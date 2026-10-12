@@ -1,0 +1,294 @@
+// Pune ↔ Mumbai Private Travel Platform - Database Schema
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Location {
+  id        String   @id @default(cuid())
+  name      String
+  city      String
+  state     String   @default("Maharashtra")
+  type      String   @default("CITY")
+  side      String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  routesAsPickup Route[]         @relation("PickupLocation")
+  routesAsDrop   Route[]         @relation("DropLocation")
+  parkingCharges ParkingCharge[]
+  waitingCharges WaitingCharge[]
+  localVehicles  LocalVehicle[]
+
+  @@map("locations")
+}
+
+model Route {
+  id               String   @id @default(cuid())
+  routeName        String
+  pickupLocationId String
+  dropLocationId   String
+  isActive         Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  pickupLocation      Location              @relation("PickupLocation", fields: [pickupLocationId], references: [id])
+  dropLocation        Location              @relation("DropLocation", fields: [dropLocationId], references: [id])
+  fares               Fare[]
+  tolls               Toll[]
+  vehicleAvailability VehicleAvailability[]
+  bookings            Booking[]
+
+  @@unique([pickupLocationId, dropLocationId])
+  @@map("routes")
+}
+
+model Vehicle {
+  id              String   @id @default(cuid())
+  name            String
+  category        String
+  image           String   @default("/assets/sedan.webp")
+  description     String?  @db.Text
+  seatingCapacity Int
+  isActive        Boolean  @default(true)
+  displayOrder    Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  fares        Fare[]
+  availability VehicleAvailability[]
+  bookings     Booking[]
+
+  @@map("vehicles")
+}
+
+model LocalVehicle {
+  id                String   @id @default(cuid())
+  city              String   // "Pune" | "Mumbai"
+  pickupLocationId  String?
+  name              String
+  category          String   // "SEDAN" | "SUV" | "LUXURY" | "MINI_BUS" | "TWENTY_SEATER"
+  image             String   @default("/assets/sedan.webp")
+  description       String?  @db.Text
+  seatingCapacity   Int      @default(4)
+  durationHours     Int      @default(8) // e.g. 4, 6, 8, 10, 12
+  baseFare          Float
+  extraHourCharge   Float    @default(150)
+  parkingEnabled    Boolean  @default(false)
+  parkingAmount     Float    @default(0)
+  parkingType       String   @default("FIXED")
+  waitingEnabled    Boolean  @default(false)
+  freeMinutes       Int      @default(30)
+  perHourCharge     Float    @default(0)
+  availableQuantity Int      @default(5)
+  status            String   @default("AVAILABLE") // "AVAILABLE" | "LIMITED" | "UNAVAILABLE"
+  isActive          Boolean  @default(true)
+  displayOrder      Int      @default(0)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  pickupLocation Location? @relation(fields: [pickupLocationId], references: [id])
+  bookings       Booking[]
+
+  @@map("local_vehicles")
+}
+
+model VehicleAvailability {
+  id                String   @id @default(cuid())
+  vehicleId         String
+  routeId           String
+  availableDate     DateTime
+  availableFromTime String
+  availableToTime   String
+  availableQuantity Int      @default(1)
+  status            String   @default("AVAILABLE")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  vehicle Vehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  route   Route   @relation(fields: [routeId], references: [id], onDelete: Cascade)
+
+  @@map("vehicle_availability")
+}
+
+model Fare {
+  id          String   @id @default(cuid())
+  routeId     String
+  vehicleId   String
+  tripType    String   @default("ONE_WAY") // "ONE_WAY" | "ROUND_TRIP"
+  baseFare    Float
+  perKmFare   Float    @default(0)
+  minimumFare Float    @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  route   Route   @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  vehicle Vehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  fareTolls   FareToll[]
+  fareParking FareParking?
+  fareWaiting FareWaiting?
+
+  @@unique([routeId, vehicleId, tripType])
+  @@map("fares")
+}
+
+model FareToll {
+  id        String   @id @default(cuid())
+  fareId    String
+  name      String
+  amount    Float
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  fare Fare @relation(fields: [fareId], references: [id], onDelete: Cascade)
+
+  @@map("fare_tolls")
+}
+
+model FareParking {
+  id           String   @id @default(cuid())
+  fareId       String   @unique
+  enabled      Boolean  @default(false)
+  locationId   String?
+  chargingType String   @default("FIXED")
+  amount       Float    @default(0)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  fare Fare @relation(fields: [fareId], references: [id], onDelete: Cascade)
+
+  @@map("fare_parking")
+}
+
+model FareWaiting {
+  id            String   @id @default(cuid())
+  fareId        String   @unique
+  enabled       Boolean  @default(false)
+  locationId    String?
+  freeMinutes   Int      @default(30)
+  perHourCharge Float    @default(0)
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  fare Fare @relation(fields: [fareId], references: [id], onDelete: Cascade)
+
+  @@map("fare_waiting")
+}
+
+model Toll {
+  id              String   @id @default(cuid())
+  name            String
+  routeId         String
+  amount          Float
+  vehicleCategory String
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  route Route @relation(fields: [routeId], references: [id], onDelete: Cascade)
+
+  @@map("tolls")
+}
+
+model ParkingCharge {
+  id              String   @id @default(cuid())
+  locationId      String
+  vehicleCategory String
+  amount          Float
+  chargingType    String   @default("FIXED")
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  location Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
+
+  @@map("parking_charges")
+}
+
+model WaitingCharge {
+  id              String   @id @default(cuid())
+  locationId      String
+  vehicleCategory String
+  freeMinutes     Int      @default(30)
+  perHourCharge   Float
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  location Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
+
+  @@map("waiting_charges")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  role         String   @default("CUSTOMER")
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  auditLogs AuditLog[]
+
+  @@map("users")
+}
+
+model Booking {
+  id               String    @id @default(cuid())
+  routeId          String?
+  vehicleId        String?
+  localVehicleId   String?
+  pickupLocationId String?
+  dropLocationId   String?
+  city             String?
+  tripType         String    @default("ONE_WAY") // "ONE_WAY" | "ROUND_TRIP" | "LOCAL"
+  pickupDate       DateTime
+  pickupTime       String
+  returnDate       DateTime?
+  returnTime       String?
+  durationHours    Int?
+  passengers       Int       @default(1)
+  pickupAddress    String?   @db.Text
+  dropAddress      String?   @db.Text
+  fareTotal        Float
+  fareDetails      String?   @db.Text
+  status           String    @default("PENDING") // "PENDING" | "CONFIRMED" | "CANCELLED" | "COMPLETED"
+  customerName     String?
+  customerPhone    String?
+  customerEmail    String?
+  notes            String?   @db.Text
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  route        Route?        @relation(fields: [routeId], references: [id])
+  vehicle      Vehicle?      @relation(fields: [vehicleId], references: [id])
+  localVehicle LocalVehicle? @relation(fields: [localVehicleId], references: [id])
+
+  @@map("bookings")
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  adminId   String
+  action    String
+  entity    String
+  entityId  String
+  oldValue  String?  @db.Text
+  newValue  String?  @db.Text
+  createdAt DateTime @default(now())
+
+  admin User @relation(fields: [adminId], references: [id])
+
+  @@map("audit_logs")
+}

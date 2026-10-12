@@ -1,0 +1,37 @@
+# Dependencies
+node_modules/
+*/node_modules/
+
+# Environment files
+.env
+.env.*
+!.env.example
+*.env
+.env.local
+*.local
+
+# Database & backups
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+dev.db
+backend/prisma/dev.db
+database_backups/
+*.dump
+
+# Build outputs
+dist/
+*/dist/
+
+# Logs
+*.log
+logs/
+
+# IDE / OS files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
