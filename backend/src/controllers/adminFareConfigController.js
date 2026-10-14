@@ -52,10 +52,10 @@ const listFareConfigs = async (req, res, next) => {
           orderBy: { createdAt: 'desc' },
         });
 
-        const totalToll = (f.fareTolls || []).reduce((sum, t) => sum + toNum(t.amount), 0);
+        const totalToll = toNum((f.fareTolls || []).reduce((sum, t) => sum + toNum(t.amount), 0));
         const parkingAmount = f.fareParking && f.fareParking.enabled ? toNum(f.fareParking.amount) : 0;
         const stayAmount = f.fareWaiting && f.fareWaiting.enabled ? toNum(f.fareWaiting.perHourCharge) : 0;
-        const estimatedTotal = toNum(f.baseFare) + totalToll + parkingAmount + stayAmount;
+        const estimatedTotal = toNum(toNum(f.baseFare) + totalToll + parkingAmount + stayAmount);
 
         return {
           id: f.id,
@@ -139,10 +139,10 @@ const getFareConfig = async (req, res, next) => {
       orderBy: { createdAt: 'desc' },
     });
 
-    const totalToll = (fare.fareTolls || []).reduce((sum, t) => sum + toNum(t.amount), 0);
+    const totalToll = toNum((fare.fareTolls || []).reduce((sum, t) => sum + toNum(t.amount), 0));
     const parkingAmount = fare.fareParking && fare.fareParking.enabled ? toNum(fare.fareParking.amount) : 0;
     const stayAmount = fare.fareWaiting && fare.fareWaiting.enabled ? toNum(fare.fareWaiting.perHourCharge) : 0;
-    const estimatedTotal = toNum(fare.baseFare) + totalToll + parkingAmount + stayAmount;
+    const estimatedTotal = toNum(toNum(fare.baseFare) + totalToll + parkingAmount + stayAmount);
 
     res.json({
       success: true,

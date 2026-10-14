@@ -2,6 +2,11 @@ const prisma = require('../utils/prisma');
 const { AppError } = require('../middleware/errorHandler');
 const { calculateFareQuote } = require('../services/fareCalculationService');
 
+const toTwoDecimals = (val) => {
+  if (val === undefined || val === null || isNaN(Number(val))) return 0;
+  return parseFloat(Number(val).toFixed(2));
+};
+
 /**
  * POST /api/bookings — Create booking with server-side recalculated fare (ONE_WAY, ROUND_TRIP, LOCAL)
  */
@@ -25,11 +30,14 @@ const createBooking = async (req, res, next) => {
       customerEmail,
       pickupAddress,
       dropAddress,
+      notes,
       paymentStatus,
       paymentId,
       paymentMethod,
       isPhoneVerified,
     } = req.body;
+
+    const normalizedNotes = typeof notes === 'string' && notes.trim().length > 0 ? notes.trim() : null;
 
     const isDevelopment = process.env.NODE_ENV !== 'production';
 
@@ -78,15 +86,15 @@ const createBooking = async (req, res, next) => {
         return next(new AppError(`Vehicle capacity exceeded. Max allowed is ${localVehicle.seatingCapacity} passengers.`, 400));
       }
 
-      const parkingAmount = localVehicle.parkingEnabled ? parseFloat(localVehicle.parkingAmount) : 0;
-      const serverCalculatedTotal = parseFloat(localVehicle.baseFare) + parkingAmount;
+      const parkingAmount = localVehicle.parkingEnabled ? toTwoDecimals(localVehicle.parkingAmount) : 0;
+      const serverCalculatedTotal = toTwoDecimals(parseFloat(localVehicle.baseFare) + parkingAmount);
 
       const fareDetails = {
         tripType: 'LOCAL',
         city: localVehicle.city,
         durationHours: localVehicle.durationHours,
-        baseFare: parseFloat(localVehicle.baseFare),
-        extraHourCharge: parseFloat(localVehicle.extraHourCharge),
+        baseFare: toTwoDecimals(localVehicle.baseFare),
+        extraHourCharge: toTwoDecimals(localVehicle.extraHourCharge),
         parking: parkingAmount,
         total: serverCalculatedTotal,
         paymentInfo,
@@ -108,7 +116,7 @@ const createBooking = async (req, res, next) => {
           customerEmail,
           pickupAddress: pickupAddress || `${localVehicle.city} Area`,
           dropAddress: dropAddress || 'Local City Travel',
-          notes,
+          notes: normalizedNotes,
           status: resolvedBookingStatus,
         },
         include: {
@@ -159,7 +167,7 @@ const createBooking = async (req, res, next) => {
       return next(new AppError('Vehicle is unavailable for the selected date and time.', 400));
     }
 
-    const serverCalculatedTotal = selectedVehicleQuote.fare.total;
+    const serverCalculatedTotal = toTwoDecimals(selectedVehicleQuote.fare.total);
 
     // Resolve or find the route
     const route = await prisma.route.findFirst({
@@ -195,7 +203,7 @@ const createBooking = async (req, res, next) => {
         customerEmail,
         pickupAddress,
         dropAddress,
-        notes,
+        notes: normalizedNotes,
         status: resolvedBookingStatus,
       },
       include: {

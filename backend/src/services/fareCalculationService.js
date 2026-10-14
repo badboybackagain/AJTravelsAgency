@@ -78,7 +78,7 @@ async function calculateVehicleFare(route, vehicle, options = {}) {
   let tollBreakdown = [];
 
   if (fareConfig.fareTolls && fareConfig.fareTolls.length > 0) {
-    totalToll = fareConfig.fareTolls.reduce((sum, t) => sum + toNumber(t.amount), 0);
+    totalToll = toNumber(fareConfig.fareTolls.reduce((sum, t) => sum + toNumber(t.amount), 0));
     tollBreakdown = fareConfig.fareTolls.map((t) => ({
       name: t.name,
       amount: toNumber(t.amount),
@@ -97,7 +97,7 @@ async function calculateVehicleFare(route, vehicle, options = {}) {
     totalStay = toNumber(fareConfig.fareWaiting.perHourCharge);
   }
 
-  const total = baseFare + totalToll + totalParking + totalStay;
+  const total = toNumber(baseFare + totalToll + totalParking + totalStay);
 
   return {
     configured: true,
@@ -150,7 +150,7 @@ async function calculateFareQuote(params) {
     // Query Local Vehicles matching city & passenger capacity
     let localVehicles = await prisma.localVehicle.findMany({
       where: {
-        city: { contains: targetCity },
+        city: { contains: targetCity, mode: 'insensitive' },
         isActive: true,
         seatingCapacity: { gte: numPassengers },
       },
@@ -165,7 +165,7 @@ async function calculateFareQuote(params) {
     if (localVehicles.length === 0) {
       // Check if vehicles exist for this city regardless of passenger count to give helpful error
       const anyVehicles = await prisma.localVehicle.findFirst({
-        where: { city: { contains: targetCity }, isActive: true },
+        where: { city: { contains: targetCity, mode: 'insensitive' }, isActive: true },
       });
       if (anyVehicles) {
         throw new AppError('No suitable local vehicles are available for the selected passenger count.', 400);
@@ -175,7 +175,7 @@ async function calculateFareQuote(params) {
 
     const vehicleQuotes = localVehicles.map((v) => {
       const parking = v.parkingEnabled ? toNumber(v.parkingAmount) : 0;
-      const total = toNumber(v.baseFare) + parking;
+      const total = toNumber(toNumber(v.baseFare) + parking);
 
       return {
         vehicleId: v.id,

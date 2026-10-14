@@ -14,7 +14,7 @@ const listLocalVehicles = async (req, res, next) => {
     const { city, category, isActive } = req.query;
 
     const whereClause = {
-      ...(city && { city: { contains: city } }),
+      ...(city && { city: { contains: city, mode: 'insensitive' } }),
       ...(category && { category }),
       ...(isActive !== undefined && { isActive: isActive === 'true' }),
     };

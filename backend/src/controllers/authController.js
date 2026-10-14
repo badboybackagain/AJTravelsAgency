@@ -52,6 +52,8 @@ const login = async (req, res, next) => {
         user: {
           id: user.id,
           email: user.email,
+          name: user.name || '',
+          phone: user.phone || '',
           role: user.role,
         }
       }
@@ -71,7 +73,7 @@ const register = async (req, res, next) => {
       return next(new AppError(parsed.error.errors[0].message, 422));
     }
 
-    const { email, password, role } = parsed.data;
+    const { email, password, role, name, phone } = req.body;
 
     const existing = await prisma.user.findUnique({ where: { email } });
     if (existing) {
@@ -81,8 +83,14 @@ const register = async (req, res, next) => {
     const passwordHash = await bcrypt.hash(password, 12);
 
     const user = await prisma.user.create({
-      data: { email, passwordHash, role },
-      select: { id: true, email: true, role: true, createdAt: true }
+      data: {
+        email,
+        name: name ? name.trim() : null,
+        phone: phone ? phone.trim() : null,
+        passwordHash,
+        role: role || 'CUSTOMER',
+      },
+      select: { id: true, email: true, name: true, phone: true, role: true, createdAt: true }
     });
 
     res.status(201).json({ success: true, data: user });
@@ -98,7 +106,7 @@ const me = async (req, res, next) => {
   try {
     const user = await prisma.user.findUnique({
       where: { id: req.user.userId },
-      select: { id: true, email: true, role: true, createdAt: true }
+      select: { id: true, email: true, name: true, phone: true, role: true, createdAt: true }
     });
     if (!user) {
       return next(new AppError('User not found.', 404));
@@ -134,10 +142,12 @@ const registerCustomer = async (req, res, next) => {
     const user = await prisma.user.create({
       data: {
         email,
+        name: name ? name.trim() : null,
+        phone: phone ? phone.trim() : null,
         passwordHash,
         role: 'CUSTOMER',
       },
-      select: { id: true, email: true, role: true, createdAt: true }
+      select: { id: true, email: true, name: true, phone: true, role: true, createdAt: true }
     });
 
     const token = jwt.sign(
@@ -154,8 +164,8 @@ const registerCustomer = async (req, res, next) => {
         user: {
           id: user.id,
           email: user.email,
-          name: name || user.email.split('@')[0],
-          phone: phone || '',
+          name: user.name || user.email.split('@')[0],
+          phone: user.phone || '',
           role: user.role,
         }
       }
