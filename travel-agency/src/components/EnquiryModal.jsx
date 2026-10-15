@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { X, Send, MessageSquare, CheckCircle, User, Phone, MapPin, Calendar, Car } from 'lucide-react';
+import { X, Send, MessageSquare, CheckCircle, User, Phone, MapPin, Calendar, Car, Loader2, AlertCircle } from 'lucide-react';
 import { getWhatsAppLink } from '../utils/whatsapp';
+import { enquiryApi } from '../services/api';
 
 export const EnquiryModal = ({ isOpen, onClose }) => {
   const [formData, setFormData] = useState({
@@ -14,16 +15,40 @@ export const EnquiryModal = ({ isOpen, onClose }) => {
   });
 
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
   if (!isOpen) return null;
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+    if (errorMsg) setErrorMsg('');
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setSubmitted(true);
+    setIsSubmitting(true);
+    setErrorMsg('');
+    try {
+      await enquiryApi.create({
+        name: formData.name,
+        phone: formData.phone,
+        pickup: formData.pickup,
+        destination: formData.destination,
+        travelDate: formData.date,
+        vehicle: formData.vehicle,
+        message: formData.message,
+      });
+      setSubmitted(true);
+    } catch (err) {
+      console.error('Enquiry submission error:', err);
+      setErrorMsg(
+        err.response?.data?.message ||
+          'Failed to submit enquiry. Please try again or reach out on WhatsApp.'
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const currentWALink = getWhatsAppLink({
@@ -77,6 +102,24 @@ export const EnquiryModal = ({ isOpen, onClose }) => {
               <h3>Get Instant Fare Quote</h3>
               <p>Fill in your trip details to check vehicle availability and best rates.</p>
             </div>
+
+            {errorMsg && (
+              <div style={{
+                background: '#FEF2F2',
+                border: '1px solid #FECACA',
+                color: '#991B1B',
+                borderRadius: '8px',
+                padding: '0.6rem 0.8rem',
+                fontSize: '0.8rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+                marginBottom: '0.8rem'
+              }}>
+                <AlertCircle size={15} style={{ flexShrink: 0 }} />
+                <span>{errorMsg}</span>
+              </div>
+            )}
 
             <form onSubmit={handleSubmit} className="modal-form">
               <div className="modal-form-grid">
@@ -179,8 +222,21 @@ export const EnquiryModal = ({ isOpen, onClose }) => {
 
               {/* Action CTAs: Side-by-side buttons */}
               <div className="modal-actions">
-                <button type="submit" className="btn btn-gold modal-submit-btn">
-                  <Send size={15} /> SUBMIT ENQUIRY
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="btn btn-gold modal-submit-btn"
+                  style={{ opacity: isSubmitting ? 0.75 : 1, cursor: isSubmitting ? 'not-allowed' : 'pointer' }}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 size={15} className="animate-spin" /> SUBMITTING...
+                    </>
+                  ) : (
+                    <>
+                      <Send size={15} /> SUBMIT ENQUIRY
+                    </>
+                  )}
                 </button>
                 <a
                   href={currentWALink}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Header } from './components/Header';
 import { HeroBooking } from './components/HeroBooking';
@@ -12,12 +12,34 @@ import { VehicleDiscovery } from './components/VehicleDiscovery';
 import { FAQSection } from './components/FAQSection';
 import { Footer } from './components/Footer';
 import { EnquiryModal } from './components/EnquiryModal';
-import { AdminLogin } from './components/admin/AdminLogin';
-import { AdminDashboard } from './components/admin/AdminDashboard';
-import { FarePage } from './pages/FarePage';
-import { BookingPage } from './pages/BookingPage';
+import { NotFoundPage } from './pages/NotFoundPage';
+import { usePageSeo } from './hooks/usePageSeo';
+
+// Lazy-load heavy pages — keeps initial JS bundle small
+const AdminLogin     = lazy(() => import('./components/admin/AdminLogin').then(m => ({ default: m.AdminLogin })));
+const AdminDashboard = lazy(() => import('./components/admin/AdminDashboard').then(m => ({ default: m.AdminDashboard })));
+const FarePage       = lazy(() => import('./pages/FarePage').then(m => ({ default: m.FarePage })));
+const BookingPage    = lazy(() => import('./pages/BookingPage').then(m => ({ default: m.BookingPage })));
+
+// Minimal loading spinner — shown during lazy chunk download
+const PageLoader = () => (
+  <div style={{
+    minHeight: '100vh',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    background: '#0f1623',
+    color: '#D8AE55',
+    fontSize: '1.1rem',
+    fontFamily: "'Inter', sans-serif",
+  }}>
+    Loading…
+  </div>
+);
+
 
 function MainWebsite() {
+  usePageSeo('home', 'AJ Tours & Travels – Pune to Mumbai Cab | Best Intercity Cab Service');
   const [isEnquiryOpen, setIsEnquiryOpen] = useState(false);
 
   return (
@@ -76,18 +98,38 @@ function AdminRouteWrapper() {
 function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<MainWebsite />} />
-        <Route path="/fare" element={<FarePage />} />
-        <Route path="/book" element={<BookingPage />} />
-        <Route path="/booking" element={<BookingPage />} />
-        <Route path="/admin/login" element={<AdminLogin onLoginSuccess={() => window.location.href = '/admin/dashboard'} />} />
-        <Route path="/admin/dashboard" element={<AdminRouteWrapper />} />
-        <Route path="/admin/fares" element={<Navigate to="/admin/dashboard" replace />} />
-        <Route path="/admin/bookings" element={<Navigate to="/admin/dashboard" replace />} />
-        <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
+          {/* Public SPA routes */}
+          <Route path="/" element={<MainWebsite />} />
+          <Route path="/fare" element={<FarePage />} />
+          <Route path="/booking" element={<BookingPage />} />
+
+          {/* /book → /booking canonical redirect */}
+          <Route path="/book" element={<Navigate to="/booking" replace />} />
+
+          {/* Admin routes — all lazy-loaded */}
+          <Route
+            path="/admin/login"
+            element={
+              <AdminLogin
+                onLoginSuccess={() => window.location.href = '/admin/dashboard'}
+              />
+            }
+          />
+          <Route path="/admin/dashboard" element={<AdminRouteWrapper />} />
+          <Route path="/admin/fares"    element={<Navigate to="/admin/dashboard" replace />} />
+          <Route path="/admin/bookings" element={<Navigate to="/admin/dashboard" replace />} />
+          <Route path="/admin"          element={<Navigate to="/admin/dashboard" replace />} />
+
+          {/*
+            Unknown routes → NotFoundPage (NOT a homepage redirect).
+            The backend already returns HTTP 404 for unrecognised paths;
+            this component handles the user-facing 404 rendering client-side.
+          */}
+          <Route path="*" element={<NotFoundPage />} />
+        </Routes>
+      </Suspense>
     </BrowserRouter>
   );
 }

@@ -295,3 +295,94 @@ model AuditLog {
 
   @@map("audit_logs")
 }
+
+model IntegrationSetting {
+  id                String    @id @default(cuid())
+  service           String    @unique @default("WHATSAPP")
+  provider          String    @default("WASMS") // "WASMS"
+  apiUrl            String?   @default("https://wasms.nirosha.org")
+  apiKey            String?   @db.Text
+  senderId          String?   // WhatsApp Account ID
+  destinationNumber String?
+  isEnabled         Boolean   @default(false)
+  notifyBookings    Boolean   @default(true)
+  notifyEnquiries   Boolean   @default(true)
+  lastStatus        String    @default("UNCONFIGURED") // "CONNECTED" | "DISCONNECTED" | "ERROR" | "UNCONFIGURED"
+  lastVerifiedAt    DateTime?
+  lastError         String?   @db.Text
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@map("integration_settings")
+}
+
+model OtpChallenge {
+  id                String    @id @default(cuid())
+  phoneNumber       String
+  purpose           String    @default("BOOKING_VERIFICATION")
+  status            String    @default("PENDING") // "PENDING" | "VERIFIED" | "CONSUMED" | "EXPIRED"
+  verificationToken String?   @unique
+  attempts          Int       @default(0)
+  maxAttempts       Int       @default(5)
+  resendCount       Int       @default(0)
+  provider          String    @default("WASMS")
+  providerRef       String?
+  expiresAt         DateTime
+  verifiedAt        DateTime?
+  consumedAt        DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@index([phoneNumber, status])
+  @@map("otp_challenges")
+}
+
+model Enquiry {
+  id          String   @id @default(cuid())
+  name        String
+  phone       String
+  pickup      String
+  destination String
+  travelDate  String?
+  vehicle     String?
+  message     String?  @db.Text
+  status      String   @default("NEW") // "NEW" | "CONTACTED" | "RESOLVED"
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("enquiries")
+}
+
+model NotificationLog {
+  id               String   @id @default(cuid())
+  channel          String   @default("WHATSAPP")
+  eventType        String   // "ENQUIRY" | "BOOKING_CREATED" | "BOOKING_STATUS" | "ADMIN_TEST"
+  referenceId      String?  // Enquiry ID or Booking ID
+  recipient        String
+  status           String   // "SENT" | "ACCEPTED" | "FAILED" | "SKIPPED_DISABLED"
+  providerResponse String?  @db.Text
+  errorMessage     String?  @db.Text
+  createdAt        DateTime @default(now())
+
+  @@index([referenceId, eventType])
+  @@map("notification_logs")
+}
+
+model SeoMeta {
+  id              String   @id @default(cuid())
+  pageKey         String   @unique  // e.g. "home", "fare", "booking"
+  pageLabel       String            // Human-readable label, e.g. "Home Page"
+  pageUrl         String            // Canonical path, e.g. "/"
+  seoTitle        String?  @db.Text
+  metaDescription String?  @db.Text
+  canonicalUrl    String?
+  isIndexable     Boolean  @default(true)
+  ogTitle         String?  @db.Text
+  ogDescription   String?  @db.Text
+  ogImage         String?
+  slug            String?           // Custom slug override (where supported)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("seo_meta")
+}

@@ -1,6 +1,12 @@
 import axios from 'axios';
 
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+// Support both VITE_API_BASE_URL (standard) and VITE_API_URL (handoff documentation).
+// In development, fallback to 'http://localhost:3001' if unconfigured.
+// In production builds, default to '' (relative path) to prevent hardcoding localhost into client bundle.
+export const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL ||
+  import.meta.env.VITE_API_URL ||
+  (import.meta.env.DEV ? 'http://localhost:3001' : '');
 
 const api = axios.create({
   baseURL: `${API_BASE_URL}/api`,
@@ -155,4 +161,33 @@ export const authApi = {
   me: () => api.get('/auth/me'),
 };
 
+export const adminWhatsAppApi = {
+  getSettings: () => api.get('/admin/whatsapp/settings'),
+  updateSettings: (data) => api.put('/admin/whatsapp/settings', data),
+  verifyConnection: (data) => api.post('/admin/whatsapp/verify', data, { timeout: 60000 }),
+  toggle: (isEnabled) => api.patch('/admin/whatsapp/toggle', { isEnabled }),
+  test: (destinationNumber) => api.post('/admin/whatsapp/test', { destinationNumber }),
+  getLogs: () => api.get('/admin/whatsapp/logs'),
+};
+
+export const otpApi = {
+  send: (phone) => api.post('/otp/send', { phone }),
+  verify: (phone, otp) => api.post('/otp/verify', { phone, otp }),
+};
+
+export const enquiryApi = {
+  create: (data) => api.post('/enquiries', data),
+  adminGetAll: () => api.get('/enquiries/admin'),
+  adminUpdateStatus: (id, status) => api.put(`/enquiries/admin/${id}/status`, { status }),
+};
+
+export const seoApi = {
+  getPages: () => api.get('/admin/seo/pages'),
+  getPage: (pageKey) => api.get(`/admin/seo/pages/${pageKey}`),
+  updatePage: (pageKey, data) => api.put(`/admin/seo/pages/${pageKey}`, data),
+  getPublicPages: () => api.get('/seo/public'),
+};
+
 export default api;
+
+

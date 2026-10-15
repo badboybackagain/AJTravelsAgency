@@ -2,8 +2,17 @@
 // Returns consistent JSON error responses, hides stack trace in production
 
 const errorHandler = (err, req, res, next) => {
-  const statusCode = err.statusCode || 500;
+  let statusCode = err.statusCode || 500;
   const isDev = process.env.NODE_ENV === 'development';
+
+  // Map database connectivity/initialization failures to 503 Service Unavailable
+  if (
+    err.name === 'PrismaClientInitializationError' ||
+    err.name === 'PrismaClientRustPanicError' ||
+    (err.message && err.message.includes('DATABASE_URL'))
+  ) {
+    statusCode = 503;
+  }
 
   // Log for server debugging
   if (statusCode >= 500) {

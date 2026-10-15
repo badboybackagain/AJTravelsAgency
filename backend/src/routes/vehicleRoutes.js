@@ -5,6 +5,10 @@ const auth = require('../middleware/auth');
 const adminOnly = require('../middleware/adminOnly');
 const upload = require('../middleware/upload');
 
+// ADMIN
+router.get('/admin', auth, adminOnly, adminGetVehicles);
+router.get('/admin/all', auth, adminOnly, adminGetVehicles);
+
 // PUBLIC
 router.get('/', getAllVehicles);
 router.get('/:id', getVehicle);
@@ -22,9 +26,7 @@ router.post('/upload-image', auth, adminOnly, upload.single('image'), (req, res,
   }
 });
 
-// ADMIN
-router.get('/admin', auth, adminOnly, adminGetVehicles);
-router.get('/admin/all', auth, adminOnly, adminGetVehicles);
+// ADMIN MUTATIONS
 router.post('/', auth, adminOnly, createVehicle);
 router.put('/:id', auth, adminOnly, updateVehicle);
 router.delete('/:id', auth, adminOnly, deleteVehicle);

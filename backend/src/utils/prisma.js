@@ -3,18 +3,15 @@
 
 const { PrismaClient } = require('@prisma/client');
 
+const globalForPrisma = globalThis;
+
 let prisma;
 
-if (process.env.NODE_ENV === 'production') {
-  prisma = new PrismaClient();
-} else {
-  // Avoid creating new connections on every hot reload in dev
-  if (!global.__prisma) {
-    global.__prisma = new PrismaClient({
-      log: ['warn', 'error'],
-    });
-  }
-  prisma = global.__prisma;
+if (!globalForPrisma.__prisma) {
+  globalForPrisma.__prisma = new PrismaClient({
+    log: process.env.NODE_ENV === 'development' ? ['warn', 'error'] : ['error'],
+  });
 }
+prisma = globalForPrisma.__prisma;
 
 module.exports = prisma;

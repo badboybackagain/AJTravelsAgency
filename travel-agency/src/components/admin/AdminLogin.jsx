@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { authApi } from '../../services/api';
-import { Lock, Mail, ShieldAlert, ArrowRight, CheckCircle } from 'lucide-react';
+import { Lock, Mail, ShieldAlert, ArrowRight } from 'lucide-react';
 
 export const AdminLogin = ({ onLoginSuccess }) => {
-  const [email, setEmail] = useState('admin@punemumbaitravels.in');
-  const [password, setPassword] = useState('Admin@123456');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -52,16 +52,23 @@ export const AdminLogin = ({ onLoginSuccess }) => {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="admin-login-form">
+        <form onSubmit={handleSubmit} className="admin-login-form" autoComplete="off">
+          {/* Prevent browser from automatically prefilling saved credentials */}
+          <input type="text" style={{ display: 'none' }} tabIndex={-1} autoComplete="off" readOnly />
+          <input type="password" style={{ display: 'none' }} tabIndex={-1} autoComplete="off" readOnly />
+
           <div className="form-group">
             <label>Admin Email</label>
             <div className="input-with-icon">
               <Mail size={18} className="input-icon" />
               <input
                 type="email"
+                name="admin_login_user"
+                id="admin_login_user"
+                autoComplete="off"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@punemumbaitravels.in"
+                placeholder="admin@punetravelagency.in"
                 required
               />
             </div>
@@ -73,6 +80,9 @@ export const AdminLogin = ({ onLoginSuccess }) => {
               <Lock size={18} className="input-icon" />
               <input
                 type="password"
+                name="admin_login_pass"
+                id="admin_login_pass"
+                autoComplete="new-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••••••"
@@ -86,11 +96,6 @@ export const AdminLogin = ({ onLoginSuccess }) => {
             <ArrowRight size={18} />
           </button>
         </form>
-
-        <div className="admin-demo-notice">
-          <CheckCircle size={14} color="#10B981" />
-          <span>Default Credentials Loaded for Dev Testing</span>
-        </div>
       </div>
 
       <style>{`
@@ -229,16 +234,6 @@ export const AdminLogin = ({ onLoginSuccess }) => {
         .btn-admin-submit:disabled {
           opacity: 0.6;
           cursor: not-allowed;
-        }
-
-        .admin-demo-notice {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 0.5rem;
-          margin-top: 1.5rem;
-          font-size: 0.8rem;
-          color: #64748B;
         }
       `}</style>
     </div>

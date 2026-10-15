@@ -22,9 +22,11 @@ import {
 import { fareApi, locationApi, routeApi, API_BASE_URL } from '../services/api';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
+import { usePageSeo } from '../hooks/usePageSeo';
 import './fare.css';
 
 export const FarePage = () => {
+  usePageSeo('fare', 'Pune Mumbai Cab Fare Calculator | AJ Tours & Travels');
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 

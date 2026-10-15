@@ -15,12 +15,16 @@ import {
   Calendar,
   Menu,
   X,
+  MessageSquare,
+  Search,
 } from 'lucide-react';
 import { adminFareConfigApi, bookingApi, routeApi, vehicleApi } from '../../services/api';
 import { AdminFares } from './AdminFares';
 import { AdminLocalVehicles } from './AdminLocalVehicles';
 import { AdminBookings } from './AdminBookings';
 import { AdminFareForm } from './AdminFareForm';
+import { AdminWhatsAppSettings } from './AdminWhatsAppSettings';
+import { AdminSeo } from './AdminSeo';
 import './admin.css';
 
 export const AdminDashboard = ({ onLogout }) => {
@@ -166,6 +170,28 @@ export const AdminDashboard = ({ onLogout }) => {
               </span>
             )}
           </button>
+
+          <button
+            onClick={() => {
+              setActiveTab('whatsapp');
+              setIsMobileMenuOpen(false);
+            }}
+            className={`admin-nav-item ${activeTab === 'whatsapp' ? 'active' : ''}`}
+          >
+            <MessageSquare size={18} />
+            <span>WhatsApp Integration</span>
+          </button>
+
+          <button
+            onClick={() => {
+              setActiveTab('seo');
+              setIsMobileMenuOpen(false);
+            }}
+            className={`admin-nav-item ${activeTab === 'seo' ? 'active' : ''}`}
+          >
+            <Search size={18} />
+            <span>SEO Management</span>
+          </button>
         </nav>
 
         {/* User Profile Card */}
@@ -221,6 +247,10 @@ export const AdminDashboard = ({ onLogout }) => {
                   ? 'Local Hourly Packages'
                   : activeTab === 'bookings'
                   ? 'Customer Bookings'
+                  : activeTab === 'whatsapp'
+                  ? 'WhatsApp Integration'
+                  : activeTab === 'seo'
+                  ? 'SEO Management'
                   : 'Dashboard Overview'}
               </span>
             </div>
@@ -232,10 +262,12 @@ export const AdminDashboard = ({ onLogout }) => {
               <span>API Live</span>
             </div>
 
-            <button onClick={() => setIsQuickCreateOpen(true)} className="admin-btn-primary admin-header-add-btn">
-              <Plus size={16} />
-              <span>Add Fare</span>
-            </button>
+            {(activeTab === 'fares' || activeTab === 'local') && (
+              <button onClick={() => setIsQuickCreateOpen(true)} className="admin-btn-primary admin-header-add-btn">
+                <Plus size={16} />
+                <span>Add Fare</span>
+              </button>
+            )}
           </div>
         </header>
 
@@ -392,6 +424,12 @@ export const AdminDashboard = ({ onLogout }) => {
 
           {/* TAB 4: BOOKINGS */}
           {activeTab === 'bookings' && <AdminBookings />}
+
+          {/* TAB 5: WHATSAPP INTEGRATION */}
+          {activeTab === 'whatsapp' && <AdminWhatsAppSettings />}
+
+          {/* TAB 6: SEO MANAGEMENT */}
+          {activeTab === 'seo' && <AdminSeo />}
 
         </main>
 

@@ -1,6 +1,8 @@
 const prisma = require('../utils/prisma');
 const { AppError } = require('../middleware/errorHandler');
 const { calculateFareQuote } = require('../services/fareCalculationService');
+const { sendBookingNotification } = require('../services/whatsappService');
+const { validateAndConsumeToken } = require('../services/otpService');
 
 const toTwoDecimals = (val) => {
   if (val === undefined || val === null || isNaN(Number(val))) return 0;
@@ -34,8 +36,18 @@ const createBooking = async (req, res, next) => {
       paymentStatus,
       paymentId,
       paymentMethod,
-      isPhoneVerified,
+      verificationToken,
     } = req.body;
+
+    if (!customerName || !customerPhone) {
+      return next(new AppError('Customer Name and Phone Number are required.', 400));
+    }
+
+    // Enforce server-side WhatsApp OTP verification token (Replay, Expiry & Phone Binding protected)
+    const tokenValidation = await validateAndConsumeToken(customerPhone, verificationToken);
+    if (!tokenValidation.valid) {
+      return next(new AppError(tokenValidation.message || 'Mobile number verification required. Please verify via WhatsApp OTP.', 403));
+    }
 
     const normalizedNotes = typeof notes === 'string' && notes.trim().length > 0 ? notes.trim() : null;
 
@@ -44,24 +56,22 @@ const createBooking = async (req, res, next) => {
     // SECURITY ISOLATION:
     // In production, unverified client-supplied paymentStatus cannot be trusted as COMPLETED.
     // Real payments must be verified via gateway webhooks/signatures before marking CONFIRMED/COMPLETED.
-    const resolvedPaymentStatus = isDevelopment ? (paymentStatus || 'COMPLETED') : 'PENDING';
-    const resolvedBookingStatus = (isDevelopment && resolvedPaymentStatus === 'COMPLETED') ? 'CONFIRMED' : 'PENDING';
+    const resolvedPaymentStatus = paymentStatus || 'PAY_TO_DRIVER';
+    const resolvedBookingStatus = 'CONFIRMED';
 
     const generatedPaymentId =
-      paymentId || (isDevelopment ? `dev_sim_${Date.now().toString(36)}${Math.random().toString(36).substring(2, 6)}` : null);
+      paymentId || `book_${Date.now().toString(36)}${Math.random().toString(36).substring(2, 6)}`;
 
     const paymentInfo = {
       paymentStatus: resolvedPaymentStatus,
       paymentId: generatedPaymentId,
-      paymentMethod: paymentMethod || (isDevelopment ? 'Simulated Dev Payment' : 'PENDING_GATEWAY'),
-      isPhoneVerified: isDevelopment ? !!isPhoneVerified : false,
-      isSimulated: isDevelopment,
-      verifiedAt: isDevelopment ? new Date().toISOString() : null,
+      paymentMethod: paymentMethod || 'Pay to Driver / Cash on Pickup',
+      isPhoneVerified: true,
+      phoneVerifiedAt: tokenValidation.verifiedAt || new Date().toISOString(),
+      otpChallengeId: tokenValidation.challengeId,
+      isSimulated: false,
+      verifiedAt: new Date().toISOString(),
     };
-
-    if (!customerName || !customerPhone) {
-      return next(new AppError('Customer Name and Phone Number are required.', 400));
-    }
 
     const numPassengers = parseInt(passengers, 10) || 1;
 
@@ -122,6 +132,11 @@ const createBooking = async (req, res, next) => {
         include: {
           localVehicle: true,
         },
+      });
+
+      // Trigger WhatsApp notification asynchronously (isolated; never fails booking)
+      sendBookingNotification(booking, localVehicle.name).catch((notifErr) => {
+        console.error('Local Booking WhatsApp dispatch notice:', notifErr.message);
       });
 
       return res.status(201).json({
@@ -215,6 +230,12 @@ const createBooking = async (req, res, next) => {
         },
         vehicle: true,
       },
+    });
+
+    // Trigger WhatsApp notification asynchronously (isolated; never fails booking)
+    const vehName = booking.vehicle?.name || selectedVehicleQuote.name || 'Executive Cab';
+    sendBookingNotification(booking, vehName).catch((notifErr) => {
+      console.error('Intercity Booking WhatsApp dispatch notice:', notifErr.message);
     });
 
     return res.status(201).json({

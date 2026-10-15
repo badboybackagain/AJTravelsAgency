@@ -1,11 +1,25 @@
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const os = require('os');
 
-// Ensure upload directory exists
-const uploadDir = path.join(__dirname, '../../uploads/vehicles');
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
+// Ensure upload directory exists safely (guard against read-only serverless filesystems)
+let uploadDir = path.join(__dirname, '../../uploads/vehicles');
+try {
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+  }
+} catch (err) {
+  // Fall back to system temporary directory in read-only environments (e.g. Vercel serverless)
+  uploadDir = path.join(os.tmpdir(), 'uploads', 'vehicles');
+  try {
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+  } catch (tmpErr) {
+    // Non-fatal warning at initialization time; individual uploads will fail with descriptive error
+    console.warn('⚠️ Warning: Could not initialize local upload directory:', tmpErr.message);
+  }
 }
 
 const storage = multer.diskStorage({

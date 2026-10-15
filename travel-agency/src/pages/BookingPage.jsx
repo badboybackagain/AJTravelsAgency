@@ -30,12 +30,14 @@ import {
   Phone,
   ShieldAlert,
 } from 'lucide-react';
-import { bookingApi, fareApi, locationApi, API_BASE_URL } from '../services/api';
+import { bookingApi, fareApi, locationApi, otpApi, API_BASE_URL } from '../services/api';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
+import { usePageSeo } from '../hooks/usePageSeo';
 import './fare.css';
 
 export const BookingPage = () => {
+  usePageSeo('booking', 'Book Pune to Mumbai Cab Online | AJ Tours & Travels');
   const [searchParams] = useSearchParams();
   const locationState = useLocation();
   const navigate = useNavigate();
@@ -69,23 +71,16 @@ export const BookingPage = () => {
   const [dropAddress, setDropAddress] = useState('');
   const [notes, setNotes] = useState('');
 
-  // Phone OTP Verification Popup Modal States
+  // WhatsApp OTP Verification Inline States
   const [isPhoneVerified, setIsPhoneVerified] = useState(false);
-  const [isOtpModalOpen, setIsOtpModalOpen] = useState(false);
-  const [generatedOtp, setGeneratedOtp] = useState('');
+  const [verificationToken, setVerificationToken] = useState('');
+  const [otpSent, setOtpSent] = useState(false);
   const [inputOtp, setInputOtp] = useState('');
   const [otpNotice, setOtpNotice] = useState('');
   const [otpError, setOtpError] = useState('');
   const [isSendingOtp, setIsSendingOtp] = useState(false);
-
-  // Payment Integration Modal States
-  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('UPI'); // 'UPI' | 'RAZORPAY' | 'CARD' | 'NETBANKING'
-  const [upiId, setUpiId] = useState('');
-  const [cardNumber, setCardNumber] = useState('');
-  const [cardExpiry, setCardExpiry] = useState('');
-  const [cardCvv, setCardCvv] = useState('');
-  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
 
   // Submission State
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -134,10 +129,22 @@ export const BookingPage = () => {
     revalidateQuote();
   }, [tripType, pickupId, dropId, city, duration, date, time, vehicleId]);
 
-  // Handle Send Phone OTP Popup Trigger
-  const handleSendOtp = () => {
+  // Resend cooldown timer
+  useEffect(() => {
+    let timer;
+    if (cooldown > 0) {
+      timer = setInterval(() => {
+        setCooldown((prev) => (prev > 1 ? prev - 1 : 0));
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [cooldown]);
+
+  // Handle Send WhatsApp OTP inline
+  const handleSendOtp = async () => {
     setOtpError('');
     setOtpNotice('');
+    setSubmitError('');
     setInputOtp('');
     const cleanPhone = customerPhone.replace(/\D/g, '');
     if (cleanPhone.length !== 10) {
@@ -146,38 +153,52 @@ export const BookingPage = () => {
     }
 
     setIsSendingOtp(true);
-    setTimeout(() => {
-      // Generate 4-digit verification code (e.g. 4829)
-      const mockCode = Math.floor(1000 + Math.random() * 9000).toString();
-      setGeneratedOtp(mockCode);
+    try {
+      const res = await otpApi.send(cleanPhone);
+      if (res.data?.success) {
+        setCooldown(res.data.cooldownSeconds || 60);
+        setOtpSent(true);
+        setOtpNotice(res.data.message || 'OTP sent to your WhatsApp number. Please enter it below.');
+      }
+    } catch (err) {
+      const errMsg = err.response?.data?.message || 'Failed to dispatch WhatsApp OTP. Please ensure WhatsApp gateway is active.';
+      setOtpError(errMsg);
+    } finally {
       setIsSendingOtp(false);
-      setIsOtpModalOpen(true); // Open OTP Verification Popup Modal
-    }, 500);
+    }
   };
 
-  // Handle Verify OTP Code inside Popup Modal
-  const handleVerifyOtp = () => {
+  // Handle Verify WhatsApp OTP Code inline
+  const handleVerifyOtp = async () => {
     setOtpError('');
     if (!inputOtp.trim()) {
-      setOtpError('Please enter the 4-digit OTP code.');
+      setOtpError('Please enter the OTP code received on WhatsApp.');
       return;
     }
 
-    // Allow generated OTP (or universal testing code 1234 strictly in local development)
-    const isLocalDev = import.meta.env.DEV;
-    if (inputOtp.trim() === generatedOtp || (isLocalDev && inputOtp.trim() === '1234')) {
-      setIsPhoneVerified(true);
-      setIsOtpModalOpen(false); // Close OTP Popup Modal!
-      setOtpError('');
-      setSubmitError('');
-      setOtpNotice(`✓ Mobile number +91 ${customerPhone} verified successfully! Pickup & Drop location fields unlocked.`);
-    } else {
-      setOtpError('Invalid OTP code. Please check code and try again.');
+    const cleanPhone = customerPhone.replace(/\D/g, '');
+    setIsVerifyingOtp(true);
+
+    try {
+      const res = await otpApi.verify(cleanPhone, inputOtp.trim());
+      if (res.data?.success) {
+        setVerificationToken(res.data.verificationToken);
+        setIsPhoneVerified(true);
+        setOtpSent(false);
+        setOtpError('');
+        setSubmitError('');
+        setOtpNotice(`✓ Mobile number +91 ${cleanPhone} verified via WhatsApp! Address fields unlocked.`);
+      }
+    } catch (err) {
+      const errMsg = err.response?.data?.message || 'Invalid or expired OTP code. Please check your WhatsApp and try again.';
+      setOtpError(errMsg);
+    } finally {
+      setIsVerifyingOtp(false);
     }
   };
 
-  // Handle Open Payment Gateway Modal
-  const handleOpenPaymentModal = (e) => {
+  // Handle Direct Cab Booking Submission (No Payment Gateway)
+  const handleCreateBooking = async (e) => {
     e.preventDefault();
     setSubmitError('');
 
@@ -192,8 +213,8 @@ export const BookingPage = () => {
       return;
     }
 
-    if (!isPhoneVerified) {
-      setSubmitError('🔒 Mobile Verification Required: Click "Verify Number" to receive & confirm OTP first.');
+    if (!isPhoneVerified || !verificationToken) {
+      setSubmitError('🔒 Mobile Verification Required: Click "Verify Number" to receive and confirm your WhatsApp OTP first.');
       return;
     }
 
@@ -207,17 +228,7 @@ export const BookingPage = () => {
       return;
     }
 
-    // Opens Payment Modal
-    setIsPaymentModalOpen(true);
-  };
-
-  // Handle Final Payment & Booking Submission
-  const handleCompletePayment = async () => {
-    setIsProcessingPayment(true);
-    setSubmitError('');
-
-    const cleanPhone = customerPhone.replace(/\D/g, '');
-    const generatedTxnId = `pay_rzp_${Date.now().toString(36)}${Math.random().toString(36).substring(2, 6)}`;
+    setIsSubmitting(true);
 
     try {
       const payload = {
@@ -239,34 +250,28 @@ export const BookingPage = () => {
         pickupAddress: pickupAddress.trim(),
         dropAddress: tripType === 'LOCAL' ? 'Local City Travel' : dropAddress.trim(),
         notes: notes.trim() || undefined,
-        isPhoneVerified: true,
-        paymentStatus: 'COMPLETED',
-        paymentId: generatedTxnId,
-        paymentMethod: selectedPaymentMethod === 'UPI' ? 'UPI (Google Pay / PhonePe)' : selectedPaymentMethod === 'CARD' ? 'Credit/Debit Card (Razorpay)' : 'Net Banking Gateway',
+        verificationToken,
+        paymentStatus: 'PAY_TO_DRIVER',
+        paymentMethod: 'Pay to Driver / Cash on Pickup',
       };
-
-      // Simulated 1.2s payment gateway handshake delay
-      await new Promise((resolve) => setTimeout(resolve, 1200));
 
       const res = await bookingApi.create(payload);
       if (res.data?.success) {
         setBookingConfirmed({
           ...res.data.data,
-          paymentTxnId: generatedTxnId,
-          paymentMethodName: payload.paymentMethod,
+          paymentMethodName: 'Pay to Driver (Cash / UPI)',
         });
-        setIsPaymentModalOpen(false);
       } else {
-        setSubmitError(res.data?.message || 'Failed to complete transaction.');
+        setSubmitError(res.data?.message || 'Failed to complete booking.');
       }
     } catch (err) {
-      console.error('Payment booking error:', err);
+      console.error('Booking submission error:', err);
       setSubmitError(
         err.response?.data?.message ||
-          'Payment process encountered an error. Please try again.'
+          'Booking process encountered an error. Please try again.'
       );
     } finally {
-      setIsProcessingPayment(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -292,7 +297,7 @@ export const BookingPage = () => {
             </div>
 
             <h2 style={{ fontSize: '1.45rem', fontWeight: 800, color: '#0F172A', marginBottom: '0.25rem' }}>
-              Cab Booking & Payment Confirmed!
+              Cab Booking Confirmed!
             </h2>
             <p style={{ color: '#64748B', fontSize: '0.84rem', marginBottom: '1.1rem' }}>
               Booking Ref ID:{' '}
@@ -322,12 +327,12 @@ export const BookingPage = () => {
                   <strong>{selectedVehicle?.name || 'Executive Cab'}</strong>
                 </div>
                 <div>
-                  <span className="confirmed-label">Payment Status:</span>
-                  <span style={{ color: '#16A34A', fontWeight: 800 }}>✅ PAID & SUCCESSFUL</span>
+                  <span className="confirmed-label">Payment Mode:</span>
+                  <span style={{ color: '#0284C7', fontWeight: 800 }}>Pay to Driver on Trip (Cash / UPI)</span>
                 </div>
                 <div>
-                  <span className="confirmed-label">Payment Transaction ID:</span>
-                  <strong style={{ fontFamily: 'monospace', color: '#0284C7' }}>{bookingConfirmed.paymentTxnId || 'pay_rzp_98231'}</strong>
+                  <span className="confirmed-label">Total Payable:</span>
+                  <strong style={{ color: '#16A34A', fontSize: '1.05rem' }}>₹{fareTotal?.toLocaleString()}</strong>
                 </div>
               </div>
             </div>
@@ -363,7 +368,7 @@ export const BookingPage = () => {
                 </div>
               )}
 
-              <form onSubmit={handleOpenPaymentModal} className="booking-compact-form">
+              <form onSubmit={handleCreateBooking} className="booking-compact-form">
                 {/* Row 1: Name & Mobile */}
                 <div className="booking-input-row-2">
                   {/* Full Name */}
@@ -401,8 +406,12 @@ export const BookingPage = () => {
                         value={customerPhone}
                         disabled={isPhoneVerified}
                         onChange={(e) => {
-                          setCustomerPhone(e.target.value);
+                          const val = e.target.value;
+                          setCustomerPhone(val);
                           setIsPhoneVerified(false);
+                          setVerificationToken('');
+                          setOtpSent(false);
+                          setOtpError('');
                         }}
                         placeholder="10-digit number"
                         maxLength="10"
@@ -414,13 +423,187 @@ export const BookingPage = () => {
                         <button
                           type="button"
                           onClick={handleSendOtp}
-                          disabled={isSendingOtp}
+                          disabled={isSendingOtp || (otpSent && cooldown > 0)}
                           className="btn-otp-trigger"
                         >
-                          {isSendingOtp ? <Loader2 size={12} className="animate-spin" /> : 'Verify Number'}
+                          {isSendingOtp ? (
+                            <Loader2 size={12} className="animate-spin" />
+                          ) : otpSent && cooldown > 0 ? (
+                            `Resend (${cooldown}s)`
+                          ) : otpSent ? (
+                            'Resend OTP'
+                          ) : (
+                            'Verify Number'
+                          )}
                         </button>
                       )}
                     </div>
+
+                    {/* Inline OTP Verification Flow */}
+                    {otpSent && !isPhoneVerified && (
+                      <div
+                        id="inline-otp-section"
+                        style={{
+                          marginTop: '0.65rem',
+                          padding: '0.75rem 0.85rem',
+                          background: '#F0FDF4',
+                          border: '1.5px solid #86EFAC',
+                          borderRadius: '10px',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '0.5rem',
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                          <CheckCircle2 size={14} color="#16A34A" style={{ flexShrink: 0 }} />
+                          <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#15803D' }}>
+                            OTP sent to your WhatsApp number. Please enter it below.
+                          </span>
+                        </div>
+
+                        {otpError && (
+                          <div
+                            id="inline-otp-error"
+                            style={{
+                              color: '#BE123C',
+                              backgroundColor: '#FFE4E6',
+                              border: '1px solid #FECDD3',
+                              padding: '0.4rem 0.6rem',
+                              borderRadius: '6px',
+                              fontSize: '0.72rem',
+                              fontWeight: 600,
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '0.3rem',
+                            }}
+                          >
+                            <AlertCircle size={13} color="#BE123C" style={{ flexShrink: 0 }} />
+                            <span>{otpError}</span>
+                          </div>
+                        )}
+
+                        <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+                          <input
+                            type="text"
+                            id="inline-otp-input"
+                            value={inputOtp}
+                            onChange={(e) => {
+                              setInputOtp(e.target.value.replace(/\D/g, ''));
+                              if (otpError) setOtpError('');
+                            }}
+                            placeholder="Enter OTP"
+                            maxLength="8"
+                            autoFocus
+                            style={{
+                              flex: '1',
+                              minWidth: '0',
+                              height: '34px',
+                              padding: '0 0.6rem',
+                              fontSize: '0.95rem',
+                              letterSpacing: '0.12em',
+                              fontWeight: 700,
+                              fontFamily: 'monospace',
+                              textAlign: 'center',
+                              borderRadius: '6px',
+                              border: '1.5px solid #22C55E',
+                              outline: 'none',
+                              background: '#FFFFFF',
+                              color: '#0F172A',
+                            }}
+                          />
+
+                          <button
+                            type="button"
+                            id="btn-verify-otp-inline"
+                            onClick={handleVerifyOtp}
+                            disabled={isVerifyingOtp || !inputOtp.trim()}
+                            style={{
+                              height: '34px',
+                              padding: '0 0.85rem',
+                              background: '#16A34A',
+                              color: '#FFFFFF',
+                              border: 'none',
+                              borderRadius: '6px',
+                              fontSize: '0.74rem',
+                              fontWeight: 800,
+                              cursor: isVerifyingOtp || !inputOtp.trim() ? 'not-allowed' : 'pointer',
+                              opacity: isVerifyingOtp || !inputOtp.trim() ? 0.6 : 1,
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '0.3rem',
+                              whiteSpace: 'nowrap',
+                              transition: 'all 0.2s ease',
+                            }}
+                          >
+                            {isVerifyingOtp ? (
+                              <>
+                                <Loader2 size={12} className="animate-spin" />
+                                <span>Verifying...</span>
+                              </>
+                            ) : (
+                              <>
+                                <CheckCircle2 size={13} />
+                                <span>Verify OTP</span>
+                              </>
+                            )}
+                          </button>
+
+                          <button
+                            type="button"
+                            id="btn-resend-otp-inline"
+                            onClick={handleSendOtp}
+                            disabled={isSendingOtp || cooldown > 0}
+                            style={{
+                              height: '34px',
+                              padding: '0 0.65rem',
+                              background: '#FFFFFF',
+                              color: cooldown > 0 ? '#94A3B8' : '#0284C7',
+                              border: '1px solid #CBD5E1',
+                              borderRadius: '6px',
+                              fontSize: '0.72rem',
+                              fontWeight: 700,
+                              cursor: isSendingOtp || cooldown > 0 ? 'not-allowed' : 'pointer',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '0.25rem',
+                              whiteSpace: 'nowrap',
+                              transition: 'all 0.2s ease',
+                            }}
+                          >
+                            {isSendingOtp ? (
+                              <Loader2 size={11} className="animate-spin" />
+                            ) : cooldown > 0 ? (
+                              <span>Resend in {cooldown}s</span>
+                            ) : (
+                              <span>Resend OTP</span>
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Inline error if OTP send failed before otpSent became true */}
+                    {otpError && !otpSent && !isPhoneVerified && (
+                      <div
+                        id="inline-otp-send-error"
+                        style={{
+                          marginTop: '0.45rem',
+                          color: '#BE123C',
+                          backgroundColor: '#FFE4E6',
+                          border: '1px solid #FECDD3',
+                          padding: '0.4rem 0.6rem',
+                          borderRadius: '6px',
+                          fontSize: '0.72rem',
+                          fontWeight: 600,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.3rem',
+                        }}
+                      >
+                        <AlertCircle size={13} color="#BE123C" style={{ flexShrink: 0 }} />
+                        <span>{otpError}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -524,12 +707,21 @@ export const BookingPage = () => {
                 {/* Submit Action */}
                 <button
                   type="submit"
-                  disabled={recalculatingQuote}
+                  disabled={recalculatingQuote || isSubmitting}
                   className="booking-confirm-btn"
                 >
-                  <Lock size={16} />
-                  <span>CONFIRM & BOOK CAB NOW (₹{fareTotal?.toLocaleString()})</span>
-                  <ArrowRight size={16} />
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 size={16} className="animate-spin" />
+                      <span>CONFIRMING YOUR BOOKING...</span>
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 size={16} />
+                      <span>CONFIRM & BOOK CAB NOW (₹{fareTotal?.toLocaleString()})</span>
+                      <ArrowRight size={16} />
+                    </>
+                  )}
                 </button>
               </form>
             </div>
@@ -634,255 +826,16 @@ export const BookingPage = () => {
               {/* Trust Badge */}
               <div className="booking-trust-note">
                 <CheckCircle2 size={14} color="#16A34A" style={{ flexShrink: 0 }} />
-                <span>Instant 256-Bit SSL Payment Gateway Integration. All Cards, UPI & NetBanking accepted.</span>
+                <span>Zero Advance Required. Pay directly to the chauffeur on trip completion (Cash / UPI).</span>
               </div>
             </div>
           </div>
         )}
       </main>
 
-      {/* ── POPUP OTP VERIFICATION MODAL ── */}
-      {isOtpModalOpen && (
-        <div className="payment-modal-backdrop">
-          <div className="payment-modal-card" style={{ maxWidth: '420px', padding: '1.5rem', borderRadius: '20px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.85rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: '#E0F2FE', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Phone size={18} color="#0284C7" />
-                </div>
-                <div>
-                  <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
-                    Verify Mobile Number
-                  </h3>
-                  <span style={{ fontSize: '0.72rem', color: '#64748B' }}>
-                    Sent to +91 {customerPhone}
-                  </span>
-                </div>
-              </div>
 
-              <button
-                type="button"
-                onClick={() => setIsOtpModalOpen(false)}
-                style={{ background: '#F1F5F9', border: 'none', borderRadius: '8px', width: '30px', height: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
-              >
-                <X size={16} color="#64748B" />
-              </button>
-            </div>
 
-            {import.meta.env.DEV && (
-              <div style={{ background: '#F0F9FF', border: '1px solid #BAE6FD', padding: '0.65rem 0.85rem', borderRadius: '10px', fontSize: '0.78rem', color: '#0369A1', fontWeight: 700, marginBottom: '1.25rem', textAlign: 'center' }}>
-                🔑 [Dev Mode Simulation] Verification Code: <span style={{ fontSize: '1.15rem', fontWeight: 900, letterSpacing: '0.12em', color: '#0284C7' }}>{generatedOtp}</span>
-              </div>
-            )}
 
-            <div style={{ marginBottom: '1.25rem', textAlign: 'center' }}>
-              <label style={{ display: 'block', fontSize: '0.72rem', fontWeight: 800, color: '#475569', marginBottom: '0.45rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                Enter 4-Digit OTP Code
-              </label>
-              <input
-                type="text"
-                value={inputOtp}
-                onChange={(e) => setInputOtp(e.target.value)}
-                placeholder="• • • •"
-                maxLength="4"
-                autoFocus
-                style={{ width: '180px', height: '46px', margin: '0 auto', fontSize: '1.35rem', letterSpacing: '0.3em', fontFamily: 'monospace', fontWeight: 900, textAlign: 'center', borderRadius: '12px', border: '2px solid #0284C7', outline: 'none', background: '#F8FAFC' }}
-              />
-            </div>
-
-            {otpError && (
-              <div style={{ color: '#E11D48', fontSize: '0.76rem', fontWeight: 700, marginBottom: '0.85rem', textAlign: 'center' }}>
-                {otpError}
-              </div>
-            )}
-
-            <button
-              type="button"
-              onClick={handleVerifyOtp}
-              className="pay-btn-glow"
-              style={{ width: '100%', margin: '0', height: '46px', fontSize: '0.88rem' }}
-            >
-              <CheckCircle2 size={18} />
-              <span>VERIFY OTP & CONTINUE</span>
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* ── SECURED PAYMENT GATEWAY MODAL (Razorpay / Instant UPI Payment) ── */}
-      {isPaymentModalOpen && (
-        <div className="payment-modal-backdrop">
-          <div className="payment-modal-card">
-            {/* Modal Header */}
-            <div className="payment-modal-header">
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <ShieldCheck size={20} color="#10B981" />
-                  <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#FFFFFF', margin: 0 }}>
-                    Secured Payment Gateway
-                  </h3>
-                </div>
-                <p style={{ fontSize: '0.74rem', color: '#94A3B8', margin: '0.2rem 0 0 0' }}>
-                  Pune ↔ Mumbai Private Travels • Instant Fare Checkout
-                </p>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setIsPaymentModalOpen(false)}
-                className="payment-modal-close-btn"
-              >
-                <X size={18} color="#FFFFFF" />
-              </button>
-            </div>
-
-            {/* Amount Summary Strip */}
-            <div className="payment-summary-strip">
-              <div>
-                <span style={{ fontSize: '0.7rem', color: '#64748B', fontWeight: 700, textTransform: 'uppercase' }}>
-                  Total Amount Payable
-                </span>
-                <div style={{ fontSize: '1.6rem', fontWeight: 900, color: '#0284C7', lineHeight: 1 }}>
-                  ₹{fareTotal?.toLocaleString()}
-                </div>
-              </div>
-
-              <div style={{ textAlign: 'right' }}>
-                <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#0F172A', display: 'block' }}>
-                  {selectedVehicle?.name || 'Executive Sedan'}
-                </span>
-                <span style={{ fontSize: '0.7rem', color: '#16A34A', fontWeight: 700 }}>
-                  ✓ Expressway Toll & Tax Included
-                </span>
-              </div>
-            </div>
-
-            {/* Payment Method Tabs */}
-            <div className="payment-method-bar">
-              <button
-                type="button"
-                className={`payment-method-pill ${selectedPaymentMethod === 'UPI' ? 'active' : ''}`}
-                onClick={() => setSelectedPaymentMethod('UPI')}
-              >
-                <QrCode size={15} />
-                <span>UPI / QR</span>
-              </button>
-
-              <button
-                type="button"
-                className={`payment-method-pill ${selectedPaymentMethod === 'CARD' ? 'active' : ''}`}
-                onClick={() => setSelectedPaymentMethod('CARD')}
-              >
-                <CreditCard size={15} />
-                <span>Razorpay / Card</span>
-              </button>
-
-              <button
-                type="button"
-                className={`payment-method-pill ${selectedPaymentMethod === 'NETBANKING' ? 'active' : ''}`}
-                onClick={() => setSelectedPaymentMethod('NETBANKING')}
-              >
-                <Building size={15} />
-                <span>Net Banking</span>
-              </button>
-            </div>
-
-            {/* Payment Option Form */}
-            <div className="payment-form-body">
-              {selectedPaymentMethod === 'UPI' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                  <label className="booking-form-label">Enter VPA / UPI ID (Google Pay, PhonePe, Paytm)</label>
-                  <input
-                    type="text"
-                    value={upiId}
-                    onChange={(e) => setUpiId(e.target.value)}
-                    placeholder="e.g. 9876543210@paytm / name@upi"
-                    className="booking-form-control"
-                    style={{ fontSize: '0.9rem', padding: '0 1rem' }}
-                  />
-
-                  <div style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', padding: '0.65rem 0.85rem', borderRadius: '10px', fontSize: '0.76rem', color: '#475569' }}>
-                    💡 <strong>Instant Payment Handshake:</strong> A collect request will be sent to your UPI app.
-                  </div>
-                </div>
-              )}
-
-              {selectedPaymentMethod === 'CARD' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
-                  <div>
-                    <label className="booking-form-label">Card Number</label>
-                    <input
-                      type="text"
-                      value={cardNumber}
-                      onChange={(e) => setCardNumber(e.target.value)}
-                      placeholder="4532 •••• •••• 8921"
-                      maxLength="19"
-                      className="booking-form-control"
-                    />
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.65rem' }}>
-                    <div>
-                      <label className="booking-form-label">Expiry Date</label>
-                      <input
-                        type="text"
-                        value={cardExpiry}
-                        onChange={(e) => setCardExpiry(e.target.value)}
-                        placeholder="MM/YY"
-                        maxLength="5"
-                        className="booking-form-control"
-                      />
-                    </div>
-                    <div>
-                      <label className="booking-form-label">CVV</label>
-                      <input
-                        type="password"
-                        value={cardCvv}
-                        onChange={(e) => setCardCvv(e.target.value)}
-                        placeholder="•••"
-                        maxLength="4"
-                        className="booking-form-control"
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {selectedPaymentMethod === 'NETBANKING' && (
-                <div>
-                  <label className="booking-form-label">Select Bank</label>
-                  <select className="booking-form-control" style={{ width: '100%' }}>
-                    <option value="HDFC">HDFC Bank</option>
-                    <option value="ICICI">ICICI Bank</option>
-                    <option value="SBI">State Bank of India (SBI)</option>
-                    <option value="AXIS">Axis Bank</option>
-                    <option value="KOTAK">Kotak Mahindra Bank</option>
-                  </select>
-                </div>
-              )}
-            </div>
-
-            {/* Complete Payment Button */}
-            <button
-              type="button"
-              onClick={handleCompletePayment}
-              disabled={isProcessingPayment}
-              className="pay-btn-glow"
-            >
-              {isProcessingPayment ? (
-                <>
-                  <Loader2 size={18} className="animate-spin" />
-                  <span>Processing Bank Gateway Handshake...</span>
-                </>
-              ) : (
-                <>
-                  <Lock size={18} />
-                  <span>PAY ₹{fareTotal?.toLocaleString()} & COMPLETE BOOKING</span>
-                </>
-              )}
-            </button>
-          </div>
-        </div>
-      )}
 
       <Footer />
     </div>
