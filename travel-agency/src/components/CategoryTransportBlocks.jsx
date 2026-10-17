@@ -1,60 +1,28 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { ArrowRight, Car, CheckCircle2 } from 'lucide-react';
+import { homepageContent } from '../data/homepageContent';
 
 export const CategoryTransportBlocks = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('ALL');
 
+  const catData = homepageContent.categoriesSection;
+  const categories = catData.categories || [];
+
   const handleBookCategory = (catTitle, r) => {
     let category = 'SEDAN';
     if (catTitle.includes('SUV')) category = 'SUV';
-    else if (catTitle.includes('MINI') || catTitle.includes('BUS')) category = 'TEMPO_TRAVELLER';
+    else if (catTitle.includes('MINI') || catTitle.includes('TEMPO') || catTitle.includes('BUS')) category = 'TEMPO_TRAVELLER';
 
     const params = new URLSearchParams({
       tripType: 'ONE_WAY',
-      pickupId: r.from,
-      dropId: r.to,
+      pickupId: r.from.toLowerCase(),
+      dropId: r.to.toLowerCase(),
       category,
     });
     navigate(`/fare?${params.toString()}`);
   };
-
-  const categories = [
-    {
-      id: 'cabs',
-      title: 'OUTSTATION CABS',
-      badge: '4 SEATER SEDAN',
-      bgImg: '/assets/sedan.webp',
-      routes: [
-        { from: 'PUNE', to: 'MUMBAI', type: 'One-Way Express', est: '₹2,490*', note: 'All-Inclusive Toll & Tax' },
-        { from: 'MUMBAI', to: 'PUNE', type: 'One-Way Express', est: '₹2,490*', note: 'Doorstep Pickup Included' },
-        { from: 'HINJAWADI', to: 'BKC MUMBAI', type: 'Executive Cab', est: '₹2,750*', note: 'Corporate Express Corridor' }
-      ]
-    },
-    {
-      id: 'suv',
-      title: 'SPACIOUS SUVS',
-      badge: '6 SEATER SUV',
-      bgImg: '/assets/suv.webp',
-      routes: [
-        { from: 'PUNE AIRPORT', to: 'MUMBAI (BOM)', type: '6-Seater SUV', est: '₹3,490*', note: 'Flight Tracked Guarantee' },
-        { from: 'MUMBAI (BOM)', to: 'PUNE CITY', type: '6-Seater SUV', est: '₹3,490*', note: 'Extra Boot Luggage Space' },
-        { from: 'WAKAD / BANER', to: 'ANDHERI / POWAI', type: 'Family SUV', est: '₹3,250*', note: 'Reclining AC Comfort' }
-      ]
-    },
-    {
-      id: 'minibus',
-      title: 'GROUP MINI BUS',
-      badge: '12-20 SEATER TEMPO',
-      bgImg: '/assets/pune-mumbai-travel-banner.webp',
-      routes: [
-        { from: 'PUNE', to: 'MUMBAI', type: '12-Seater Tempo', est: '₹6,490*', note: 'Pushback Luxury Seats' },
-        { from: 'MUMBAI', to: 'PUNE', type: '17-Seater Tempo', est: '₹7,990*', note: 'Dedicated Aisle & Music' },
-        { from: 'PUNE / MUMBAI', to: 'WEDDING VENUE', type: '20-Seater Coach', est: '₹9,990*', note: 'Intercity State Permit' }
-      ]
-    }
-  ];
 
   const displayedCategories = activeTab === 'ALL'
     ? categories
@@ -65,11 +33,9 @@ export const CategoryTransportBlocks = () => {
       <div className="container">
         {/* Section Header */}
         <div className="category-section-header">
-          <span className="eyebrow-chip">EXPRESS TRANSPORT CATEGORIES</span>
-          <h2>Pune ↔ Mumbai Fleet Fares</h2>
-          <p>
-            Choose your preferred vehicle tier for instant fare estimates and direct online booking.
-          </p>
+          <span className="eyebrow-chip">{catData.badge}</span>
+          <h2>{catData.title}</h2>
+          <p>{catData.subtitle}</p>
         </div>
 
         {/* Category Pill Navigation Bar */}
@@ -115,7 +81,7 @@ export const CategoryTransportBlocks = () => {
             <div key={cat.id} className="category-transport-card">
               {/* Left Media Image Banner */}
               <div className="category-banner-side">
-                <img src={cat.bgImg} alt={cat.title} className="category-banner-img" />
+                <img src={cat.bgImg} alt={cat.title} className="category-banner-img" loading="lazy" decoding="async" />
                 <div className="category-banner-overlay">
                   <span className="category-badge-chip">{cat.badge}</span>
                   <h3 className="category-banner-heading">{cat.title}</h3>
@@ -134,6 +100,12 @@ export const CategoryTransportBlocks = () => {
                       </div>
                       <span className="route-type-tag">{r.type}</span>
                     </div>
+
+                    {r.link && (
+                      <Link to={r.link} className="route-guide-link">
+                        View Destination Guide & Rates →
+                      </Link>
+                    )}
 
                     <div className="tile-price-bottom">
                       <div className="price-stack">
@@ -166,9 +138,10 @@ export const CategoryTransportBlocks = () => {
 
       <style>{`
         .category-blocks-section {
-          background: #F8FAFC;
-          padding-top: 4rem;
-          padding-bottom: 4.5rem;
+          background: #F1F5F9;
+          padding-top: 4.5rem;
+          padding-bottom: 5rem;
+          border-top: 1px solid #E2E8F0;
         }
 
         .category-section-header {
@@ -179,25 +152,27 @@ export const CategoryTransportBlocks = () => {
         .eyebrow-chip {
           display: inline-block;
           font-family: var(--font-heading);
-          font-size: 0.76rem;
+          font-size: 0.74rem;
           font-weight: 800;
           letter-spacing: 0.08em;
           color: #0284C7;
           background: #E0F2FE;
-          padding: 0.3rem 0.85rem;
+          padding: 0.35rem 0.9rem;
           border-radius: 9999px;
-          margin-bottom: 0.5rem;
+          border: 1px solid #BAE6FD;
+          margin-bottom: 0.6rem;
         }
 
         .category-section-header h2 {
-          font-size: 2.1rem;
-          font-weight: 800;
+          font-size: 2.25rem;
+          font-weight: 900;
           color: #0F172A;
-          margin-bottom: 0.35rem;
+          margin-bottom: 0.4rem;
+          letter-spacing: -0.02em;
         }
 
         .category-section-header p {
-          font-size: 0.92rem;
+          font-size: 0.95rem;
           color: #64748B;
           max-width: 580px;
           margin: 0 auto;
@@ -217,8 +192,8 @@ export const CategoryTransportBlocks = () => {
           background: #FFFFFF;
           padding: 0.4rem;
           border-radius: 9999px;
-          border: 1.5px solid #E2E8F0;
-          box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
+          border: 1.5px solid #CBD5E1;
+          box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05);
           flex-wrap: wrap;
         }
 
@@ -241,12 +216,12 @@ export const CategoryTransportBlocks = () => {
         }
 
         .pill-tab-btn.active {
-          background: linear-gradient(135deg, #0284C7 0%, #0369A1 100%);
+          background: linear-gradient(135deg, #1D4ED8 0%, #1E40AF 100%);
           color: #FFFFFF;
-          box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35);
+          box-shadow: 0 4px 14px rgba(29, 78, 216, 0.35);
         }
 
-        /* Category Card Block */
+        /* Category Card Block — Balanced Enterprise Surface */
         .category-blocks-list {
           display: flex;
           flex-direction: column;
@@ -256,8 +231,8 @@ export const CategoryTransportBlocks = () => {
         .category-transport-card {
           background: #FFFFFF;
           border-radius: 24px;
-          border: 1.5px solid #E2E8F0;
-          box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
+          border: 1px solid #CBD5E1;
+          box-shadow: 0 4px 20px rgba(15, 23, 42, 0.06);
           padding: 1.25rem;
           display: grid;
           grid-template-columns: 240px 1fr;
@@ -266,8 +241,8 @@ export const CategoryTransportBlocks = () => {
         }
 
         .category-transport-card:hover {
-          box-shadow: 0 16px 40px rgba(15, 23, 42, 0.09);
-          border-color: #CBD5E1;
+          box-shadow: 0 12px 32px rgba(15, 23, 42, 0.12);
+          border-color: #93C5FD;
         }
 
         /* Left Banner Side */
@@ -282,12 +257,17 @@ export const CategoryTransportBlocks = () => {
           width: 100%;
           height: 100%;
           object-fit: cover;
+          transition: transform 0.4s ease;
+        }
+
+        .category-transport-card:hover .category-banner-img {
+          transform: scale(1.04);
         }
 
         .category-banner-overlay {
           position: absolute;
           inset: 0;
-          background: linear-gradient(to top, rgba(15, 23, 42, 0.9) 0%, rgba(15, 23, 42, 0.25) 60%, rgba(0,0,0,0) 100%);
+          background: linear-gradient(to top, rgba(15, 23, 42, 0.95) 0%, rgba(15, 23, 42, 0.35) 60%, rgba(0,0,0,0) 100%);
           padding: 1.25rem;
           display: flex;
           flex-direction: column;
@@ -300,12 +280,12 @@ export const CategoryTransportBlocks = () => {
           font-size: 0.68rem;
           font-weight: 800;
           letter-spacing: 0.06em;
-          background: rgba(255, 255, 255, 0.2);
+          background: rgba(29, 78, 216, 0.85);
           backdrop-filter: blur(8px);
           color: #FFFFFF;
           padding: 0.25rem 0.65rem;
           border-radius: 9999px;
-          border: 1px solid rgba(255, 255, 255, 0.3);
+          border: 1px solid rgba(147, 197, 253, 0.4);
         }
 
         .category-banner-heading {
@@ -318,7 +298,7 @@ export const CategoryTransportBlocks = () => {
           text-shadow: 0 2px 8px rgba(0,0,0,0.5);
         }
 
-        /* Right Offers Grid */
+        /* Right Offers Grid — Balanced Surface & Contrast */
         .category-offers-grid {
           display: grid;
           grid-template-columns: repeat(3, 1fr);
@@ -338,8 +318,8 @@ export const CategoryTransportBlocks = () => {
 
         .route-offer-tile:hover {
           background: #FFFFFF;
-          border-color: #0284C7;
-          box-shadow: 0 8px 24px rgba(2, 132, 199, 0.12);
+          border-color: #93C5FD;
+          box-shadow: 0 8px 24px rgba(29, 78, 216, 0.08);
           transform: translateY(-3px);
         }
 
@@ -357,23 +337,23 @@ export const CategoryTransportBlocks = () => {
 
         .loc-pill {
           font-family: var(--font-heading);
-          font-size: 0.82rem;
+          font-size: 0.8rem;
           font-weight: 800;
           color: #0F172A;
           background: #FFFFFF;
           padding: 0.3rem 0.55rem;
           border-radius: 8px;
-          border: 1px solid #E2E8F0;
+          border: 1px solid #CBD5E1;
         }
 
         .dest-pill {
-          color: #0284C7;
-          border-color: #BAE6FD;
-          background: #F0F9FF;
+          color: #1D4ED8;
+          border-color: #BFDBFE;
+          background: #EFF6FF;
         }
 
         .loc-arrow-divider {
-          color: #0284C7;
+          color: #1D4ED8;
           font-weight: 800;
           font-size: 0.8rem;
         }
@@ -391,6 +371,21 @@ export const CategoryTransportBlocks = () => {
           gap: 0.85rem;
         }
 
+        .route-guide-link {
+          display: inline-block;
+          font-size: 0.76rem;
+          font-weight: 700;
+          color: #2563EB;
+          text-decoration: none;
+          margin-top: 0.35rem;
+          transition: color 0.2s ease;
+        }
+
+        .route-guide-link:hover {
+          color: #1D4ED8;
+          text-decoration: underline;
+        }
+
         .price-stack {
           display: flex;
           flex-direction: column;
@@ -401,20 +396,20 @@ export const CategoryTransportBlocks = () => {
           font-size: 0.64rem;
           font-weight: 800;
           letter-spacing: 0.06em;
-          color: #94A3B8;
+          color: #64748B;
         }
 
         .price-val-main {
           font-family: var(--font-heading);
           font-size: 1.45rem;
           font-weight: 800;
-          color: #0284C7;
+          color: #0F172A;
           line-height: 1;
         }
 
         .price-note-txt {
           font-size: 0.72rem;
-          color: #10B981;
+          color: #059669;
           font-weight: 600;
           display: inline-flex;
           align-items: center;
@@ -424,7 +419,7 @@ export const CategoryTransportBlocks = () => {
 
         .btn-book-tile {
           width: 100%;
-          background: linear-gradient(135deg, #0284C7 0%, #0369A1 100%);
+          background: linear-gradient(135deg, #1D4ED8 0%, #1E40AF 100%);
           color: #FFFFFF;
           border: none;
           padding: 0.7rem 1rem;
@@ -438,13 +433,13 @@ export const CategoryTransportBlocks = () => {
           justify-content: center;
           gap: 0.5rem;
           cursor: pointer;
-          box-shadow: 0 4px 14px rgba(2, 132, 199, 0.25);
+          box-shadow: 0 4px 14px rgba(29, 78, 216, 0.35);
           transition: all 0.2s ease;
         }
 
         .btn-book-tile:hover {
-          background: linear-gradient(135deg, #0369A1 0%, #075985 100%);
-          box-shadow: 0 6px 18px rgba(2, 132, 199, 0.4);
+          background: linear-gradient(135deg, #1E40AF 0%, #172554 100%);
+          box-shadow: 0 6px 18px rgba(29, 78, 216, 0.5);
           transform: translateY(-1px);
         }
 

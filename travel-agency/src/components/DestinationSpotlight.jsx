@@ -1,85 +1,24 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Building2, Compass, Plane, MapPin, Navigation, MessageSquare, Clock, ArrowRight, Car } from 'lucide-react';
+import { useNavigate, Link } from 'react-router-dom';
+import { Building2, Compass, Plane, MapPin, Navigation, MessageSquare, Clock, ArrowRight, Car, Sparkles, Landmark } from 'lucide-react';
 import { getWhatsAppLink } from '../utils/whatsapp';
+import { homepageContent } from '../data/homepageContent';
+
+const ICON_MAP = {
+  'pune-mumbai': Building2,
+  'mahabaleshwar': Compass,
+  'shirdi': Landmark,
+  'lonavala': Navigation,
+  'nashik': MapPin,
+  'alibaug-goa': Plane,
+};
 
 export const DestinationSpotlight = () => {
   const navigate = useNavigate();
+  const spotlightData = homepageContent.destinationsSpotlight;
+  const destinations = spotlightData.destinations || [];
 
-  const destinations = [
-    {
-      id: 'hinjawadi',
-      name: 'Hinjawadi',
-      city: 'Pune',
-      title: 'HINJAWADI IT HUB',
-      tagline: 'India\'s Premier Rajiv Gandhi Infotech Park Phase 1, 2 & 3.',
-      image: '/assets/sedan.webp',
-      icon: Building2,
-      desc: 'Connect seamlessly from Hinjawadi Phase 1, Phase 2, Phase 3, and Maan tech hubs directly to Mumbai, BKC, and Mumbai International Airport.',
-      popularRoute: 'Hinjawadi → Mumbai (BKC / Andheri)',
-      estTime: '3 Hours 15 Mins',
-      pickupKey: 'hinjawadi',
-      dropKey: 'mumbai',
-    },
-    {
-      id: 'bkc',
-      name: 'BKC Mumbai',
-      city: 'Mumbai',
-      title: 'BKC FINANCIAL HUB',
-      tagline: 'Bandra Kurla Complex - Mumbai\'s Executive Business District.',
-      image: '/assets/suv.webp',
-      icon: Building2,
-      desc: 'Executive chauffeured cars for corporate delegates travelling between Pune and major financial headquarters in Bandra Kurla Complex.',
-      popularRoute: 'BKC → Pune (Hinjawadi / Wakad / Kothrud)',
-      estTime: '3 Hours 30 Mins',
-      pickupKey: 'bkc',
-      dropKey: 'pune',
-    },
-    {
-      id: 'bom_airport',
-      name: 'Mumbai Airport',
-      city: 'Mumbai',
-      title: 'MUMBAI AIRPORT (BOM)',
-      tagline: 'Chhatrapati Shivaji Maharaj International Airport T1 & T2.',
-      image: '/assets/pune-to-mumbai-premium-travel-banner.webp',
-      icon: Plane,
-      desc: 'Punctual flight-tracked private airport transfers connecting all Pune localities with Mumbai International & Domestic departure terminals.',
-      popularRoute: 'Pune City → Mumbai Airport (BOM T2)',
-      estTime: '3.5 Hours Express',
-      pickupKey: 'pune',
-      dropKey: 'mumbai airport',
-    },
-    {
-      id: 'pnq_airport',
-      name: 'Pune Airport',
-      city: 'Pune',
-      title: 'PUNE AIRPORT (PNQ)',
-      tagline: 'Lohegaon Pune Airport Express Pickup & Drop Corridor.',
-      image: '/assets/sedan.webp',
-      icon: Plane,
-      desc: 'Direct airport taxi pickup from Pune Airport arrival gates straight to Mumbai residential, corporate, or hotel destinations.',
-      popularRoute: 'Pune Airport (PNQ) → Mumbai City',
-      estTime: '3.5 Hours Express',
-      pickupKey: 'pune airport',
-      dropKey: 'mumbai',
-    },
-    {
-      id: 'south_mumbai',
-      name: 'South Mumbai',
-      city: 'Mumbai',
-      title: 'MARINE DRIVE & SOUTH MUMBAI',
-      tagline: 'Coastal Road, Bandra-Worli Sea Link, and Colaba Heritage Corridor.',
-      image: '/assets/suv.webp',
-      icon: Navigation,
-      desc: 'Travel in luxury via the Bandra-Worli Sea Link to Marine Drive, Nariman Point, and Gateway of India with doorstep pickup.',
-      popularRoute: 'Pune → Marine Drive / Colaba',
-      estTime: '3 Hours 45 Mins',
-      pickupKey: 'pune',
-      dropKey: 'mumbai',
-    }
-  ];
-
-  const [selectedDest, setSelectedDest] = useState(destinations[0]);
+  const [selectedDest, setSelectedDest] = useState(destinations[0] || {});
 
   const handleBookDestination = (dest) => {
     // Notify homepage booking form if present
@@ -104,32 +43,41 @@ export const DestinationSpotlight = () => {
   };
 
   return (
-    <section className="section-padding bg-cream" style={{ paddingTop: '3.5rem', paddingBottom: '4rem' }}>
+    <section className="section-padding bg-white" style={{ paddingTop: '4.5rem', paddingBottom: '5rem', position: 'relative' }}>
       <div className="container">
-        {/* Section Header */}
-        <div className="campaign-title-block" style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <h2 style={{ fontSize: '2rem', fontWeight: 800, color: '#0F172A', margin: '0 0 0.4rem 0' }}>
-            Top Pune ↔ Mumbai Destinations
+        {/* Lovable Modern Section Header */}
+        <div className="lovable-section-header">
+          <div className="lovable-badge">
+            <Sparkles size={13} />
+            <span>{spotlightData.badge}</span>
+          </div>
+          <h2 className="lovable-title">
+            {spotlightData.title}
           </h2>
-          <p style={{ fontSize: '0.9rem', color: '#64748B', maxWidth: '560px', margin: '0 auto' }}>
-            Direct doorstep cab service across prime tech corridors, international airports & executive business hubs.
+          <p className="lovable-subtitle">
+            {spotlightData.subtitle}
           </p>
+          <div className="lovable-divider">
+            <div className="lovable-divider-line"></div>
+            <div className="lovable-divider-dot"></div>
+            <div className="lovable-divider-line right"></div>
+          </div>
         </div>
 
         {/* Icon Selector Cards Bar */}
         <div className="dest-icon-strip">
-          {destinations.map((d) => {
-            const Icon = d.icon;
+          {destinations.map((d, idx) => {
+            const Icon = ICON_MAP[d.id] || MapPin;
             const isSelected = selectedDest.id === d.id;
             return (
               <button
                 key={d.id}
                 type="button"
-                className={`dest-icon-card ${isSelected ? 'active' : ''}`}
+                className={`dest-icon-card ${isSelected ? 'active' : ''} stagger-${(idx % 5) + 1}`}
                 onClick={() => setSelectedDest(d)}
               >
                 <div className="dest-icon-box">
-                  <Icon size={24} color={isSelected ? '#0284C7' : '#64748B'} />
+                  <Icon size={22} color={isSelected ? '#FFFFFF' : '#2563EB'} />
                 </div>
                 <span className="dest-icon-name">{d.name}</span>
                 <span className="dest-icon-city">{d.city}</span>
@@ -168,15 +116,25 @@ export const DestinationSpotlight = () => {
                   className="btn-emerald-glowing"
                 >
                   <Car size={18} />
-                  <span>BOOK TAXI TO {selectedDest.name.toUpperCase()}</span>
+                  <span>BOOK CAB TO {selectedDest.name.toUpperCase()}</span>
                   <ArrowRight size={16} />
                 </button>
 
+                {selectedDest.url && (
+                  <Link
+                    to={selectedDest.url}
+                    className="btn-spotlight-guide"
+                  >
+                    <span>Read Travel Guide</span>
+                    <ArrowRight size={15} />
+                  </Link>
+                )}
+
                 <a
                   href={getWhatsAppLink({
-                    from: selectedDest.name,
-                    to: selectedDest.city === 'Pune' ? 'Mumbai' : 'Pune',
-                    tripType: 'Destination Focus'
+                    from: 'Pune',
+                    to: selectedDest.name,
+                    tripType: 'Outstation Cab'
                   })}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -195,6 +153,8 @@ export const DestinationSpotlight = () => {
                   src={selectedDest.image}
                   alt={selectedDest.title}
                   className="spotlight-media-img"
+                  loading="lazy"
+                  decoding="async"
                 />
                 <div className="spotlight-media-overlay">
                   <span className="media-chip">
@@ -210,27 +170,27 @@ export const DestinationSpotlight = () => {
 
       <style>{`
         .btn-emerald-glowing {
-          background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+          background: linear-gradient(135deg, #1D4ED8 0%, #1E40AF 100%);
           color: #FFFFFF;
           font-family: var(--font-heading);
-          font-size: 0.95rem;
-          font-weight: 800;
-          letter-spacing: 0.03em;
-          padding: 0.85rem 1.6rem;
-          border-radius: 14px;
+          font-size: 0.9rem;
+          font-weight: 700;
+          letter-spacing: 0.02em;
+          padding: 0.75rem 1.45rem;
+          border-radius: 12px;
           border: none;
           display: inline-flex;
           align-items: center;
-          gap: 0.65rem;
-          box-shadow: 0 6px 22px rgba(16, 185, 129, 0.45);
-          transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+          gap: 0.55rem;
+          box-shadow: 0 4px 14px rgba(29, 78, 216, 0.35);
+          transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
           cursor: pointer;
         }
 
         .btn-emerald-glowing:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 10px 28px rgba(16, 185, 129, 0.6);
-          background: linear-gradient(135deg, #34D399 0%, #10B981 100%);
+          transform: translateY(-1px);
+          box-shadow: 0 6px 18px rgba(29, 78, 216, 0.45);
+          background: linear-gradient(135deg, #1E40AF 0%, #172554 100%);
         }
 
         .btn-emerald-glowing:active {
@@ -238,14 +198,14 @@ export const DestinationSpotlight = () => {
         }
 
         .btn-whatsapp-outline {
-          background: rgba(255, 255, 255, 0.06);
-          border: 1.5px solid rgba(255, 255, 255, 0.2);
-          color: #FFFFFF;
+          background: rgba(37, 211, 102, 0.12);
+          border: 1.5px solid rgba(37, 211, 102, 0.4);
+          color: #4ADE80;
           font-family: var(--font-heading);
-          font-size: 0.9rem;
+          font-size: 0.875rem;
           font-weight: 700;
-          padding: 0.85rem 1.35rem;
-          border-radius: 14px;
+          padding: 0.75rem 1.25rem;
+          border-radius: 12px;
           display: inline-flex;
           align-items: center;
           gap: 0.5rem;
@@ -254,10 +214,10 @@ export const DestinationSpotlight = () => {
         }
 
         .btn-whatsapp-outline:hover {
-          background: rgba(37, 211, 102, 0.15);
-          border-color: #25D366;
-          color: #FFFFFF;
-          transform: translateY(-2px);
+          background: rgba(37, 211, 102, 0.22);
+          border-color: #22C55E;
+          color: #86EFAC;
+          transform: translateY(-1px);
         }
 
         .dest-icon-strip {
@@ -265,7 +225,7 @@ export const DestinationSpotlight = () => {
           align-items: center;
           justify-content: center;
           gap: 1rem;
-          margin-bottom: 2.25rem;
+          margin-bottom: 2.5rem;
           flex-wrap: wrap;
         }
 
@@ -278,68 +238,76 @@ export const DestinationSpotlight = () => {
           flex-direction: column;
           align-items: center;
           text-align: center;
-          border: 1.5px solid #E2E8F0;
-          box-shadow: 0 2px 8px rgba(15, 23, 42, 0.03);
-          transition: all 0.25s ease;
+          border: 1.5px solid #DCE3EB;
+          box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+          transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
           cursor: pointer;
         }
 
         .dest-icon-card:hover {
-          border-color: #BAE6FD;
-          transform: translateY(-2px);
-          box-shadow: 0 6px 18px rgba(2, 132, 199, 0.08);
+          border-color: #93C5FD;
+          transform: translateY(-3px);
+          box-shadow: 0 8px 24px rgba(37, 99, 235, 0.1);
         }
 
         .dest-icon-card.active {
-          background: #F0F9FF;
-          border-color: #0284C7;
-          box-shadow: 0 8px 24px rgba(2, 132, 199, 0.15);
-          transform: translateY(-3px);
+          background: #EFF6FF;
+          border-color: #2563EB;
+          box-shadow: 0 8px 24px rgba(37, 99, 235, 0.16);
+          transform: translateY(-2px);
         }
 
         .dest-icon-box {
           width: 44px;
           height: 44px;
           border-radius: 12px;
-          background: #F8FAFC;
+          background: #EFF6FF;
+          border: 1px solid #BFDBFE;
           display: flex;
           align-items: center;
           justify-content: center;
-          margin-bottom: 0.4rem;
+          margin-bottom: 0.5rem;
+          transition: all 0.2s ease;
         }
 
         .dest-icon-card.active .dest-icon-box {
-          background: #E0F2FE;
+          background: #2563EB;
+          border-color: #2563EB;
         }
 
         .dest-icon-name {
           font-family: var(--font-heading);
           font-size: 0.92rem;
           font-weight: 800;
-          color: #0F172A;
+          color: #17324D;
           line-height: 1.2;
+        }
+
+        .dest-icon-card.active .dest-icon-name {
+          color: #1D4ED8;
         }
 
         .dest-icon-city {
           font-size: 0.72rem;
           color: #64748B;
-          margin-top: 0.15rem;
-          font-weight: 600;
+          margin-top: 0.2rem;
+          font-weight: 700;
+          letter-spacing: 0.02em;
         }
 
         .spotlight-card-wrapper {
-          background: var(--bg-dark-navy);
-          border-radius: 28px;
-          padding: 3rem;
-          border: 1px solid var(--border-gold);
-          box-shadow: 0 20px 40px rgba(7, 17, 31, 0.3);
-          color: #FFFFFF;
+          background: linear-gradient(145deg, #0B111E 0%, #0F172A 100%);
+          border-radius: 24px;
+          padding: 2.75rem;
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25), 0 0 30px rgba(37, 99, 235, 0.08);
+          color: #F8FAFC;
         }
 
         .spotlight-2col-grid {
           display: grid;
-          grid-template-columns: 1.1fr 0.9fr;
-          gap: 3rem;
+          grid-template-columns: 1.15fr 0.85fr;
+          gap: 2.5rem;
           align-items: center;
         }
 
@@ -352,37 +320,38 @@ export const DestinationSpotlight = () => {
 
         .spotlight-eyebrow {
           font-family: var(--font-heading);
-          font-size: 0.78rem;
+          font-size: 0.72rem;
           font-weight: 800;
-          letter-spacing: 0.1em;
-          color: var(--accent-gold-warm);
+          letter-spacing: 0.08em;
+          color: #60A5FA;
           margin-bottom: 0.6rem;
-          background: rgba(216, 174, 85, 0.12);
-          padding: 0.25rem 0.75rem;
+          background: rgba(37, 99, 235, 0.2);
+          padding: 0.3rem 0.85rem;
           border-radius: 9999px;
-          border: 1px solid var(--border-gold);
+          border: 1px solid rgba(96, 165, 250, 0.4);
         }
 
         .spotlight-title {
-          font-size: 2.2rem;
-          font-weight: 800;
+          font-size: 2.1rem;
+          font-weight: 900;
           line-height: 1.15;
-          margin-bottom: 0.6rem;
+          margin-bottom: 0.4rem;
           color: #FFFFFF;
+          letter-spacing: -0.02em;
         }
 
         .spotlight-tagline {
-          font-size: 1.05rem;
-          color: #D1D5DB;
-          font-weight: 600;
-          margin-bottom: 1rem;
+          font-size: 0.98rem;
+          color: #38BDF8;
+          font-weight: 700;
+          margin-bottom: 0.85rem;
         }
 
         .spotlight-desc {
           font-size: 0.92rem;
-          color: #9CA3AF;
-          line-height: 1.6;
-          margin-bottom: 1.75rem;
+          color: #CBD5E1;
+          line-height: 1.65;
+          margin-bottom: 1.65rem;
         }
 
         .spotlight-info-grid {
@@ -390,28 +359,34 @@ export const DestinationSpotlight = () => {
           grid-template-columns: 1fr 1fr;
           gap: 1rem;
           width: 100%;
-          margin-bottom: 2rem;
+          margin-bottom: 1.85rem;
           padding-top: 1.25rem;
-          border-top: 1px dashed rgba(255, 255, 255, 0.15);
+          border-top: 1px solid rgba(255, 255, 255, 0.12);
         }
 
         .info-badge-box {
           display: flex;
           flex-direction: column;
-          gap: 0.2rem;
+          gap: 0.25rem;
+          background: rgba(30, 41, 59, 0.7);
+          border: 1.5px solid rgba(255, 255, 255, 0.1);
+          border-radius: 12px;
+          padding: 0.75rem 1rem;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
         }
 
         .info-badge-label {
-          font-size: 0.7rem;
+          font-size: 0.68rem;
           font-weight: 800;
-          color: var(--accent-gold-soft);
-          letter-spacing: 0.05em;
+          color: #94A3B8;
+          letter-spacing: 0.06em;
+          text-transform: uppercase;
         }
 
         .info-badge-val {
           font-family: var(--font-heading);
           font-size: 0.95rem;
-          font-weight: 700;
+          font-weight: 800;
           color: #FFFFFF;
         }
 
@@ -427,9 +402,9 @@ export const DestinationSpotlight = () => {
           position: relative;
           border-radius: 20px;
           overflow: hidden;
-          box-shadow: 0 15px 30px rgba(0,0,0,0.4);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          height: 340px;
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          height: 330px;
         }
 
         .spotlight-media-img {
@@ -440,13 +415,13 @@ export const DestinationSpotlight = () => {
         }
 
         .spotlight-media-card:hover .spotlight-media-img {
-          transform: scale(1.04);
+          transform: scale(1.03);
         }
 
         .spotlight-media-overlay {
           position: absolute;
-          bottom: 1.25rem;
-          left: 1.25rem;
+          bottom: 1rem;
+          left: 1rem;
           z-index: 2;
         }
 
@@ -454,14 +429,14 @@ export const DestinationSpotlight = () => {
           display: inline-flex;
           align-items: center;
           gap: 0.4rem;
-          background: rgba(7, 17, 31, 0.85);
+          background: rgba(15, 23, 42, 0.85);
           backdrop-filter: blur(8px);
-          border: 1px solid var(--border-gold);
-          padding: 0.45rem 0.9rem;
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          padding: 0.35rem 0.8rem;
           border-radius: 9999px;
           font-family: var(--font-heading);
-          font-size: 0.82rem;
-          font-weight: 700;
+          font-size: 0.8rem;
+          font-weight: 600;
           color: #FFFFFF;
         }
 
@@ -530,7 +505,27 @@ export const DestinationSpotlight = () => {
             height: 140px;
             border-radius: 14px;
           }
+          .btn-spotlight-guide {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            background: #EFF6FF;
+            border: 1px solid #BFDBFE;
+            color: #1D4ED8;
+            padding: 0.75rem 1.25rem;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 0.88rem;
+            text-decoration: none;
+            transition: all 0.2s ease;
+          }
+          .btn-spotlight-guide:hover {
+            background: #DBEAFE;
+            color: #1E40AF;
+            transform: translateY(-2px);
+          }
           .btn-emerald-glowing,
+          .btn-spotlight-guide,
           .btn-whatsapp-outline {
             width: 100%;
             justify-content: center;

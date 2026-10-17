@@ -16,6 +16,7 @@ import {
   Clock,
   MapPin,
   Sparkles,
+  Navigation,
   IndianRupee,
   RotateCcw,
 } from 'lucide-react';
@@ -23,7 +24,22 @@ import { fareApi, locationApi, routeApi, API_BASE_URL } from '../services/api';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
 import { usePageSeo } from '../hooks/usePageSeo';
+import { useScrollReveal } from '../hooks/useScrollReveal';
+import { businessConfig } from '../config/business.config';
 import './fare.css';
+
+// In-memory cache for locations across user session
+let locationsCache = null;
+const getCachedLocations = async () => {
+  if (locationsCache && locationsCache.length > 0) return locationsCache;
+  try {
+    const res = await locationApi.getLocations();
+    locationsCache = res.data?.data || [];
+  } catch (err) {
+    locationsCache = [];
+  }
+  return locationsCache;
+};
 
 export const FarePage = () => {
   usePageSeo('fare', 'Pune Mumbai Cab Fare Calculator | AJ Tours & Travels');
@@ -52,6 +68,9 @@ export const FarePage = () => {
   const [error, setError] = useState('');
   const [expandedBreakdownId, setExpandedBreakdownId] = useState(null);
 
+  // Trigger smooth scroll-reveal animations when quote or category changes
+  useScrollReveal([quoteData, activeCategory, loading]);
+
   const fetchQuote = async () => {
     setLoading(true);
     setError('');
@@ -61,8 +80,7 @@ export const FarePage = () => {
 
       // Smart location resolver: match UUIDs or text search keys (e.g. 'hinjawadi', 'bkc', 'airport')
       if (tripType !== 'LOCAL') {
-        const locRes = await locationApi.getLocations();
-        const allLocs = locRes.data?.data || [];
+        const allLocs = await getCachedLocations();
 
         let matchedPickup = allLocs.find((l) => l.id === activePickupId);
         if (!matchedPickup && activePickupId) {
@@ -157,7 +175,7 @@ export const FarePage = () => {
       passengers,
     });
 
-    navigate(`/book?${bookingParams.toString()}`, {
+    navigate(`/booking?${bookingParams.toString()}`, {
       state: {
         vehicle,
         quoteData,
@@ -218,11 +236,108 @@ export const FarePage = () => {
     <div className="fare-page-wrapper">
       <Header isDark={false} />
 
+      {/* ── Internal Hero Banner (Matches Services & Corridors Header System) ── */}
+      <section className="internal-hero-section">
+        <div className="container">
+          <div className="breadcrumbs-nav">
+            <Link to="/">Home</Link>
+            <span className="bc-sep">/</span>
+            <span className="bc-current">Fare Calculator</span>
+          </div>
+
+          <div className="internal-hero-content">
+            <div className="hero-badge-pill">
+              <Sparkles size={14} />
+              <span>AJ TRAVEL AGENCY • FLEET FARES & AVAILABILITY</span>
+            </div>
+
+            <h1 className="internal-hero-title">
+              {tripType === 'LOCAL' ? (
+                <>
+                  {city} Local Cab <span className="text-gradient">Fare Calculator</span>
+                </>
+              ) : tripType === 'ROUND_TRIP' ? (
+                <>
+                  Round Trip Cab Fare: <span className="text-gradient">{(quoteData?.route?.pickup?.name || 'Pune')} to {(quoteData?.route?.drop?.name || 'Mumbai')}</span>
+                </>
+              ) : (
+                <>
+                  Pune to Mumbai Cab <span className="text-gradient">Fare Calculator</span>
+                </>
+              )}
+            </h1>
+
+            <p className="internal-hero-subtitle">
+              All-inclusive transparent rates with expressway tolls, fuel, and chauffeur allowances included. Choose your preferred car category and reserve instantly with zero advance deposit.
+            </p>
+
+            {/* Corridor Route / Trip Stats Chips */}
+            <div className="svc-stats-chips-row">
+              <div className="chip-box">
+                <MapPin size={15} color="#2563EB" />
+                <div>
+                  <span className="chip-lbl">CORRIDOR ROUTE</span>
+                  <strong>
+                    {tripType === 'LOCAL'
+                      ? `${city} Local (${duration}h Package)`
+                      : `${quoteData?.route?.pickup?.name || 'Pune'} ➔ ${quoteData?.route?.drop?.name || 'Mumbai'}`}
+                  </strong>
+                </div>
+              </div>
+
+              {quoteData?.route?.distance ? (
+                <div className="chip-box">
+                  <Navigation size={15} color="#2563EB" />
+                  <div>
+                    <span className="chip-lbl">TOTAL DISTANCE</span>
+                    <strong>{quoteData.route.distance} km approx.</strong>
+                  </div>
+                </div>
+              ) : (
+                <div className="chip-box">
+                  <Navigation size={15} color="#2563EB" />
+                  <div>
+                    <span className="chip-lbl">CORRIDOR HIGHWAY</span>
+                    <strong>Mumbai-Pune Expressway</strong>
+                  </div>
+                </div>
+              )}
+
+              {quoteData?.route?.durationHours ? (
+                <div className="chip-box">
+                  <Clock size={15} color="#2563EB" />
+                  <div>
+                    <span className="chip-lbl">DRIVING TIME</span>
+                    <strong>{quoteData.route.durationHours} hrs estimated</strong>
+                  </div>
+                </div>
+              ) : (
+                <div className="chip-box">
+                  <Clock size={15} color="#2563EB" />
+                  <div>
+                    <span className="chip-lbl">ESTIMATED TIME</span>
+                    <strong>3.0 – 3.5 hrs drive</strong>
+                  </div>
+                </div>
+              )}
+
+              <div className="chip-box">
+                <ShieldCheck size={15} color="#15803D" />
+                <div>
+                  <span className="chip-lbl">TOLL INCLUSION</span>
+                  <strong>Expressway Tolls Included</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Main Content Area */}
       <main className="fare-content-section container">
         {loading ? (
           <div className="fare-loading-box">
-            <Loader2 size={36} className="animate-spin" color="#0099FF" />
+            <Loader2 size={36} className="animate-spin" color="#1D4ED8" />
             <h3>Checking vehicle availability & toll rates...</h3>
             <p>Fetching real-time server verified pricing for your trip</p>
           </div>
@@ -235,9 +350,9 @@ export const FarePage = () => {
               <Link to="/" className="admin-btn-primary" style={{ textDecoration: 'none' }}>
                 Change Search
               </Link>
-              <a href="tel:+919876543210" className="admin-btn-secondary" style={{ textDecoration: 'none' }}>
-                Call 24x7 Help Desk
-              </a>
+              <Link to="/booking" className="admin-btn-secondary" style={{ textDecoration: 'none' }}>
+                Book Cab Online
+              </Link>
             </div>
           </div>
         ) : quoteData?.vehicles?.length === 0 ? (
@@ -251,6 +366,7 @@ export const FarePage = () => {
           </div>
         ) : (
           <div>
+
             {/* Category Filter Tabs Bar */}
             <div className="fare-filter-tabs">
               <button
@@ -306,7 +422,7 @@ export const FarePage = () => {
               </div>
             ) : (
               <div className="fare-cabs-grid">
-                {filteredVehicles.map((v) => {
+                {filteredVehicles.map((v, idx) => {
                   const isExpanded = expandedBreakdownId === v.vehicleId;
                   const hasFare = v.fare?.configured && v.fare?.total > 0;
                   const isUnavailable = v.availability === 'UNAVAILABLE';
@@ -325,7 +441,7 @@ export const FarePage = () => {
                   return (
                     <div
                       key={v.vehicleId}
-                      className={`fare-cab-card ${isSelectedMatch ? 'selected-model-card' : ''}`}
+                      className={`fare-cab-card reveal stagger-${(idx % 4) + 1} ${isSelectedMatch ? 'selected-model-card' : ''}`}
                     >
                       {/* Left Column: Image & Vehicle Specs */}
                       <div className="cab-image-col">

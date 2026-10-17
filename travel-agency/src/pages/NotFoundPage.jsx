@@ -1,5 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { Header } from '../components/Header';
+import { Footer } from '../components/Footer';
 
 /**
  * NotFoundPage — shown for any URL the app does not recognise.
@@ -18,22 +20,35 @@ export function NotFoundPage() {
       minHeight: '100vh',
       display: 'flex',
       flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      background: 'linear-gradient(135deg, #0f1623 0%, #1a2235 100%)',
-      color: '#fff',
+      background: '#F8F7F4',
+      color: '#1E293B',
       fontFamily: "'Inter', sans-serif",
-      padding: '2rem',
-      textAlign: 'center',
     }}>
-      <div style={{ maxWidth: '480px', width: '100%' }}>
+      <Header isDark={false} />
+      <div style={{
+        flex: 1,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '4rem 1.5rem',
+        textAlign: 'center',
+      }}>
+      <div style={{
+        maxWidth: '520px',
+        width: '100%',
+        background: '#FFFFFF',
+        border: '1.5px solid #DCE3EB',
+        borderRadius: '24px',
+        padding: '3rem 2rem',
+        boxShadow: '0 20px 50px rgba(15, 23, 42, 0.08)',
+      }}>
 
         {/* 404 number */}
         <div style={{
-          fontSize: 'clamp(6rem, 20vw, 10rem)',
-          fontWeight: 800,
+          fontSize: 'clamp(5rem, 16vw, 8rem)',
+          fontWeight: 900,
           lineHeight: 1,
-          background: 'linear-gradient(135deg, #D8AE55, #f0cc7a)',
+          background: 'linear-gradient(135deg, #2563EB, #1D4ED8)',
           WebkitBackgroundClip: 'text',
           WebkitTextFillColor: 'transparent',
           backgroundClip: 'text',
@@ -44,23 +59,23 @@ export function NotFoundPage() {
         </div>
 
         <h1 style={{
-          fontSize: '1.5rem',
-          fontWeight: 700,
+          fontSize: '1.75rem',
+          fontWeight: 800,
           margin: '0 0 0.75rem',
-          color: '#fff',
+          color: '#17324D',
+          fontFamily: "'Outfit', sans-serif",
         }}>
-          Page not found
+          Page Not Found
         </h1>
 
         <p style={{
-          fontSize: '1rem',
-          color: '#9CA3AF',
+          fontSize: '0.95rem',
+          color: '#475569',
           lineHeight: 1.6,
           margin: '0 0 2rem',
         }}>
-          The page you are looking for does not exist in this version of the site.
-          If you followed a link from the existing website, some pages are still being
-          developed and will be available soon.
+          The page you are looking for does not exist or has been relocated.
+          Explore our verified fleet and calculate live fares below.
         </p>
 
         <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
@@ -68,17 +83,16 @@ export function NotFoundPage() {
             to="/"
             style={{
               display: 'inline-block',
-              padding: '0.75rem 1.5rem',
-              background: 'linear-gradient(135deg, #D8AE55, #c49a3a)',
-              color: '#0f1623',
-              borderRadius: '0.5rem',
+              padding: '0.75rem 1.6rem',
+              background: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)',
+              color: '#FFFFFF',
+              borderRadius: '9999px',
               fontWeight: 700,
               textDecoration: 'none',
-              fontSize: '0.95rem',
-              transition: 'opacity 0.2s',
+              fontSize: '0.9rem',
+              boxShadow: '0 4px 16px rgba(37, 99, 235, 0.35)',
+              transition: 'all 0.2s',
             }}
-            onMouseOver={e => e.currentTarget.style.opacity = '0.9'}
-            onMouseOut={e => e.currentTarget.style.opacity = '1'}
           >
             Go to Home
           </Link>
@@ -86,23 +100,23 @@ export function NotFoundPage() {
             to="/fare"
             style={{
               display: 'inline-block',
-              padding: '0.75rem 1.5rem',
-              border: '1px solid rgba(216, 174, 85, 0.4)',
-              color: '#D8AE55',
-              borderRadius: '0.5rem',
-              fontWeight: 600,
+              padding: '0.75rem 1.6rem',
+              border: '1.5px solid #DCE3EB',
+              color: '#17324D',
+              borderRadius: '9999px',
+              fontWeight: 700,
               textDecoration: 'none',
-              fontSize: '0.95rem',
-              transition: 'border-color 0.2s, background 0.2s',
-              background: 'transparent',
+              fontSize: '0.9rem',
+              transition: 'all 0.2s',
+              background: '#F8FAFC',
             }}
-            onMouseOver={e => { e.currentTarget.style.borderColor = '#D8AE55'; e.currentTarget.style.background = 'rgba(216,174,85,0.08)'; }}
-            onMouseOut={e => { e.currentTarget.style.borderColor = 'rgba(216, 174, 85, 0.4)'; e.currentTarget.style.background = 'transparent'; }}
           >
             Check Fares
           </Link>
         </div>
       </div>
+      </div>
+      <Footer />
     </div>
   );
 }

@@ -7,6 +7,10 @@
   "scripts": {
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
+    "test:seo": "node tests/seo.test.js",
+    "test:media": "node tests/media.test.js",
+    "test:analyzer": "node tests/seoAnalyzer.test.js",
+    "test:gsc": "node tests/seoGsc.test.js",
     "prisma:migrate": "npx prisma migrate dev",
     "prisma:generate": "npx prisma generate",
     "prisma:seed": "node prisma/seed.js",

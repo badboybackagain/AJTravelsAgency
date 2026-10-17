@@ -28,6 +28,7 @@ const whatsappRoutes = require('./routes/whatsappRoutes');
 const enquiryRoutes = require('./routes/enquiryRoutes');
 const otpRoutes = require('./routes/otpRoutes');
 const seoRoutes = require('./routes/seoRoutes');
+const mediaRoutes = require('./routes/mediaRoutes');
 const { getSitemap, getRobots, getPublicPages } = require('./controllers/seoController');
 const seoHydrate = require('./middleware/seoHydrate');
 
@@ -131,6 +132,8 @@ app.use('/api/admin/whatsapp', whatsappRoutes);
 app.use('/api/enquiries', enquiryRoutes);
 app.use('/api/otp', otpRoutes);
 app.use('/api/admin/seo', seoRoutes);
+app.use('/api/media', mediaRoutes);
+app.use('/api/admin/media', mediaRoutes);
 app.use('/api', miscRoutes);
 
 // ============================================================

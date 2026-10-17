@@ -17,6 +17,7 @@ import {
 import gsap from 'gsap';
 import { businessConfig } from '../config/business.config';
 import { locationApi } from '../services/api';
+import { homepageContent } from '../data/homepageContent';
 
 const TIME_SLOTS = [
   '12:00 AM', '01:00 AM', '02:00 AM', '03:00 AM', '04:00 AM', '05:00 AM',
@@ -25,6 +26,11 @@ const TIME_SLOTS = [
   '06:00 PM', '07:00 PM', '08:00 PM', '09:00 PM', '10:00 PM', '11:00 PM',
 ];
 
+// In-memory module cache for locations across sessions
+let cachedLocations = null;
+let cachedPuneLocations = null;
+let cachedMumbaiLocations = null;
+
 export const HeroBooking = () => {
   const navigate = useNavigate();
   const swapBtnRef = useRef(null);
@@ -32,10 +38,10 @@ export const HeroBooking = () => {
   // Travel Mode: 'ONE_WAY' | 'ROUND_TRIP' | 'LOCAL'
   const [tripType, setTripType] = useState('ONE_WAY');
 
-  // Locations from backend
-  const [locations, setLocations] = useState([]);
-  const [puneLocations, setPuneLocations] = useState([]);
-  const [mumbaiLocations, setMumbaiLocations] = useState([]);
+  // Locations from backend (cached to eliminate any initial render blink)
+  const [locations, setLocations] = useState(() => cachedLocations || []);
+  const [puneLocations, setPuneLocations] = useState(() => cachedPuneLocations || []);
+  const [mumbaiLocations, setMumbaiLocations] = useState(() => cachedMumbaiLocations || []);
 
   // Form states with placeholder-first defaults
   const [pickupLocationId, setPickupLocationId] = useState('');
@@ -53,25 +59,31 @@ export const HeroBooking = () => {
 
   // Fetch Locations from Backend on Mount & Listen to Trip Selection events
   useEffect(() => {
-    locationApi
-      .getLocations()
-      .then((res) => {
-        const data = res.data?.data || [];
-        setLocations(data);
+    if (!cachedLocations || cachedLocations.length === 0) {
+      locationApi
+        .getLocations()
+        .then((res) => {
+          const data = res.data?.data || [];
+          cachedLocations = data;
 
-        const puneList = data.filter(
-          (l) => l.side === 'PUNE_SIDE' || l.city?.toLowerCase() === 'pune'
-        );
-        const mumbaiList = data.filter(
-          (l) =>
-            l.side === 'MUMBAI_SIDE' ||
-            ['mumbai', 'thane', 'navi mumbai'].includes(l.city?.toLowerCase())
-        );
+          const puneList = data.filter(
+            (l) => l.side === 'PUNE_SIDE' || l.city?.toLowerCase() === 'pune'
+          );
+          const mumbaiList = data.filter(
+            (l) =>
+              l.side === 'MUMBAI_SIDE' ||
+              ['mumbai', 'thane', 'navi mumbai'].includes(l.city?.toLowerCase())
+          );
 
-        setPuneLocations(puneList);
-        setMumbaiLocations(mumbaiList);
-      })
-      .catch((err) => console.log('Location API notice:', err.message));
+          cachedPuneLocations = puneList;
+          cachedMumbaiLocations = mumbaiList;
+
+          setLocations(data);
+          setPuneLocations(puneList);
+          setMumbaiLocations(mumbaiList);
+        })
+        .catch((err) => console.log('Location API notice:', err.message));
+    }
 
     const handleSelectTripType = (e) => {
       const type = e.detail;
@@ -254,10 +266,13 @@ export const HeroBooking = () => {
       {/* Background Banner Image */}
       <div className="hero-bg-wrapper">
         <img
-          src="/assets/pune-to-mumbai-premium-travel-banner.webp"
-          alt="Pune to Mumbai Expressway scenic highway with luxury car"
+          src={homepageContent.hero.bgImage}
+          alt={homepageContent.hero.bgImageAlt}
           className="hero-bg-img"
           fetchPriority="high"
+          width="1920"
+          height="1080"
+          decoding="async"
         />
         <div className="hero-bg-overlay"></div>
       </div>
@@ -266,40 +281,34 @@ export const HeroBooking = () => {
         {/* Left Column: Heading & Trust Highlights */}
         <div className="hero-left-col">
           <div className="hero-eyebrow">
-            <Sparkles size={13} color="#D97706" />
-            <span>PREMIUM PUNE ↔ MUMBAI CAB SERVICE</span>
+            <Sparkles size={13} color="#38BDF8" />
+            <span>{homepageContent.hero.eyebrow}</span>
           </div>
 
           <h1 className="hero-title">
-            Pune ↔ Mumbai Taxi
-            <span className="hero-title-sub">Luxury Express Highway Travel</span>
+            {homepageContent.hero.titlePrimary}
+            <span className="hero-title-sub">{homepageContent.hero.titleSecondary}</span>
           </h1>
 
           <p className="hero-description">
-            Clean, sanitised private cabs with verified professional drivers. Instant server-verified quotes with all expressway tolls included.
+            {homepageContent.hero.description}
           </p>
 
           <div className="hero-trust-chips">
-            <div className="hero-chip">
-              <span className="chip-indicator green"></span>
-              <span>30-Min Fast Dispatch</span>
-            </div>
-            <div className="hero-chip">
-              <span className="chip-indicator sky"></span>
-              <span>All Tolls Included</span>
-            </div>
-            <div className="hero-chip">
-              <span className="chip-indicator amber"></span>
-              <span>Verified Chauffeurs</span>
-            </div>
+            {homepageContent.hero.trustChips.map((chip, idx) => (
+              <div key={idx} className="hero-chip">
+                <span className={`chip-indicator ${chip.color}`}></span>
+                <span>{chip.text}</span>
+              </div>
+            ))}
           </div>
 
           <div className="hero-dispatch-notice-pill">
             <div className="notice-icon-box">
-              <Zap size={14} color="#0284C7" />
+              <Zap size={14} color="#38BDF8" />
             </div>
             <span className="notice-text">
-              <strong>Quick Dispatch:</strong> Fast 30-min pickup target across Pune & Mumbai city hubs.
+              <strong>{homepageContent.hero.dispatchNotice.headline}</strong> {homepageContent.hero.dispatchNotice.text}
             </span>
           </div>
         </div>
@@ -510,11 +519,19 @@ export const HeroBooking = () => {
                       </select>
                     </div>
                   </div>
+
+                  <div className="booking-perks-strip">
+                    <span>✓ Expressway Tolls Included</span>
+                    <span className="perk-sep">•</span>
+                    <span>✓ Doorstep Pickup</span>
+                    <span className="perk-sep">•</span>
+                    <span>✓ Zero Return Penalty</span>
+                  </div>
                 </>
               )}
 
               {/* ================================================= */}
-              {/* MODE 2: ROUND TRIP (Compact Multi-Column)         */}
+              {/* MODE 2: ROUND TRIP (Spacious 2-Row Dates & Time)  */}
               {/* ================================================= */}
               {tripType === 'ROUND_TRIP' && (
                 <>
@@ -591,11 +608,12 @@ export const HeroBooking = () => {
                     </div>
                   </div>
 
-                  <div className="booking-row-4col">
+                  {/* Outbound Date + Time */}
+                  <div className="booking-row-2col">
                     <div className="booking-field-group">
                       <label className="booking-label">
                         <Calendar size={13} color="#0099FF" />
-                        <span>Depart Date *</span>
+                        <span>Departure Date *</span>
                       </label>
                       <input
                         type="date"
@@ -612,7 +630,7 @@ export const HeroBooking = () => {
                     <div className="booking-field-group">
                       <label className="booking-label">
                         <Clock size={13} color="#0099FF" />
-                        <span>Depart Time *</span>
+                        <span>Pickup Time *</span>
                       </label>
                       <select
                         value={departureTime}
@@ -622,7 +640,7 @@ export const HeroBooking = () => {
                         }}
                         className="booking-select-control"
                       >
-                        <option value="">Time</option>
+                        <option value="">Choose time</option>
                         {TIME_SLOTS.map((t) => (
                           <option key={t} value={t}>
                             {t}
@@ -630,7 +648,10 @@ export const HeroBooking = () => {
                         ))}
                       </select>
                     </div>
+                  </div>
 
+                  {/* Return Date + Time + Passengers */}
+                  <div className="booking-row-3col">
                     <div className="booking-field-group">
                       <label className="booking-label">
                         <Calendar size={13} color="#F59E0B" />
@@ -661,7 +682,7 @@ export const HeroBooking = () => {
                         }}
                         className="booking-select-control"
                       >
-                        <option value="">Time</option>
+                        <option value="">Choose time</option>
                         {TIME_SLOTS.map((t) => (
                           <option key={t} value={t}>
                             {t}
@@ -669,6 +690,31 @@ export const HeroBooking = () => {
                         ))}
                       </select>
                     </div>
+
+                    <div className="booking-field-group">
+                      <label className="booking-label">
+                        <Users size={13} color="#6366F1" />
+                        <span>Passengers</span>
+                      </label>
+                      <select
+                        value={passengers}
+                        onChange={(e) => setPassengers(e.target.value)}
+                        className="booking-select-control"
+                      >
+                        <option value="1">1 Person</option>
+                        <option value="2">2 Persons</option>
+                        <option value="3">3 Persons</option>
+                        <option value="4">4 Persons</option>
+                        <option value="6">6 Persons (SUV)</option>
+                        <option value="12">12+ Persons</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="booking-perks-strip">
+                    <span>✓ Round Trip Driver Allowance Included</span>
+                    <span className="perk-sep">•</span>
+                    <span>✓ 24/7 Cab On Call</span>
                   </div>
                 </>
               )}
@@ -777,6 +823,14 @@ export const HeroBooking = () => {
                       </select>
                     </div>
                   </div>
+
+                  <div className="booking-perks-strip">
+                    <span>✓ Flexible Hourly Packages</span>
+                    <span className="perk-sep">•</span>
+                    <span>✓ Unlimited City Stops</span>
+                    <span className="perk-sep">•</span>
+                    <span>✓ AC Sedan / SUV</span>
+                  </div>
                 </>
               )}
 
@@ -795,3 +849,4 @@ export const HeroBooking = () => {
     </section>
   );
 };
+

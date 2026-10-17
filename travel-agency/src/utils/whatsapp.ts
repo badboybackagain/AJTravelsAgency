@@ -49,5 +49,5 @@ export function getWhatsAppLink(details: Partial<BookingDetails>): string {
 }
 
 export function getPhoneCallLink(): string {
-  return `tel:${businessConfig.phone}`;
+  return businessConfig.phone ? `tel:${businessConfig.phone}` : '#';
 }

@@ -186,6 +186,32 @@ export const seoApi = {
   getPage: (pageKey) => api.get(`/admin/seo/pages/${pageKey}`),
   updatePage: (pageKey, data) => api.put(`/admin/seo/pages/${pageKey}`, data),
   getPublicPages: () => api.get('/seo/public'),
+  getAnalyzerOverview: () => api.get('/admin/seo/analyzer/overview'),
+  analyzeAll: () => api.post('/admin/seo/analyzer/analyze-all'),
+  analyzePage: (pageKey) => api.post('/admin/seo/analyzer/analyze-page', { pageKey }),
+  getPageAnalysis: (pageKey) => api.get(`/admin/seo/analyzer/page/${pageKey}`),
+  getIntegrations: () => api.get('/admin/seo/analyzer/integrations'),
+};
+
+export const gscApi = {
+  getStatus: () => api.get('/admin/seo/gsc/status'),
+  getAuthUrl: () => api.get('/admin/seo/gsc/auth-url'),
+  disconnect: () => api.post('/admin/seo/gsc/disconnect'),
+  getProperties: () => api.get('/admin/seo/gsc/properties'),
+  selectProperty: (siteUrl) => api.post('/admin/seo/gsc/select-property', { siteUrl }),
+  getPerformance: (params) => api.get('/admin/seo/gsc/performance', { params }),
+  refreshData: (data) => api.post('/admin/seo/gsc/refresh', data),
+};
+
+export const mediaApi = {
+  getAll: (params) => api.get('/media', { params }),
+  getById: (id) => api.get(`/media/${id}`),
+  upload: (formData) =>
+    api.post('/media/upload', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }),
+  updateMetadata: (id, data) => api.put(`/media/${id}`, data),
+  delete: (id, force = false) => api.delete(`/media/${id}`, { params: { force } }),
 };
 
 export default api;

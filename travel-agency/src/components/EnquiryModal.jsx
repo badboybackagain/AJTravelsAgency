@@ -309,7 +309,7 @@ export const EnquiryModal = ({ isOpen, onClose }) => {
           font-family: var(--font-heading);
           font-size: 0.72rem;
           font-weight: 800;
-          color: #9C721D;
+          color: #0284C7;
           letter-spacing: 0.08em;
           text-transform: uppercase;
         }
@@ -317,13 +317,13 @@ export const EnquiryModal = ({ isOpen, onClose }) => {
         .modal-header h3 {
           font-size: 1.4rem;
           font-weight: 800;
-          color: var(--bg-dark-navy);
+          color: #0F172A;
           margin-top: 0.1rem;
         }
 
         .modal-header p {
           font-size: 0.82rem;
-          color: #6B7280;
+          color: #64748B;
           margin-top: 0.15rem;
         }
 
@@ -353,18 +353,18 @@ export const EnquiryModal = ({ isOpen, onClose }) => {
           width: 100%;
           padding: 0.55rem 0.75rem;
           border-radius: 8px;
-          border: 1.5px solid #E5E7EB;
+          border: 1.5px solid #E2E8F0;
           font-family: var(--font-body);
           font-size: 0.85rem;
           outline: none;
-          background: #FAFAFA;
+          background: #F8FAFC;
           transition: all 0.2s ease;
         }
 
         .modal-input:focus, .modal-select:focus {
           background: #FFFFFF;
-          border-color: var(--accent-gold-soft);
-          box-shadow: 0 0 0 3px rgba(200, 155, 60, 0.18);
+          border-color: #0284C7;
+          box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
         }
 
         .modal-actions {

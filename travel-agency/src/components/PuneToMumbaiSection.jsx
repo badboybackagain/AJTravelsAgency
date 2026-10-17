@@ -1,67 +1,90 @@
 import React from 'react';
-import { CheckCircle2, MessageSquare, ShieldCheck, MapPin, Users } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { CheckCircle2, MessageSquare, ShieldCheck, MapPin, Users, ArrowRight } from 'lucide-react';
 import { getWhatsAppLink } from '../utils/whatsapp';
+import { homepageContent } from '../data/homepageContent';
 
 export const PuneToMumbaiSection = () => {
-  const benefits = [
-    { title: 'Private Doorstep Pickup', desc: 'Direct pickup from your home, office, hotel, or Pune Airport (PNQ).' },
-    { title: 'Flexible Departure Schedules', desc: 'Depart on your time schedule without waiting for fixed timetables.' },
-    { title: 'Dedicated Luggage & Cabin Space', desc: 'Clean, spacious vehicles with dedicated boot space for all bags.' },
-    { title: 'Family & Corporate Comfort', desc: 'Sanitized cars with dual AC and experienced, courteous chauffeurs.' },
-    { title: 'Direct Airport & City Transfers', desc: 'Seamless drop-offs at Mumbai Airport (BOM), BKC, Andheri, or Bandra.' },
-    { title: 'Group Transportation Options', desc: 'Mini buses and 20-seater vehicles for larger group journeys.' }
-  ];
+  const data = homepageContent.corridors.intercity;
+  const benefits = data.features || [];
 
   return (
-    <section id="pune-to-mumbai" className="section-padding bg-white">
+    <section id="pune-to-mumbai" className="section-padding bg-ivory" style={{ paddingTop: '4.5rem', paddingBottom: '4.5rem' }}>
       <div className="container">
-        <div className="split-grid">
-          {/* Left Column: Visual Media */}
-          <div className="split-media">
-            <img
-              src="/assets/sedan.webp"
-              alt="Pune to Mumbai Taxi Service luxury sedan vehicle"
-              className="split-img rounded-img"
-              loading="lazy"
-            />
-            <div className="media-overlay-badge">
-              <ShieldCheck size={18} color="#D8AE55" />
-              <span>Pune → Mumbai Express Route</span>
+        <div className="card-white" style={{ padding: '3.25rem', borderRadius: '28px', border: '1.5px solid #DCE3EB', boxShadow: '0 16px 40px rgba(15, 23, 42, 0.06)' }}>
+          <div className="split-grid">
+            {/* Left Column: Visual Media */}
+            <div className="split-media">
+              <img
+                src={data.image}
+                alt={data.imageAlt}
+                className="split-img rounded-img"
+                loading="lazy"
+              />
+              <div className="media-overlay-badge">
+                <ShieldCheck size={18} color="#60A5FA" />
+                <span>Pune ↔ Mumbai Express Corridor</span>
+              </div>
             </div>
-          </div>
 
-          {/* Right Column: Copy & Benefits */}
-          <div className="split-content">
-            <span className="eyebrow-text">PUNE → MUMBAI PRIVATE TAXI</span>
-            <h2>Pune to Mumbai Taxi Service</h2>
-            <p className="lead-paragraph">
-              Looking for a comfortable private taxi from Pune to Mumbai? Travel from your preferred pickup location with a vehicle suited to your passengers, luggage and journey requirements. Choose one-way or round-trip travel and contact us for current vehicle availability and fare.
-            </p>
+            {/* Right Column: Copy & Benefits */}
+            <div className="split-content">
+              <div className="lovable-badge" style={{ marginBottom: '0.75rem' }}>
+                <ShieldCheck size={13} />
+                <span>{data.badge}</span>
+              </div>
+              <h2 className="lovable-title" style={{ textAlign: 'left', fontSize: '2.2rem', marginBottom: '0.85rem' }}>
+                {data.title}
+              </h2>
+              <p className="lead-paragraph" style={{ color: '#475569' }}>
+                {data.subtitle}
+              </p>
 
-            <h3 className="subheading">Why Book a Private Pune to Mumbai Taxi?</h3>
+              <h3 className="subheading" style={{ color: '#17324D', fontSize: '1.2rem', fontWeight: 800, marginBottom: '1rem' }}>
+                Why Book AJ Travels for Expressway Transit?
+              </h3>
 
-            <div className="benefits-grid">
-              {benefits.map((b, idx) => (
-                <div key={idx} className="benefit-item">
-                  <CheckCircle2 size={18} color="#C89B3C" className="benefit-icon" />
-                  <div>
-                    <h4 className="benefit-title">{b.title}</h4>
-                    <p className="benefit-desc">{b.desc}</p>
+              <div className="benefits-grid">
+                {benefits.map((b, idx) => (
+                  <div key={idx} className="benefit-item">
+                    <CheckCircle2 size={18} color="#2563EB" className="benefit-icon" />
+                    <div>
+                      <h4 className="benefit-title" style={{ color: '#17324D' }}>{b.title}</h4>
+                      <p className="benefit-desc" style={{ color: '#64748B' }}>{b.desc}</p>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
 
-            <div className="action-row">
-              <a
-                href={getWhatsAppLink({ from: 'Pune', to: 'Mumbai', tripType: 'One Way' })}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn btn-whatsapp btn-lg"
-              >
-                <MessageSquare size={18} />
-                <span>BOOK PUNE → MUMBAI</span>
-              </a>
+              <div className="action-row" style={{ display: 'flex', gap: '0.85rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                <Link
+                  to={data.ctaUrl}
+                  className="btn btn-primary btn-lg"
+                >
+                  <span>{data.ctaText}</span>
+                </Link>
+                {data.articleUrl && (
+                  <Link
+                    to={data.articleUrl}
+                    className="btn btn-outline-primary btn-lg"
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.45rem',
+                      padding: '0.85rem 1.4rem',
+                      borderRadius: '12px',
+                      fontWeight: 700,
+                      textDecoration: 'none',
+                      border: '1.5px solid #2563EB',
+                      color: '#2563EB',
+                      background: '#FFFFFF'
+                    }}
+                  >
+                    <span>EXPRESSWAY GUIDE</span>
+                    <ArrowRight size={16} />
+                  </Link>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -77,24 +100,30 @@ export const PuneToMumbaiSection = () => {
 
         .split-media {
           position: relative;
-          border-radius: var(--radius-xl);
+          border-radius: 20px;
           overflow: hidden;
-          box-shadow: var(--shadow-xl);
+          box-shadow: 0 12px 36px rgba(15, 23, 42, 0.12);
+          border: 1.5px solid #DCE3EB;
         }
 
         .split-img {
           width: 100%;
-          height: 480px;
+          height: 460px;
           object-fit: cover;
+          transition: transform 0.4s ease;
+        }
+
+        .split-media:hover .split-img {
+          transform: scale(1.02);
         }
 
         .media-overlay-badge {
           position: absolute;
           bottom: 1.5rem;
           left: 1.5rem;
-          background: rgba(7, 17, 31, 0.85);
-          backdrop-filter: blur(10px);
-          border: 1px solid var(--border-gold);
+          background: rgba(23, 50, 77, 0.92);
+          backdrop-filter: blur(12px);
+          border: 1px solid rgba(255, 255, 255, 0.2);
           padding: 0.6rem 1.25rem;
           border-radius: 9999px;
           color: #FFFFFF;
@@ -106,40 +135,23 @@ export const PuneToMumbaiSection = () => {
           gap: 0.5rem;
         }
 
-        .eyebrow-text {
-          font-family: var(--font-heading);
-          font-size: 0.85rem;
-          font-weight: 800;
-          letter-spacing: 0.1em;
-          color: var(--accent-gold-soft);
-          display: block;
-          margin-bottom: 0.5rem;
-        }
-
         .lead-paragraph {
-          font-size: 1.05rem;
-          color: var(--text-muted);
+          font-size: 0.98rem;
+          line-height: 1.65;
           margin-bottom: 1.5rem;
-          line-height: 1.6;
-        }
-
-        .subheading {
-          font-size: 1.35rem;
-          color: var(--bg-dark-navy);
-          margin-bottom: 1.25rem;
         }
 
         .benefits-grid {
           display: grid;
           grid-template-columns: 1fr 1fr;
-          gap: 1rem;
+          gap: 1.15rem;
           margin-bottom: 2rem;
         }
 
         .benefit-item {
           display: flex;
           align-items: flex-start;
-          gap: 0.6rem;
+          gap: 0.65rem;
         }
 
         .benefit-icon {
@@ -148,40 +160,37 @@ export const PuneToMumbaiSection = () => {
         }
 
         .benefit-title {
-          font-size: 0.9rem;
+          font-size: 0.88rem;
           font-weight: 700;
-          color: var(--bg-dark-navy);
+          margin-bottom: 0.15rem;
         }
 
         .benefit-desc {
           font-size: 0.78rem;
-          color: #6B7280;
-          line-height: 1.3;
+          line-height: 1.4;
         }
 
         .action-row {
           display: flex;
           align-items: center;
           gap: 1rem;
+          flex-wrap: wrap;
         }
 
         @media (max-width: 992px) {
+          .card-white {
+            padding: 1.5rem !important;
+          }
           .split-grid {
             grid-template-columns: 1fr;
-            gap: 1.5rem;
+            gap: 2rem;
           }
           .split-img {
-            height: 180px;
+            height: 220px;
           }
           .benefits-grid {
-            grid-template-columns: 1fr 1fr;
-            gap: 0.75rem;
-          }
-          .benefit-title {
-            font-size: 0.85rem;
-          }
-          .benefit-desc {
-            font-size: 0.75rem;
+            grid-template-columns: 1fr;
+            gap: 0.85rem;
           }
         }
       `}</style>

@@ -5,6 +5,7 @@
 
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
+const { SITE_DOMAIN } = require('../config/seoConfig');
 
 // ---------------------------------------------------------------------------
 // Public pages tracked by the SEO module
@@ -15,7 +16,7 @@ const PUBLIC_PAGES = [
     pageKey:         'home',
     pageLabel:       'Home Page',
     pageUrl:         '/',
-    seoTitle:        'AJ Tours & Travels – Pune to Mumbai Cab | Best Intercity Cab Service',
+    seoTitle:        'AJ Tours - Pune to Mumbai Cab | Best Intercity Cab Service',
     metaDescription: 'Book reliable Pune to Mumbai cab service at affordable rates. AJ Tours & Travels offers sedan, SUV & luxury cabs with verified drivers and WhatsApp support.',
     isIndexable:     true,
   },
@@ -38,22 +39,153 @@ const PUBLIC_PAGES = [
 ];
 
 // ---------------------------------------------------------------------------
+// Route Inventory Definition (Single Source of Truth)
+// ---------------------------------------------------------------------------
+const ROUTE_INVENTORY = [
+  {
+    path: '/',
+    label: 'Home Page',
+    type: 'PUBLIC_PAGE',
+    isPublic: true,
+    hasContent: true,
+    indexingStatus: 'index, follow',
+    sitemapStatus: 'Included (Priority 1.0)',
+    managedPageKey: 'home',
+    notes: 'Primary landing page with fleet discovery, route showcase, FAQs, and instant booking engine.',
+  },
+  {
+    path: '/fare',
+    label: 'Fare Calculator',
+    type: 'PUBLIC_PAGE',
+    isPublic: true,
+    hasContent: true,
+    indexingStatus: 'index, follow',
+    sitemapStatus: 'Included (Priority 0.8)',
+    managedPageKey: 'fare',
+    notes: 'Interactive pricing calculator with one-way/round-trip vehicle rates, tolls, and duration estimates.',
+  },
+  {
+    path: '/booking',
+    label: 'Cab Booking',
+    type: 'PUBLIC_PAGE',
+    isPublic: true,
+    hasContent: true,
+    indexingStatus: 'index, follow',
+    sitemapStatus: 'Included (Priority 0.8)',
+    managedPageKey: 'booking',
+    notes: 'Online booking flow with passenger details, vehicle selection, and OTP verification.',
+  },
+  {
+    path: '/book',
+    label: 'Legacy Booking Alias',
+    type: 'REDIRECT_ALIAS',
+    isPublic: false,
+    hasContent: false,
+    indexingStatus: '301 Permanent Redirect → /booking',
+    sitemapStatus: 'Excluded (Alias)',
+    managedPageKey: null,
+    notes: 'Single-hop permanent redirect to /booking; preserves incoming search parameters and state.',
+  },
+  {
+    path: '/admin/login',
+    label: 'Admin Login',
+    type: 'ADMIN_ROUTE',
+    isPublic: false,
+    hasContent: false,
+    indexingStatus: 'noindex, nofollow (No canonical)',
+    sitemapStatus: 'Excluded (Disallow: /admin/)',
+    managedPageKey: null,
+    notes: 'Authentication interface for site administration; protected by noindex and robots.txt disallow.',
+  },
+  {
+    path: '/admin/dashboard',
+    label: 'Admin Dashboard',
+    type: 'ADMIN_ROUTE',
+    isPublic: false,
+    hasContent: false,
+    indexingStatus: 'noindex, nofollow (No canonical)',
+    sitemapStatus: 'Excluded (Disallow: /admin/)',
+    managedPageKey: null,
+    notes: 'Authenticated administrative workspace for fares, local vehicles, bookings, WhatsApp, and SEO.',
+  },
+  {
+    path: '/admin/fares',
+    label: 'Admin Fares Alias',
+    type: 'ADMIN_REDIRECT',
+    isPublic: false,
+    hasContent: false,
+    indexingStatus: 'noindex, nofollow (Redirect → /admin/dashboard)',
+    sitemapStatus: 'Excluded',
+    managedPageKey: null,
+    notes: 'Internal administrative redirect to dashboard tab.',
+  },
+  {
+    path: '/admin/bookings',
+    label: 'Admin Bookings Alias',
+    type: 'ADMIN_REDIRECT',
+    isPublic: false,
+    hasContent: false,
+    indexingStatus: 'noindex, nofollow (Redirect → /admin/dashboard)',
+    sitemapStatus: 'Excluded',
+    managedPageKey: null,
+    notes: 'Internal administrative redirect to dashboard tab.',
+  },
+  {
+    path: '/admin',
+    label: 'Admin Root Alias',
+    type: 'ADMIN_REDIRECT',
+    isPublic: false,
+    hasContent: false,
+    indexingStatus: 'noindex, nofollow (Redirect → /admin/dashboard)',
+    sitemapStatus: 'Excluded',
+    managedPageKey: null,
+    notes: 'Internal administrative redirect to dashboard.',
+  },
+  {
+    path: '*',
+    label: 'Not Found Page (404)',
+    type: 'NOT_FOUND_HANDLER',
+    isPublic: false,
+    hasContent: false,
+    indexingStatus: 'HTTP 404 (Excluded from indexing)',
+    sitemapStatus: 'Excluded',
+    managedPageKey: null,
+    notes: 'Wildcard error page returned with HTTP 404 status for unrecognised paths; guides users back home.',
+  },
+];
+
+const PLANNED_ROUTES = [
+  { path: '/about', label: 'About Us', priority: 'High', description: 'Company history, mission, verified fleet details, operating credentials.' },
+  { path: '/contact', label: 'Contact Us', priority: 'High', description: 'Verified phone numbers, branch addresses, emergency helpline, operating hours.' },
+  { path: '/airport-transfers', label: 'Airport Transfers', priority: 'Medium', description: 'Dedicated landing page for Pune (PNQ) and Mumbai (BOM/CSIA) airport transfers.' },
+  { path: '/vehicles', label: 'Fleet & Vehicles', priority: 'Medium', description: 'Detailed fleet showcase for Sedan, SUV, Innova Crysta, and Tempo Traveller options.' },
+  { path: '/pune-to-mumbai-taxi', label: 'Pune to Mumbai Taxi', priority: 'High', description: 'High-intent route landing page targeting Pune→Mumbai intercity taxi queries.' },
+  { path: '/mumbai-to-pune-taxi', label: 'Mumbai to Pune Taxi', priority: 'High', description: 'High-intent route landing page targeting Mumbai→Pune intercity taxi queries.' },
+  { path: '/privacy-policy', label: 'Privacy Policy', priority: 'Medium', description: 'Mandatory legal compliance and data protection disclosure.' },
+  { path: '/terms', label: 'Terms & Conditions', priority: 'Medium', description: 'Booking conditions, cancellation/refund policies, toll and tax disclaimers.' },
+];
+
+// ---------------------------------------------------------------------------
 // Ensure all known pages exist in DB (idempotent seed on first access)
 // ---------------------------------------------------------------------------
 async function seedPages() {
-  for (const page of PUBLIC_PAGES) {
-    await prisma.seoMeta.upsert({
-      where: { pageKey: page.pageKey },
-      update: {}, // Never overwrite admin-saved data on subsequent seeds
-      create: {
-        pageKey:         page.pageKey,
-        pageLabel:       page.pageLabel,
-        pageUrl:         page.pageUrl,
-        seoTitle:        page.seoTitle        || null,
-        metaDescription: page.metaDescription || null,
-        isIndexable:     page.isIndexable     ?? true,
-      },
-    });
+  try {
+    for (const page of PUBLIC_PAGES) {
+      await prisma.seoMeta.upsert({
+        where: { pageKey: page.pageKey },
+        update: {}, // Never overwrite admin-saved data on subsequent seeds
+        create: {
+          pageKey:         page.pageKey,
+          pageLabel:       page.pageLabel,
+          pageUrl:         page.pageUrl,
+          seoTitle:        page.seoTitle        || null,
+          metaDescription: page.metaDescription || null,
+          isIndexable:     page.isIndexable     ?? true,
+        },
+      });
+    }
+  } catch (err) {
+    console.warn('[SEO] seedPages non-fatal warning:', err.message);
   }
 }
 
@@ -63,7 +195,24 @@ async function seedPages() {
 const getPages = async (req, res) => {
   try {
     await seedPages();
-    const pages = await prisma.seoMeta.findMany({ orderBy: { pageKey: 'asc' } });
+    let pages = [];
+    try {
+      pages = await prisma.seoMeta.findMany({ orderBy: { pageKey: 'asc' } });
+    } catch (dbErr) {
+      console.warn('[SEO] DB query fallback:', dbErr.message);
+    }
+
+    if (!pages || pages.length === 0) {
+      pages = PUBLIC_PAGES.map(p => ({
+        ...p,
+        canonicalUrl: null,
+        ogTitle: null,
+        ogDescription: null,
+        ogImage: null,
+        slug: null,
+        updatedAt: new Date().toISOString(),
+      }));
+    }
 
     const missingTitle = pages.filter(p => !p.seoTitle).length;
     const missingDesc  = pages.filter(p => !p.metaDescription).length;
@@ -71,13 +220,19 @@ const getPages = async (req, res) => {
     res.json({
       success: true,
       data: {
+        siteDomain: SITE_DOMAIN,
         pages,
         stats: {
           total:        pages.length,
           indexable:    pages.filter(p => p.isIndexable).length,
+          noindex:      pages.filter(p => !p.isIndexable).length,
           missingTitle,
           missingDesc,
+          routesCount:  ROUTE_INVENTORY.length,
+          plannedCount: PLANNED_ROUTES.length,
         },
+        routeInventory: ROUTE_INVENTORY,
+        plannedRoutes:  PLANNED_ROUTES,
       },
     });
   } catch (err) {
@@ -141,19 +296,42 @@ const updatePage = async (req, res) => {
   }
 };
 
+
 // ---------------------------------------------------------------------------
-// GET /api/sitemap.xml  — generate XML sitemap (public, no auth)
+// GET /sitemap.xml  — generate XML sitemap (public, no auth)
 // ---------------------------------------------------------------------------
 const getSitemap = async (req, res) => {
   try {
-    const domain = process.env.SITE_DOMAIN || 'https://ajtoursandtravels.in';
-    const pages  = await prisma.seoMeta.findMany({ where: { isIndexable: true } });
+    const domain = SITE_DOMAIN;
+    const pages  = await prisma.seoMeta.findMany({
+      where:   { isIndexable: true },
+      orderBy: { pageUrl: 'asc' },   // deterministic: / → /booking → /fare
+    });
+
+    const today = new Date().toISOString().split('T')[0];
 
     const urlEntries = pages.map(p => {
+      // Prefer explicit canonicalUrl; fall back to domain + pageUrl
       const loc = p.canonicalUrl
         ? (p.canonicalUrl.startsWith('http') ? p.canonicalUrl : `${domain}${p.canonicalUrl}`)
         : `${domain}${p.pageUrl}`;
-      return `  <url>\n    <loc>${loc}</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>`;
+
+      // Homepage is the most important page; all others are secondary
+      const priority = p.pageUrl === '/' ? '1.0' : '0.8';
+
+      // Use the record's updatedAt date if available, otherwise today
+      const lastmod = p.updatedAt
+        ? new Date(p.updatedAt).toISOString().split('T')[0]
+        : today;
+
+      return [
+        '  <url>',
+        `    <loc>${loc}</loc>`,
+        `    <lastmod>${lastmod}</lastmod>`,
+        `    <changefreq>weekly</changefreq>`,
+        `    <priority>${priority}</priority>`,
+        '  </url>',
+      ].join('\n');
     }).join('\n');
 
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
@@ -169,9 +347,10 @@ ${urlEntries}
   }
 };
 
+
 // ---------------------------------------------------------------------------
 const getRobots = (req, res) => {
-  const domain = process.env.SITE_DOMAIN || 'https://ajtoursandtravels.in';
+  const domain = SITE_DOMAIN;
   // /admin/, /api/, and /auth/ are blocked from crawlers.
   // /auth/ matches the live production robots.txt which also disallows /auth.
   const content = [
@@ -193,19 +372,39 @@ const getRobots = (req, res) => {
 // ---------------------------------------------------------------------------
 const getPublicPages = async (req, res) => {
   try {
-    const pages = await prisma.seoMeta.findMany({
-      select: {
-        pageKey: true,
-        pageUrl: true,
-        seoTitle: true,
-        metaDescription: true,
-        canonicalUrl: true,
-        isIndexable: true,
-        ogTitle: true,
-        ogDescription: true,
-        ogImage: true,
-      },
-    });
+    let pages = [];
+    try {
+      pages = await prisma.seoMeta.findMany({
+        select: {
+          pageKey: true,
+          pageUrl: true,
+          seoTitle: true,
+          metaDescription: true,
+          canonicalUrl: true,
+          isIndexable: true,
+          ogTitle: true,
+          ogDescription: true,
+          ogImage: true,
+        },
+      });
+    } catch (dbErr) {
+      console.warn('[SEO] getPublicPages DB query fallback:', dbErr.message);
+    }
+
+    if (!pages || pages.length === 0) {
+      pages = PUBLIC_PAGES.map(p => ({
+        pageKey: p.pageKey,
+        pageUrl: p.pageUrl,
+        seoTitle: p.seoTitle,
+        metaDescription: p.metaDescription,
+        canonicalUrl: null,
+        isIndexable: p.isIndexable,
+        ogTitle: null,
+        ogDescription: null,
+        ogImage: null,
+      }));
+    }
+
     res.json({ success: true, data: pages });
   } catch (err) {
     console.error('[SEO] getPublicPages error:', err);
@@ -213,4 +412,14 @@ const getPublicPages = async (req, res) => {
   }
 };
 
-module.exports = { getPages, getPage, updatePage, getSitemap, getRobots, getPublicPages };
+module.exports = {
+  getPages,
+  getPage,
+  updatePage,
+  getSitemap,
+  getRobots,
+  getPublicPages,
+  PUBLIC_PAGES,
+  ROUTE_INVENTORY,
+  PLANNED_ROUTES,
+};

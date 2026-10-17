@@ -1,26 +1,31 @@
 import React from 'react';
-import { Car, Sparkles, UserCheck, MapPin, Zap, MessageSquare } from 'lucide-react';
+import { Car, Sparkles, UserCheck, MapPin, Zap, MessageSquare, ShieldCheck, Clock } from 'lucide-react';
+import { homepageContent } from '../data/homepageContent';
+
+const ICON_MAP = {
+  Car,
+  Sparkles,
+  UserCheck,
+  MapPin,
+  ShieldCheck,
+  Clock,
+  Zap,
+  MessageSquare,
+};
 
 export const TrustBar = () => {
-  const trustItems = [
-    { icon: Car, title: 'LUXURY FLEET', desc: 'Premium sedans, Ertiga & Innova' },
-    { icon: Sparkles, title: 'SANITIZED CABS', desc: 'Clean interiors & dual AC' },
-    { icon: UserCheck, title: 'VERIFIED CHAUFFEURS', desc: 'Professional highway drivers' },
-    { icon: MapPin, title: 'DOORSTEP PICKUP', desc: 'Direct home, office or airport' },
-    { icon: Zap, title: 'FAST 30-MIN DISPATCH', desc: 'Prompt citywide availability' },
-    { icon: MessageSquare, title: 'INSTANT BOOKING', desc: 'Zero hidden toll charges' }
-  ];
+  const trustItems = homepageContent.trustBar || [];
 
   return (
-    <div className="trust-connected-bar">
+    <div id="about" className="trust-connected-bar">
       <div className="container">
         <div className="trust-scroll-container">
           {trustItems.map((item, index) => {
-            const Icon = item.icon;
+            const Icon = ICON_MAP[item.icon] || ShieldCheck;
             return (
-              <div key={index} className="trust-scroll-card">
+              <div key={item.id || index} className={`trust-scroll-card reveal stagger-${(index % 4) + 1}`}>
                 <div className="trust-scroll-icon">
-                  <Icon size={16} color="#0284C7" />
+                  <Icon size={16} color="#1D4ED8" />
                 </div>
                 <div className="trust-scroll-text">
                   <span className="trust-scroll-title">{item.title}</span>
@@ -34,13 +39,12 @@ export const TrustBar = () => {
 
       <style>{`
         .trust-connected-bar {
-          background: #FFFFFF;
-          border-top: 1px solid #E2E8F0;
-          border-bottom: 1px solid #F1F5F9;
-          padding: 0.75rem 0;
+          background: #F8F7F4;
+          border-top: 1px solid #DCE3EB;
+          border-bottom: 1px solid #DCE3EB;
+          padding: 1.15rem 0;
           position: relative;
           z-index: 10;
-          box-shadow: 0 2px 10px rgba(15, 23, 42, 0.02);
         }
 
         .trust-scroll-container {
@@ -61,36 +65,39 @@ export const TrustBar = () => {
         }
 
         .trust-scroll-card {
-          background: #F8FAFC;
-          border: 1px solid #E2E8F0;
-          border-radius: 12px;
-          padding: 0.45rem 0.95rem;
-          height: 46px;
+          background: #FFFFFF;
+          border: 1.5px solid #DCE3EB;
+          border-radius: 14px;
+          padding: 0.55rem 1.15rem;
+          height: 52px;
           display: inline-flex;
           align-items: center;
-          gap: 0.65rem;
+          gap: 0.75rem;
           flex-shrink: 0;
           white-space: nowrap;
           scroll-snap-align: start;
-          transition: all 0.2s ease;
+          transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+          box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
         }
 
         .trust-scroll-card:hover {
-          background: #F0F9FF;
-          border-color: #BAE6FD;
-          transform: translateY(-1.5px);
-          box-shadow: 0 4px 12px rgba(2, 132, 199, 0.08);
+          background: #FFFFFF;
+          border-color: #93C5FD;
+          transform: translateY(-2px);
+          box-shadow: 0 6px 18px rgba(37, 99, 235, 0.12);
         }
 
         .trust-scroll-icon {
-          width: 30px;
-          height: 30px;
-          border-radius: 8px;
-          background: #E0F2FE;
+          width: 32px;
+          height: 32px;
+          border-radius: 9px;
+          background: #EFF6FF;
+          border: 1px solid #BFDBFE;
           display: flex;
           align-items: center;
           justify-content: center;
           flex-shrink: 0;
+          color: #2563EB;
         }
 
         .trust-scroll-text {
@@ -100,11 +107,11 @@ export const TrustBar = () => {
         }
 
         .trust-scroll-title {
-          font-family: var(--font-heading);
-          font-size: 0.75rem;
+          font-family: var(--font-heading, 'Outfit', sans-serif);
+          font-size: 0.76rem;
           font-weight: 800;
-          letter-spacing: 0.03em;
-          color: #0F172A;
+          letter-spacing: 0.04em;
+          color: #17324D;
         }
 
         .trust-scroll-desc {

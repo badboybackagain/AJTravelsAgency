@@ -13,18 +13,50 @@ router.get('/admin/all', auth, adminOnly, adminGetVehicles);
 router.get('/', getAllVehicles);
 router.get('/:id', getVehicle);
 
+const prisma = require('../utils/prisma');
+
 // ADMIN — IMAGE UPLOAD
-router.post('/upload-image', auth, adminOnly, upload.single('image'), (req, res, next) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({ success: false, message: 'No image file uploaded' });
+router.post(
+  '/upload-image',
+  auth,
+  adminOnly,
+  (req, res, next) => {
+    req.uploadCategory = 'vehicles';
+    next();
+  },
+  upload.single('image'),
+  async (req, res, next) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ success: false, message: 'No image file uploaded' });
+      }
+      const imageUrl = req.file.publicUrl || `/uploads/vehicles/${req.file.filename}`;
+
+      // Synchronize with Central Media Library
+      try {
+        await prisma.mediaAsset.create({
+          data: {
+            filename: req.file.filename,
+            originalName: req.file.originalname,
+            url: imageUrl,
+            mimeType: req.file.mimetype,
+            fileSize: req.file.size,
+            category: 'vehicles',
+            altText: `Fleet Vehicle Image - ${req.file.originalname}`,
+            title: req.file.originalname.replace(/\.[^/.]+$/, ''),
+          },
+        });
+      } catch (dbErr) {
+        // Non-fatal if asset record creation fails; keep image upload functional
+        console.warn('Could not index vehicle upload in MediaAsset:', dbErr.message);
+      }
+
+      res.json({ success: true, imageUrl, message: 'Vehicle image uploaded successfully' });
+    } catch (err) {
+      next(err);
     }
-    const imageUrl = `/uploads/vehicles/${req.file.filename}`;
-    res.json({ success: true, imageUrl, message: 'Vehicle image uploaded successfully' });
-  } catch (err) {
-    next(err);
   }
-});
+);
 
 // ADMIN MUTATIONS
 router.post('/', auth, adminOnly, createVehicle);

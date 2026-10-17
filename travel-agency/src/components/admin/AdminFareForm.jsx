@@ -10,8 +10,10 @@ import {
   AlertCircle,
   Loader2,
   Sparkles,
+  Image as ImageIcon,
 } from 'lucide-react';
 import { adminFareConfigApi, locationApi, routeApi, vehicleApi, API_BASE_URL } from '../../services/api';
+import { MediaPickerModal } from './MediaPickerModal';
 import './admin.css';
 
 export const AdminFareForm = ({ isOpen, onClose, onSuccess, initialData = null }) => {
@@ -25,6 +27,7 @@ export const AdminFareForm = ({ isOpen, onClose, onSuccess, initialData = null }
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [isMediaPickerOpen, setIsMediaPickerOpen] = useState(false);
 
   // Form State
   const [routeMode, setRouteMode] = useState('existing'); // 'existing' | 'new'
@@ -555,11 +558,22 @@ export const AdminFareForm = ({ isOpen, onClose, onSuccess, initialData = null }
                     style={{ width: '48px', height: '34px', borderRadius: '6px', objectFit: 'contain', backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', padding: '2px', flexShrink: 0 }}
                     onError={(e) => { e.target.src = '/assets/sedan.webp'; }}
                   />
-                  <label className="admin-btn-secondary" style={{ flex: 1, height: '36px', cursor: 'pointer', fontSize: '0.78rem' }}>
-                    <Upload size={13} />
-                    <span>{uploadingImage ? 'Uploading...' : 'Upload Custom Image'}</span>
-                    <input type="file" accept="image/*" onChange={handleImageUpload} style={{ display: 'none' }} />
-                  </label>
+                  <div style={{ display: 'flex', gap: '0.5rem', flex: 1 }}>
+                    <button
+                      type="button"
+                      onClick={() => setIsMediaPickerOpen(true)}
+                      className="admin-btn-secondary"
+                      style={{ flex: 1, height: '36px', fontSize: '0.78rem' }}
+                    >
+                      <ImageIcon size={13} />
+                      <span>Choose from Library</span>
+                    </button>
+                    <label className="admin-btn-secondary" style={{ flex: 1, height: '36px', cursor: 'pointer', fontSize: '0.78rem' }}>
+                      <Upload size={13} />
+                      <span>{uploadingImage ? 'Uploading...' : 'Upload File'}</span>
+                      <input type="file" accept="image/*" onChange={handleImageUpload} style={{ display: 'none' }} />
+                    </label>
+                  </div>
                 </div>
               </div>
 
@@ -710,6 +724,18 @@ export const AdminFareForm = ({ isOpen, onClose, onSuccess, initialData = null }
         </div>
 
       </div>
+
+      {/* Media Picker Modal */}
+      <MediaPickerModal
+        isOpen={isMediaPickerOpen}
+        onClose={() => setIsMediaPickerOpen(false)}
+        onSelect={(asset) => {
+          setVehicleImage(asset.url);
+        }}
+        initialCategory="vehicles"
+        currentValue={vehicleImage}
+        title="Select Vehicle Image"
+      />
     </div>
   );
 };

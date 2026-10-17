@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Car, Clock, ArrowLeftRight, MapPin, Navigation, Search, MessageSquare, Star, Users } from 'lucide-react';
+import { Car, Clock, ArrowLeftRight, MapPin, Navigation, Search, MessageSquare, ShieldCheck, CheckCircle2 } from 'lucide-react';
 import { getWhatsAppLink } from '../utils/whatsapp';
 
 export const BookingCard = ({ onOpenEnquiry }) => {
@@ -114,14 +114,14 @@ export const BookingCard = ({ onOpenEnquiry }) => {
             <span>Check Fare & Book on WhatsApp</span>
           </button>
 
-          {/* Social Proof Trust Footer inside card */}
+          {/* Verified Service Features */}
           <div className="card-trust-footer">
             <span className="trust-proof-item">
-              <Star size={14} color="#F59E0B" fill="#F59E0B" /> <strong>4.9 Rating</strong>
+              <ShieldCheck size={14} color="#16A34A" /> <strong>Fixed Transparent Fares</strong>
             </span>
             <span className="trust-divider">|</span>
             <span className="trust-proof-item">
-              <Users size={14} color="#0099FF" /> <strong>50,000+ Trips Completed</strong>
+              <CheckCircle2 size={14} color="#0099FF" /> <strong>Verified Drivers & AC Fleet</strong>
             </span>
             <span className="trust-divider">|</span>
             <span className="trust-proof-item">

@@ -39,11 +39,11 @@ export const AdminLogin = ({ onLoginSuccess }) => {
       <div className="admin-login-card">
         <div className="admin-login-header">
           <div className="admin-badge">
-            <ShieldAlert size={20} color="#0099FF" />
+            <ShieldAlert size={18} color="#0284C7" />
             <span>ADMINISTRATOR ACCESS</span>
           </div>
-          <h2>Pune ↔ Mumbai Travel</h2>
-          <p>Control Panel & Dynamic Fare Management System</p>
+          <h2>AJ Travel Agency</h2>
+          <p>Executive Control Panel & Fleet Management</p>
         </div>
 
         {error && (
@@ -68,7 +68,7 @@ export const AdminLogin = ({ onLoginSuccess }) => {
                 autoComplete="off"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@punetravelagency.in"
+                placeholder="admin@ajtravelagency.in"
                 required
               />
             </div>
@@ -92,7 +92,7 @@ export const AdminLogin = ({ onLoginSuccess }) => {
           </div>
 
           <button type="submit" className="btn-admin-submit" disabled={loading}>
-            {loading ? 'Authenticating...' : 'Sign In to Admin Portal'}
+            {loading ? 'Authenticating...' : 'Sign In to Control Center'}
             <ArrowRight size={18} />
           </button>
         </form>
@@ -104,7 +104,7 @@ export const AdminLogin = ({ onLoginSuccess }) => {
           display: flex;
           align-items: center;
           justify-content: center;
-          background: #0B132B;
+          background: #F8FAFC;
           padding: 2rem;
           font-family: var(--font-body, system-ui, sans-serif);
         }
@@ -112,12 +112,12 @@ export const AdminLogin = ({ onLoginSuccess }) => {
         .admin-login-card {
           width: 100%;
           max-width: 440px;
-          background: #1C2541;
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          border-radius: 24px;
+          background: #FFFFFF;
+          border: 1px solid #E2E8F0;
+          border-radius: 20px;
           padding: 2.5rem;
-          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-          color: #FFFFFF;
+          box-shadow: 0 10px 30px -5px rgba(15, 23, 42, 0.08), 0 4px 6px -4px rgba(15, 23, 42, 0.04);
+          color: #0F172A;
         }
 
         .admin-login-header {
@@ -129,12 +129,13 @@ export const AdminLogin = ({ onLoginSuccess }) => {
           display: inline-flex;
           align-items: center;
           gap: 0.5rem;
-          padding: 0.4rem 0.8rem;
-          background: rgba(0, 153, 255, 0.15);
-          border-radius: 999px;
+          padding: 0.35rem 0.85rem;
+          background: #F0F9FF;
+          border: 1px solid #BAE6FD;
+          border-radius: 9999px;
           font-size: 0.75rem;
           font-weight: 700;
-          color: #38BDF8;
+          color: #0284C7;
           letter-spacing: 0.05em;
           margin-bottom: 1rem;
         }
@@ -142,23 +143,23 @@ export const AdminLogin = ({ onLoginSuccess }) => {
         .admin-login-header h2 {
           font-size: 1.75rem;
           font-weight: 800;
-          color: #FFFFFF;
-          margin-bottom: 0.5rem;
+          color: #0F172A;
+          margin-bottom: 0.4rem;
         }
 
         .admin-login-header p {
-          font-size: 0.9rem;
-          color: #94A3B8;
+          font-size: 0.875rem;
+          color: #64748B;
         }
 
         .admin-error-alert {
-          background: rgba(239, 68, 68, 0.15);
-          border: 1px solid #EF4444;
-          color: #FCA5A5;
-          padding: 0.8rem 1rem;
-          border-radius: 12px;
+          background: #FEF2F2;
+          border: 1px solid #FCA5A5;
+          color: #B91C1C;
+          padding: 0.75rem 1rem;
+          border-radius: 10px;
           font-size: 0.85rem;
-          margin-bottom: 1.5rem;
+          margin-bottom: 1.25rem;
         }
 
         .admin-login-form {
@@ -170,13 +171,13 @@ export const AdminLogin = ({ onLoginSuccess }) => {
         .form-group {
           display: flex;
           flex-direction: column;
-          gap: 0.5rem;
+          gap: 0.45rem;
         }
 
         .form-group label {
-          font-size: 0.8rem;
-          font-weight: 600;
-          color: #CBD5E1;
+          font-size: 0.75rem;
+          font-weight: 700;
+          color: #475569;
           text-transform: uppercase;
           letter-spacing: 0.05em;
         }
@@ -190,23 +191,24 @@ export const AdminLogin = ({ onLoginSuccess }) => {
         .input-icon {
           position: absolute;
           left: 1rem;
-          color: #64748B;
+          color: #94A3B8;
         }
 
         .input-with-icon input {
           width: 100%;
-          padding: 0.9rem 1rem 0.9rem 2.8rem;
-          background: #0F172A;
-          border: 1px solid #334155;
-          border-radius: 12px;
-          color: #FFFFFF;
-          font-size: 0.95rem;
+          padding: 0.85rem 1rem 0.85rem 2.8rem;
+          background: #F8FAFC;
+          border: 1.5px solid #E2E8F0;
+          border-radius: 10px;
+          color: #0F172A;
+          font-size: 0.9375rem;
           outline: none;
           transition: border-color 0.2s;
         }
 
         .input-with-icon input:focus {
-          border-color: #38BDF8;
+          border-color: #0284C7;
+          background: #FFFFFF;
         }
 
         .btn-admin-submit {
@@ -214,21 +216,23 @@ export const AdminLogin = ({ onLoginSuccess }) => {
           align-items: center;
           justify-content: center;
           gap: 0.6rem;
-          padding: 1rem;
-          background: linear-gradient(135deg, #0099FF 0%, #0066FF 100%);
+          padding: 0.9rem;
+          background: #0284C7;
           border: none;
-          border-radius: 12px;
+          border-radius: 10px;
           color: #FFFFFF;
           font-weight: 700;
-          font-size: 1rem;
+          font-size: 0.95rem;
           cursor: pointer;
-          transition: transform 0.2s, box-shadow 0.2s;
+          transition: all 0.2s ease;
           margin-top: 0.5rem;
+          box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25);
         }
 
         .btn-admin-submit:hover:not(:disabled) {
-          transform: translateY(-2px);
-          box-shadow: 0 10px 20px rgba(0, 153, 255, 0.4);
+          background: #0369A1;
+          transform: translateY(-1px);
+          box-shadow: 0 6px 16px rgba(2, 132, 199, 0.35);
         }
 
         .btn-admin-submit:disabled {

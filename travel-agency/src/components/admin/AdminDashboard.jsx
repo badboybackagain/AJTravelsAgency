@@ -17,6 +17,7 @@ import {
   X,
   MessageSquare,
   Search,
+  Image as ImageIcon,
 } from 'lucide-react';
 import { adminFareConfigApi, bookingApi, routeApi, vehicleApi } from '../../services/api';
 import { AdminFares } from './AdminFares';
@@ -25,10 +26,12 @@ import { AdminBookings } from './AdminBookings';
 import { AdminFareForm } from './AdminFareForm';
 import { AdminWhatsAppSettings } from './AdminWhatsAppSettings';
 import { AdminSeo } from './AdminSeo';
+import { AdminMediaLibrary } from './AdminMediaLibrary';
 import './admin.css';
 
 export const AdminDashboard = ({ onLogout }) => {
   const [activeTab, setActiveTab] = useState('fares'); // 'dashboard' | 'fares' | 'bookings'
+  const [visitedTabs, setVisitedTabs] = useState(() => new Set(['fares']));
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [stats, setStats] = useState({
     activeFares: 0,
@@ -39,6 +42,15 @@ export const AdminDashboard = ({ onLogout }) => {
   const [recentFares, setRecentFares] = useState([]);
   const [loadingDashboard, setLoadingDashboard] = useState(false);
   const [isQuickCreateOpen, setIsQuickCreateOpen] = useState(false);
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    setVisitedTabs((prev) => {
+      const next = new Set(prev);
+      next.add(tab);
+      return next;
+    });
+  };
 
   const adminEmail = localStorage.getItem('adminEmail') || 'admin@punemumbaitravels.in';
 
@@ -102,10 +114,10 @@ export const AdminDashboard = ({ onLogout }) => {
         
         {/* Brand Header */}
         <div className="admin-brand">
-          <div className="admin-brand-logo">PM</div>
+          <div className="admin-brand-logo">AJ</div>
           <div style={{ flex: 1 }}>
-            <div className="admin-brand-title">Pune ↔ Mumbai</div>
-            <div className="admin-brand-sub">Admin Portal</div>
+            <div className="admin-brand-title">AJ Travel Agency</div>
+            <div className="admin-brand-sub">Control Center</div>
           </div>
           {/* Close button inside mobile drawer */}
           <button
@@ -121,7 +133,7 @@ export const AdminDashboard = ({ onLogout }) => {
         <nav className="admin-nav">
           <button
             onClick={() => {
-              setActiveTab('dashboard');
+              handleTabChange('dashboard');
               setIsMobileMenuOpen(false);
             }}
             className={`admin-nav-item ${activeTab === 'dashboard' ? 'active' : ''}`}
@@ -132,7 +144,7 @@ export const AdminDashboard = ({ onLogout }) => {
 
           <button
             onClick={() => {
-              setActiveTab('fares');
+              handleTabChange('fares');
               setIsMobileMenuOpen(false);
             }}
             className={`admin-nav-item ${activeTab === 'fares' ? 'active' : ''}`}
@@ -146,7 +158,7 @@ export const AdminDashboard = ({ onLogout }) => {
 
           <button
             onClick={() => {
-              setActiveTab('local');
+              handleTabChange('local');
               setIsMobileMenuOpen(false);
             }}
             className={`admin-nav-item ${activeTab === 'local' ? 'active' : ''}`}
@@ -157,7 +169,7 @@ export const AdminDashboard = ({ onLogout }) => {
 
           <button
             onClick={() => {
-              setActiveTab('bookings');
+              handleTabChange('bookings');
               setIsMobileMenuOpen(false);
             }}
             className={`admin-nav-item ${activeTab === 'bookings' ? 'active' : ''}`}
@@ -173,7 +185,7 @@ export const AdminDashboard = ({ onLogout }) => {
 
           <button
             onClick={() => {
-              setActiveTab('whatsapp');
+              handleTabChange('whatsapp');
               setIsMobileMenuOpen(false);
             }}
             className={`admin-nav-item ${activeTab === 'whatsapp' ? 'active' : ''}`}
@@ -184,13 +196,24 @@ export const AdminDashboard = ({ onLogout }) => {
 
           <button
             onClick={() => {
-              setActiveTab('seo');
+              handleTabChange('seo');
               setIsMobileMenuOpen(false);
             }}
             className={`admin-nav-item ${activeTab === 'seo' ? 'active' : ''}`}
           >
             <Search size={18} />
             <span>SEO Management</span>
+          </button>
+
+          <button
+            onClick={() => {
+              handleTabChange('media');
+              setIsMobileMenuOpen(false);
+            }}
+            className={`admin-nav-item ${activeTab === 'media' ? 'active' : ''}`}
+          >
+            <ImageIcon size={18} />
+            <span>Media Library</span>
           </button>
         </nav>
 
@@ -417,19 +440,34 @@ export const AdminDashboard = ({ onLogout }) => {
           )}
 
           {/* TAB 2: UNIFIED FARE MANAGEMENT */}
-          {activeTab === 'fares' && <AdminFares />}
+          <div style={{ display: activeTab === 'fares' ? 'block' : 'none' }}>
+            {(visitedTabs.has('fares') || activeTab === 'fares') && <AdminFares />}
+          </div>
 
           {/* TAB 3: LOCAL HOURLY PACKAGES */}
-          {activeTab === 'local' && <AdminLocalVehicles />}
+          <div style={{ display: activeTab === 'local' ? 'block' : 'none' }}>
+            {(visitedTabs.has('local') || activeTab === 'local') && <AdminLocalVehicles />}
+          </div>
 
           {/* TAB 4: BOOKINGS */}
-          {activeTab === 'bookings' && <AdminBookings />}
+          <div style={{ display: activeTab === 'bookings' ? 'block' : 'none' }}>
+            {(visitedTabs.has('bookings') || activeTab === 'bookings') && <AdminBookings />}
+          </div>
 
           {/* TAB 5: WHATSAPP INTEGRATION */}
-          {activeTab === 'whatsapp' && <AdminWhatsAppSettings />}
+          <div style={{ display: activeTab === 'whatsapp' ? 'block' : 'none' }}>
+            {(visitedTabs.has('whatsapp') || activeTab === 'whatsapp') && <AdminWhatsAppSettings />}
+          </div>
 
           {/* TAB 6: SEO MANAGEMENT */}
-          {activeTab === 'seo' && <AdminSeo />}
+          <div style={{ display: activeTab === 'seo' ? 'block' : 'none' }}>
+            {(visitedTabs.has('seo') || activeTab === 'seo') && <AdminSeo />}
+          </div>
+
+          {/* TAB 7: CENTRAL MEDIA LIBRARY */}
+          <div style={{ display: activeTab === 'media' ? 'block' : 'none' }}>
+            {(visitedTabs.has('media') || activeTab === 'media') && <AdminMediaLibrary />}
+          </div>
 
         </main>
 

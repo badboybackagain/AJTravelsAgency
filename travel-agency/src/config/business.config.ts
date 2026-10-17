@@ -30,13 +30,13 @@ export interface BusinessConfig {
 }
 
 export const businessConfig: BusinessConfig = {
-  businessName: "Pune ↔ Mumbai Private Travels",
-  tagline: "Premium Pune–Mumbai Travel With Fast Doorstep Pickup",
-  phone: "+919876543210",
-  phoneDisplay: "+91 98765 43210",
-  whatsapp: "919876543210",
-  email: "booking@punemumbaitravels.in",
-  address: "Pune-Mumbai Intercity Terminal, Hinjawadi, Pune, Maharashtra 411057",
+  businessName: "AJ Travel Agency",
+  tagline: "Premier Vehicle Rentals & Intercity Chauffeured Travel",
+  phone: "",
+  phoneDisplay: "",
+  whatsapp: "919156183915",
+  email: "contact@ajtravelagency.in",
+  address: "AJ Travel Agency Hub, Hinjawadi & Pune-Mumbai Expressway Terminal, Pune 411057",
   businessHours: "24 Hours / 7 Days a Week",
   googleBusinessProfileUrl: "https://maps.google.com",
   googleReviewUrl: "https://maps.google.com",

@@ -34,6 +34,7 @@ import { bookingApi, fareApi, locationApi, otpApi, API_BASE_URL } from '../servi
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
 import { usePageSeo } from '../hooks/usePageSeo';
+import { useScrollReveal } from '../hooks/useScrollReveal';
 import './fare.css';
 
 export const BookingPage = () => {
@@ -41,6 +42,9 @@ export const BookingPage = () => {
   const [searchParams] = useSearchParams();
   const locationState = useLocation();
   const navigate = useNavigate();
+
+  // Scroll reveal trigger
+  useScrollReveal();
 
   // URL & Navigation State Parameters
   const tripType = searchParams.get('tripType') || locationState.state?.tripType || 'ONE_WAY';
@@ -89,6 +93,23 @@ export const BookingPage = () => {
 
   // Server-side quote verification on mount
   useEffect(() => {
+    // Skip entirely if quoteData and vehicle are already passed via navigation state
+    if (locationState.state?.quoteData && (locationState.state?.vehicle || vehicleId)) {
+      setRecalculatingQuote(false);
+      return;
+    }
+
+    // Skip API call if we lack the required IDs (would cause 400)
+    const hasValidRoute =
+      tripType === 'LOCAL'
+        ? city && duration
+        : pickupId || dropId;
+
+    if (!hasValidRoute) {
+      setRecalculatingQuote(false);
+      return;
+    }
+
     const revalidateQuote = async () => {
       setRecalculatingQuote(true);
       setQuoteError('');
@@ -119,8 +140,9 @@ export const BookingPage = () => {
           }
         }
       } catch (err) {
-        console.error('Revalidation error:', err);
-        setQuoteError('Unable to verify fare with server.');
+        // Only log — don't block the booking page with an error banner
+        console.warn('Quote revalidation skipped:', err?.response?.data?.message || err.message);
+        setQuoteError('');
       } finally {
         setRecalculatingQuote(false);
       }
@@ -287,6 +309,65 @@ export const BookingPage = () => {
     <div className="fare-page-wrapper">
       <Header isDark={false} />
 
+      {/* ── Internal Hero Banner (Matches Services & Corridors Header System) ── */}
+      <section className="internal-hero-section">
+        <div className="container">
+          <div className="breadcrumbs-nav">
+            <Link to="/">Home</Link>
+            <span className="bc-sep">/</span>
+            <Link to="/fare">Fare Calculator</Link>
+            <span className="bc-sep">/</span>
+            <span className="bc-current">Confirm Reservation</span>
+          </div>
+
+          <div className="internal-hero-content">
+            <div className="hero-badge-pill">
+              <Sparkles size={14} />
+              <span>AJ TRAVEL AGENCY • EXPRESS CAB RESERVATION</span>
+            </div>
+
+            <h1 className="internal-hero-title">
+              Confirm Your Cab <span className="text-gradient">Reservation</span>
+            </h1>
+
+            <p className="internal-hero-subtitle">
+              Direct doorstep pickup with professional verified chauffeur. Pay directly to the driver upon trip arrival — zero advance deposit required.
+            </p>
+
+            {/* Corridor Route / Trip Stats Chips */}
+            <div className="svc-stats-chips-row">
+              <div className="chip-box">
+                <Car size={15} color="#2563EB" />
+                <div>
+                  <span className="chip-lbl">ASSIGNED VEHICLE</span>
+                  <strong>{selectedVehicle?.name || 'Executive Cab'}</strong>
+                </div>
+              </div>
+
+              <div className="chip-box">
+                <MapPin size={15} color="#2563EB" />
+                <div>
+                  <span className="chip-lbl">CORRIDOR ROUTE</span>
+                  <strong>
+                    {tripType === 'LOCAL'
+                      ? `${city} Local (${duration}h Package)`
+                      : `${quoteData?.route?.pickup?.name || 'Pune'} ➔ ${quoteData?.route?.drop?.name || 'Mumbai'}`}
+                  </strong>
+                </div>
+              </div>
+
+              <div className="chip-box">
+                <ShieldCheck size={15} color="#15803D" />
+                <div>
+                  <span className="chip-lbl">RESERVATION GUARANTEE</span>
+                  <strong>100% Guaranteed On-Time Departure</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Main Single-Window Checkout Section */}
       <main className="container booking-main-container">
         {bookingConfirmed ? (
@@ -346,11 +427,11 @@ export const BookingPage = () => {
         ) : (
           <div className="booking-compact-grid">
             {/* Left Column: Form */}
-            <div className="booking-card-left">
+            <div className="booking-card-left reveal stagger-1">
               <div className="booking-section-header">
-                <h1 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
-                  Passenger & Pickup Details
-                </h1>
+                <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
+                  AJ Travel Agency — Passenger & Booking Details
+                </h2>
                 <span className="booking-instant-tag">✓ Verified Secure Booking</span>
               </div>
 
@@ -727,9 +808,9 @@ export const BookingPage = () => {
             </div>
 
             {/* Right Column: Order Summary & Pricing */}
-            <div className="booking-card-right">
+            <div className="booking-card-right reveal stagger-2">
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.65rem' }}>
-                <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                   Trip & Vehicle Summary
                 </span>
                 <span className="booking-fare-verified-badge">

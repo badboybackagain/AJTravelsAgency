@@ -1,5 +1,6 @@
 import React from 'react';
-import { MessageSquare, Phone, ShieldCheck, Clock, MapPin, Sparkles } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { MessageSquare, Phone, ShieldCheck, Clock, MapPin, Sparkles, Calendar } from 'lucide-react';
 import { businessConfig } from '../config/business.config';
 import { getWhatsAppLink, getPhoneCallLink } from '../utils/whatsapp';
 
@@ -9,7 +10,7 @@ export const Hero = ({ onOpenEnquiry }) => {
       {/* Visual Campaign Banner Background */}
       <div className="hero-banner-wrapper">
         <img
-          src="/assets/pune-to-mumbai-premium-travel-banner.webp"
+          src="/assets/hero-luxury-cars.jpg"
           alt="Pune to Mumbai premium private travel with luxury vehicle"
           className="hero-banner-img"
           width="1920"
@@ -51,10 +52,17 @@ export const Hero = ({ onOpenEnquiry }) => {
               <MessageSquare size={20} />
               <span>BOOK ON WHATSAPP</span>
             </a>
-            <a href={getPhoneCallLink()} className="btn btn-gold btn-lg">
-              <Phone size={20} />
-              <span>CALL NOW</span>
-            </a>
+            {businessConfig.phone ? (
+              <a href={getPhoneCallLink()} className="btn btn-gold btn-lg">
+                <Phone size={20} />
+                <span>CALL NOW</span>
+              </a>
+            ) : (
+              <Link to="/booking" className="btn btn-gold btn-lg" style={{ textDecoration: 'none' }}>
+                <Calendar size={20} />
+                <span>BOOK CAB ONLINE</span>
+              </Link>
+            )}
             <button onClick={onOpenEnquiry} className="btn btn-outline-gold btn-lg">
               <span>GET A QUOTE</span>
             </button>
