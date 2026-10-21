@@ -10,6 +10,7 @@ import { AboutPage } from './AboutPage';
 import { ContactPage } from './ContactPage';
 import { BlogPage } from './BlogPage';
 import { NotFoundPage } from './NotFoundPage';
+import { businessConfig } from '../config/business.config';
 import { 
   Car, 
   ArrowRight, 
@@ -27,8 +28,6 @@ import {
 export function LiveMigratedPage() {
   const { slug } = useParams();
   const location = useLocation();
-  const navigate = useNavigate();
-  const [isEnquiryOpen, setIsEnquiryOpen] = useState(false);
 
   // Normalize slug from route param or pathname (handles trailing slashes)
   const currentSlug = slug || location.pathname.replace(/^\/|\/$/g, '');
@@ -44,6 +43,12 @@ export function LiveMigratedPage() {
     return <BlogPage />;
   }
 
+  return <LiveMigratedContent currentSlug={currentSlug} />;
+}
+
+function LiveMigratedContent({ currentSlug }) {
+  const navigate = useNavigate();
+  const [isEnquiryOpen, setIsEnquiryOpen] = useState(false);
   const page = getLivePage(currentSlug);
 
   usePageSeo(
@@ -74,13 +79,15 @@ export function LiveMigratedPage() {
       'url': page.canonicalUrl,
       'provider': {
         '@type': 'TravelAgency',
-        'name': 'AJ Travels Pune',
-        'telephone': '+919156183915',
+        'name': businessConfig.businessName,
+        'telephone': businessConfig.phone,
+        'email': businessConfig.email,
         'address': {
           '@type': 'PostalAddress',
-          'addressLocality': 'Kasarwadi',
-          'addressRegion': 'Pune',
+          'streetAddress': 'Old Mumbai–Pune Highway, Nashik Fata, Kasarawadi',
+          'addressLocality': 'Pune',
           'postalCode': '411064',
+          'addressRegion': 'Maharashtra',
           'addressCountry': 'IN'
         }
       }
@@ -99,10 +106,14 @@ export function LiveMigratedPage() {
   }
 
   const handleBookNow = () => {
+    const pId = page.bookingDefaults?.pickupId || 'pune';
+    const dId = page.bookingDefaults?.dropId || 'mumbai';
     const params = new URLSearchParams({
       tripType: page.bookingDefaults?.tripType || 'ONE_WAY',
-      pickupId: page.bookingDefaults?.pickupId || 'pune',
-      dropId: page.bookingDefaults?.dropId || 'mumbai',
+      pickupId: pId,
+      dropId: dId,
+      pickupName: pId === 'mumbai' ? 'Mumbai (All Areas)' : 'Pune (All Areas)',
+      dropName: dId === 'pune' ? 'Pune (All Areas)' : 'Mumbai (All Areas)',
       category: page.bookingDefaults?.category || 'SEDAN'
     });
     navigate(`/fare?${params.toString()}`);
@@ -281,11 +292,11 @@ export function LiveMigratedPage() {
                 </button>
 
                 <div className="sidebar-desk-actions">
-                  <a href="tel:+919156183915" className="sidebar-desk-link call">
-                    <span>📞 Call 24/7 Desk: +91 91561 83915</span>
+                  <a href={`tel:${businessConfig.phone}`} className="sidebar-desk-link call">
+                    <span>📞 Call 24/7 Desk: {businessConfig.phoneDisplay}</span>
                   </a>
                   <a 
-                    href={`https://wa.me/919156183915?text=${encodeURIComponent(`Hi AJ Travels, I am on "${page.h1}" and would like to enquire about cab availability.`)}`}
+                    href={`https://wa.me/${businessConfig.whatsapp}?text=${encodeURIComponent(`Hi AJ Travels, I am on "${page.h1}" and would like to enquire about cab availability.`)}`}
                     target="_blank" 
                     rel="noopener noreferrer" 
                     className="sidebar-desk-link whatsapp"

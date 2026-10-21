@@ -19,8 +19,8 @@ import {
 export function BlogPage() {
   usePageSeo(
     'blog',
-    'AJ Travels Blog | Pune to Mumbai Cab Guides & Travel Advice',
-    'Explore comprehensive travel guides, expressway tips, outstation getaway itineraries, and vehicle rental advice from Maharashtra’s premier intercity travel team.'
+    'Travel Guides & Cab Rental Advice | AJ Travels Pune',
+    'Read Maharashtra travel guides, Pune to Mumbai cab travel tips, Tempo Traveller rental advice, and weekend getaway itineraries from AJ Travels.'
   );
 
   const [isEnquiryOpen, setIsEnquiryOpen] = useState(false);

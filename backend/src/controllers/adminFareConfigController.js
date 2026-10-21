@@ -1,5 +1,6 @@
 const prisma = require('../utils/prisma');
 const { AppError } = require('../middleware/errorHandler');
+const { invalidateFareCache } = require('../services/fareCalculationService');
 
 /**
  * Helper to convert float / decimal safely
@@ -41,48 +42,61 @@ const listFareConfigs = async (req, res, next) => {
       orderBy: [{ updatedAt: 'desc' }],
     });
 
-    // Also fetch latest availability for each fare's vehicle + route
-    const configsWithDetails = await Promise.all(
-      fares.map(async (f) => {
-        const availability = await prisma.vehicleAvailability.findFirst({
+    // Batch fetch latest availability for all fares in 1 query instead of 20+ parallel network round-trips
+    const vehicleIds = [...new Set(fares.map((f) => f.vehicleId).filter(Boolean))];
+    const routeIds = [...new Set(fares.map((f) => f.routeId).filter(Boolean))];
+
+    const availabilities = (vehicleIds.length > 0 && routeIds.length > 0)
+      ? await prisma.vehicleAvailability.findMany({
           where: {
-            vehicleId: f.vehicleId,
-            routeId: f.routeId,
+            vehicleId: { in: vehicleIds },
+            routeId: { in: routeIds },
           },
           orderBy: { createdAt: 'desc' },
-        });
+        })
+      : [];
 
-        const totalToll = toNum((f.fareTolls || []).reduce((sum, t) => sum + toNum(t.amount), 0));
-        const parkingAmount = f.fareParking && f.fareParking.enabled ? toNum(f.fareParking.amount) : 0;
-        const stayAmount = f.fareWaiting && f.fareWaiting.enabled ? toNum(f.fareWaiting.perHourCharge) : 0;
-        const estimatedTotal = toNum(toNum(f.baseFare) + totalToll + parkingAmount + stayAmount);
+    const availabilityMap = new Map();
+    for (const a of availabilities) {
+      const key = `${a.vehicleId}_${a.routeId}`;
+      if (!availabilityMap.has(key)) {
+        availabilityMap.set(key, a);
+      }
+    }
 
-        return {
-          id: f.id,
-          routeId: f.routeId,
-          vehicleId: f.vehicleId,
-          baseFare: toNum(f.baseFare),
-          perKmFare: toNum(f.perKmFare),
-          minimumFare: toNum(f.minimumFare),
-          isActive: f.isActive,
-          createdAt: f.createdAt,
-          updatedAt: f.updatedAt,
-          route: f.route,
-          vehicle: f.vehicle,
-          tolls: f.fareTolls || [],
-          totalToll,
-          parking: f.fareParking || { enabled: false, amount: 0, chargingType: 'FIXED' },
-          waiting: f.fareWaiting || { enabled: false, freeMinutes: 30, perHourCharge: 0 },
-          availability: availability || {
-            status: 'AVAILABLE',
-            availableQuantity: 1,
-            availableFromTime: '00:00',
-            availableToTime: '23:59',
-          },
-          estimatedTotal,
-        };
-      })
-    );
+    const configsWithDetails = fares.map((f) => {
+      const availability = availabilityMap.get(`${f.vehicleId}_${f.routeId}`);
+
+      const totalToll = toNum((f.fareTolls || []).reduce((sum, t) => sum + toNum(t.amount), 0));
+      const parkingAmount = f.fareParking && f.fareParking.enabled ? toNum(f.fareParking.amount) : 0;
+      const stayAmount = f.fareWaiting && f.fareWaiting.enabled ? toNum(f.fareWaiting.perHourCharge) : 0;
+      const estimatedTotal = toNum(toNum(f.baseFare) + totalToll + parkingAmount + stayAmount);
+
+      return {
+        id: f.id,
+        routeId: f.routeId,
+        vehicleId: f.vehicleId,
+        baseFare: toNum(f.baseFare),
+        perKmFare: toNum(f.perKmFare),
+        minimumFare: toNum(f.minimumFare),
+        isActive: f.isActive,
+        createdAt: f.createdAt,
+        updatedAt: f.updatedAt,
+        route: f.route,
+        vehicle: f.vehicle,
+        tolls: f.fareTolls || [],
+        totalToll,
+        parking: f.fareParking || { enabled: false, amount: 0, chargingType: 'FIXED' },
+        waiting: f.fareWaiting || { enabled: false, freeMinutes: 30, perHourCharge: 0 },
+        availability: availability || {
+          status: 'AVAILABLE',
+          availableQuantity: 1,
+          availableFromTime: '00:00',
+          availableToTime: '23:59',
+        },
+        estimatedTotal,
+      };
+    });
 
     // Optional text search filter
     let result = configsWithDetails;
@@ -398,6 +412,7 @@ const createFareConfig = async (req, res, next) => {
       },
     });
 
+    invalidateFareCache();
     res.status(201).json({
       success: true,
       message: 'Fare configuration created successfully!',
@@ -590,6 +605,7 @@ const updateFareConfig = async (req, res, next) => {
       },
     });
 
+    invalidateFareCache();
     res.json({
       success: true,
       message: 'Fare configuration updated successfully!',
@@ -633,6 +649,7 @@ const toggleFareStatus = async (req, res, next) => {
       });
     }
 
+    invalidateFareCache();
     res.json({
       success: true,
       message: `Fare configuration ${newStatus ? 'activated' : 'deactivated'} successfully.`,
@@ -680,6 +697,7 @@ const deleteFareConfig = async (req, res, next) => {
       }
     });
 
+    invalidateFareCache();
     res.json({ success: true, message: 'Fare configuration deleted permanently.' });
   } catch (err) {
     next(err);
@@ -797,6 +815,7 @@ const duplicateFareConfig = async (req, res, next) => {
       },
     });
 
+    invalidateFareCache();
     res.status(201).json({
       success: true,
       message: 'Fare configuration duplicated successfully!',

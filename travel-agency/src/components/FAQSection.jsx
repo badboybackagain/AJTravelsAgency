@@ -11,6 +11,7 @@ import {
   Plane,
 } from 'lucide-react';
 import { getWhatsAppLink, getPhoneCallLink } from '../utils/whatsapp';
+import { businessConfig } from '../config/business.config';
 import { homepageContent } from '../data/homepageContent';
 
 const FAQ_DATA = homepageContent.faqs || [];
@@ -149,7 +150,7 @@ export const FAQSection = () => {
               className="faq-contact-btn call"
             >
               <PhoneCall size={16} />
-              <span>Call +91 91561 83915</span>
+              <span>Call {businessConfig.phoneDisplay}</span>
             </a>
           </div>
         </div>

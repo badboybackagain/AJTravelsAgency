@@ -10,6 +10,7 @@ export const API_BASE_URL =
 
 const api = axios.create({
   baseURL: `${API_BASE_URL}/api`,
+  timeout: 30000, // 30 second timeout prevents premature timeout during remote database queries
   headers: {
     'Content-Type': 'application/json',
   },
@@ -41,9 +42,26 @@ api.interceptors.response.use(
   }
 );
 
-// Unified Admin Fare Config API
+// Unified Admin Fare Config API with in-flight request deduplication
+let inFlightFareConfigsPromise = null;
+
 export const adminFareConfigApi = {
-  getAll: (params) => api.get('/fares/admin/configs', { params }),
+  getAll: (params) => {
+    // If no params are passed (full list on mount), reuse the in-flight request
+    if (!params || Object.keys(params).length === 0) {
+      if (inFlightFareConfigsPromise) {
+        return inFlightFareConfigsPromise;
+      }
+      inFlightFareConfigsPromise = api.get('/fares/admin/configs')
+        .finally(() => {
+          setTimeout(() => {
+            inFlightFareConfigsPromise = null;
+          }, 300);
+        });
+      return inFlightFareConfigsPromise;
+    }
+    return api.get('/fares/admin/configs', { params });
+  },
   getById: (id) => api.get(`/fares/admin/configs/${id}`),
   create: (data) => api.post('/fares/admin/configs', data),
   update: (id, data) => api.put(`/fares/admin/configs/${id}`, data),
@@ -67,14 +85,50 @@ export const localVehicleApi = {
   getById: (id) => api.get(`/local-vehicles/${id}`),
 };
 
-// Public & Admin Locations API
+// Public & Admin Locations API with In-Flight De-duplication and Session Caching
+let sharedLocationsCache = null;
+let sharedLocationsPromise = null;
+
 export const locationApi = {
-  getLocations: (side) => api.get('/locations', { params: { side } }),
-  getDestinations: (pickupId) => api.get('/locations/destinations', { params: { pickupId } }),
-  adminGetAll: () => api.get('/locations/admin'),
-  create: (data) => api.post('/locations', data),
-  update: (id, data) => api.put(`/locations/${id}`, data),
-  delete: (id) => api.delete(`/locations/${id}`),
+  getLocations: (side, config = {}) => {
+    if (side) {
+      return api.get('/locations', { params: { side }, ...config });
+    }
+    if (sharedLocationsCache && sharedLocationsCache.length > 0) {
+      return Promise.resolve({ data: { success: true, data: sharedLocationsCache } });
+    }
+    if (sharedLocationsPromise) {
+      return sharedLocationsPromise;
+    }
+    sharedLocationsPromise = api
+      .get('/locations', config)
+      .then((res) => {
+        sharedLocationsCache = res.data?.data || [];
+        return res;
+      })
+      .finally(() => {
+        sharedLocationsPromise = null;
+      });
+    return sharedLocationsPromise;
+  },
+  clearCache: () => {
+    sharedLocationsCache = null;
+    sharedLocationsPromise = null;
+  },
+  getDestinations: (pickupId, config = {}) => api.get('/locations/destinations', { params: { pickupId }, ...config }),
+  adminGetAll: (config = {}) => api.get('/locations/admin', config),
+  create: (data) => {
+    locationApi.clearCache();
+    return api.post('/locations', data);
+  },
+  update: (id, data) => {
+    locationApi.clearCache();
+    return api.put(`/locations/${id}`, data);
+  },
+  delete: (id) => {
+    locationApi.clearCache();
+    return api.delete(`/locations/${id}`);
+  },
 };
 
 // Fleet Vehicles API
@@ -87,7 +141,7 @@ export const vehicleApi = {
   delete: (id) => api.delete(`/vehicles/${id}`),
   uploadImage: (formData) =>
     api.post('/vehicles/upload-image', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
+      headers: { 'Content-Type': undefined },
     }),
 };
 
@@ -102,9 +156,9 @@ export const routeApi = {
 
 // Fare Quote API
 export const fareApi = {
-  getQuote: (params) => api.post('/fares/quote', params),
-  getQuoteGet: (params) => api.get('/fares/quote', { params }),
-  adminGetAll: () => api.get('/fares/admin/all'),
+  getQuote: (params, config = {}) => api.post('/fares/quote', params, config),
+  getQuoteGet: (params, config = {}) => api.get('/fares/quote', { params, ...config }),
+  adminGetAll: (config = {}) => api.get('/fares/admin/all', config),
   create: (data) => api.post('/fares', data),
   update: (id, data) => api.put(`/fares/${id}`, data),
   delete: (id) => api.delete(`/fares/${id}`),
@@ -177,8 +231,21 @@ export const otpApi = {
 
 export const enquiryApi = {
   create: (data) => api.post('/enquiries', data),
-  adminGetAll: () => api.get('/enquiries/admin'),
+  createEnquiry: (data) => api.post('/enquiries', data),
+  adminGetAll: (params) => api.get('/enquiries/admin', { params }),
   adminUpdateStatus: (id, status) => api.put(`/enquiries/admin/${id}/status`, { status }),
+};
+
+export const quoteApi = {
+  // Admin endpoints
+  adminPrepareQuote: (enquiryId, data) => api.post(`/enquiries/admin/${enquiryId}/quote`, data),
+  adminGetQuotes: (enquiryId) => api.get(`/enquiries/admin/${enquiryId}/quotes`),
+  adminConvertToBooking: (enquiryId, quoteId) => api.post(`/enquiries/admin/${enquiryId}/quotes/${quoteId}/convert-to-booking`),
+
+  // Public customer endpoints
+  getByToken: (token) => api.get(`/quotes/${token}`),
+  accept: (token) => api.post(`/quotes/${token}/accept`),
+  decline: (token, data) => api.post(`/quotes/${token}/decline`, data),
 };
 
 export const seoApi = {
@@ -208,7 +275,7 @@ export const mediaApi = {
   getById: (id) => api.get(`/media/${id}`),
   upload: (formData) =>
     api.post('/media/upload', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
+      headers: { 'Content-Type': undefined },
     }),
   updateMetadata: (id, data) => api.put(`/media/${id}`, data),
   delete: (id, force = false) => api.delete(`/media/${id}`, { params: { force } }),

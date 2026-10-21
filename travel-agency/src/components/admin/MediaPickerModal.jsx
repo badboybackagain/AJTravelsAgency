@@ -514,13 +514,13 @@ export const MediaPickerModal = ({
                       Click to choose image or drag & drop here
                     </p>
                     <p style={{ margin: '0.3rem 0 0', fontSize: '0.75rem', color: '#64748B' }}>
-                      JPG, PNG, or WebP up to 5MB
+                      JPG, PNG, WebP, AVIF, or JFIF up to 5MB
                     </p>
                   </div>
                 )}
                 <input
                   type="file"
-                  accept="image/jpeg,image/png,image/webp"
+                  accept="image/jpeg,image/png,image/webp,image/avif,.jfif,.jpg,.jpeg,.png,.webp,.avif"
                   onChange={handleFileChange}
                   style={{
                     position: 'absolute',

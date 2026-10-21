@@ -12,9 +12,10 @@ import {
   MapPin,
   RefreshCw,
   Loader2,
+  Image as ImageIcon,
 } from 'lucide-react';
 import { adminFareConfigApi, API_BASE_URL } from '../../services/api';
-import { AdminFareForm } from './AdminFareForm';
+import { AdminFareForm, prefetchFareFormData } from './AdminFareForm';
 import './admin.css';
 
 export const AdminFares = () => {
@@ -45,6 +46,7 @@ export const AdminFares = () => {
 
   useEffect(() => {
     fetchFares();
+    prefetchFareFormData();
   }, []);
 
   const showToast = (msg) => {
@@ -173,7 +175,7 @@ export const AdminFares = () => {
           </p>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
           <button
             onClick={fetchFares}
             disabled={loading}

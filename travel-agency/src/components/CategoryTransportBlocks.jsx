@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { ArrowRight, Car, CheckCircle2 } from 'lucide-react';
+import { buildFareUrl, normalizeCorridorKey } from '../utils/fareNavigation';
 import { homepageContent } from '../data/homepageContent';
 
 export const CategoryTransportBlocks = () => {
@@ -15,13 +16,21 @@ export const CategoryTransportBlocks = () => {
     if (catTitle.includes('SUV')) category = 'SUV';
     else if (catTitle.includes('MINI') || catTitle.includes('TEMPO') || catTitle.includes('BUS')) category = 'TEMPO_TRAVELLER';
 
-    const params = new URLSearchParams({
+    const pKey = normalizeCorridorKey(r.from);
+    const dKey = normalizeCorridorKey(r.to);
+    const isCorridor = (pKey === 'pune' && dKey === 'mumbai') || (pKey === 'mumbai' && dKey === 'pune');
+
+    const fareUrl = buildFareUrl({
       tripType: 'ONE_WAY',
-      pickupId: r.from.toLowerCase(),
-      dropId: r.to.toLowerCase(),
+      pickupId: pKey,
+      dropId: dKey,
+      pickupName: r.from,
+      dropName: r.to,
       category,
+      isCustomRoute: !isCorridor,
     });
-    navigate(`/fare?${params.toString()}`);
+
+    navigate(fareUrl);
   };
 
   const displayedCategories = activeTab === 'ALL'
@@ -124,7 +133,7 @@ export const CategoryTransportBlocks = () => {
                         className="btn-book-tile"
                       >
                         <Car size={15} />
-                        <span>BOOK NOW</span>
+                        <span>Book Now</span>
                         <ArrowRight size={14} />
                       </button>
                     </div>
@@ -152,9 +161,9 @@ export const CategoryTransportBlocks = () => {
         .eyebrow-chip {
           display: inline-block;
           font-family: var(--font-heading);
-          font-size: 0.74rem;
-          font-weight: 800;
-          letter-spacing: 0.08em;
+          font-size: 0.72rem;
+          font-weight: 600;
+          letter-spacing: 0.06em;
           color: #0284C7;
           background: #E0F2FE;
           padding: 0.35rem 0.9rem;
@@ -164,11 +173,11 @@ export const CategoryTransportBlocks = () => {
         }
 
         .category-section-header h2 {
-          font-size: 2.25rem;
-          font-weight: 900;
+          font-size: clamp(1.4rem, 2.5vw, 2.1rem);
+          font-weight: 650;
           color: #0F172A;
           margin-bottom: 0.4rem;
-          letter-spacing: -0.02em;
+          letter-spacing: -0.015em;
         }
 
         .category-section-header p {
@@ -204,7 +213,7 @@ export const CategoryTransportBlocks = () => {
           border-radius: 9999px;
           font-family: var(--font-heading);
           font-size: 0.86rem;
-          font-weight: 700;
+          font-weight: 550;
           color: #64748B;
           cursor: pointer;
           transition: all 0.2s ease;
@@ -278,8 +287,8 @@ export const CategoryTransportBlocks = () => {
           align-self: flex-start;
           font-family: var(--font-heading);
           font-size: 0.68rem;
-          font-weight: 800;
-          letter-spacing: 0.06em;
+          font-weight: 600;
+          letter-spacing: 0.05em;
           background: rgba(29, 78, 216, 0.85);
           backdrop-filter: blur(8px);
           color: #FFFFFF;
@@ -290,8 +299,8 @@ export const CategoryTransportBlocks = () => {
 
         .category-banner-heading {
           font-family: var(--font-heading);
-          font-size: 1.3rem;
-          font-weight: 800;
+          font-size: 1.25rem;
+          font-weight: 650;
           color: #FFFFFF;
           line-height: 1.2;
           margin: 0;
@@ -338,7 +347,7 @@ export const CategoryTransportBlocks = () => {
         .loc-pill {
           font-family: var(--font-heading);
           font-size: 0.8rem;
-          font-weight: 800;
+          font-weight: 600;
           color: #0F172A;
           background: #FFFFFF;
           padding: 0.3rem 0.55rem;
@@ -354,7 +363,7 @@ export const CategoryTransportBlocks = () => {
 
         .loc-arrow-divider {
           color: #1D4ED8;
-          font-weight: 800;
+          font-weight: 600;
           font-size: 0.8rem;
         }
 
@@ -394,15 +403,15 @@ export const CategoryTransportBlocks = () => {
 
         .price-start-lbl {
           font-size: 0.64rem;
-          font-weight: 800;
-          letter-spacing: 0.06em;
+          font-weight: 550;
+          letter-spacing: 0.05em;
           color: #64748B;
         }
 
         .price-val-main {
           font-family: var(--font-heading);
           font-size: 1.45rem;
-          font-weight: 800;
+          font-weight: 700;
           color: #0F172A;
           line-height: 1;
         }
@@ -410,7 +419,7 @@ export const CategoryTransportBlocks = () => {
         .price-note-txt {
           font-size: 0.72rem;
           color: #059669;
-          font-weight: 600;
+          font-weight: 500;
           display: inline-flex;
           align-items: center;
           gap: 0.3rem;
@@ -426,8 +435,8 @@ export const CategoryTransportBlocks = () => {
           border-radius: 12px;
           font-family: var(--font-heading);
           font-size: 0.82rem;
-          font-weight: 800;
-          letter-spacing: 0.03em;
+          font-weight: 600;
+          letter-spacing: 0.02em;
           display: flex;
           align-items: center;
           justify-content: center;

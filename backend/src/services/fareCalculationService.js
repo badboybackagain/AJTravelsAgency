@@ -12,20 +12,76 @@ const toNumber = (val) => {
   return parseFloat(Number(val).toFixed(2));
 };
 
-/**
- * Calculate fare for a single vehicle on a given route and tripType
- */
-async function calculateVehicleFare(route, vehicle, options = {}) {
-  const { tripType = 'ONE_WAY', parkingRequired = true, stayRequired = false, dropLocationId } = options;
+// ============================================================
+// HIGH-PERFORMANCE IN-MEMORY CACHING LAYER (60s TTL)
+// Completely eliminates remote roundtrips on repeated quote queries
+// ============================================================
+const CACHE_TTL_MS = 60 * 1000;
 
-  // 1. Load fare config (exact route + vehicle + tripType match)
-  let fareConfig = await prisma.fare.findFirst({
-    where: {
-      routeId: route.id,
-      vehicleId: vehicle.id,
-      tripType,
-      isActive: true,
-    },
+let cachedLocationsMap = null;
+let locationsCacheTime = 0;
+
+let cachedRoutesList = null;
+let routesCacheTime = 0;
+
+let cachedVehiclesList = null;
+let vehiclesCacheTime = 0;
+
+const faresCacheByRouteId = new Map();
+
+function invalidateFareCache() {
+  cachedLocationsMap = null;
+  locationsCacheTime = 0;
+  cachedRoutesList = null;
+  routesCacheTime = 0;
+  cachedVehiclesList = null;
+  vehiclesCacheTime = 0;
+  faresCacheByRouteId.clear();
+}
+
+async function getActiveLocation(locationId) {
+  const now = Date.now();
+  if (!cachedLocationsMap || (now - locationsCacheTime) > CACHE_TTL_MS) {
+    const locs = await prisma.location.findMany({ where: { isActive: true } });
+    cachedLocationsMap = new Map(locs.map((l) => [l.id, l]));
+    locationsCacheTime = now;
+  }
+  return cachedLocationsMap.get(locationId) || null;
+}
+
+async function getActiveRoutes() {
+  const now = Date.now();
+  if (!cachedRoutesList || (now - routesCacheTime) > CACHE_TTL_MS) {
+    cachedRoutesList = await prisma.route.findMany({
+      where: { isActive: true },
+      include: { pickupLocation: true, dropLocation: true },
+    });
+    routesCacheTime = now;
+  }
+  return cachedRoutesList;
+}
+
+async function getActiveVehicles(minCapacity = 1) {
+  const now = Date.now();
+  if (!cachedVehiclesList || (now - vehiclesCacheTime) > CACHE_TTL_MS) {
+    cachedVehiclesList = await prisma.vehicle.findMany({
+      where: { isActive: true },
+      orderBy: [{ displayOrder: 'asc' }, { seatingCapacity: 'asc' }],
+    });
+    vehiclesCacheTime = now;
+  }
+  return cachedVehiclesList.filter((v) => v.seatingCapacity >= minCapacity);
+}
+
+async function getActiveRouteFares(routeId) {
+  const now = Date.now();
+  const entry = faresCacheByRouteId.get(routeId);
+  if (entry && (now - entry.timestamp) < CACHE_TTL_MS) {
+    return entry.data;
+  }
+
+  const fares = await prisma.fare.findMany({
+    where: { routeId, isActive: true },
     include: {
       fareTolls: { where: { isActive: true } },
       fareParking: true,
@@ -33,13 +89,34 @@ async function calculateVehicleFare(route, vehicle, options = {}) {
     },
   });
 
-  // Fallback: If ROUND_TRIP has no specific fare, check ONE_WAY and multiply base by 2
-  if (!fareConfig && tripType === 'ROUND_TRIP') {
-    const oneWayFare = await prisma.fare.findFirst({
+  faresCacheByRouteId.set(routeId, { data: fares, timestamp: now });
+  return fares;
+}
+
+/**
+ * Calculate fare for a single vehicle on a given route and tripType
+ * Accepts optional preloadedFares to eliminate sequential remote database queries
+ */
+async function calculateVehicleFare(route, vehicle, options = {}, preloadedFares = null) {
+  const { tripType = 'ONE_WAY', parkingRequired = true, stayRequired = false, dropLocationId } = options;
+
+  // 1. Load fare config (exact route + vehicle + tripType match)
+  let fareConfig = preloadedFares
+    ? preloadedFares.find(
+        (f) =>
+          f.routeId === route.id &&
+          f.vehicleId === vehicle.id &&
+          f.tripType === tripType &&
+          f.isActive
+      )
+    : null;
+
+  if (!fareConfig && !preloadedFares) {
+    fareConfig = await prisma.fare.findFirst({
       where: {
         routeId: route.id,
         vehicleId: vehicle.id,
-        tripType: 'ONE_WAY',
+        tripType,
         isActive: true,
       },
       include: {
@@ -48,6 +125,31 @@ async function calculateVehicleFare(route, vehicle, options = {}) {
         fareWaiting: true,
       },
     });
+  }
+
+  // Fallback: If ROUND_TRIP has no specific fare, check ONE_WAY and multiply base by 2
+  if (!fareConfig && tripType === 'ROUND_TRIP') {
+    const oneWayFare = preloadedFares
+      ? preloadedFares.find(
+          (f) =>
+            f.routeId === route.id &&
+            f.vehicleId === vehicle.id &&
+            f.tripType === 'ONE_WAY' &&
+            f.isActive
+        )
+      : await prisma.fare.findFirst({
+          where: {
+            routeId: route.id,
+            vehicleId: vehicle.id,
+            tripType: 'ONE_WAY',
+            isActive: true,
+          },
+          include: {
+            fareTolls: { where: { isActive: true } },
+            fareParking: true,
+            fareWaiting: true,
+          },
+        });
 
     if (oneWayFare) {
       fareConfig = {
@@ -237,17 +339,15 @@ async function calculateFareQuote(params) {
     throw new AppError('Pickup and drop locations are required.', 400);
   }
 
-  // Step 1: Validate pickup & drop locations
-  const pickupLocation = await prisma.location.findFirst({
-    where: { id: pickupLocationId, isActive: true },
-  });
+  // Step 1: Validate pickup & drop locations using fast caching layer
+  const [pickupLocation, dropLocation] = await Promise.all([
+    getActiveLocation(pickupLocationId),
+    getActiveLocation(dropLocationId),
+  ]);
+
   if (!pickupLocation) {
     throw new AppError('Pickup location does not exist or is inactive.', 404);
   }
-
-  const dropLocation = await prisma.location.findFirst({
-    where: { id: dropLocationId, isActive: true },
-  });
   if (!dropLocation) {
     throw new AppError('Drop location does not exist or is inactive.', 404);
   }
@@ -266,14 +366,11 @@ async function calculateFareQuote(params) {
     }
   }
 
-  // Step 3: Resolve Route (Exact -> City-level Fallback)
-  let route = await prisma.route.findFirst({
-    where: {
-      pickupLocationId,
-      dropLocationId,
-      isActive: true,
-    },
-  });
+  // Step 3: Resolve Route (Exact -> City-level Fallback) from cached active routes
+  const allRoutes = await getActiveRoutes();
+  let route = allRoutes.find(
+    (r) => r.pickupLocationId === pickupLocationId && r.dropLocationId === dropLocationId && r.isActive
+  );
 
   if (!route) {
     const isPuneToMumbai =
@@ -284,37 +381,28 @@ async function calculateFareQuote(params) {
       (dropLocation.side === 'PUNE_SIDE' || dropLocation.city === 'Pune');
 
     if (isPuneToMumbai) {
-      route = await prisma.route.findFirst({
-        where: {
-          pickupLocation: { name: 'Pune (All Areas)' },
-          dropLocation: { name: 'Mumbai (All Areas)' },
-          isActive: true,
-        },
-      });
+      route = allRoutes.find(
+        (r) =>
+          r.pickupLocation?.name === 'Pune (All Areas)' &&
+          r.dropLocation?.name === 'Mumbai (All Areas)' &&
+          r.isActive
+      );
     } else if (isMumbaiToPune) {
-      route = await prisma.route.findFirst({
-        where: {
-          pickupLocation: { name: 'Mumbai (All Areas)' },
-          dropLocation: { name: 'Pune (All Areas)' },
-          isActive: true,
-        },
-      });
+      route = allRoutes.find(
+        (r) =>
+          r.pickupLocation?.name === 'Mumbai (All Areas)' &&
+          r.dropLocation?.name === 'Pune (All Areas)' &&
+          r.isActive
+      );
     }
 
     if (!route) {
-      route = await prisma.route.findFirst({
-        where: {
-          pickupLocation: { side: pickupLocation.side },
-          dropLocation: { side: dropLocation.side },
-          isActive: true,
-        },
-      });
-    }
-
-    if (!route) {
-      route = await prisma.route.findFirst({
-        where: { isActive: true, fares: { some: { isActive: true } } },
-      });
+      route = allRoutes.find(
+        (r) =>
+          r.pickupLocation?.side === pickupLocation.side &&
+          r.dropLocation?.side === dropLocation.side &&
+          r.isActive
+      );
     }
   }
 
@@ -322,28 +410,30 @@ async function calculateFareQuote(params) {
     throw new AppError(`Route from ${pickupLocation.name} to ${dropLocation.name} is currently unavailable.`, 404);
   }
 
-  // Step 4: Get vehicles matching passenger capacity
-  const vehicles = await prisma.vehicle.findMany({
-    where: {
-      isActive: true,
-      seatingCapacity: { gte: numPassengers },
-    },
-    orderBy: [{ displayOrder: 'asc' }, { seatingCapacity: 'asc' }],
-  });
+  // Step 4: Get vehicles and all route fares concurrently using cached accessors
+  const [vehicles, allFaresForRoute] = await Promise.all([
+    getActiveVehicles(numPassengers),
+    getActiveRouteFares(route.id),
+  ]);
 
   if (vehicles.length === 0) {
     throw new AppError('No suitable vehicles are available for the selected passenger count.', 400);
   }
 
-  // Step 5: Calculate fares strictly for the requested tripType
+  // Step 5: Calculate fares strictly for the requested tripType using preloaded fares
   const vehicleQuotes = await Promise.all(
     vehicles.map(async (vehicle) => {
-      const fareBreakdown = await calculateVehicleFare(route, vehicle, {
-        tripType,
-        parkingRequired,
-        stayRequired,
-        dropLocationId,
-      });
+      const fareBreakdown = await calculateVehicleFare(
+        route,
+        vehicle,
+        {
+          tripType,
+          parkingRequired,
+          stayRequired,
+          dropLocationId,
+        },
+        allFaresForRoute
+      );
 
       return {
         vehicleId: vehicle.id,
@@ -409,4 +499,4 @@ async function calculateFareQuote(params) {
   };
 }
 
-module.exports = { calculateFareQuote, calculateVehicleFare };
+module.exports = { calculateFareQuote, calculateVehicleFare, invalidateFareCache };

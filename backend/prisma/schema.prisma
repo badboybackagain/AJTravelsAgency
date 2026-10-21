@@ -271,12 +271,15 @@ model Booking {
   customerPhone    String?
   customerEmail    String?
   notes            String?   @db.Text
+  enquiryId        String?
+  quoteId          String?   @unique
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 
   route        Route?        @relation(fields: [routeId], references: [id])
   vehicle      Vehicle?      @relation(fields: [vehicleId], references: [id])
   localVehicle LocalVehicle? @relation(fields: [localVehicleId], references: [id])
+  quote        Quote?        @relation("BookingQuote")
 
   @@map("bookings")
 }
@@ -350,7 +353,42 @@ model Enquiry {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  quotes      Quote[]
+
   @@map("enquiries")
+}
+
+model Quote {
+  id              String    @id @default(cuid())
+  enquiryId       String
+  bookingId       String?   @unique
+  vehicleCategory String    // "SEDAN" | "SUV" | "INNOVA_CRYSTA" | "TEMPO_TRAVELLER" | "OTHER"
+  vehicleName     String?   // e.g. "Toyota Innova Crysta (6+1)"
+  tripType        String    @default("ONE_WAY") // "ONE_WAY" | "ROUND_TRIP" | "LOCAL"
+  baseFare        Float
+  tollCharges     Float     @default(0)
+  driverAllowance Float     @default(0)
+  parkingCharges  Float     @default(0)
+  totalFare       Float
+  inclusions      String?   @db.Text
+  exclusions      String?   @db.Text
+  terms           String?   @db.Text
+  status          String    @default("QUOTED") // "QUOTED" | "ACCEPTED" | "DECLINED" | "EXPIRED" | "SUPERSEDED"
+  quoteToken      String    @unique
+  validUntil      DateTime
+  sentAt          DateTime?
+  acceptedAt      DateTime?
+  declinedAt      DateTime?
+  declinedReason  String?   @db.Text
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  enquiry         Enquiry   @relation(fields: [enquiryId], references: [id], onDelete: Cascade)
+  booking         Booking?  @relation("BookingQuote", fields: [bookingId], references: [id])
+
+  @@index([enquiryId])
+  @@index([quoteToken])
+  @@map("quotes")
 }
 
 model NotificationLog {

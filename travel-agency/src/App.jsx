@@ -1,4 +1,4 @@
-import React, { useState, useEffect, lazy, Suspense } from 'react';
+import React, { useState, useEffect, useLayoutEffect, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useParams } from 'react-router-dom';
 import { getPostBySlug } from './data/blogData';
 import { getServiceBySlug } from './data/servicesData';
@@ -37,6 +37,7 @@ const ServiceDetailPage = lazy(() => import('./pages/ServiceDetailPage').then(m 
 const VehiclesPage   = lazy(() => import('./pages/VehiclesPage').then(m => ({ default: m.VehiclesPage })));
 const VehicleDetailPage = lazy(() => import('./pages/VehicleDetailPage').then(m => ({ default: m.VehicleDetailPage })));
 const LiveMigratedPage = lazy(() => import('./pages/LiveMigratedPage').then(m => ({ default: m.LiveMigratedPage })));
+const CustomerQuotePage = lazy(() => import('./pages/CustomerQuotePage').then(m => ({ default: m.CustomerQuotePage })));
 
 // Minimal loading placeholder — fully transparent to avoid flash
 const PageLoader = () => (
@@ -205,19 +206,42 @@ function BookRedirect() {
 function ScrollToTop() {
   const { pathname, hash } = useLocation();
 
+  // Enforce manual scroll restoration so the browser does not carry over old scroll offsets
   useEffect(() => {
+    if ('scrollRestoration' in window.history) {
+      window.history.scrollRestoration = 'manual';
+    }
+  }, []);
+
+  // Pre-paint scroll reset for route changes, with anchor support
+  useLayoutEffect(() => {
     if (hash) {
       const targetId = hash.replace('#', '');
+      const el = document.getElementById(targetId);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth' });
+        return;
+      }
+      // Retry in case target element is rendered inside a lazy-loaded component
       const timer = setTimeout(() => {
-        const el = document.getElementById(targetId);
-        if (el) {
-          el.scrollIntoView({ behavior: 'smooth' });
+        const lateEl = document.getElementById(targetId);
+        if (lateEl) {
+          lateEl.scrollIntoView({ behavior: 'smooth' });
         }
-      }, 60);
+      }, 100);
       return () => clearTimeout(timer);
-    } else {
-      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
     }
+
+    // Immediately reset window and body scroll before browser paint
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    if (document.documentElement) document.documentElement.scrollTop = 0;
+    if (document.body) document.body.scrollTop = 0;
+
+    // Safety check after Suspense lazy chunks or layouts resolve
+    const rAF = requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    });
+    return () => cancelAnimationFrame(rAF);
   }, [pathname, hash]);
 
   return null;
@@ -260,6 +284,9 @@ function App() {
 
           {/* /book → /booking canonical redirect preserving query string and state */}
           <Route path="/book" element={<BookRedirect />} />
+
+          {/* Customer Quotation Review & Acceptance */}
+          <Route path="/quote/:token" element={<CustomerQuotePage />} />
 
           {/* About Us & Contact Pages with Live Sitemap Aliases */}
           <Route path="/about" element={<AboutPage />} />

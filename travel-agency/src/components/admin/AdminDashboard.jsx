@@ -18,19 +18,21 @@ import {
   MessageSquare,
   Search,
   Image as ImageIcon,
+  HelpCircle,
 } from 'lucide-react';
-import { adminFareConfigApi, bookingApi, routeApi, vehicleApi } from '../../services/api';
+import { adminFareConfigApi, bookingApi, routeApi, vehicleApi, enquiryApi } from '../../services/api';
 import { AdminFares } from './AdminFares';
 import { AdminLocalVehicles } from './AdminLocalVehicles';
 import { AdminBookings } from './AdminBookings';
-import { AdminFareForm } from './AdminFareForm';
+import { AdminEnquiries } from './AdminEnquiries';
+import { AdminFareForm, prefetchFareFormData } from './AdminFareForm';
 import { AdminWhatsAppSettings } from './AdminWhatsAppSettings';
 import { AdminSeo } from './AdminSeo';
 import { AdminMediaLibrary } from './AdminMediaLibrary';
 import './admin.css';
 
 export const AdminDashboard = ({ onLogout }) => {
-  const [activeTab, setActiveTab] = useState('fares'); // 'dashboard' | 'fares' | 'bookings'
+  const [activeTab, setActiveTab] = useState('fares'); // 'dashboard' | 'fares' | 'bookings' | 'enquiries'
   const [visitedTabs, setVisitedTabs] = useState(() => new Set(['fares']));
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [stats, setStats] = useState({
@@ -38,6 +40,8 @@ export const AdminDashboard = ({ onLogout }) => {
     vehiclesCount: 0,
     routesCount: 0,
     bookingsCount: 0,
+    enquiriesCount: 0,
+    newEnquiriesCount: 0,
   });
   const [recentFares, setRecentFares] = useState([]);
   const [loadingDashboard, setLoadingDashboard] = useState(false);
@@ -57,23 +61,28 @@ export const AdminDashboard = ({ onLogout }) => {
   const loadDashboardData = async () => {
     setLoadingDashboard(true);
     try {
-      const [faresRes, vehiclesRes, routesRes, bookingsRes] = await Promise.all([
+      const [faresRes, vehiclesRes, routesRes, bookingsRes, enquiriesRes] = await Promise.all([
         adminFareConfigApi.getAll().catch(() => ({ data: { data: [] } })),
         vehicleApi.adminGetAll().catch(() => ({ data: { data: [] } })),
         routeApi.adminGetAll().catch(() => ({ data: { data: [] } })),
         bookingApi.adminGetAll().catch(() => ({ data: { data: [] } })),
+        enquiryApi.adminGetAll().catch(() => ({ data: { data: [] } })),
       ]);
 
       const allFares = faresRes.data?.data || [];
       const allVehicles = vehiclesRes.data?.data || [];
       const allRoutes = routesRes.data?.data || [];
       const allBookings = bookingsRes.data?.data || [];
+      const allEnquiries = enquiriesRes.data?.data || [];
+      const newEnquiries = allEnquiries.filter((e) => e.status === 'NEW').length;
 
       setStats({
         activeFares: allFares.filter((f) => f.isActive).length,
         vehiclesCount: allVehicles.length,
         routesCount: allRoutes.length,
         bookingsCount: allBookings.length,
+        enquiriesCount: allEnquiries.length,
+        newEnquiriesCount: newEnquiries,
       });
 
       setRecentFares(allFares.slice(0, 5));
@@ -86,6 +95,7 @@ export const AdminDashboard = ({ onLogout }) => {
 
   useEffect(() => {
     loadDashboardData();
+    prefetchFareFormData();
   }, []);
 
   const handleLogout = () => {
@@ -185,6 +195,26 @@ export const AdminDashboard = ({ onLogout }) => {
 
           <button
             onClick={() => {
+              handleTabChange('enquiries');
+              setIsMobileMenuOpen(false);
+            }}
+            className={`admin-nav-item ${activeTab === 'enquiries' ? 'active' : ''}`}
+          >
+            <HelpCircle size={18} />
+            <span>Enquiries</span>
+            {stats.newEnquiriesCount > 0 ? (
+              <span className="admin-nav-badge" style={{ backgroundColor: '#FEF3C7', color: '#B45309' }}>
+                {stats.newEnquiriesCount} New
+              </span>
+            ) : stats.enquiriesCount > 0 ? (
+              <span className="admin-nav-badge" style={{ backgroundColor: '#E0F2FE', color: '#0369A1' }}>
+                {stats.enquiriesCount}
+              </span>
+            ) : null}
+          </button>
+
+          <button
+            onClick={() => {
               handleTabChange('whatsapp');
               setIsMobileMenuOpen(false);
             }}
@@ -222,10 +252,10 @@ export const AdminDashboard = ({ onLogout }) => {
           <div className="admin-user-info">
             <div className="admin-avatar">AD</div>
             <div style={{ minWidth: 0, flex: 1 }}>
-              <div style={{ fontWeight: 700, fontSize: '0.82rem', color: '#0F172A', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              <div style={{ fontWeight: 700, fontSize: '0.84rem', color: '#FFFFFF', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', letterSpacing: '0.01em' }}>
                 Administrator
               </div>
-              <div style={{ fontSize: '0.7rem', color: '#64748B', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              <div style={{ fontSize: '0.72rem', color: '#94A3B8', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 {adminEmail}
               </div>
             </div>
@@ -270,10 +300,14 @@ export const AdminDashboard = ({ onLogout }) => {
                   ? 'Local Hourly Packages'
                   : activeTab === 'bookings'
                   ? 'Customer Bookings'
+                  : activeTab === 'enquiries'
+                  ? 'Customer Enquiries'
                   : activeTab === 'whatsapp'
                   ? 'WhatsApp Integration'
                   : activeTab === 'seo'
                   ? 'SEO Management'
+                  : activeTab === 'media'
+                  ? 'Media Library'
                   : 'Dashboard Overview'}
               </span>
             </div>
@@ -368,6 +402,23 @@ export const AdminDashboard = ({ onLogout }) => {
                   </div>
                 </div>
 
+                <div className="admin-stat-card">
+                  <div className="admin-stat-icon" style={{ backgroundColor: '#FEF3C7', color: '#B45309' }}>
+                    <HelpCircle size={24} />
+                  </div>
+                  <div>
+                    <div className="admin-stat-label">Customer Enquiries</div>
+                    <div className="admin-stat-val" style={{ display: 'flex', alignItems: 'baseline', gap: '0.4rem' }}>
+                      <span>{stats.enquiriesCount}</span>
+                      {stats.newEnquiriesCount > 0 && (
+                        <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#B45309' }}>
+                          ({stats.newEnquiriesCount} New)
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
               </div>
 
               {/* Recent Fares Table */}
@@ -452,6 +503,11 @@ export const AdminDashboard = ({ onLogout }) => {
           {/* TAB 4: BOOKINGS */}
           <div style={{ display: activeTab === 'bookings' ? 'block' : 'none' }}>
             {(visitedTabs.has('bookings') || activeTab === 'bookings') && <AdminBookings />}
+          </div>
+
+          {/* TAB: ENQUIRIES */}
+          <div style={{ display: activeTab === 'enquiries' ? 'block' : 'none' }}>
+            {(visitedTabs.has('enquiries') || activeTab === 'enquiries') && <AdminEnquiries />}
           </div>
 
           {/* TAB 5: WHATSAPP INTEGRATION */}

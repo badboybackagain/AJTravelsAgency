@@ -11,19 +11,44 @@ import {
   Loader2,
   Sparkles,
   Image as ImageIcon,
+  ArrowLeft,
 } from 'lucide-react';
 import { adminFareConfigApi, locationApi, routeApi, vehicleApi, API_BASE_URL } from '../../services/api';
 import { MediaPickerModal } from './MediaPickerModal';
-import './admin.css';
+// In-memory cache for instant dropdown loading across modal opens
+let cachedRoutes = null;
+let cachedLocations = null;
+let cachedVehicles = null;
+let prefetchPromise = null;
+
+export const prefetchFareFormData = () => {
+  if (prefetchPromise) return prefetchPromise;
+  prefetchPromise = Promise.all([
+    routeApi.adminGetAll().catch(() => ({ data: { data: [] } })),
+    locationApi.getLocations().catch(() => ({ data: { data: [] } })),
+    vehicleApi.adminGetAll().catch(() => ({ data: { data: [] } })),
+  ])
+    .then(([routesRes, locsRes, vehiclesRes]) => {
+      cachedRoutes = routesRes.data?.data || [];
+      cachedLocations = locsRes.data?.data || [];
+      cachedVehicles = vehiclesRes.data?.data || [];
+      return { cachedRoutes, cachedLocations, cachedVehicles };
+    })
+    .catch(() => ({
+      cachedRoutes: cachedRoutes || [],
+      cachedLocations: cachedLocations || [],
+      cachedVehicles: cachedVehicles || [],
+    }));
+  return prefetchPromise;
+};
 
 export const AdminFareForm = ({ isOpen, onClose, onSuccess, initialData = null }) => {
   const isEditMode = Boolean(initialData?.id);
 
-  // Lists for dropdowns
-  const [routes, setRoutes] = useState([]);
-  const [locations, setLocations] = useState([]);
-  const [existingVehicles, setExistingVehicles] = useState([]);
-  const [loadingInitial, setLoadingInitial] = useState(false);
+  // Lists for dropdowns (initialized from cache if available for instant 0ms render)
+  const [routes, setRoutes] = useState(cachedRoutes || []);
+  const [locations, setLocations] = useState(cachedLocations || []);
+  const [existingVehicles, setExistingVehicles] = useState(cachedVehicles || []);
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -38,17 +63,17 @@ export const AdminFareForm = ({ isOpen, onClose, onSuccess, initialData = null }
   // Vehicle State
   const [vehicleSelectionType, setVehicleSelectionType] = useState('new'); // 'new' | 'existing'
   const [vehicleId, setVehicleId] = useState('');
-  const [vehicleName, setVehicleName] = useState('');
+  const [vehicleName, setVehicleName] = useState('Executive Sedan');
   const [vehicleCategory, setVehicleCategory] = useState('SEDAN');
   const [seatingCapacity, setSeatingCapacity] = useState(4);
   const [vehicleImage, setVehicleImage] = useState('/assets/sedan.webp');
-  const [vehicleDescription, setVehicleDescription] = useState('');
+  const [vehicleDescription, setVehicleDescription] = useState('Air-conditioned sedan for 1-4 passengers with ample luggage room.');
 
   // Fare State
   const [tripType, setTripType] = useState('ONE_WAY'); // 'ONE_WAY' | 'ROUND_TRIP'
-  const [baseFare, setBaseFare] = useState('');
+  const [baseFare, setBaseFare] = useState(2200);
   const [perKmFare, setPerKmFare] = useState(0);
-  const [minimumFare, setMinimumFare] = useState('');
+  const [minimumFare, setMinimumFare] = useState(2200);
   const [isFareActive, setIsFareActive] = useState(true);
 
   // Tolls State
@@ -57,12 +82,12 @@ export const AdminFareForm = ({ isOpen, onClose, onSuccess, initialData = null }
   ]);
 
   // Parking State
-  const [parkingEnabled, setParkingEnabled] = useState(false);
+  const [parkingEnabled, setParkingEnabled] = useState(true);
   const [parkingAmount, setParkingAmount] = useState(100);
   const [parkingType, setParkingType] = useState('FIXED');
 
   // Waiting State
-  const [waitingEnabled, setWaitingEnabled] = useState(false);
+  const [waitingEnabled, setWaitingEnabled] = useState(true);
   const [freeMinutes, setFreeMinutes] = useState(30);
   const [perHourCharge, setPerHourCharge] = useState(150);
 
@@ -72,98 +97,103 @@ export const AdminFareForm = ({ isOpen, onClose, onSuccess, initialData = null }
   const [availFromTime, setAvailFromTime] = useState('00:00');
   const [availToTime, setAvailToTime] = useState('23:59');
 
-  // Load dropdown data
+  // Synchronously populate inputs on open or initialData change (zero UI delay)
+  useEffect(() => {
+    if (!isOpen) return;
+    setErrorMsg('');
+
+    if (initialData) {
+      setRouteId(initialData.routeId || '');
+      setRouteMode('existing');
+
+      if (initialData.vehicle) {
+        setVehicleSelectionType('existing');
+        setVehicleId(initialData.vehicle.id || '');
+        setVehicleName(initialData.vehicle.name || '');
+        setVehicleCategory(initialData.vehicle.category || 'SEDAN');
+        setSeatingCapacity(initialData.vehicle.seatingCapacity || 4);
+        setVehicleImage(initialData.vehicle.image || '/assets/sedan.webp');
+        setVehicleDescription(initialData.vehicle.description || '');
+      }
+
+      setTripType(initialData.tripType || 'ONE_WAY');
+      setBaseFare(initialData.baseFare !== undefined ? initialData.baseFare : '');
+      setPerKmFare(initialData.perKmFare || 0);
+      setMinimumFare(initialData.minimumFare || '');
+      setIsFareActive(initialData.isActive !== undefined ? initialData.isActive : true);
+
+      if (initialData.tolls && initialData.tolls.length > 0) {
+        setTolls(initialData.tolls.map((t) => ({ name: t.name, amount: t.amount, isActive: t.isActive !== false })));
+      } else {
+        setTolls([]);
+      }
+
+      if (initialData.parking) {
+        setParkingEnabled(Boolean(initialData.parking.enabled));
+        setParkingAmount(initialData.parking.amount || 0);
+        setParkingType(initialData.parking.chargingType || 'FIXED');
+      }
+
+      if (initialData.waiting) {
+        setWaitingEnabled(Boolean(initialData.waiting.enabled));
+        setFreeMinutes(initialData.waiting.freeMinutes || 30);
+        setPerHourCharge(initialData.waiting.perHourCharge || 0);
+      }
+
+      if (initialData.availability) {
+        setAvailStatus(initialData.availability.status || 'AVAILABLE');
+        setAvailQuantity(initialData.availability.availableQuantity || 1);
+        setAvailFromTime(initialData.availability.availableFromTime || '00:00');
+        setAvailToTime(initialData.availability.availableToTime || '23:59');
+      }
+    } else {
+      // Default create mode
+      setVehicleSelectionType('new');
+      setVehicleId('');
+      setVehicleName('Executive Sedan');
+      setVehicleCategory('SEDAN');
+      setSeatingCapacity(4);
+      setVehicleImage('/assets/sedan.webp');
+      setVehicleDescription('Air-conditioned sedan for 1-4 passengers with ample luggage room.');
+      setTripType('ONE_WAY');
+      setBaseFare(2200);
+      setMinimumFare(2200);
+      setPerKmFare(0);
+      setIsFareActive(true);
+      setTolls([{ name: 'Mumbai-Pune Expressway Toll', amount: 320, isActive: true }]);
+      setParkingEnabled(true);
+      setParkingAmount(100);
+      setWaitingEnabled(true);
+      setFreeMinutes(30);
+      setPerHourCharge(150);
+      setAvailStatus('AVAILABLE');
+      setAvailQuantity(5);
+    }
+  }, [isOpen, initialData]);
+
+  // Load dropdown data asynchronously in background without blocking form UI
   useEffect(() => {
     if (!isOpen) return;
 
-    setLoadingInitial(true);
-    setErrorMsg('');
+    if (cachedRoutes && cachedLocations && cachedVehicles) {
+      setRoutes(cachedRoutes);
+      setLocations(cachedLocations);
+      setExistingVehicles(cachedVehicles);
+      if (!initialData && cachedRoutes.length > 0 && !routeId) {
+        setRouteId(cachedRoutes[0].id);
+      }
+      return;
+    }
 
-    Promise.all([
-      routeApi.adminGetAll().catch(() => ({ data: { data: [] } })),
-      locationApi.getLocations().catch(() => ({ data: { data: [] } })),
-      vehicleApi.adminGetAll().catch(() => ({ data: { data: [] } })),
-    ])
-      .then(([routesRes, locsRes, vehiclesRes]) => {
-        const fetchedRoutes = routesRes.data?.data || [];
-        const fetchedLocs = locsRes.data?.data || [];
-        const fetchedVehicles = vehiclesRes.data?.data || [];
-
-        setRoutes(fetchedRoutes);
-        setLocations(fetchedLocs);
-        setExistingVehicles(fetchedVehicles);
-
-        if (initialData) {
-          // Pre-populate Edit Mode
-          setRouteId(initialData.routeId || '');
-          setRouteMode('existing');
-
-          if (initialData.vehicle) {
-            setVehicleSelectionType('existing');
-            setVehicleId(initialData.vehicle.id || '');
-            setVehicleName(initialData.vehicle.name || '');
-            setVehicleCategory(initialData.vehicle.category || 'SEDAN');
-            setSeatingCapacity(initialData.vehicle.seatingCapacity || 4);
-            setVehicleImage(initialData.vehicle.image || '/assets/sedan.webp');
-            setVehicleDescription(initialData.vehicle.description || '');
-          }
-
-          setTripType(initialData.tripType || 'ONE_WAY');
-          setBaseFare(initialData.baseFare !== undefined ? initialData.baseFare : '');
-          setPerKmFare(initialData.perKmFare || 0);
-          setMinimumFare(initialData.minimumFare || '');
-          setIsFareActive(initialData.isActive !== undefined ? initialData.isActive : true);
-
-          if (initialData.tolls && initialData.tolls.length > 0) {
-            setTolls(initialData.tolls.map((t) => ({ name: t.name, amount: t.amount, isActive: t.isActive !== false })));
-          } else {
-            setTolls([]);
-          }
-
-          if (initialData.parking) {
-            setParkingEnabled(Boolean(initialData.parking.enabled));
-            setParkingAmount(initialData.parking.amount || 0);
-            setParkingType(initialData.parking.chargingType || 'FIXED');
-          }
-
-          if (initialData.waiting) {
-            setWaitingEnabled(Boolean(initialData.waiting.enabled));
-            setFreeMinutes(initialData.waiting.freeMinutes || 30);
-            setPerHourCharge(initialData.waiting.perHourCharge || 0);
-          }
-
-          if (initialData.availability) {
-            setAvailStatus(initialData.availability.status || 'AVAILABLE');
-            setAvailQuantity(initialData.availability.availableQuantity || 1);
-            setAvailFromTime(initialData.availability.availableFromTime || '00:00');
-            setAvailToTime(initialData.availability.availableToTime || '23:59');
-          }
-        } else {
-          // Reset default create mode
-          if (fetchedRoutes.length > 0) {
-            setRouteId(fetchedRoutes[0].id);
-          }
-          setVehicleSelectionType('new');
-          setVehicleId('');
-          setVehicleName('Executive Sedan');
-          setVehicleCategory('SEDAN');
-          setSeatingCapacity(4);
-          setVehicleImage('/assets/sedan.webp');
-          setVehicleDescription('Air-conditioned sedan for 1-4 passengers with ample luggage room.');
-          setBaseFare(2200);
-          setMinimumFare(2200);
-          setTolls([{ name: 'Mumbai-Pune Expressway Toll', amount: 320, isActive: true }]);
-          setParkingEnabled(true);
-          setParkingAmount(100);
-          setWaitingEnabled(true);
-          setFreeMinutes(30);
-          setPerHourCharge(150);
-          setAvailStatus('AVAILABLE');
-          setAvailQuantity(5);
-        }
-      })
-      .finally(() => setLoadingInitial(false));
-  }, [isOpen, initialData]);
+    prefetchFareFormData().then(({ cachedRoutes: r, cachedLocations: l, cachedVehicles: v }) => {
+      setRoutes(r);
+      setLocations(l);
+      setExistingVehicles(v);
+      if (!initialData && r && r.length > 0) {
+        setRouteId((curr) => curr || r[0].id);
+      }
+    });
+  }, [isOpen]);
 
   // Handle selecting an existing vehicle from dropdown
   const handleExistingVehicleChange = (selectedVehId) => {
@@ -301,15 +331,34 @@ export const AdminFareForm = ({ isOpen, onClose, onSuccess, initialData = null }
     }
   };
 
+  // Close modal on Escape key press
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   return (
-    <div className="admin-modal-backdrop">
-      <div className="admin-modal-card compact">
+    <div
+      className="admin-modal-backdrop"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
+    >
+      <div className="admin-modal-card compact" style={{ display: 'flex', flexDirection: 'column', maxHeight: '90vh' }}>
         
         {/* Modal Header */}
         <div className="admin-modal-header">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', minWidth: 0 }}>
             <div style={{
               width: '38px',
               height: '38px',
@@ -319,58 +368,55 @@ export const AdminFareForm = ({ isOpen, onClose, onSuccess, initialData = null }
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontWeight: 800
+              fontWeight: 800,
+              flexShrink: 0
             }}>
               <Sparkles size={18} />
             </div>
-            <div>
-              <h2 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
+            <div style={{ minWidth: 0 }}>
+              <h2 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0F172A', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 {isEditMode ? 'Edit Fare Configuration' : 'Create Unified Fare Configuration'}
               </h2>
-              <p style={{ fontSize: '0.75rem', color: '#64748B', margin: '0.15rem 0 0 0' }}>
+              <p style={{ fontSize: '0.75rem', color: '#64748B', margin: '0.15rem 0 0 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 Manage Route, Fleet Vehicle, Base Fare, Tolls, Parking, Stay & Availability in one flow
               </p>
             </div>
           </div>
-
-          <button
-            onClick={onClose}
-            className="admin-btn-secondary"
-            style={{ width: '32px', height: '32px', padding: 0 }}
-          >
-            <X size={16} />
-          </button>
         </div>
 
-        {/* Modal Body */}
-        <div className="admin-modal-body">
-          
-          {errorMsg && (
-            <div style={{
-              backgroundColor: '#FFE4E6',
-              border: '1px solid #FECDD3',
-              color: '#BE123C',
-              padding: '0.75rem 1rem',
-              borderRadius: '12px',
-              fontSize: '0.8rem',
-              fontWeight: 600,
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              marginBottom: '1.25rem'
-            }}>
-              <AlertCircle size={16} />
-              <span>{errorMsg}</span>
-            </div>
-          )}
+        {/* Modal Form */}
+        <form
+          onSubmit={handleSubmit}
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            flex: 1,
+            minHeight: 0,
+            overflow: 'hidden'
+          }}
+        >
+            {/* Modal Body (Scrollable) */}
+            <div className="admin-modal-body">
+              {errorMsg && (
+                <div style={{
+                  backgroundColor: '#FFE4E6',
+                  border: '1px solid #FECDD3',
+                  color: '#BE123C',
+                  padding: '0.75rem 1rem',
+                  borderRadius: '12px',
+                  fontSize: '0.8rem',
+                  fontWeight: 600,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  marginBottom: '1.25rem'
+                }}>
+                  <AlertCircle size={16} />
+                  <span>{errorMsg}</span>
+                </div>
+              )}
 
-          {loadingInitial ? (
-            <div style={{ padding: '4rem', textAlign: 'center', color: '#94A3B8' }}>
-              <Loader2 size={30} className="animate-spin text-sky-500" style={{ margin: '0 auto 0.75rem auto' }} />
-              <div style={{ fontWeight: 600, fontSize: '0.85rem' }}>Loading form configuration...</div>
-            </div>
-          ) : (
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               
               {/* Section 1: Route Details */}
               <div className="admin-form-section" style={{ margin: 0, padding: '1rem 1.25rem' }}>
@@ -687,41 +733,43 @@ export const AdminFareForm = ({ isOpen, onClose, onSuccess, initialData = null }
                 </div>
               </div>
 
-              {/* Modal Action Buttons */}
-              <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', marginTop: '0.5rem', borderTop: '1px solid #F1F5F9', paddingTop: '1rem' }}>
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="admin-btn-secondary"
-                  style={{ height: '40px', padding: '0 1.25rem', fontSize: '0.84rem' }}
-                >
-                  Cancel
-                </button>
-
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="admin-btn-primary"
-                  style={{ height: '40px', padding: '0 1.5rem', fontSize: '0.84rem' }}
-                >
-                  {submitting ? (
-                    <>
-                      <Loader2 size={15} className="animate-spin" />
-                      <span>Saving...</span>
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle2 size={15} />
-                      <span>{isEditMode ? 'Update Fare' : 'Save Fare'}</span>
-                    </>
-                  )}
-                </button>
               </div>
 
-            </form>
-          )}
+            </div>
 
-        </div>
+            {/* Sticky Modal Footer (Always Visible at Bottom) */}
+            {/* Sticky Modal Footer (Always Visible at Bottom) */}
+            <div className="admin-modal-footer" style={{ justifyContent: 'flex-end', gap: '0.75rem' }}>
+              <button
+                type="button"
+                onClick={onClose}
+                className="admin-btn-secondary"
+                style={{ height: '40px', padding: '0 1.5rem', fontSize: '0.84rem' }}
+              >
+                Cancel
+              </button>
+
+              <button
+                type="submit"
+                disabled={submitting}
+                className="admin-btn-primary"
+                style={{ height: '40px', padding: '0 1.5rem', fontSize: '0.84rem' }}
+              >
+                {submitting ? (
+                  <>
+                    <Loader2 size={15} className="animate-spin" />
+                    <span>Saving...</span>
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 size={15} />
+                    <span>{isEditMode ? 'Update Fare' : 'Save Fare'}</span>
+                  </>
+                )}
+              </button>
+            </div>
+
+          </form>
 
       </div>
 

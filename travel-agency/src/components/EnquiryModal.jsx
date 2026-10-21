@@ -3,16 +3,31 @@ import { X, Send, MessageSquare, CheckCircle, User, Phone, MapPin, Calendar, Car
 import { getWhatsAppLink } from '../utils/whatsapp';
 import { enquiryApi } from '../services/api';
 
-export const EnquiryModal = ({ isOpen, onClose }) => {
+export const EnquiryModal = ({ isOpen, onClose, initialData = null }) => {
   const [formData, setFormData] = useState({
-    name: '',
-    phone: '',
-    pickup: '',
-    destination: '',
-    date: '',
-    vehicle: 'Executive Sedan',
-    message: ''
+    name: initialData?.name || '',
+    phone: initialData?.phone || '',
+    pickup: initialData?.pickup || '',
+    destination: initialData?.destination || '',
+    date: initialData?.date || '',
+    vehicle: initialData?.vehicle || 'Executive Sedan',
+    message: initialData?.message || ''
   });
+
+  React.useEffect(() => {
+    if (initialData && isOpen) {
+      setFormData((prev) => ({
+        ...prev,
+        name: initialData.name || prev.name,
+        phone: initialData.phone || prev.phone,
+        pickup: initialData.pickup || prev.pickup,
+        destination: initialData.destination || prev.destination,
+        date: initialData.date || prev.date,
+        vehicle: initialData.vehicle || prev.vehicle,
+        message: initialData.message || prev.message,
+      }));
+    }
+  }, [initialData, isOpen]);
 
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -27,6 +42,7 @@ export const EnquiryModal = ({ isOpen, onClose }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isSubmitting) return;
     setIsSubmitting(true);
     setErrorMsg('');
     try {

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Building2, Compass, Plane, MapPin, Navigation, MessageSquare, Clock, ArrowRight, Car, Sparkles, Landmark } from 'lucide-react';
 import { getWhatsAppLink } from '../utils/whatsapp';
+import { buildFareUrl } from '../utils/fareNavigation';
 import { homepageContent } from '../data/homepageContent';
 
 const ICON_MAP = {
@@ -21,25 +22,28 @@ export const DestinationSpotlight = () => {
   const [selectedDest, setSelectedDest] = useState(destinations[0] || {});
 
   const handleBookDestination = (dest) => {
+    const isCorridor = dest.dropKey === 'mumbai';
+    const fareUrl = buildFareUrl({
+      tripType: 'ONE_WAY',
+      pickupId: 'pune',
+      dropId: dest.dropKey,
+      pickupName: 'Pune (All Areas)',
+      dropName: dest.name,
+      isCustomRoute: !isCorridor,
+    });
+
     // Notify homepage booking form if present
     window.dispatchEvent(
       new CustomEvent('preFillBooking', {
         detail: {
           tripType: 'ONE_WAY',
-          pickupId: dest.pickupKey,
+          pickupId: 'pune',
           dropId: dest.dropKey,
         },
       })
     );
 
-    // Redirect user to Fare Calculator with pre-configured destination parameters
-    const params = new URLSearchParams({
-      tripType: 'ONE_WAY',
-      pickupId: dest.pickupKey,
-      dropId: dest.dropKey,
-      destination: dest.name,
-    });
-    navigate(`/fare?${params.toString()}`);
+    navigate(fareUrl);
   };
 
   return (
@@ -115,20 +119,10 @@ export const DestinationSpotlight = () => {
                   onClick={() => handleBookDestination(selectedDest)}
                   className="btn-emerald-glowing"
                 >
-                  <Car size={18} />
-                  <span>BOOK CAB TO {selectedDest.name.toUpperCase()}</span>
-                  <ArrowRight size={16} />
+                  <Car size={17} />
+                  <span>Book Cab to {selectedDest.name}</span>
+                  <ArrowRight size={15} />
                 </button>
-
-                {selectedDest.url && (
-                  <Link
-                    to={selectedDest.url}
-                    className="btn-spotlight-guide"
-                  >
-                    <span>Read Travel Guide</span>
-                    <ArrowRight size={15} />
-                  </Link>
-                )}
 
                 <a
                   href={getWhatsAppLink({
@@ -221,19 +215,18 @@ export const DestinationSpotlight = () => {
         }
 
         .dest-icon-strip {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 1rem;
-          margin-bottom: 2.5rem;
-          flex-wrap: wrap;
+          display: grid;
+          grid-template-columns: repeat(6, 1fr);
+          gap: 0.85rem;
+          margin-bottom: 2.25rem;
+          width: 100%;
         }
 
         .dest-icon-card {
           background: #FFFFFF;
           border-radius: 16px;
-          padding: 1.1rem 1.35rem;
-          min-width: 145px;
+          padding: 1rem 0.65rem;
+          min-width: 0;
           display: flex;
           flex-direction: column;
           align-items: center;
@@ -277,10 +270,10 @@ export const DestinationSpotlight = () => {
 
         .dest-icon-name {
           font-family: var(--font-heading);
-          font-size: 0.92rem;
-          font-weight: 800;
+          font-size: 0.86rem;
+          font-weight: 600;
           color: #17324D;
-          line-height: 1.2;
+          line-height: 1.25;
         }
 
         .dest-icon-card.active .dest-icon-name {
@@ -290,9 +283,9 @@ export const DestinationSpotlight = () => {
         .dest-icon-city {
           font-size: 0.72rem;
           color: #64748B;
-          margin-top: 0.2rem;
-          font-weight: 700;
-          letter-spacing: 0.02em;
+          margin-top: 0.25rem;
+          font-weight: 450;
+          letter-spacing: 0.01em;
         }
 
         .spotlight-card-wrapper {
@@ -321,8 +314,8 @@ export const DestinationSpotlight = () => {
         .spotlight-eyebrow {
           font-family: var(--font-heading);
           font-size: 0.72rem;
-          font-weight: 800;
-          letter-spacing: 0.08em;
+          font-weight: 600;
+          letter-spacing: 0.06em;
           color: #60A5FA;
           margin-bottom: 0.6rem;
           background: rgba(37, 99, 235, 0.2);
@@ -332,18 +325,18 @@ export const DestinationSpotlight = () => {
         }
 
         .spotlight-title {
-          font-size: 2.1rem;
-          font-weight: 900;
-          line-height: 1.15;
-          margin-bottom: 0.4rem;
+          font-size: clamp(1.4rem, 2.5vw, 1.95rem);
+          font-weight: 650;
+          line-height: 1.2;
+          margin-bottom: 0.45rem;
           color: #FFFFFF;
-          letter-spacing: -0.02em;
+          letter-spacing: -0.015em;
         }
 
         .spotlight-tagline {
-          font-size: 0.98rem;
+          font-size: 0.95rem;
           color: #38BDF8;
-          font-weight: 700;
+          font-weight: 500;
           margin-bottom: 0.85rem;
         }
 
@@ -376,17 +369,17 @@ export const DestinationSpotlight = () => {
         }
 
         .info-badge-label {
-          font-size: 0.68rem;
-          font-weight: 800;
+          font-size: 0.65rem;
+          font-weight: 550;
           color: #94A3B8;
-          letter-spacing: 0.06em;
+          letter-spacing: 0.04em;
           text-transform: uppercase;
         }
 
         .info-badge-val {
           font-family: var(--font-heading);
-          font-size: 0.95rem;
-          font-weight: 800;
+          font-size: 0.9rem;
+          font-weight: 600;
           color: #FFFFFF;
         }
 
@@ -440,7 +433,11 @@ export const DestinationSpotlight = () => {
           color: #FFFFFF;
         }
 
-        @media (max-width: 992px) {
+        @media (max-width: 1024px) {
+          .dest-icon-strip {
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.75rem;
+          }
           .spotlight-card-wrapper {
             padding: 1.75rem;
           }

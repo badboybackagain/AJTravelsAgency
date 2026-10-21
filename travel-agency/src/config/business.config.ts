@@ -15,8 +15,11 @@ export interface BusinessConfig {
   tagline: string;
   phone: string;
   phoneDisplay: string;
+  phoneSecondary?: string;
+  phoneSecondaryDisplay?: string;
   whatsapp: string;
   email: string;
+  emailSupport?: string;
   address: string;
   businessHours: string;
   googleBusinessProfileUrl: string;
@@ -30,13 +33,16 @@ export interface BusinessConfig {
 }
 
 export const businessConfig: BusinessConfig = {
-  businessName: "AJ Travel Agency",
+  businessName: "AJ Travels",
   tagline: "Premier Vehicle Rentals & Intercity Chauffeured Travel",
-  phone: "",
-  phoneDisplay: "",
-  whatsapp: "919156183915",
-  email: "contact@ajtravelagency.in",
-  address: "AJ Travel Agency Hub, Hinjawadi & Pune-Mumbai Expressway Terminal, Pune 411057",
+  phone: "+917447443536",
+  phoneDisplay: "+91 7447443536",
+  phoneSecondary: "+918421051299",
+  phoneSecondaryDisplay: "+91 8421051299",
+  whatsapp: "917447443536",
+  email: "ajtravelpune@gmail.com",
+  emailSupport: "support@ajtravelspune.com",
+  address: "Old Mumbai–Pune Highway, Nashik Fata, Kasarawadi, Pune 411064",
   businessHours: "24 Hours / 7 Days a Week",
   googleBusinessProfileUrl: "https://maps.google.com",
   googleReviewUrl: "https://maps.google.com",

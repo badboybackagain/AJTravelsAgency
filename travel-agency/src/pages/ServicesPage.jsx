@@ -22,18 +22,25 @@ import {
 export function ServicesPage() {
   usePageSeo(
     'services',
-    'Intercity Cab Services & Travel Corridors | AJ Travels Pune',
-    'Explore AJ Travels transportation services: Pune to Mumbai cab, Mumbai to Pune return, 24/7 Airport transfers (BOM & PNQ), Outstation getaways, and Corporate rentals.'
+    'Car Rental Services in Pune | Intercity Cabs & Airport Transfers - AJ Travels',
+    'Explore chauffeur-driven car rental services in Pune: Pune to Mumbai cabs, 24/7 airport transfers (BOM & PNQ), outstation tours, and corporate car rentals with AJ Travels.'
   );
 
   const navigate = useNavigate();
   const [isEnquiryOpen, setIsEnquiryOpen] = useState(false);
 
   const handleBookService = (service) => {
+    const pId = service.pickupDefault || 'pune';
+    const dId = service.dropDefault || 'mumbai';
+    const pName = pId === 'mumbai' ? 'Mumbai (All Areas)' : (pId === 'hinjawadi' ? 'Hinjawadi, Pune' : 'Pune (All Areas)');
+    const dName = dId === 'pune' ? 'Pune (All Areas)' : (dId === 'mumbai airport' ? 'Mumbai Airport (BOM - T1/T2)' : (dId === 'mahabaleshwar' ? 'Mahabaleshwar' : (dId === 'bkc' ? 'BKC (Bandra Kurla)' : 'Mumbai (All Areas)')));
+
     const params = new URLSearchParams({
       tripType: 'ONE_WAY',
-      pickupId: service.pickupDefault || 'pune',
-      dropId: service.dropDefault || 'mumbai'
+      pickupId: pId,
+      dropId: dId,
+      pickupName: pName,
+      dropName: dName
     });
     navigate(`/fare?${params.toString()}`);
   };
@@ -57,10 +64,10 @@ export function ServicesPage() {
               <span>PREMIER INTERCITY TRANSPORT</span>
             </div>
             <h1 className="internal-hero-title">
-              Specialized Cab Services & <span className="text-gradient">Travel Corridors</span>
+              Chauffeur-Driven Car Rental & <span className="text-gradient">Intercity Cab Services</span>
             </h1>
             <p className="internal-hero-subtitle">
-              Punctual, fully insured, and verified chauffeured services connecting Maharashtra's prime cities, corporate technology parks, and international airports.
+              Punctual, fully insured, and verified chauffeured services connecting Pune with Mumbai, Maharashtra hill stations, IT parks, and international airports.
             </p>
           </div>
         </div>

@@ -1,12 +1,28 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Users, Briefcase, CheckCircle2, Car, ArrowRight } from 'lucide-react';
+import { buildFareUrl } from '../utils/fareNavigation';
 import { homepageContent } from '../data/homepageContent';
+import { vehicleApi } from '../services/api';
+import { resolveMediaUrl } from '../utils/mediaUtils';
 
 export const VehicleDiscovery = () => {
   const navigate = useNavigate();
   const fleetData = homepageContent.fleet;
   const vehicles = fleetData.vehicles || [];
+  const [dbVehicles, setDbVehicles] = useState([]);
+
+  useEffect(() => {
+    let isMounted = true;
+    vehicleApi.getAll()
+      .then(res => {
+        if (isMounted && res.data?.data) {
+          setDbVehicles(res.data.data);
+        }
+      })
+      .catch(() => {});
+    return () => { isMounted = false; };
+  }, []);
 
   const handleBookVehicle = (v) => {
     let cat = 'SEDAN';
@@ -15,14 +31,14 @@ export const VehicleDiscovery = () => {
     else if (v.id === 'minibus' || v.name.toLowerCase().includes('mini bus') || v.name.toLowerCase().includes('tempo')) cat = 'TEMPO_TRAVELLER';
     else if (v.id === 'sedan' || v.name.toLowerCase().includes('sedan')) cat = 'SEDAN';
 
-    const params = new URLSearchParams({
+    const fareUrl = buildFareUrl({
       tripType: 'ONE_WAY',
       category: cat,
       vehicleName: v.name,
       passengers: v.id === 'suv' ? '6' : v.id === 'minibus' ? '12' : '4',
     });
 
-    navigate(`/fare?${params.toString()}`);
+    navigate(fareUrl);
   };
 
   return (
@@ -49,15 +65,31 @@ export const VehicleDiscovery = () => {
 
         {/* Vehicles Cards Grid */}
         <div className="vehicles-grid">
-          {vehicles.map((v, idx) => (
+          {vehicles.map((v, idx) => {
+            const targetCat = 
+              v.id === 'suv' || v.name?.toLowerCase().includes('suv') ? 'SUV' :
+              v.id === 'premium' || v.name?.toLowerCase().includes('crysta') ? 'INNOVA_CRYSTA' :
+              v.id === 'minibus' || v.name?.toLowerCase().includes('tempo') ? 'TEMPO_TRAVELLER' :
+              'SEDAN';
+
+            const dbMatch = dbVehicles.find(db => 
+              db.category === targetCat ||
+              (v.id && db.name?.toLowerCase().includes(v.id.toLowerCase()))
+            );
+            const activeImg = dbMatch?.image ? resolveMediaUrl(dbMatch.image, v.image) : v.image;
+
+            return (
             <div key={v.id} className={`vehicle-card reveal stagger-${(idx % 3) + 1}`}>
               {/* Vehicle Image Container */}
               <div className="vehicle-img-wrapper">
                 <img
-                  src={v.image}
+                  src={activeImg}
                   alt={`${v.name} cab rental with chauffeur by AJ Travels`}
                   className="vehicle-img"
                   loading="lazy"
+                  onError={(e) => {
+                    e.target.src = v.image || '/assets/sedan.webp';
+                  }}
                 />
                 <div className="vehicle-img-overlay"></div>
                 {v.tag && <span className="vehicle-gold-tag">{v.tag}</span>}
@@ -102,7 +134,7 @@ export const VehicleDiscovery = () => {
                     style={{ cursor: 'pointer', border: 'none', flex: 1 }}
                   >
                     <Car size={16} />
-                    <span>CHECK FARE & BOOK</span>
+                    <span>Check Fare & Book</span>
                     <ArrowRight size={15} />
                   </button>
                   {v.url && (
@@ -117,7 +149,8 @@ export const VehicleDiscovery = () => {
                 </div>
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
@@ -185,10 +218,10 @@ export const VehicleDiscovery = () => {
           color: #FFFFFF;
           font-family: var(--font-heading);
           font-size: 0.72rem;
-          font-weight: 800;
+          font-weight: 600;
           padding: 0.35rem 0.85rem;
           border-radius: 9999px;
-          letter-spacing: 0.04em;
+          letter-spacing: 0.03em;
           border: 1px solid rgba(147, 197, 253, 0.3);
           box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
           z-index: 2;
@@ -203,16 +236,16 @@ export const VehicleDiscovery = () => {
 
         .vehicle-category-label {
           font-size: 0.75rem;
-          font-weight: 700;
+          font-weight: 550;
           color: #2563EB;
-          letter-spacing: 0.06em;
+          letter-spacing: 0.05em;
           margin-bottom: 0.25rem;
           text-transform: uppercase;
         }
 
         .vehicle-title {
-          font-size: 1.35rem;
-          font-weight: 800;
+          font-size: 1.3rem;
+          font-weight: 650;
           color: #17324D;
           margin-bottom: 0.85rem;
           letter-spacing: -0.01em;
@@ -234,7 +267,7 @@ export const VehicleDiscovery = () => {
           padding: 0.35rem 0.75rem;
           border-radius: 9999px;
           font-size: 0.78rem;
-          font-weight: 700;
+          font-weight: 550;
           color: #1D4ED8;
         }
 
@@ -250,7 +283,7 @@ export const VehicleDiscovery = () => {
           align-items: center;
           gap: 0.35rem;
           font-size: 0.75rem;
-          font-weight: 600;
+          font-weight: 450;
           color: #475569;
           background: #F8FAFC;
           padding: 0.3rem 0.6rem;
@@ -268,13 +301,14 @@ export const VehicleDiscovery = () => {
 
         .vehicle-ideal-text strong {
           color: #17324D;
+          font-weight: 600;
         }
 
         .vehicle-btn {
           font-family: var(--font-heading);
-          font-size: 0.88rem;
-          font-weight: 800;
-          letter-spacing: 0.03em;
+          font-size: 0.85rem;
+          font-weight: 600;
+          letter-spacing: 0.02em;
           padding: 0.85rem 1.25rem;
           background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
           color: #FFFFFF !important;

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
@@ -6,6 +6,8 @@ import { EnquiryModal } from '../components/EnquiryModal';
 import { MobileStickyBar } from '../components/MobileStickyBar';
 import { usePageSeo } from '../hooks/usePageSeo';
 import { vehiclesData } from '../data/vehiclesData';
+import { vehicleApi } from '../services/api';
+import { resolveMediaUrl } from '../utils/mediaUtils';
 import { 
   Car, 
   Users, 
@@ -20,12 +22,27 @@ import {
 export function VehiclesPage() {
   usePageSeo(
     'vehicles',
-    'Executive Cab Fleet & Vehicle Rentals | AJ Travels Pune',
-    'Explore our chauffeured car fleet: Sedan (Dzire), 6-seater SUV (Ertiga), Innova Crysta luxury, and 13-20 seater AC Tempo Travellers for intercity and airport travel.'
+    'Rental Cars & Tempo Travellers in Pune | Fleet Options - AJ Travels',
+    'Hire rental cars with driver in Pune: Swift Dzire, 6-seater Ertiga, Toyota Innova Crysta, and luxury 13 to 20-seater Force Tempo Travellers for outstation & airport trips.'
   );
 
   const navigate = useNavigate();
   const [isEnquiryOpen, setIsEnquiryOpen] = useState(false);
+  const [dbVehicles, setDbVehicles] = useState([]);
+
+  useEffect(() => {
+    let isMounted = true;
+    vehicleApi.getAll()
+      .then(res => {
+        if (isMounted && res.data?.data) {
+          setDbVehicles(res.data.data);
+        }
+      })
+      .catch(err => {
+        console.warn('VehiclesPage: Failed to load dynamic fleet images:', err?.message);
+      });
+    return () => { isMounted = false; };
+  }, []);
 
   const handleBookVehicle = (v) => {
     const params = new URLSearchParams({
@@ -55,7 +72,7 @@ export function VehiclesPage() {
               <span>COMMERCIAL LICENSED CHAUFFEURED FLEET</span>
             </div>
             <h1 className="internal-hero-title">
-              Choose the Right Vehicle for <span className="text-gradient">Your Journey</span>
+              Chauffeur-Driven Cars & <span className="text-gradient">Tempo Travellers in Pune</span>
             </h1>
             <p className="internal-hero-subtitle">
               Every vehicle in our fleet is fully licensed, sanitized prior to each departure, and driven by a courteous, background-verified highway chauffeur.
@@ -68,10 +85,25 @@ export function VehiclesPage() {
       <section className="vehicles-main-section">
         <div className="container">
           <div className="fleet-cards-grid">
-            {vehiclesData.map(v => (
+            {vehiclesData.map(v => {
+              const dbMatch = dbVehicles.find(db => 
+                db.category === v.category ||
+                (v.id && db.name?.toLowerCase().includes(v.id.toLowerCase()))
+              );
+              const cardImage = dbMatch?.image ? resolveMediaUrl(dbMatch.image, v.image) : v.image;
+
+              return (
               <div key={v.slug} className="fleet-card">
                 <div className="fleet-img-wrapper">
-                  <img src={v.image} alt={v.name} className="fleet-car-img" loading="lazy" />
+                  <img
+                    src={cardImage}
+                    alt={v.name}
+                    className="fleet-car-img"
+                    loading="lazy"
+                    onError={(e) => {
+                      e.target.src = v.image || '/assets/sedan.webp';
+                    }}
+                  />
                   <span className="fleet-tag-chip">{v.tag}</span>
                 </div>
 
@@ -127,7 +159,8 @@ export function VehiclesPage() {
                   </div>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
 
           {/* Fleet Standards Guarantee Box */}

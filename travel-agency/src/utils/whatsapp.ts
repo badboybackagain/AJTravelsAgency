@@ -13,14 +13,21 @@ export interface BookingDetails {
 }
 
 export function generateWhatsAppMessage(details: Partial<BookingDetails>): string {
-  const isMumbaiToPune = details.from === 'Mumbai' || (details.pickup && details.pickup.toLowerCase().includes('mumbai'));
-  
-  const header = isMumbaiToPune
-    ? 'Hello, I would like to book a Mumbai to Pune trip.'
-    : 'Hello, I would like to book a Pune to Mumbai trip.';
-
   const pickupVal = details.pickup?.trim() || details.from || 'Not specified';
   const destVal = details.destination?.trim() || details.to || 'Not specified';
+
+  const isMumbaiToPune = pickupVal.toLowerCase().includes('mumbai') && destVal.toLowerCase().includes('pune');
+  const isPuneToMumbai = pickupVal.toLowerCase().includes('pune') && destVal.toLowerCase().includes('mumbai');
+
+  let header = 'Hello, I would like to enquire about booking a cab trip.';
+  if (isMumbaiToPune) {
+    header = 'Hello, I would like to book a Mumbai to Pune trip.';
+  } else if (isPuneToMumbai) {
+    header = 'Hello, I would like to book a Pune to Mumbai trip.';
+  } else if (pickupVal !== 'Not specified' && destVal !== 'Not specified') {
+    header = `Hello, I would like to enquire about a ${pickupVal} to ${destVal} trip.`;
+  }
+
   const dateVal = details.date || 'As soon as possible';
   const timeVal = details.time || 'Flexible';
   const passVal = details.passengers || '1-4';

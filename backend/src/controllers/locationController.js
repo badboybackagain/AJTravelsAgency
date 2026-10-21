@@ -2,16 +2,34 @@
 const prisma = require('../utils/prisma');
 const { AppError } = require('../middleware/errorHandler');
 
+// In-memory cache for active locations (5 minute TTL, invalidated on admin write)
+let cachedLocations = null;
+let cacheTimestamp = 0;
+const CACHE_TTL_MS = 5 * 60 * 1000;
+
+const clearLocationsCache = () => {
+  cachedLocations = null;
+  cacheTimestamp = 0;
+};
+
 /**
  * GET /api/locations
- * Returns all active locations
+ * Returns all active locations (in-memory cached for sub-millisecond response)
  */
 const getAllLocations = async (req, res, next) => {
   try {
+    const now = Date.now();
+    if (cachedLocations && (now - cacheTimestamp) < CACHE_TTL_MS) {
+      return res.json({ success: true, data: cachedLocations });
+    }
+
     const locations = await prisma.location.findMany({
       where: { isActive: true },
       orderBy: [{ side: 'asc' }, { name: 'asc' }]
     });
+
+    cachedLocations = locations;
+    cacheTimestamp = now;
     res.json({ success: true, data: locations });
   } catch (err) {
     next(err);
@@ -80,6 +98,7 @@ const createLocation = async (req, res, next) => {
       data: { name, city, state: state || 'Maharashtra', type: type || 'CITY', side }
     });
 
+    clearLocationsCache();
     res.status(201).json({ success: true, data: location });
   } catch (err) {
     next(err);
@@ -109,6 +128,7 @@ const updateLocation = async (req, res, next) => {
       }
     });
 
+    clearLocationsCache();
     res.json({ success: true, data: updated });
   } catch (err) {
     next(err);
@@ -125,6 +145,7 @@ const deleteLocation = async (req, res, next) => {
       where: { id },
       data: { isActive: false }
     });
+    clearLocationsCache();
     res.json({ success: true, message: 'Location deactivated.' });
   } catch (err) {
     next(err);

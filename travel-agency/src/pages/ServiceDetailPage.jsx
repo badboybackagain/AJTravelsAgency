@@ -51,10 +51,17 @@ export function ServiceDetailPage() {
   }
 
   const handleBookNow = () => {
+    const pId = service.pickupDefault || 'pune';
+    const dId = service.dropDefault || 'mumbai';
+    const pName = pId === 'mumbai' ? 'Mumbai (All Areas)' : (pId === 'hinjawadi' ? 'Hinjawadi, Pune' : 'Pune (All Areas)');
+    const dName = dId === 'pune' ? 'Pune (All Areas)' : (dId === 'mumbai airport' ? 'Mumbai Airport (BOM - T1/T2)' : (dId === 'mahabaleshwar' ? 'Mahabaleshwar' : (dId === 'bkc' ? 'BKC (Bandra Kurla)' : 'Mumbai (All Areas)')));
+
     const params = new URLSearchParams({
       tripType: 'ONE_WAY',
-      pickupId: service.pickupDefault || 'pune',
-      dropId: service.dropDefault || 'mumbai'
+      pickupId: pId,
+      dropId: dId,
+      pickupName: pName,
+      dropName: dName
     });
     navigate(`/fare?${params.toString()}`);
   };

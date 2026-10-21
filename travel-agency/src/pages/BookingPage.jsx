@@ -71,8 +71,20 @@ export const BookingPage = () => {
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
   const [customerEmail, setCustomerEmail] = useState('');
-  const [pickupAddress, setPickupAddress] = useState('');
-  const [dropAddress, setDropAddress] = useState('');
+  const [pickupAddress, setPickupAddress] = useState(
+    () =>
+      searchParams.get('pickupAddress') ||
+      locationState.state?.pickupAddress ||
+      locationState.state?.searchParams?.pickupAddress ||
+      ''
+  );
+  const [dropAddress, setDropAddress] = useState(
+    () =>
+      searchParams.get('dropAddress') ||
+      locationState.state?.dropAddress ||
+      locationState.state?.searchParams?.dropAddress ||
+      ''
+  );
   const [notes, setNotes] = useState('');
 
   // WhatsApp OTP Verification Inline States
@@ -400,7 +412,7 @@ export const BookingPage = () => {
                   <strong>
                     {tripType === 'LOCAL'
                       ? `${city} (${duration}h Package)`
-                      : `${quoteData?.route?.pickup?.name || 'Pune'} ➔ ${quoteData?.route?.drop?.name || 'Mumbai'}`}
+                      : `${searchParams.get('pickupName') || pickupAddress || quoteData?.route?.pickup?.name || 'Pune'} ➔ ${searchParams.get('dropName') || dropAddress || quoteData?.route?.drop?.name || 'Mumbai'}`}
                   </strong>
                 </div>
                 <div>

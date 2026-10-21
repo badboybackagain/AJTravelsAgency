@@ -18,6 +18,8 @@ import gsap from 'gsap';
 import { businessConfig } from '../config/business.config';
 import { locationApi } from '../services/api';
 import { homepageContent } from '../data/homepageContent';
+import { SearchableLocationInput } from './SearchableLocationInput';
+import { detectLocationRegion } from '../services/locationSearchService';
 
 const TIME_SLOTS = [
   '12:00 AM', '01:00 AM', '02:00 AM', '03:00 AM', '04:00 AM', '05:00 AM',
@@ -46,6 +48,8 @@ export const HeroBooking = () => {
   // Form states with placeholder-first defaults
   const [pickupLocationId, setPickupLocationId] = useState('');
   const [dropLocationId, setDropLocationId] = useState('');
+  const [pickupCustom, setPickupCustom] = useState(null);
+  const [dropCustom, setDropCustom] = useState(null);
   const [localCity, setLocalCity] = useState(''); // 'Pune' | 'Mumbai'
   const [localDuration, setLocalDuration] = useState(''); // 4, 8, 12
   const [departureDate, setDepartureDate] = useState('');
@@ -100,8 +104,16 @@ export const HeroBooking = () => {
     const handlePreFill = (e) => {
       const { tripType: tt, pickupId: pId, dropId: dId, fromPune, fromMumbai } = e.detail || {};
       if (tt) setTripType(tt);
-      if (pId) setPickupLocationId(pId);
-      if (dId) setDropLocationId(dId);
+      if (pId) {
+        setPickupLocationId(pId);
+        const match = (cachedLocations || []).find((l) => l.id === pId);
+        if (match) setPickupCustom(match);
+      }
+      if (dId) {
+        setDropLocationId(dId);
+        const match = (cachedLocations || []).find((l) => l.id === dId);
+        if (match) setDropCustom(match);
+      }
       setValidationError('');
       const el = document.getElementById('home');
       if (el) {
@@ -117,11 +129,43 @@ export const HeroBooking = () => {
     };
   }, []);
 
+  // Selection Handlers for Searchable Location Inputs
+  const handlePickupSelect = (loc) => {
+    if (!loc) {
+      setPickupLocationId('');
+      setPickupCustom(null);
+      setDropLocationId('');
+      setDropCustom(null);
+      return;
+    }
+    setPickupCustom(loc);
+    setPickupLocationId(loc.id || 'custom');
+    setValidationError('');
+  };
+
+  const handleDropSelect = (loc) => {
+    if (!loc) {
+      setDropLocationId('');
+      setDropCustom(null);
+      return;
+    }
+    setDropCustom(loc);
+    setDropLocationId(loc.id || 'custom');
+    setValidationError('');
+  };
+
   // Determine current pickup side to restrict available drop locations
   const selectedPickup = locations.find((l) => l.id === pickupLocationId);
+  const effectivePickupSide = pickupCustom?.side || selectedPickup?.side;
   const isPickupPuneSide =
-    selectedPickup?.side === 'PUNE_SIDE' || selectedPickup?.city?.toLowerCase() === 'pune';
+    effectivePickupSide === 'PUNE_SIDE' ||
+    pickupCustom?.city?.toLowerCase() === 'pune' ||
+    selectedPickup?.side === 'PUNE_SIDE' ||
+    selectedPickup?.city?.toLowerCase() === 'pune';
+
   const isPickupMumbaiSide =
+    effectivePickupSide === 'MUMBAI_SIDE' ||
+    ['mumbai', 'thane', 'navi mumbai'].includes(pickupCustom?.city?.toLowerCase()) ||
     selectedPickup?.side === 'MUMBAI_SIDE' ||
     ['mumbai', 'thane', 'navi mumbai'].includes(selectedPickup?.city?.toLowerCase());
 
@@ -146,11 +190,15 @@ export const HeroBooking = () => {
       });
     }
 
-    const prevPickup = pickupLocationId;
-    const prevDrop = dropLocationId;
+    const prevPickupId = pickupLocationId;
+    const prevDropId = dropLocationId;
+    const prevPickupCustom = pickupCustom;
+    const prevDropCustom = dropCustom;
 
-    setPickupLocationId(prevDrop);
-    setDropLocationId(prevPickup);
+    setPickupLocationId(prevDropId);
+    setDropLocationId(prevPickupId);
+    setPickupCustom(prevDropCustom);
+    setDropCustom(prevPickupCustom);
     setValidationError('');
   };
 
@@ -196,15 +244,22 @@ export const HeroBooking = () => {
     // ==========================================
     // 2. VALIDATION: ONE_WAY & ROUND_TRIP
     // ==========================================
-    if (!pickupLocationId) {
-      setValidationError('Please choose your Pickup location.');
+    const hasPickup = Boolean(pickupLocationId || pickupCustom);
+    const hasDrop = Boolean(dropLocationId || dropCustom);
+
+    if (!hasPickup) {
+      setValidationError('Please choose or search your Pickup location.');
       return;
     }
-    if (!dropLocationId) {
-      setValidationError('Please choose your Drop location.');
+    if (!hasDrop) {
+      setValidationError('Please choose or search your Drop location.');
       return;
     }
-    if (pickupLocationId === dropLocationId) {
+
+    const pickupKey = (pickupCustom?.formattedAddress || pickupCustom?.name || pickupLocationId || '').toLowerCase().trim();
+    const dropKey = (dropCustom?.formattedAddress || dropCustom?.name || dropLocationId || '').toLowerCase().trim();
+
+    if (pickupKey && dropKey && pickupKey === dropKey) {
       setValidationError('Pickup and Drop locations must be different.');
       return;
     }
@@ -230,34 +285,61 @@ export const HeroBooking = () => {
         setValidationError('Please select your Return Time.');
         return;
       }
-
-      const queryParams = new URLSearchParams({
-        tripType: 'ROUND_TRIP',
-        pickupId: pickupLocationId,
-        dropId: dropLocationId,
-        departureDate,
-        departureTime,
-        returnDate,
-        returnTime,
-        date: departureDate,
-        time: departureTime,
-        passengers: passengers || '1',
-      });
-
-      navigate(`/fare?${queryParams.toString()}`);
-      return;
     }
 
-    // One Way navigation
-    const queryParams = new URLSearchParams({
-      tripType: 'ONE_WAY',
-      pickupId: pickupLocationId,
-      dropId: dropLocationId,
+    // Format display names and addresses
+    const pickupAddr = pickupCustom?.formattedAddress || pickupCustom?.name || selectedPickup?.name || '';
+    const dropAddr = dropCustom?.formattedAddress || dropCustom?.name || locations.find((l) => l.id === dropLocationId)?.name || '';
+    const pickupName = pickupCustom?.name || selectedPickup?.name || pickupAddr;
+    const dropName = dropCustom?.name || locations.find((l) => l.id === dropLocationId)?.name || dropAddr;
+
+    // Detect regions
+    const detectedPickup = detectLocationRegion(pickupAddr, pickupCustom?.lat, pickupCustom?.lon);
+    const detectedDrop = detectLocationRegion(dropAddr, dropCustom?.lat, dropCustom?.lon);
+
+    const effPickupSide = pickupCustom?.side || selectedPickup?.side || detectedPickup.side;
+    const effDropSide = dropCustom?.side || locations.find((l) => l.id === dropLocationId)?.side || detectedDrop.side;
+
+    const puneAll = puneLocations.find((l) => l.name.includes('All Areas')) || puneLocations[0];
+    const mumbaiAll = mumbaiLocations.find((l) => l.name.includes('All Areas')) || mumbaiLocations[0];
+
+    let resolvedPickupId = pickupLocationId !== 'custom' ? pickupLocationId : '';
+    let resolvedDropId = dropLocationId !== 'custom' ? dropLocationId : '';
+    let isCustomRoute = false;
+
+    // Supported Pune -> Mumbai Corridor
+    if (effPickupSide === 'PUNE_SIDE' && effDropSide === 'MUMBAI_SIDE') {
+      if (!resolvedPickupId) resolvedPickupId = puneAll?.id || puneLocations[0]?.id;
+      if (!resolvedDropId) resolvedDropId = mumbaiAll?.id || mumbaiLocations[0]?.id;
+    }
+    // Supported Mumbai -> Pune Corridor
+    else if (effPickupSide === 'MUMBAI_SIDE' && effDropSide === 'PUNE_SIDE') {
+      if (!resolvedPickupId) resolvedPickupId = mumbaiAll?.id || mumbaiLocations[0]?.id;
+      if (!resolvedDropId) resolvedDropId = puneAll?.id || puneLocations[0]?.id;
+    }
+    // Otherwise custom outstation route (e.g. Pune to Mahabaleshwar / Shirdi / Goa)
+    else {
+      isCustomRoute = true;
+    }
+
+    const queryParamsObj = {
+      tripType,
+      pickupId: resolvedPickupId || 'custom',
+      dropId: resolvedDropId || 'custom',
+      pickupAddress: pickupAddr,
+      dropAddress: dropAddr,
+      pickupName,
+      dropName,
+      isCustomRoute: isCustomRoute ? 'true' : 'false',
       date: departureDate,
       time: departureTime,
+      departureDate,
+      departureTime,
       passengers: passengers || '1',
-    });
+      ...(tripType === 'ROUND_TRIP' && { returnDate, returnTime }),
+    };
 
+    const queryParams = new URLSearchParams(queryParamsObj);
     navigate(`/fare?${queryParams.toString()}`);
   };
 
@@ -387,35 +469,22 @@ export const HeroBooking = () => {
                   {/* Row 1: Pickup + Swap + Drop in 1 Horizontal Line */}
                   <div className="booking-locations-horizontal">
                     <div className="booking-field-group">
-                      <label className="booking-label">
+                      <label className="booking-label" htmlFor="hero-oneway-pickup">
                         <MapPin size={13} color="#0099FF" />
                         <span>Pickup Location *</span>
                       </label>
-                      <select
-                        value={pickupLocationId}
-                        onChange={(e) => {
-                          setPickupLocationId(e.target.value);
-                          setDropLocationId('');
-                          setValidationError('');
-                        }}
-                        className="booking-select-control"
-                      >
-                        <option value="">Choose pickup location</option>
-                        <optgroup label="Pune Side">
-                          {puneLocations.map((loc) => (
-                            <option key={loc.id} value={loc.id}>
-                              {loc.name}
-                            </option>
-                          ))}
-                        </optgroup>
-                        <optgroup label="Mumbai Side">
-                          {mumbaiLocations.map((loc) => (
-                            <option key={loc.id} value={loc.id}>
-                              {loc.name}
-                            </option>
-                          ))}
-                        </optgroup>
-                      </select>
+                      <SearchableLocationInput
+                        id="hero-oneway-pickup"
+                        value={pickupCustom || pickupLocationId}
+                        popularLocations={locations}
+                        puneLocations={puneLocations}
+                        mumbaiLocations={mumbaiLocations}
+                        placeholder="Choose or search pickup location..."
+                        onSelect={handlePickupSelect}
+                        icon={MapPin}
+                        iconColor="#0099FF"
+                        ariaLabel="Pickup Location"
+                      />
                     </div>
 
                     <div className="booking-swap-container-inline">
@@ -432,30 +501,24 @@ export const HeroBooking = () => {
                     </div>
 
                     <div className="booking-field-group">
-                      <label className="booking-label">
+                      <label className="booking-label" htmlFor="hero-oneway-drop">
                         <Navigation size={13} color="#10B981" />
                         <span>Drop Location *</span>
                       </label>
-                      <select
-                        value={dropLocationId}
-                        onChange={(e) => {
-                          setDropLocationId(e.target.value);
-                          setValidationError('');
-                        }}
-                        className="booking-select-control"
-                        disabled={!pickupLocationId}
-                      >
-                        <option value="">
-                          {!pickupLocationId ? 'Select pickup first' : 'Choose drop location'}
-                        </option>
-                        {availableDropLocations
-                          .filter((loc) => loc.id !== pickupLocationId)
-                          .map((loc) => (
-                            <option key={loc.id} value={loc.id}>
-                              {loc.name}
-                            </option>
-                          ))}
-                      </select>
+                      <SearchableLocationInput
+                        id="hero-oneway-drop"
+                        value={dropCustom || dropLocationId}
+                        popularLocations={availableDropLocations}
+                        puneLocations={isPickupMumbaiSide ? puneLocations : []}
+                        mumbaiLocations={isPickupPuneSide ? mumbaiLocations : []}
+                        sidePreference={isPickupPuneSide ? 'MUMBAI_SIDE' : isPickupMumbaiSide ? 'PUNE_SIDE' : null}
+                        disabled={!pickupLocationId && !pickupCustom}
+                        placeholder={!pickupLocationId && !pickupCustom ? 'Select pickup first' : 'Choose or search drop location...'}
+                        onSelect={handleDropSelect}
+                        icon={Navigation}
+                        iconColor="#10B981"
+                        ariaLabel="Drop Location"
+                      />
                     </div>
                   </div>
 
@@ -537,35 +600,22 @@ export const HeroBooking = () => {
                 <>
                   <div className="booking-locations-horizontal">
                     <div className="booking-field-group">
-                      <label className="booking-label">
+                      <label className="booking-label" htmlFor="hero-roundtrip-pickup">
                         <MapPin size={13} color="#0099FF" />
                         <span>Pickup Location *</span>
                       </label>
-                      <select
-                        value={pickupLocationId}
-                        onChange={(e) => {
-                          setPickupLocationId(e.target.value);
-                          setDropLocationId('');
-                          setValidationError('');
-                        }}
-                        className="booking-select-control"
-                      >
-                        <option value="">Choose pickup location</option>
-                        <optgroup label="Pune Side">
-                          {puneLocations.map((loc) => (
-                            <option key={loc.id} value={loc.id}>
-                              {loc.name}
-                            </option>
-                          ))}
-                        </optgroup>
-                        <optgroup label="Mumbai Side">
-                          {mumbaiLocations.map((loc) => (
-                            <option key={loc.id} value={loc.id}>
-                              {loc.name}
-                            </option>
-                          ))}
-                        </optgroup>
-                      </select>
+                      <SearchableLocationInput
+                        id="hero-roundtrip-pickup"
+                        value={pickupCustom || pickupLocationId}
+                        popularLocations={locations}
+                        puneLocations={puneLocations}
+                        mumbaiLocations={mumbaiLocations}
+                        placeholder="Choose or search pickup location..."
+                        onSelect={handlePickupSelect}
+                        icon={MapPin}
+                        iconColor="#0099FF"
+                        ariaLabel="Pickup Location"
+                      />
                     </div>
 
                     <div className="booking-swap-container-inline">
@@ -575,36 +625,31 @@ export const HeroBooking = () => {
                         onClick={handleSwap}
                         className="booking-swap-btn"
                         title="Swap Locations"
+                        aria-label="Swap Locations"
                       >
                         <ArrowLeftRight size={14} />
                       </button>
                     </div>
 
                     <div className="booking-field-group">
-                      <label className="booking-label">
+                      <label className="booking-label" htmlFor="hero-roundtrip-drop">
                         <Navigation size={13} color="#10B981" />
                         <span>Drop Location *</span>
                       </label>
-                      <select
-                        value={dropLocationId}
-                        onChange={(e) => {
-                          setDropLocationId(e.target.value);
-                          setValidationError('');
-                        }}
-                        className="booking-select-control"
-                        disabled={!pickupLocationId}
-                      >
-                        <option value="">
-                          {!pickupLocationId ? 'Select pickup first' : 'Choose drop location'}
-                        </option>
-                        {availableDropLocations
-                          .filter((loc) => loc.id !== pickupLocationId)
-                          .map((loc) => (
-                            <option key={loc.id} value={loc.id}>
-                              {loc.name}
-                            </option>
-                          ))}
-                      </select>
+                      <SearchableLocationInput
+                        id="hero-roundtrip-drop"
+                        value={dropCustom || dropLocationId}
+                        popularLocations={availableDropLocations}
+                        puneLocations={isPickupMumbaiSide ? puneLocations : []}
+                        mumbaiLocations={isPickupPuneSide ? mumbaiLocations : []}
+                        sidePreference={isPickupPuneSide ? 'MUMBAI_SIDE' : isPickupMumbaiSide ? 'PUNE_SIDE' : null}
+                        disabled={!pickupLocationId && !pickupCustom}
+                        placeholder={!pickupLocationId && !pickupCustom ? 'Select pickup first' : 'Choose or search drop location...'}
+                        onSelect={handleDropSelect}
+                        icon={Navigation}
+                        iconColor="#10B981"
+                        ariaLabel="Drop Location"
+                      />
                     </div>
                   </div>
 

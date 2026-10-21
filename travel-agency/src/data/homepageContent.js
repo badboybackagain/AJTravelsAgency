@@ -7,29 +7,31 @@
 export const homepageContent = {
   // 1. Homepage SEO & OpenGraph Metadata
   seo: {
-    pageTitle: "AJ Travels - Pune Cab Service | Intercity Outstation Cabs & Car Rental",
-    metaDescription: "AJ Travels is Maharashtra's trusted travel agency for intercity cabs, airport transfers, and car rentals. Book Pune to Mumbai, Mahabaleshwar, Shirdi, Nashik & Goa with verified chauffeurs and all-inclusive toll pricing.",
+    pageTitle: "Car Rental in Pune with Driver | Outstation Cabs & Airport Transfers - AJ Travels",
+    metaDescription: "Book car rental in Pune with driver at transparent all-inclusive rates. Swift Dzire, Ertiga SUV, Innova Crysta, and Tempo Traveller for Pune to Mumbai, airport transfers, and outstation trips.",
     canonicalUrl: "https://ajtravelspune.com/",
-    h1Title: "Pune Cab Service & Maharashtra Outstation Car Rentals",
-    h1Subtitle: "Reliable Intercity Cabs, Airport Transfers & Chauffeur-Driven Rentals by AJ Travels",
+    h1Title: "Car Rental in Pune with Driver & Outstation Cab Service",
+    h1Subtitle: "Reliable Intercity Cabs, Airport Transfers & Chauffeur-Driven Vehicles across Maharashtra",
     keywords: [
-      "Pune cab service",
-      "outstation cab from Pune",
-      "Pune to Mumbai cab",
-      "Pune to Mahabaleshwar taxi",
-      "Pune to Shirdi cab",
       "car rental in Pune with driver",
+      "car on rent in Pune",
+      "chauffeur-driven car rental Pune",
+      "Pune to Mumbai cab",
+      "Innova rental in Pune",
+      "Ertiga rental in Pune",
       "tempo traveller on rent in Pune",
-      "Pune airport taxi transfer"
+      "Pune airport taxi transfer",
+      "outstation cab from Pune",
+      "corporate car rental in Pune"
     ]
   },
 
   // 2. Hero Section
   hero: {
-    eyebrow: "AJ TRAVELS • MAHARASHTRA CHAUFFEURED CABS & CAR RENTALS",
-    titlePrimary: "Pune Cab Service & Outstation Car Rentals",
-    titleSecondary: "Intercity Cabs, Airport Transfers & Local Chauffeured Rentals",
-    description: "Doorstep pickup across Pune and Maharashtra with sanitized Sedans, Ertiga SUVs, Innova Crysta, and luxury Tempo Travellers. Verified highway chauffeurs, 24/7 travel desk, and transparent flat fares with all expressway tolls included.",
+    eyebrow: "AJ TRAVELS • CHAUFFEUR-DRIVEN CAR RENTAL IN PUNE & OUTSTATION CABS",
+    titlePrimary: "Car Rental in Pune with Driver & Outstation Cabs",
+    titleSecondary: "Intercity Cabs, Airport Transfers & Chauffeur-Driven Vehicles",
+    description: "Doorstep pickup across Pune and PCMC with sanitized Sedans, Maruti Ertiga, Toyota Innova Crysta, and luxury Tempo Travellers. Experienced highway chauffeurs, 24/7 travel desk, and transparent pricing with expressway tolls included.",
     bgImage: "/assets/hero-luxury-cars.jpg",
     bgImageAlt: "AJ Travels Executive Cab Fleet - Sedans, SUVs and Tempo Travellers in Pune",
     trustChips: [
@@ -49,17 +51,17 @@ export const homepageContent = {
   // 3. Trust Bar Strip
   trustBar: [
     { id: "fleet", icon: "Car", title: "VERIFIED FLEET", desc: "Sedans, Ertiga, Innova Crysta & Tempo" },
-    { id: "clean", icon: "Sparkles", title: "SANITIZED CABIN", desc: "Clean interiors with climate dual AC" },
-    { id: "drivers", icon: "UserCheck", title: "VERIFIED DRIVERS", desc: "Polite highway-trained chauffeurs" },
-    { id: "doorstep", icon: "MapPin", title: "DOORSTEP PICKUP", desc: "Direct pickup from home, office or airport" },
-    { id: "pricing", icon: "ShieldCheck", title: "ALL-INCLUSIVE TOLLS", desc: "Zero surprise toll or parking charges" },
+    { id: "clean", icon: "Sparkles", title: "SANITIZED CABIN", desc: "Clean interiors with dual air conditioning" },
+    { id: "drivers", icon: "UserCheck", title: "VERIFIED DRIVERS", desc: "Polite, highway-trained chauffeurs" },
+    { id: "doorstep", icon: "MapPin", title: "DOORSTEP PICKUP", desc: "Direct pickup from home, office, or airport" },
+    { id: "pricing", icon: "ShieldCheck", title: "ALL-INCLUSIVE TOLLS", desc: "Clear flat pricing with tolls included" },
     { id: "support", icon: "Clock", title: "24/7 TRAVEL DESK", desc: "Instant phone & WhatsApp assistance" }
   ],
 
   // 4. Destinations Spotlight (Travel Agency Coverage Across Maharashtra)
   destinationsSpotlight: {
     badge: "POPULAR TRAVEL DESTINATIONS",
-    title: "Trending Travel Corridors from Pune",
+    title: "Trending Outstation Travel Corridors from Pune",
     subtitle: "From daily corporate express routes to scenic hill station holidays and sacred pilgrimage circuits, AJ Travels connects you seamlessly with verified doorstep service.",
     destinations: [
       {
@@ -70,7 +72,7 @@ export const homepageContent = {
         title: "PUNE ↔ MUMBAI EXPRESSWAY & AIRPORT",
         tagline: "Connecting Pune with BKC, Andheri, South Mumbai & CSMIA Airport T1/T2.",
         image: "/assets/pune-to-mumbai-premium-travel-banner.webp",
-        desc: "Maharashtra's busiest travel corridor. Enjoy smooth, stress-free travel via the Yashwantrao Chavan Expressway with doorstep pickup in Hinjawadi, Baner, Kothrud, or Viman Nagar straight to your Mumbai destination or departure gate.",
+        desc: "Maharashtra's busiest travel corridor. Enjoy smooth, stress-free travel via the Mumbai-Pune Expressway with doorstep pickup in Hinjawadi, Baner, Kothrud, or Viman Nagar straight to your Mumbai destination or airport departure terminal.",
         popularRoute: "Pune City / Airport → Mumbai (BKC / Airport / South Mumbai)",
         estTime: "3 Hours 15 Mins",
         url: "/pune-to-mumbai-one-way-cab/",
@@ -85,7 +87,7 @@ export const homepageContent = {
         title: "MAHABALESHWAR & PANCHGANI ESCAPE",
         tagline: "Scenic ghat journeys, strawberry farms, viewpoints & family getaways.",
         image: "/assets/suv.webp",
-        desc: "Breathe fresh mountain air without the fatigue of driving. Our experienced hill-road chauffeurs take you via Wai and Pasarni Ghat to Venna Lake, Arthur's Seat, Mapro Garden, and Table Land in plush AC comfort.",
+        desc: "Breathe fresh mountain air without the fatigue of driving. Our experienced hill-road chauffeurs take you via Wai and Pasarni Ghat to Venna Lake, Arthur's Seat, Mapro Garden, and Table Land in air-conditioned comfort.",
         popularRoute: "Pune → Wai → Panchgani → Mahabaleshwar",
         estTime: "3 Hours Express",
         url: "/pune-to-mahabaleshwar-cab/",
@@ -157,16 +159,16 @@ export const homepageContent = {
 
   // 5. Express Transport Categories (Services Breakdown)
   categoriesSection: {
-    badge: "COMPREHENSIVE TRAVEL SOLUTIONS",
-    title: "Travel Agency Services Designed for Every Journey",
-    subtitle: "From single-passenger business commutes to large group pilgrimage tours, choose the vehicle format tailored to your schedule, luggage, and passenger count.",
+    badge: "COMPREHENSIVE FLEET & SERVICE OPTIONS",
+    title: "Chauffeur-Driven Car & Tempo Traveller Rentals in Pune",
+    subtitle: "From individual corporate commutes to family vacations and group pilgrimages, select the ideal vehicle tailored to your passenger count, luggage, and schedule.",
     categories: [
       {
         id: "cabs",
-        title: "OUTSTATION CABS",
-        badge: "4-SEATER SEDANS",
+        title: "SEDAN CAR RENTAL",
+        badge: "4-SEATER SWIFT DZIRE & ETIOS",
         bgImg: "/assets/sedan.webp",
-        description: "Economical, comfortable sedans like Swift Dzire and Toyota Etios. Ideal for business professionals, couples, and small families traveling intercity.",
+        description: "Fuel-efficient, clean AC sedans like Swift Dzire and Toyota Etios. Ideal for couples, business professionals, and small families booking car rental in Pune with driver.",
         routes: [
           { from: "PUNE", to: "MUMBAI CITY", type: "One-Way Express", est: "All-Inclusive", note: "Expressway Tolls & Taxes Included", link: "/pune-to-mumbai-one-way-cab/" },
           { from: "PUNE", to: "MAHABALESHWAR", type: "Round-Trip Tour", est: "Custom Package", note: "Sightseeing Waiting Included", link: "/pune-to-mahabaleshwar-cab/" },
@@ -175,10 +177,10 @@ export const homepageContent = {
       },
       {
         id: "suv",
-        title: "SPACIOUS FAMILY SUVS",
-        badge: "6-SEATER ERTIGA & INNOVA",
+        title: "6-SEATER SUV RENTAL",
+        badge: "MARUTI ERTIGA & KIA CARENS",
         bgImg: "/assets/suv.webp",
-        description: "Reclining ergonomic seating, dual AC, and abundant boot capacity. Maruti Ertiga and Toyota Innova Crysta for relaxed family road trips.",
+        description: "Reclining ergonomic seating, dual AC vents, and generous luggage capacity. Ideal for family airport runs, hill station tours, and outstation trips across Maharashtra.",
         routes: [
           { from: "PUNE RESIDENCE", to: "MUMBAI AIRPORT (BOM)", type: "Flight Transfer", est: "Flight Tracked", note: "Doorstep Pickup & Luggage Assist", link: "/pune-to-mumbai-airport-cab/" },
           { from: "PUNE", to: "NASHIK / TRIMBAK", type: "Outstation Package", est: "All-Inclusive", note: "Comfort Highway Suspension", link: "/pune-to-nashik-cab/" },
@@ -187,10 +189,10 @@ export const homepageContent = {
       },
       {
         id: "minibus",
-        title: "GROUP TEMPO TRAVELLERS",
-        badge: "12 - 20 SEATER COACHES",
+        title: "TEMPO TRAVELLER ON RENT",
+        badge: "12, 17 & 20-SEATER COACHES",
         bgImg: "/assets/pune-mumbai-travel-banner.webp",
-        description: "High-roof luxury mini coaches with pushback seats, individual AC vents, and large luggage holds. Built for weddings, corporate offsites, and group outings.",
+        description: "Luxury high-roof Force Tempo Travellers with pushback seats, individual AC vents, and large luggage space. Ideal for wedding guest transfers, corporate offsites, and group pilgrimage tours.",
         routes: [
           { from: "PUNE / PCMC", to: "MUMBAI EVENTS", type: "13-Seater Tempo", est: "Special Permit", note: "Pushback Seats & Music System", link: "/tempo-traveller-on-rent-in-pune/" },
           { from: "PUNE", to: "SHIRDI / SHANI", type: "17-Seater Group", est: "All-Inclusive", note: "Dedicated Safe Chauffeur", link: "/tempo-traveller-on-rent-in-pune/" },
@@ -205,8 +207,8 @@ export const homepageContent = {
     intercity: {
       id: "intercity-express",
       badge: "PREMIER INTERCITY CONNECTIVITY",
-      title: "Pune ↔ Mumbai Expressway Cab Service",
-      subtitle: "Experience Maharashtra's gold-standard intercity corridor with prompt doorstep pickup, verified expressway drivers, and transparent toll-inclusive billing.",
+      title: "Pune to Mumbai Expressway Cab Service",
+      subtitle: "Experience Maharashtra's premier intercity travel corridor with prompt doorstep pickup across Pune & PCMC, verified expressway drivers, and all expressway tolls included.",
       image: "/assets/sedan.webp",
       imageAlt: "Pune to Mumbai Expressway private cab transfer by AJ Travels",
       features: [
@@ -218,14 +220,14 @@ export const homepageContent = {
         { title: "Corporate Billing & Invoicing", desc: "GST-compliant invoices and dedicated corporate travel coordination available on request." }
       ],
       ctaText: "CALCULATE EXPRESS FARE",
-      ctaUrl: "/fare?tripType=ONE_WAY&pickupId=pune&dropId=mumbai",
+      ctaUrl: "/fare?tripType=ONE_WAY&pickupId=pune&dropId=mumbai&pickupName=Pune+(All+Areas)&dropName=Mumbai+(All+Areas)",
       articleUrl: "/pune-to-mumbai-one-way-cab/"
     },
     outstationHolidays: {
       id: "outstation-holidays",
       badge: "MAHARASHTRA OUTSTATION PACKAGES",
-      title: "Outstation Tours & Pilgrimage Car Rentals",
-      subtitle: "Explore Western India's most celebrated hill stations, sacred shrines, and coastal retreats with customized round-trip cab packages.",
+      title: "Chauffeur-Driven Outstation Car Rental in Pune",
+      subtitle: "Explore Western India's celebrated hill stations, pilgrimage shrines, and coastal retreats with customized one-way and round-trip outstation cab packages.",
       image: "/assets/suv.webp",
       imageAlt: "Outstation tourist cab service in Pune by AJ Travels",
       features: [
@@ -245,17 +247,17 @@ export const homepageContent = {
   // 7. One-Way vs Round-Trip Travel
   tripOptions: {
     badge: "FLEXIBLE BOOKING MODES",
-    title: "One-Way vs Round-Trip Travel",
-    subtitle: "Choose between the simplicity of single-direction point-to-point travel or reserve your vehicle and chauffeur for multi-day outstation journeys.",
+    title: "One-Way Cab vs Round-Trip Car Rental",
+    subtitle: "Choose between single-direction point-to-point travel with zero return charges, or reserve your vehicle and chauffeur for multi-day outstation journeys.",
     oneWay: {
       id: "one-way-cabs",
-      badge: "ONE WAY TRAVEL • NO RETURN PENALTY",
+      badge: "ONE WAY TRAVEL • NO RETURN CHARGE",
       title: "One-Way Intercity Cabs",
-      desc: "Pay only for the distance you travel. Never pay two-way charges when you only need one-way drop to Mumbai, airport terminals, or neighboring cities.",
+      desc: "Pay only for the distance you travel. Never pay two-way charges when you only need a drop to Mumbai, airport terminals, or neighboring cities.",
       features: [
         "100% private cab with zero shared co-passengers",
-        "Doorstep pickup at your exact residence or office",
-        "Direct drop at your final drop location or airport gate",
+        "Doorstep pickup at your exact residence, hotel, or office",
+        "Direct drop at your final destination address or airport gate",
         "All highway toll taxes and driver allowances included",
         "Instant server-verified quote before confirmation"
       ],
@@ -266,11 +268,11 @@ export const homepageContent = {
       id: "round-trip-cabs",
       badge: "ROUND TRIP TRAVEL • MAXIMUM FREEDOM",
       title: "Round-Trip & Multi-Day Rentals",
-      desc: "Keep the vehicle and experienced chauffeur at your disposal for business meetings, doctor appointments, family functions, or weekend holiday tours.",
+      desc: "Keep the vehicle and experienced chauffeur at your disposal for business meetings, doctor visits, family functions, or weekend holiday tours.",
       features: [
-        "Same dedicated vehicle and trusted driver for full trip",
+        "Same dedicated vehicle and trusted driver for the entire trip",
         "Flexible departure times and custom en-route rest stops",
-        "Sightseeing and local destination travel included in package",
+        "Local destination sightseeing and multiple stops included",
         "Convenient return to your original pickup address",
         "Available for Sedans, 6-Seater SUVs, and Tempo Travellers"
       ],
@@ -282,7 +284,7 @@ export const homepageContent = {
   // 8. Fleet & Vehicles Discovery
   fleet: {
     badge: "EXECUTIVE FLEET CATALOGUE",
-    title: "Our Verified Chauffeured Fleet",
+    title: "Our Verified Chauffeured Fleet in Pune",
     subtitle: "From economical daily sedans to executive SUVs and high-capacity luxury coaches. Every vehicle is thoroughly sanitized, mechanically inspected, and GPS-monitored.",
     vehicles: [
       {
@@ -292,7 +294,7 @@ export const homepageContent = {
         passengers: "1 - 4 Passengers",
         luggage: "2 Medium Bags",
         features: ["Clean AC Cabin", "Generous Legroom", "USB Phone Charging", "Experienced Highway Driver"],
-        idealFor: "Individual business commuters, airport transfers, and small families.",
+        idealFor: "Swift Dzire rental in Pune for individual business commuters, airport transfers, and couples.",
         image: "/assets/sedan.webp",
         tag: "Most Popular",
         url: "/swift-dzire-car-on-rent-with-driver-in-pune/"
@@ -300,11 +302,11 @@ export const homepageContent = {
       {
         id: "suv",
         name: "Family SUV",
-        category: "Maruti Ertiga / Carens",
+        category: "Maruti Ertiga / Kia Carens",
         passengers: "1 - 6 Passengers",
         luggage: "3 - 4 Large Bags",
         features: ["Dual Air Conditioning", "Reclining Middle Row", "Spacious Boot", "Smooth Highway Suspension"],
-        idealFor: "Family vacations, heavy airport luggage, and outstation trips.",
+        idealFor: "Ertiga & Kia Carens rental in Pune for family vacations, airport transfers, and outstation trips.",
         image: "/assets/suv.webp",
         tag: "Best for Families",
         url: "/ertiga-car-on-rent-in-pune/"
@@ -316,7 +318,7 @@ export const homepageContent = {
         passengers: "1 - 7 Passengers",
         luggage: "4 - 5 Large Bags",
         features: ["Plush Captain Seats", "Whisper Quiet Cabin", "Rear Climate Control", "Executive Chauffeur"],
-        idealFor: "Corporate delegations, VIP airport pickups, and long-distance comfort.",
+        idealFor: "Innova rental in Pune for corporate delegations, VIP airport pickups, and long-distance luxury.",
         image: "/assets/pune-to-mumbai-premium-travel-banner.webp",
         tag: "Executive Class",
         url: "/innova-car-on-rent-in-pune/"
@@ -328,7 +330,7 @@ export const homepageContent = {
         passengers: "8 - 20 Passengers",
         luggage: "10 - 16 Large Bags",
         features: ["Pushback Reclining Seats", "Individual AC Vents", "High Ceiling & Wide Aisle", "Interstate State Permits"],
-        idealFor: "Wedding parties, pilgrimage groups, school/college excursions, and corporate offsites.",
+        idealFor: "Tempo Traveller on rent in Pune for weddings, pilgrimage groups, and corporate offsites.",
         image: "/assets/pune-mumbai-travel-banner.webp",
         tag: "Group Choice",
         url: "/tempo-traveller-on-rent-in-pune/"
@@ -342,8 +344,8 @@ export const homepageContent = {
       id: 1,
       category: "services",
       categoryLabel: "Services & Scope",
-      q: "What travel services does AJ Travels provide in Pune?",
-      a: "AJ Travels is a comprehensive travel agency offering intercity outstation cabs, one-way and round-trip express rides (including Pune to Mumbai, Mahabaleshwar, Shirdi, and Nashik), dedicated airport transfers for Pune (PNQ) and Mumbai (BOM) airports, local hourly car rental with driver (4hr, 8hr, 12hr packages), and luxury Tempo Traveller rentals for group travel."
+      q: "What car rental and cab services does AJ Travels provide in Pune?",
+      a: "AJ Travels provides chauffeur-driven car rental in Pune, intercity outstation cabs, one-way and round-trip routes (including Pune to Mumbai, Mahabaleshwar, Shirdi, and Nashik), dedicated airport transfers for Pune Airport (PNQ) and Mumbai Airport (BOM), local hourly rentals with driver (4hr, 8hr, 12hr packages), and luxury Tempo Traveller rentals for group travel."
     },
     {
       id: 2,
@@ -356,8 +358,8 @@ export const homepageContent = {
       id: 3,
       category: "booking",
       categoryLabel: "Booking Process",
-      q: "How can I book a cab with AJ Travels?",
-      a: "You can book instantly online using our Fare Calculator on the homepage, or contact our 24/7 travel desk directly via WhatsApp or phone call at +91 91561 83915. Provide your pickup location, destination, date, and preferred vehicle to receive instant confirmation."
+      q: "How can I book a car on rent in Pune with driver?",
+      a: "You can calculate fares and book instantly online through our Fare Calculator, or reach our 24/7 travel desk on WhatsApp or call at +91 91561 83915. Share your pickup address, destination, date, and preferred vehicle to receive confirmed pricing."
     },
     {
       id: 4,
@@ -377,8 +379,8 @@ export const homepageContent = {
       id: 6,
       category: "fleet",
       categoryLabel: "Vehicles & Group Travel",
-      q: "Can I rent a Tempo Traveller or larger vehicle for a group outing?",
-      a: "Yes. We maintain a sanitized fleet of 13-seater, 17-seater, and 20-seater luxury Tempo Travellers equipped with pushback reclining seats, individual AC vents, and generous luggage space. They are ideal for family pilgrimages, weddings, and corporate outings."
+      q: "Can I hire a 13-seater, 17-seater, or 20-seater Tempo Traveller on rent in Pune?",
+      a: "Yes. We provide 13-seater, 17-seater, and 20-seater luxury Force Tempo Travellers on rent in Pune and PCMC. Equipped with pushback reclining seats, ducted AC, and generous luggage space, they are ideal for weddings, family vacations, corporate offsites, and pilgrimage tours."
     },
     {
       id: 7,
@@ -401,10 +403,12 @@ export const homepageContent = {
     badge: "PLAN YOUR JOURNEY WITH AJ TRAVELS",
     title: "Ready to Travel with Maharashtra's Trusted Cab Agency?",
     description: "Tell us your starting point, destination, date, and vehicle preference. Our 24/7 travel desk will assist you with confirmed flat fares, vehicle availability, and instant booking.",
-    phoneDisplay: "+91 91561 83915",
-    phoneRaw: "+919156183915",
-    whatsappNumber: "919156183915",
-    address: "Kasarwadi Hub, Pune, Maharashtra 411064",
+    phoneDisplay: "+91 7447443536",
+    phoneSecondaryDisplay: "+91 8421051299",
+    phoneRaw: "+917447443536",
+    phoneSecondaryRaw: "+918421051299",
+    whatsappNumber: "917447443536",
+    address: "Old Mumbai–Pune Highway, Nashik Fata, Kasarawadi, Pune 411064",
     ctaButtons: {
       whatsapp: "Book on WhatsApp",
       call: "Call 24/7 Desk",

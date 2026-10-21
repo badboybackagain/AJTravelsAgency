@@ -6,17 +6,17 @@ export const vehiclesData = [
   {
     slug: 'sedan',
     id: 'sedan',
-    name: 'Executive Sedan',
+    name: 'Executive Sedan (Swift Dzire / Etios)',
     category: 'SEDAN',
     models: 'Maruti Suzuki Dzire / Toyota Etios / Honda Amaze',
     tag: 'MOST POPULAR FOR COMMUTERS',
-    metaTitle: 'Sedan Car on Rent in Pune with Driver | Swift Dzire - AJ Travels',
-    metaDesc: 'Rent comfortable AC Sedan cabs in Pune. Swift Dzire, Toyota Etios for Pune to Mumbai one-way, airport transfers, and outstation trips at best rates.',
+    metaTitle: 'Swift Dzire on Rent in Pune with Driver | Sedan Car Rental - AJ Travels',
+    metaDesc: 'Rent Swift Dzire in Pune with driver at transparent rates. AC sedan cab hire for Pune to Mumbai one-way, airport pickup/drop, and local city travel.',
     image: '/assets/sedan.webp',
     passengers: '4 Passengers',
     luggage: '2-3 Medium Bags',
     fareStarting: '₹2,490',
-    overview: 'Our Executive Sedan fleet offers the optimal balance of fuel-efficient economy, quiet cabin comfort, and agility on highway expressways. Ideal for solo business travelers, couples, and small nuclear families.',
+    overview: 'Our Executive Sedan fleet features fuel-efficient, well-maintained Swift Dzire and Toyota Etios cars with experienced drivers. Ideal for solo business travelers, couples, and small nuclear families seeking dependable point-to-point and outstation car rental in Pune.',
     features: [
       'Dual Air-Conditioning with rapid cooling',
       'Plush fabric or leatherette seating with ample legroom',
@@ -24,7 +24,7 @@ export const vehiclesData = [
       'Mobile charging port & USB audio connectivity',
       'All-inclusive toll package available on Pune-Mumbai runs'
     ],
-    idealFor: 'Pune to Mumbai airport transfers, daily business meetings, and small family visits.',
+    idealFor: 'Swift Dzire rental in Pune for Pune to Mumbai airport transfers, daily business meetings, and small family visits.',
     specs: {
       engine: '1.2L DualJet / Petrol-CNG / Diesel',
       seatingCapacity: '4 + 1 Driver',
@@ -35,17 +35,17 @@ export const vehiclesData = [
   {
     slug: 'ertiga-suv',
     id: 'suv',
-    name: 'Spacious Family SUV (Maruti Ertiga)',
+    name: 'Spacious 6-Seater SUV (Maruti Ertiga / Carens)',
     category: 'SUV',
     models: 'Maruti Suzuki Ertiga / Kia Carens',
     tag: 'BEST VALUE FOR FAMILIES',
-    metaTitle: 'Ertiga Car on Rent in Pune with Driver | 6 Seater SUV - AJ Travels',
-    metaDesc: 'Hire Maruti Ertiga 6-seater SUV on rent in Pune. Best family cab for Pune to Mumbai, Mahabaleshwar, Shirdi, and airport transfers with ample luggage room.',
+    metaTitle: 'Ertiga & Kia Carens on Rent in Pune with Driver | 6-Seater SUV - AJ Travels',
+    metaDesc: 'Hire 6-seater Maruti Ertiga and Kia Carens SUV on rent in Pune with chauffeur. Spacious family car hire for outstation tours, airport transfers, and hill stations.',
     image: '/assets/suv.webp',
     passengers: '6 Passengers',
     luggage: '4 Large Bags',
     fareStarting: '₹3,490',
-    overview: 'The Maruti Suzuki Ertiga and Kia Carens are Maharashtra’s favorite family SUVs. Designed with three comfortable seating rows, roof-mounted rear AC blowers, and flexible seating, this category delivers supreme highway ride quality without the bulk of larger commercial vehicles.',
+    overview: 'The Maruti Suzuki Ertiga and Kia Carens are Maharashtra’s favorite 6-seater family SUVs. Designed with three comfortable seating rows, roof-mounted rear AC blowers, and flexible luggage capacity, this category delivers supreme highway ride quality without the bulk of larger commercial vehicles.',
     features: [
       'Roof-mounted rear AC vents keeping 2nd and 3rd row passengers cool',
       'Flexible folding 3rd-row seats expanding luggage room when needed',
@@ -53,7 +53,7 @@ export const vehiclesData = [
       'Ample legroom in both front and middle row captain/bench seats',
       'Punctual door-to-door service with verified drivers'
     ],
-    idealFor: 'Family airport drops with international luggage, weekend getaways to Mahabaleshwar and Lonavala, and group road trips.',
+    idealFor: 'Ertiga & Kia Carens rental in Pune for family airport drops, weekend getaways to Mahabaleshwar and Lonavala, and group road trips.',
     specs: {
       engine: '1.5L Smart Hybrid K15C Engine',
       seatingCapacity: '6 + 1 Driver',
@@ -68,13 +68,13 @@ export const vehiclesData = [
     category: 'INNOVA_CRYSTA',
     models: 'Toyota Innova Crysta 2.4 / 2.8',
     tag: 'SUPREME COMFORT & LUXURY',
-    metaTitle: 'Innova Crysta on Rent in Pune with Driver | Luxury Cab - AJ Travels',
-    metaDesc: 'Book Toyota Innova Crysta luxury cab in Pune with experienced chauffeur. Reclining captain seats, supreme safety, and pristine interiors for executive travel.',
+    metaTitle: 'Innova Crysta on Rent in Pune with Driver | Luxury Cab Hire - AJ Travels',
+    metaDesc: 'Rent Toyota Innova Crysta in Pune with professional chauffeur. Executive 7-seater luxury cab hire for corporate travel, VIP airport transfers, and family tours.',
     image: '/assets/suv.webp',
     passengers: '6-7 Passengers',
     luggage: '4-5 Large Bags',
     fareStarting: '₹4,490',
-    overview: 'The Toyota Innova Crysta is internationally recognized as the benchmark in executive long-distance highway luxury. Featuring ergonomic reclining captain seats, exceptional sound insulation, and bulletproof reliability, it turns every road journey into first-class comfort.',
+    overview: 'The Toyota Innova Crysta is the gold standard in executive long-distance highway comfort. Featuring ergonomic reclining captain seats, exceptional sound insulation, and bulletproof reliability, it turns every road journey into first-class travel.',
     features: [
       'Ultra-comfortable ergonomic captain chairs with armrests',
       'Whisper-quiet cabin with superior acoustic damping',
@@ -82,7 +82,7 @@ export const vehiclesData = [
       'Exceptional highway ride stability on the Bhor Ghat curves',
       'Experienced executive chauffeurs accustomed to VIP travel'
     ],
-    idealFor: 'VIP delegations, corporate executives, wedding guest transfers, and luxury long-distance tourism.',
+    idealFor: 'Innova rental in Pune for VIP delegations, corporate executives, wedding guest transfers, and luxury long-distance tourism.',
     specs: {
       engine: '2.4L Turbo Diesel GD Engine',
       seatingCapacity: '6-7 + 1 Driver',
@@ -97,13 +97,13 @@ export const vehiclesData = [
     category: 'TEMPO_TRAVELLER',
     models: 'Force Tempo Traveller 3350 / 4020 Super Luxury',
     tag: 'BEST FOR WEDDINGS & GROUPS',
-    metaTitle: 'Tempo Traveller on Rent in Pune | 13, 17, 20 Seater AC - AJ Travels',
-    metaDesc: 'Rent luxury AC Tempo Traveller in Pune for outstation tours, weddings, and corporate events. 13, 17, 20 seater options with pushback seats and music system.',
+    metaTitle: 'Tempo Traveller on Rent in Pune | 13, 17 & 20 Seater AC Hire - AJ Travels',
+    metaDesc: 'Rent luxury Force Tempo Traveller in Pune with driver for outstation trips, weddings, and corporate outings. 13-seater, 17-seater, and 20-seater pushback AC coaches.',
     image: '/assets/pune-mumbai-travel-banner.webp',
     passengers: '12 - 20 Passengers',
     luggage: '10+ Big Bags',
     fareStarting: '₹6,490',
-    overview: 'Keep your entire group laughing, chatting, and celebrating together. Our 13-seater, 17-seater, and 20-seater Force Tempo Travellers are outfitted with individual luxury pushback seats, wide panoramic windows, personal charging sockets, and expansive rear luggage compartments.',
+    overview: 'Keep your entire group comfortable and traveling together. Our 13-seater, 17-seater, and 20-seater Force Tempo Travellers are outfitted with individual luxury pushback seats, wide panoramic windows, personal charging sockets, and expansive rear luggage compartments.',
     features: [
       '2x1 or 1x1 luxury high-back reclining captain seats',
       'High-capacity roof-mounted ducted air conditioning',
@@ -111,7 +111,7 @@ export const vehiclesData = [
       'Huge separate luggage deck accommodating all bags easily',
       'Commercial licensed interstate chauffeurs with deep route expertise'
     ],
-    idealFor: 'Wedding guest shuttles, Shirdi-Nashik-Trimbakeshwar pilgrimages, Goa holiday road trips, and corporate team offsites.',
+    idealFor: 'Tempo Traveller on rent in Pune for wedding guest shuttles, Shirdi-Nashik pilgrimages, Goa holiday road trips, and corporate offsites.',
     specs: {
       engine: '2.6L FM CR DI Turbocharged Engine',
       seatingCapacity: '13 to 20 + 1 Driver',

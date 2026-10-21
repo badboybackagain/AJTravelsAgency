@@ -20,6 +20,8 @@ export const PopularRoutes = () => {
       tripType: 'ONE_WAY',
       pickupId: route.from,
       dropId: route.to,
+      pickupName: route.from,
+      dropName: route.to,
     });
     navigate(`/fare?${params.toString()}`);
   };

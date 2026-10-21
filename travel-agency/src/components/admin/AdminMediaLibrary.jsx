@@ -20,8 +20,9 @@ import {
   Plus,
   RefreshCw,
   ShieldAlert,
+  Car,
 } from 'lucide-react';
-import { mediaApi, API_BASE_URL } from '../../services/api';
+import { mediaApi, vehicleApi, API_BASE_URL } from '../../services/api';
 import './admin.css';
 
 const CATEGORIES = [
@@ -51,6 +52,7 @@ export const AdminMediaLibrary = () => {
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [uploadFile, setUploadFile] = useState(null);
   const [uploadCategory, setUploadCategory] = useState('general');
+  const [uploadAssignVehicleId, setUploadAssignVehicleId] = useState('');
   const [uploadAltText, setUploadAltText] = useState('');
   const [uploadTitle, setUploadTitle] = useState('');
   const [uploadPreview, setUploadPreview] = useState(null);
@@ -66,6 +68,47 @@ export const AdminMediaLibrary = () => {
   const [assetToDelete, setAssetToDelete] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const [forceDelete, setForceDelete] = useState(false);
+
+  // Direct Vehicle Assignment State
+  const [fleetVehicles, setFleetVehicles] = useState([]);
+  const [assignTargetVehicleId, setAssignTargetVehicleId] = useState('');
+  const [assigningVehicle, setAssigningVehicle] = useState(false);
+  const [assignSuccess, setAssignSuccess] = useState('');
+
+  const loadFleetVehicles = async () => {
+    try {
+      const res = await vehicleApi.adminGetAll();
+      if (res.data?.data) {
+        setFleetVehicles(res.data.data);
+      }
+    } catch (err) {
+      console.warn('AdminMediaLibrary: Could not load fleet vehicles:', err?.message);
+    }
+  };
+
+  useEffect(() => {
+    loadFleetVehicles();
+  }, []);
+
+  const handleAssignToVehicle = async () => {
+    if (!assignTargetVehicleId || !selectedAsset) return;
+    setAssigningVehicle(true);
+    setAssignSuccess('');
+    setErrorMsg('');
+    try {
+      await vehicleApi.update(assignTargetVehicleId, {
+        image: selectedAsset.url,
+      });
+      const targetV = fleetVehicles.find((v) => v.id === assignTargetVehicleId);
+      setAssignSuccess(`Assigned to ${targetV?.name || 'vehicle'}!`);
+      setTimeout(() => setAssignSuccess(''), 4000);
+      loadMedia();
+    } catch (err) {
+      setErrorMsg(err.response?.data?.message || 'Failed to assign image to vehicle.');
+    } finally {
+      setAssigningVehicle(false);
+    }
+  };
 
   // Load Media Assets
   const loadMedia = async () => {
@@ -160,8 +203,17 @@ export const AdminMediaLibrary = () => {
       formData.append('title', uploadTitle);
 
       const res = await mediaApi.upload(formData);
-      setSuccessMsg('Media uploaded successfully!');
-      setTimeout(() => setSuccessMsg(''), 3000);
+      const uploadedAsset = res.data?.data;
+      if (uploadAssignVehicleId && uploadedAsset?.url) {
+        await vehicleApi.update(uploadAssignVehicleId, { image: uploadedAsset.url });
+      }
+
+      setSuccessMsg(
+        uploadAssignVehicleId 
+          ? 'Photo uploaded and assigned to vehicle successfully!' 
+          : 'Media uploaded successfully!'
+      );
+      setTimeout(() => setSuccessMsg(''), 3500);
 
       // Reset upload modal
       setIsUploadOpen(false);
@@ -169,10 +221,11 @@ export const AdminMediaLibrary = () => {
       setUploadPreview(null);
       setUploadAltText('');
       setUploadTitle('');
+      setUploadAssignVehicleId('');
 
       // Auto-select uploaded asset
-      if (res.data?.data) {
-        handleSelectAsset(res.data.data);
+      if (uploadedAsset) {
+        handleSelectAsset(uploadedAsset);
       }
       loadMedia();
     } catch (err) {
@@ -238,25 +291,60 @@ export const AdminMediaLibrary = () => {
 
   return (
     <div className="admin-content-wrap">
-      {/* ── Page Header ── */}
-      <div className="admin-page-header">
+      {/* ── Top Banner & Primary Actions ── */}
+      <div
+        className="admin-card"
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '1.5rem',
+          flexWrap: 'wrap',
+          marginBottom: '1.25rem',
+        }}
+      >
         <div>
-          <h1 className="admin-page-title" style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-            <ImageIcon size={24} style={{ color: '#0284C7' }} />
-            <span>Central Media Library</span>
-          </h1>
-          <p className="admin-page-sub">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
+            <h1
+              style={{
+                fontSize: '1.4rem',
+                fontWeight: 800,
+                color: '#0F172A',
+                margin: 0,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.65rem',
+              }}
+            >
+              <ImageIcon size={24} style={{ color: '#0284C7' }} />
+              <span>Central Media Library</span>
+            </h1>
+            <span
+              style={{
+                padding: '0.2rem 0.65rem',
+                borderRadius: '9999px',
+                backgroundColor: '#E0F2FE',
+                color: '#0369A1',
+                fontSize: '0.75rem',
+                fontWeight: 800,
+              }}
+            >
+              {(pagination?.total ?? assets.length)} Assets
+            </span>
+          </div>
+          <p style={{ fontSize: '0.82rem', color: '#64748B', margin: '0.35rem 0 0 0' }}>
             Upload, inspect, catalog and reuse authentic photographs across fleets, blogs, destinations and homepage
           </p>
         </div>
 
-        <div style={{ display: 'flex', gap: '0.65rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           <button
             type="button"
             onClick={loadMedia}
             className="admin-btn-secondary"
             title="Refresh assets list"
             disabled={loading}
+            style={{ height: '42px', padding: '0 1rem' }}
           >
             <RefreshCw size={15} className={loading ? 'spin' : ''} />
             <span>Refresh</span>
@@ -265,6 +353,7 @@ export const AdminMediaLibrary = () => {
             type="button"
             onClick={() => setIsUploadOpen(true)}
             className="admin-btn-primary"
+            style={{ height: '42px', padding: '0 1.25rem', display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}
           >
             <Upload size={16} />
             <span>Upload Media</span>
@@ -636,6 +725,9 @@ export const AdminMediaLibrary = () => {
                 }
                 alt={selectedAsset.altText || selectedAsset.originalName}
                 style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                onError={(e) => {
+                  e.target.src = '/assets/sedan.webp';
+                }}
               />
             </div>
 
@@ -695,6 +787,84 @@ export const AdminMediaLibrary = () => {
                   <span>{copiedUrl === selectedAsset.url ? 'Copied' : 'Copy'}</span>
                 </button>
               </div>
+            </div>
+
+            {/* Quick Assign to Fleet Vehicle */}
+            <div
+              style={{
+                marginBottom: '1.15rem',
+                padding: '0.75rem',
+                backgroundColor: '#F0FDF4',
+                border: '1px solid #BBF7D0',
+                borderRadius: '8px',
+              }}
+            >
+              <label
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                  fontSize: '0.75rem',
+                  fontWeight: 700,
+                  color: '#166534',
+                  marginBottom: '0.45rem',
+                }}
+              >
+                <Car size={14} color="#16A34A" />
+                <span>Assign to Fleet Vehicle</span>
+              </label>
+              <div style={{ display: 'flex', gap: '0.4rem' }}>
+                <select
+                  value={assignTargetVehicleId}
+                  onChange={(e) => setAssignTargetVehicleId(e.target.value)}
+                  style={{
+                    flex: 1,
+                    height: '32px',
+                    borderRadius: '6px',
+                    border: '1px solid #86EFAC',
+                    padding: '0 0.4rem',
+                    fontSize: '0.74rem',
+                    backgroundColor: '#FFFFFF',
+                    color: '#0F172A',
+                  }}
+                >
+                  <option value="">-- Choose Vehicle --</option>
+                  {fleetVehicles.map((fv) => (
+                    <option key={fv.id} value={fv.id}>
+                      {fv.name} ({fv.category})
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={handleAssignToVehicle}
+                  disabled={!assignTargetVehicleId || assigningVehicle}
+                  className="admin-btn-primary"
+                  style={{
+                    height: '32px',
+                    padding: '0 0.75rem',
+                    fontSize: '0.74rem',
+                    backgroundColor: '#16A34A',
+                    borderColor: '#16A34A',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {assigningVehicle ? <Loader2 size={12} className="spin" /> : <Check size={12} />}
+                  <span>Assign</span>
+                </button>
+              </div>
+              {assignSuccess && (
+                <div
+                  style={{
+                    fontSize: '0.72rem',
+                    color: '#15803D',
+                    fontWeight: 600,
+                    marginTop: '0.4rem',
+                  }}
+                >
+                  ✓ {assignSuccess}
+                </div>
+              )}
             </div>
 
             {/* Editable Metadata Form */}
@@ -908,13 +1078,13 @@ export const AdminMediaLibrary = () => {
                       Click to choose image or drag & drop here
                     </p>
                     <p style={{ margin: '0.35rem 0 0', fontSize: '0.75rem', color: '#64748B' }}>
-                      WebP, JPEG or PNG up to 5MB
+                      WebP, JPEG, PNG, AVIF or JFIF up to 5MB
                     </p>
                   </div>
                 )}
                 <input
                   type="file"
-                  accept="image/jpeg,image/png,image/webp"
+                  accept="image/jpeg,image/png,image/webp,image/avif,.jfif,.jpg,.jpeg,.png,.webp,.avif"
                   onChange={handleFilePick}
                   style={{
                     position: 'absolute',
@@ -951,6 +1121,54 @@ export const AdminMediaLibrary = () => {
                   <option value="general">General / Homepage</option>
                 </select>
               </div>
+
+              {uploadCategory === 'vehicles' && (
+                <div
+                  style={{
+                    marginBottom: '0.85rem',
+                    padding: '0.65rem 0.85rem',
+                    backgroundColor: '#F0FDF4',
+                    border: '1px solid #BBF7D0',
+                    borderRadius: '8px',
+                  }}
+                >
+                  <label
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.35rem',
+                      fontSize: '0.74rem',
+                      fontWeight: 700,
+                      color: '#166534',
+                      marginBottom: '0.35rem',
+                    }}
+                  >
+                    <Car size={13} color="#16A34A" />
+                    <span>Assign Immediately to Vehicle (Optional)</span>
+                  </label>
+                  <select
+                    value={uploadAssignVehicleId}
+                    onChange={(e) => setUploadAssignVehicleId(e.target.value)}
+                    style={{
+                      width: '100%',
+                      height: '34px',
+                      borderRadius: '6px',
+                      border: '1px solid #86EFAC',
+                      padding: '0 0.5rem',
+                      fontSize: '0.78rem',
+                      backgroundColor: '#FFFFFF',
+                      color: '#0F172A',
+                    }}
+                  >
+                    <option value="">-- None (Only save in Media Library) --</option>
+                    {fleetVehicles.map((fv) => (
+                      <option key={fv.id} value={fv.id}>
+                        {fv.name} ({fv.category})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
               <div style={{ marginBottom: '0.75rem' }}>
                 <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: '#475569', marginBottom: '0.25rem' }}>

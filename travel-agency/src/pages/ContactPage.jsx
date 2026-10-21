@@ -23,8 +23,8 @@ import { enquiryApi } from '../services/api';
 export function ContactPage() {
   usePageSeo(
     'contact',
-    'Contact Us | 24/7 Cab Booking Support Desk - AJ Travels',
-    'Contact AJ Travels Pune & Mumbai operations desk. Call +91 9156183915 or message on WhatsApp 24/7 for instant bookings, inquiries, and airport transfers.'
+    'Contact AJ Travels Pune | 24/7 Car Rental & Cab Booking Desk',
+    'Contact AJ Travels Pune. Call +91 7447443536 / +91 8421051299 or WhatsApp for instant car rental with driver, outstation cabs, and airport transfer bookings.'
   );
 
   const [isEnquiryOpen, setIsEnquiryOpen] = useState(false);
@@ -48,6 +48,7 @@ export function ContactPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isSubmitting) return;
     if (!formData.name.trim() || !formData.phone.trim()) {
       setErrorMsg('Please enter your full name and contact phone number.');
       return;
@@ -132,6 +133,11 @@ export function ContactPage() {
                     <a href={`tel:${businessConfig.phone}`} className="channel-main-link">
                       {businessConfig.phoneDisplay}
                     </a>
+                    {businessConfig.phoneSecondary && (
+                      <a href={`tel:${businessConfig.phoneSecondary}`} className="channel-main-link" style={{ fontSize: '1rem', marginTop: '0.25rem', color: '#4B5563' }}>
+                        {businessConfig.phoneSecondaryDisplay}
+                      </a>
+                    )}
                     <span className="channel-sub">Instant answers & emergency cab dispatch</span>
                   </div>
                 </div>
@@ -149,7 +155,7 @@ export function ContactPage() {
                       rel="noreferrer" 
                       className="channel-main-link wa-text"
                     >
-                      Chat on WhatsApp (+91 {businessConfig.whatsapp})
+                      Chat on WhatsApp (+{businessConfig.whatsapp})
                     </a>
                     <span className="channel-sub">Share flight tickets & receive instant live quotes</span>
                   </div>
@@ -244,7 +250,7 @@ export function ContactPage() {
                           required
                           value={formData.phone}
                           onChange={handleChange}
-                          placeholder="e.g. 9156183915"
+                          placeholder="e.g. 7447443536"
                         />
                       </div>
                     </div>

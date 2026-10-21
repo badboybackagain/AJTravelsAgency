@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
@@ -6,6 +6,8 @@ import { EnquiryModal } from '../components/EnquiryModal';
 import { MobileStickyBar } from '../components/MobileStickyBar';
 import { usePageSeo } from '../hooks/usePageSeo';
 import { getVehicleBySlug, vehiclesData } from '../data/vehiclesData';
+import { vehicleApi } from '../services/api';
+import { resolveMediaUrl } from '../utils/mediaUtils';
 import { 
   Users, 
   Briefcase, 
@@ -14,7 +16,7 @@ import {
   ArrowLeft, 
   ArrowRight, 
   ShieldCheck, 
-  Sparkles,
+  Sparkles, 
   Info
 } from 'lucide-react';
 
@@ -22,8 +24,29 @@ export function VehicleDetailPage() {
   const { slug } = useParams();
   const navigate = useNavigate();
   const [isEnquiryOpen, setIsEnquiryOpen] = useState(false);
+  const [dbVehicles, setDbVehicles] = useState([]);
 
   const vehicle = getVehicleBySlug(slug);
+
+  useEffect(() => {
+    let isMounted = true;
+    vehicleApi.getAll()
+      .then(res => {
+        if (isMounted && res.data?.data) {
+          setDbVehicles(res.data.data);
+        }
+      })
+      .catch(err => {
+        console.warn('VehicleDetailPage: Failed to load dynamic fleet images:', err?.message);
+      });
+    return () => { isMounted = false; };
+  }, []);
+
+  const dbMatch = vehicle ? dbVehicles.find(db => 
+    db.category === vehicle.category ||
+    (vehicle.id && db.name?.toLowerCase().includes(vehicle.id.toLowerCase()))
+  ) : null;
+  const activeImage = dbMatch?.image ? resolveMediaUrl(dbMatch.image, vehicle.image) : vehicle?.image;
 
   usePageSeo(
     vehicle ? `vehicle_${vehicle.slug}` : 'vehicle_not_found',
@@ -79,7 +102,14 @@ export function VehicleDetailPage() {
         <div className="container">
           <div className="veh-hero-grid">
             <div className="veh-hero-image-box">
-              <img src={vehicle.image} alt={vehicle.name} className="veh-hero-photo" />
+              <img
+                src={activeImage}
+                alt={vehicle.name}
+                className="veh-hero-photo"
+                onError={(e) => {
+                  e.target.src = vehicle.image || '/assets/sedan.webp';
+                }}
+              />
               <span className="veh-floating-tag">{vehicle.tag}</span>
             </div>
 

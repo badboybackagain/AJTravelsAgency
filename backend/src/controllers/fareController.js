@@ -1,7 +1,7 @@
 // Fare Controller — Admin CRUD + Public fare quote
 const prisma = require('../utils/prisma');
 const { AppError } = require('../middleware/errorHandler');
-const { calculateFareQuote } = require('../services/fareCalculationService');
+const { calculateFareQuote, invalidateFareCache } = require('../services/fareCalculationService');
 
 // ============================================================
 // PUBLIC
@@ -148,6 +148,7 @@ const createFare = async (req, res, next) => {
       return created;
     });
 
+    invalidateFareCache();
     res.status(201).json({ success: true, data: fare });
   } catch (err) {
     next(err);
@@ -203,6 +204,7 @@ const updateFare = async (req, res, next) => {
       return fare;
     });
 
+    invalidateFareCache();
     res.json({ success: true, data: updated });
   } catch (err) {
     next(err);
@@ -232,6 +234,7 @@ const deleteFare = async (req, res, next) => {
       });
     });
 
+    invalidateFareCache();
     res.json({ success: true, message: 'Fare deactivated.' });
   } catch (err) {
     next(err);

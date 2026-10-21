@@ -67,7 +67,13 @@ const storage = multer.diskStorage({
     const category = file.targetCategory || resolveCategory(req);
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
     const ext = path.extname(file.originalname).toLowerCase();
-    const cleanExt = ['.jpg', '.jpeg', '.png', '.webp'].includes(ext) ? ext : '.jpg';
+    // Normalize .jfif to .jpg, preserve .jpg, .jpeg, .png, .webp, .avif
+    let cleanExt = '.jpg';
+    if (['.jpg', '.jpeg', '.png', '.webp', '.avif'].includes(ext)) {
+      cleanExt = ext;
+    } else if (ext === '.jfif') {
+      cleanExt = '.jpg';
+    }
     const filename = `${category}-${uniqueSuffix}${cleanExt}`;
     file.targetFilename = filename;
     file.publicUrl = `/uploads/${category}/${filename}`;
@@ -76,14 +82,27 @@ const storage = multer.diskStorage({
 });
 
 const fileFilter = (req, file, cb) => {
-  const allowedMimes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+  const allowedMimes = [
+    'image/jpeg',
+    'image/jpg',
+    'image/pjpeg',
+    'image/jfif',
+    'image/png',
+    'image/x-png',
+    'image/webp',
+    'image/avif',
+  ];
   const ext = path.extname(file.originalname).toLowerCase();
-  const allowedExts = ['.jpg', '.jpeg', '.png', '.webp'];
+  const allowedExts = ['.jpg', '.jpeg', '.jfif', '.png', '.webp', '.avif'];
 
-  if (allowedMimes.includes(file.mimetype) && allowedExts.includes(ext)) {
+  // Accept if valid MIME or valid extension (handles browser variations on Windows)
+  const mimeValid = allowedMimes.includes(file.mimetype) || (file.mimetype === 'application/octet-stream' && allowedExts.includes(ext));
+  const extValid = allowedExts.includes(ext);
+
+  if (mimeValid && extValid) {
     cb(null, true);
   } else {
-    cb(new Error('Invalid file type. Only JPG, PNG, and WEBP images up to 5MB are allowed.'), false);
+    cb(new Error('Invalid file type. Only JPG, PNG, WEBP, AVIF, and JFIF images up to 5MB are allowed.'), false);
   }
 };
 

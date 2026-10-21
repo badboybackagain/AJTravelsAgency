@@ -6,6 +6,7 @@ import { EnquiryModal } from '../components/EnquiryModal';
 import { MobileStickyBar } from '../components/MobileStickyBar';
 import { usePageSeo } from '../hooks/usePageSeo';
 import { getPostBySlug, blogPosts } from '../data/blogData';
+import { businessConfig } from '../config/business.config';
 import { 
   Clock, 
   Calendar, 
@@ -98,10 +99,14 @@ export function BlogPostPage() {
   }
 
   const handleBookNow = () => {
+    const pId = post.pickupDefault || 'pune';
+    const dId = post.dropDefault || 'mumbai';
     const params = new URLSearchParams({
       tripType: 'ONE_WAY',
-      pickupId: post.pickupDefault || 'pune',
-      dropId: post.dropDefault || 'mumbai'
+      pickupId: pId,
+      dropId: dId,
+      pickupName: pId === 'mumbai' ? 'Mumbai (All Areas)' : 'Pune (All Areas)',
+      dropName: dId === 'pune' ? 'Pune (All Areas)' : 'Mumbai (All Areas)'
     });
     navigate(`/fare?${params.toString()}`);
   };
@@ -302,11 +307,11 @@ export function BlogPostPage() {
                 </button>
 
                 <div className="sidebar-desk-actions">
-                  <a href="tel:+919156183915" className="sidebar-desk-link call">
-                    <span>📞 Call 24/7 Desk: +91 91561 83915</span>
+                  <a href={`tel:${businessConfig.phone}`} className="sidebar-desk-link call">
+                    <span>📞 Call 24/7 Desk: {businessConfig.phoneDisplay}</span>
                   </a>
                   <a 
-                    href={`https://wa.me/919156183915?text=${encodeURIComponent(`Hi AJ Travels, I am reading your guide for "${post.title}" and would like to enquire about cab availability.`)}`}
+                    href={`https://wa.me/${businessConfig.whatsapp}?text=${encodeURIComponent(`Hi AJ Travels, I am reading your guide for "${post.title}" and would like to enquire about cab availability.`)}`}
                     target="_blank" 
                     rel="noopener noreferrer" 
                     className="sidebar-desk-link whatsapp"

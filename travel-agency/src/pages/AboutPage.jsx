@@ -23,8 +23,8 @@ import {
 export function AboutPage() {
   usePageSeo(
     'about',
-    'About Us | AJ Travels - Maharashtra Premier Intercity Cab Service',
-    'Learn about AJ Travels, Maharashtra’s trusted chauffeured intercity travel agency. Founded on safety, punctuality, verified drivers, and transparent pricing.'
+    'About AJ Travels | Car Rental & Outstation Cab Service in Pune',
+    'Discover AJ Travels, Pune’s trusted agency for chauffeur-driven car rental, intercity outstation cabs, and group Tempo Traveller rentals with transparent pricing.'
   );
 
   const [isEnquiryOpen, setIsEnquiryOpen] = useState(false);
@@ -53,9 +53,9 @@ export function AboutPage() {
   ];
 
   const milestones = [
-    { number: '10,000+', label: 'Successful Trips Completed' },
-    { number: '99.4%', label: 'On-Time Arrival Rate' },
-    { number: '4.9 ★', label: 'Average Customer Rating' },
+    { number: 'Verified', label: 'Commercial Licensed Fleet' },
+    { number: '100%', label: 'Doorstep Pickup Across Pune' },
+    { number: 'All-Inclusive', label: 'Tolls & State Taxes Covered' },
     { number: '24/7', label: 'Dedicated Travel Desk' }
   ];
 

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Car, User, LogOut, ChevronDown, UserCheck, Menu, X, Phone } from 'lucide-react';
 import { CustomerAuthModal } from './CustomerAuthModal';
+import { businessConfig } from '../config/business.config';
 
 export const Header = ({ isDark = false, onOpenEnquiry }) => {
   const location = useLocation();
@@ -129,12 +130,6 @@ export const Header = ({ isDark = false, onOpenEnquiry }) => {
             Blog
           </Link>
           <Link
-            to="/contact"
-            className={`header-nav-link ${isActive('/contact') ? 'active' : ''}`}
-          >
-            Contact
-          </Link>
-          <Link
             to="/fare"
             className={`header-nav-link ${isActive('/fare') ? 'active' : ''}`}
           >
@@ -146,17 +141,23 @@ export const Header = ({ isDark = false, onOpenEnquiry }) => {
           >
             Book Cab
           </Link>
+          <Link
+            to="/contact"
+            className={`header-nav-link ${isActive('/contact') ? 'active' : ''}`}
+          >
+            Contact
+          </Link>
         </nav>
 
         {/* Section 3: Action Controls (Phone & Login) */}
         <div className="header-actions">
           <a
-            href="tel:+919156183915"
+            href={`tel:${businessConfig.phone}`}
             className="header-phone-chip"
             title="Call AJ Travels 24/7 Support Desk"
           >
             <Phone size={13} className="phone-icon" />
-            <span className="phone-text">+91 7447443536</span>
+            <span className="phone-text">{businessConfig.phoneDisplay}</span>
           </a>
 
           {currentUser ? (
@@ -259,12 +260,6 @@ export const Header = ({ isDark = false, onOpenEnquiry }) => {
               Blog & Travel Guides
             </Link>
             <Link
-              to="/contact"
-              className={`mobile-nav-link ${isActive('/contact') ? 'active' : ''}`}
-            >
-              Contact Support
-            </Link>
-            <Link
               to="/fare"
               className={`mobile-nav-link ${isActive('/fare') ? 'active' : ''}`}
             >
@@ -276,12 +271,18 @@ export const Header = ({ isDark = false, onOpenEnquiry }) => {
             >
               Book Cab Online
             </Link>
+            <Link
+              to="/contact"
+              className={`mobile-nav-link ${isActive('/contact') ? 'active' : ''}`}
+            >
+              Contact Support
+            </Link>
             <a
-              href="tel:+919156183915"
+              href={`tel:${businessConfig.phone}`}
               className="mobile-nav-link phone-link"
             >
               <Phone size={15} />
-              <span>Call: +91 91561 83915</span>
+              <span>Call: {businessConfig.phoneDisplay}</span>
             </a>
           </div>
         </div>
@@ -410,10 +411,10 @@ export const Header = ({ isDark = false, onOpenEnquiry }) => {
 
         .header-nav-link {
           font-family: var(--font-body, 'Inter', sans-serif);
-          font-weight: 550;
+          font-weight: 500;
           font-size: 0.82rem;
           text-decoration: none;
-          color: rgba(255, 255, 255, 0.82);
+          color: rgba(255, 255, 255, 0.85);
           padding: 0.42rem 0.75rem;
           border-radius: 9999px;
           white-space: nowrap;
@@ -432,7 +433,7 @@ export const Header = ({ isDark = false, onOpenEnquiry }) => {
           background: rgba(255, 255, 255, 0.16);
           border: 1px solid rgba(255, 255, 255, 0.25);
           box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
-          font-weight: 700;
+          font-weight: 600;
           transform: translateY(-1px);
         }
 
@@ -450,7 +451,7 @@ export const Header = ({ isDark = false, onOpenEnquiry }) => {
           gap: 0.45rem;
           font-family: var(--font-body, 'Inter', sans-serif);
           font-size: 0.78rem;
-          font-weight: 700;
+          font-weight: 600;
           color: #FFFFFF;
           text-decoration: none;
           padding: 0 0.95rem;
@@ -478,7 +479,7 @@ export const Header = ({ isDark = false, onOpenEnquiry }) => {
           align-items: center;
           gap: 0.35rem;
           font-family: var(--font-heading, 'Outfit', sans-serif);
-          font-weight: 700;
+          font-weight: 600;
           font-size: 0.82rem;
           padding: 0 1.25rem;
           height: 38px;
@@ -518,7 +519,7 @@ export const Header = ({ isDark = false, onOpenEnquiry }) => {
           border-radius: 9999px;
           color: #FFFFFF;
           font-family: var(--font-heading, 'Outfit', sans-serif);
-          font-weight: 700;
+          font-weight: 600;
           font-size: 0.82rem;
           cursor: pointer;
           transition: all 0.2s ease;

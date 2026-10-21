@@ -12,8 +12,10 @@ import {
   AlertCircle,
   Sparkles,
   Image as ImageIcon,
+  ArrowLeft,
 } from 'lucide-react';
-import { adminLocalVehicleApi } from '../../services/api';
+import { adminLocalVehicleApi, API_BASE_URL } from '../../services/api';
+import { MediaPickerModal } from './MediaPickerModal';
 import './admin.css';
 
 const PRESET_IMAGES = [
@@ -44,6 +46,7 @@ export const AdminLocalVehicleForm = ({ isOpen, vehicle, onClose, onSuccess }) =
 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
+  const [isMediaPickerOpen, setIsMediaPickerOpen] = useState(false);
 
   useEffect(() => {
     if (vehicle) {
@@ -84,7 +87,17 @@ export const AdminLocalVehicleForm = ({ isOpen, vehicle, onClose, onSuccess }) =
     setError(null);
   }, [vehicle, isOpen]);
 
-  if (!isOpen) return null;
+  // Close on Escape key press
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
 
   const handleApplyPreset = (preset) => {
     setFormData((prev) => ({
@@ -141,8 +154,15 @@ export const AdminLocalVehicleForm = ({ isOpen, vehicle, onClose, onSuccess }) =
     }
   };
 
+  if (!isOpen) return null;
+
   return (
     <div
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
       style={{
         position: 'fixed',
         inset: 0,
@@ -175,6 +195,7 @@ export const AdminLocalVehicleForm = ({ isOpen, vehicle, onClose, onSuccess }) =
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
+            background: 'linear-gradient(to right, #F0F9FF, #FFFFFF)',
           }}
         >
           <div>
@@ -185,19 +206,26 @@ export const AdminLocalVehicleForm = ({ isOpen, vehicle, onClose, onSuccess }) =
               Define city, package hours, pricing, and vehicle specifications for Local Mode.
             </p>
           </div>
-          <button
-            onClick={onClose}
-            style={{
-              background: '#F1F5F9',
-              border: 'none',
-              borderRadius: '8px',
-              padding: '0.4rem',
-              cursor: 'pointer',
-              color: '#64748B',
-            }}
-          >
-            <X size={18} />
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <button
+              type="button"
+              onClick={onClose}
+              className="admin-modal-btn-back"
+              title="Cancel and Go Back"
+            >
+              <ArrowLeft size={15} />
+              <span>Cancel</span>
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="admin-modal-btn-close"
+              title="Close / Cut (Esc)"
+              aria-label="Close modal"
+            >
+              <X size={18} strokeWidth={2.5} />
+            </button>
+          </div>
         </div>
 
         {/* Form Body */}
@@ -262,6 +290,42 @@ export const AdminLocalVehicleForm = ({ isOpen, vehicle, onClose, onSuccess }) =
                   </button>
                 );
               })}
+            </div>
+
+            {/* Custom Media Library Image Option */}
+            <div
+              style={{
+                marginTop: '0.75rem',
+                padding: '0.65rem 0.85rem',
+                borderRadius: '10px',
+                backgroundColor: '#F8FAFC',
+                border: '1px solid #E2E8F0',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: '0.75rem',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                <img
+                  src={formData.image?.startsWith('/uploads') ? `${API_BASE_URL || ''}${formData.image}` : (formData.image || '/assets/sedan.webp')}
+                  alt="Vehicle preview"
+                  style={{ width: '42px', height: '28px', objectFit: 'contain', borderRadius: '4px', border: '1px solid #CBD5E1', backgroundColor: '#FFFFFF' }}
+                  onError={(e) => { e.target.src = '/assets/sedan.webp'; }}
+                />
+                <span style={{ fontSize: '0.75rem', color: '#475569', fontWeight: 600 }}>
+                  Active Photo: <code style={{ fontSize: '0.7rem', color: '#0284C7' }}>{formData.image?.split('/').pop()}</code>
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsMediaPickerOpen(true)}
+                className="admin-btn-secondary"
+                style={{ height: '32px', fontSize: '0.75rem', padding: '0 0.75rem' }}
+              >
+                <ImageIcon size={13} />
+                <span>Choose from Library</span>
+              </button>
             </div>
           </div>
 
@@ -427,6 +491,17 @@ export const AdminLocalVehicleForm = ({ isOpen, vehicle, onClose, onSuccess }) =
           </div>
         </form>
       </div>
+
+      <MediaPickerModal
+        isOpen={isMediaPickerOpen}
+        onClose={() => setIsMediaPickerOpen(false)}
+        onSelect={(asset) => {
+          setFormData((prev) => ({ ...prev, image: asset.url }));
+        }}
+        initialCategory="vehicles"
+        currentValue={formData.image}
+        title="Select Vehicle Photo"
+      />
     </div>
   );
 };

@@ -141,7 +141,7 @@ const createBooking = async (req, res, next) => {
 
       return res.status(201).json({
         success: true,
-        message: 'Local rental booking & payment confirmed successfully!',
+        message: 'Local rental booking confirmed successfully! Pay to driver on trip arrival.',
         data: booking,
       });
     }
@@ -240,7 +240,7 @@ const createBooking = async (req, res, next) => {
 
     return res.status(201).json({
       success: true,
-      message: 'Booking & payment confirmed successfully!',
+      message: 'Booking confirmed successfully! Pay to driver on trip arrival.',
       data: booking,
     });
   } catch (err) {
