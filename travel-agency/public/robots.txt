@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://punemumbaitravels.in/sitemap.xml
+Sitemap: https://ajtravelspune.com/sitemap.xml

@@ -12,6 +12,7 @@ import { PuneToMumbaiSection } from './components/PuneToMumbaiSection';
 import { MumbaiToPuneSection } from './components/MumbaiToPuneSection';
 import { OneWayRoundTripSection } from './components/OneWayRoundTripSection';
 import { VehicleDiscovery } from './components/VehicleDiscovery';
+import { BlogSection } from './components/BlogSection';
 import { FAQSection } from './components/FAQSection';
 import { Footer } from './components/Footer';
 import { FinalCTA } from './components/FinalCTA';
@@ -38,6 +39,7 @@ const VehiclesPage   = lazy(() => import('./pages/VehiclesPage').then(m => ({ de
 const VehicleDetailPage = lazy(() => import('./pages/VehicleDetailPage').then(m => ({ default: m.VehicleDetailPage })));
 const LiveMigratedPage = lazy(() => import('./pages/LiveMigratedPage').then(m => ({ default: m.LiveMigratedPage })));
 const CustomerQuotePage = lazy(() => import('./pages/CustomerQuotePage').then(m => ({ default: m.CustomerQuotePage })));
+const SitemapPage    = lazy(() => import('./pages/SitemapPage').then(m => ({ default: m.SitemapPage })));
 
 // Minimal loading placeholder — fully transparent to avoid flash
 const PageLoader = () => (
@@ -49,7 +51,7 @@ const PageLoader = () => (
 
 
 function MainWebsite() {
-  usePageSeo('home', homepageContent.seo.pageTitle, homepageContent.seo.metaDescription);
+  usePageSeo('home', homepageContent.seo.pageTitle, homepageContent.seo.metaDescription, 'https://ajtravelspune.com/');
   const [isEnquiryOpen, setIsEnquiryOpen] = useState(false);
 
   useEffect(() => {
@@ -71,8 +73,8 @@ function MainWebsite() {
           'name': 'AJ Travels',
           'alternateName': 'AJ Tours & Travels Pune',
           'url': 'https://ajtravelspune.com/',
-          'telephone': '+919156183915',
-          'email': 'contact@ajtravelagency.in',
+          'telephone': '+917447443536',
+          'email': 'ajtravelpune@gmail.com',
           'priceRange': '₹₹',
           'address': {
             '@type': 'PostalAddress',
@@ -158,7 +160,12 @@ function MainWebsite() {
         <VehicleDiscovery />
       </div>
 
-      {/* 11. Frequently Asked Questions */}
+      {/* 11. Curated Travel Guides & Route Advice */}
+      <div className="reveal">
+        <BlogSection />
+      </div>
+
+      {/* 12. Frequently Asked Questions */}
       <div className="reveal">
         <FAQSection />
       </div>
@@ -251,16 +258,29 @@ function RootSlugResolver() {
   const { slug } = useParams();
   const cleanSlug = slug ? slug.replace(/^\/|\/$/g, '') : '';
 
+  if (cleanSlug === 'sitemap') return <SitemapPage />;
+
+  // 1. Explicit Commercial Service Landing Pages
+  const service = getServiceBySlug(cleanSlug);
+  if (service) return <ServiceDetailPage />;
+
+  // 2. Explicit Vehicle Fleet Landing Pages
+  const vehicle = getVehicleBySlug(cleanSlug);
+  if (vehicle) return <VehicleDetailPage />;
+
+  // 3. Commercial Migrated Locality Rentals, Fleet & Corridors (prevents blog post shadowing)
   const livePage = getLivePage(cleanSlug);
+  if (livePage && livePage.category !== 'Travel Guide') {
+    return <LiveMigratedPage />;
+  }
+
+  // 4. Curated Blog Articles & Travel Guides
+  const post = getPostBySlug(cleanSlug);
+  if (post) return <BlogPostPage />;
+
+  // 5. Migrated Travel Guides & Blog Articles
   if (livePage) return <LiveMigratedPage />;
 
-  const post = getPostBySlug(cleanSlug);
-  const service = getServiceBySlug(cleanSlug);
-  const vehicle = getVehicleBySlug(cleanSlug);
-
-  if (post) return <BlogPostPage />;
-  if (service) return <ServiceDetailPage />;
-  if (vehicle) return <VehicleDetailPage />;
   return <NotFoundPage />;
 }
 
@@ -281,6 +301,10 @@ function App() {
           <Route path="/" element={<MainWebsite />} />
           <Route path="/fare" element={<FarePage />} />
           <Route path="/booking" element={<BookingPage />} />
+
+          {/* Customer-Friendly HTML Sitemap */}
+          <Route path="/sitemap" element={<SitemapPage />} />
+          <Route path="/sitemap/" element={<SitemapPage />} />
 
           {/* /book → /booking canonical redirect preserving query string and state */}
           <Route path="/book" element={<BookRedirect />} />

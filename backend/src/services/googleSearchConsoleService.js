@@ -876,7 +876,7 @@ function setConnectedTokensForTesting(tokens) {
     gscState.tokens = tokens;
     gscState.isConnected = true;
     gscState.status = 'CONNECTED';
-    gscState.selectedProperty = gscState.selectedProperty || 'https://punemumbaitravels.in/';
+    gscState.selectedProperty = gscState.selectedProperty || (SITE_DOMAIN ? `${SITE_DOMAIN}/` : 'https://ajtravelspune.com/');
   }
   savePersistedState();
 }

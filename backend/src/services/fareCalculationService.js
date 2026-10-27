@@ -16,61 +16,99 @@ const toNumber = (val) => {
 // HIGH-PERFORMANCE IN-MEMORY CACHING LAYER (60s TTL)
 // Completely eliminates remote roundtrips on repeated quote queries
 // ============================================================
-const CACHE_TTL_MS = 60 * 1000;
+const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 
 let cachedLocationsMap = null;
 let locationsCacheTime = 0;
+let locationsPromise = null;
 
 let cachedRoutesList = null;
 let routesCacheTime = 0;
+let routesPromise = null;
 
 let cachedVehiclesList = null;
 let vehiclesCacheTime = 0;
+let vehiclesPromise = null;
 
 const faresCacheByRouteId = new Map();
+const faresPromisesByRouteId = new Map();
 
 function invalidateFareCache() {
   cachedLocationsMap = null;
   locationsCacheTime = 0;
+  locationsPromise = null;
   cachedRoutesList = null;
   routesCacheTime = 0;
+  routesPromise = null;
   cachedVehiclesList = null;
   vehiclesCacheTime = 0;
+  vehiclesPromise = null;
   faresCacheByRouteId.clear();
+  faresPromisesByRouteId.clear();
+  warmupFareCache().catch(() => {});
 }
 
 async function getActiveLocation(locationId) {
   const now = Date.now();
   if (!cachedLocationsMap || (now - locationsCacheTime) > CACHE_TTL_MS) {
-    const locs = await prisma.location.findMany({ where: { isActive: true } });
-    cachedLocationsMap = new Map(locs.map((l) => [l.id, l]));
-    locationsCacheTime = now;
+    if (!locationsPromise) {
+      locationsPromise = prisma.location.findMany({ where: { isActive: true } })
+        .then((locs) => {
+          cachedLocationsMap = new Map(locs.map((l) => [l.id, l]));
+          locationsCacheTime = Date.now();
+          return cachedLocationsMap;
+        })
+        .finally(() => {
+          locationsPromise = null;
+        });
+    }
+    await locationsPromise;
   }
-  return cachedLocationsMap.get(locationId) || null;
+  return cachedLocationsMap ? (cachedLocationsMap.get(locationId) || null) : null;
 }
 
 async function getActiveRoutes() {
   const now = Date.now();
   if (!cachedRoutesList || (now - routesCacheTime) > CACHE_TTL_MS) {
-    cachedRoutesList = await prisma.route.findMany({
-      where: { isActive: true },
-      include: { pickupLocation: true, dropLocation: true },
-    });
-    routesCacheTime = now;
+    if (!routesPromise) {
+      routesPromise = prisma.route.findMany({
+        where: { isActive: true },
+        include: { pickupLocation: true, dropLocation: true },
+      })
+        .then((routes) => {
+          cachedRoutesList = routes;
+          routesCacheTime = Date.now();
+          return cachedRoutesList;
+        })
+        .finally(() => {
+          routesPromise = null;
+        });
+    }
+    await routesPromise;
   }
-  return cachedRoutesList;
+  return cachedRoutesList || [];
 }
 
 async function getActiveVehicles(minCapacity = 1) {
   const now = Date.now();
   if (!cachedVehiclesList || (now - vehiclesCacheTime) > CACHE_TTL_MS) {
-    cachedVehiclesList = await prisma.vehicle.findMany({
-      where: { isActive: true },
-      orderBy: [{ displayOrder: 'asc' }, { seatingCapacity: 'asc' }],
-    });
-    vehiclesCacheTime = now;
+    if (!vehiclesPromise) {
+      vehiclesPromise = prisma.vehicle.findMany({
+        where: { isActive: true },
+        orderBy: [{ displayOrder: 'asc' }, { seatingCapacity: 'asc' }],
+      })
+        .then((vehicles) => {
+          cachedVehiclesList = vehicles;
+          vehiclesCacheTime = Date.now();
+          return cachedVehiclesList;
+        })
+        .finally(() => {
+          vehiclesPromise = null;
+        });
+    }
+    await vehiclesPromise;
   }
-  return cachedVehiclesList.filter((v) => v.seatingCapacity >= minCapacity);
+  return (cachedVehiclesList || []).filter((v) => v.seatingCapacity >= minCapacity);
 }
 
 async function getActiveRouteFares(routeId) {
@@ -80,17 +118,26 @@ async function getActiveRouteFares(routeId) {
     return entry.data;
   }
 
-  const fares = await prisma.fare.findMany({
-    where: { routeId, isActive: true },
-    include: {
-      fareTolls: { where: { isActive: true } },
-      fareParking: true,
-      fareWaiting: true,
-    },
-  });
+  if (!faresPromisesByRouteId.has(routeId)) {
+    const p = prisma.fare.findMany({
+      where: { routeId, isActive: true },
+      include: {
+        fareTolls: { where: { isActive: true } },
+        fareParking: true,
+        fareWaiting: true,
+      },
+    })
+      .then((fares) => {
+        faresCacheByRouteId.set(routeId, { data: fares, timestamp: Date.now() });
+        return fares;
+      })
+      .finally(() => {
+        faresPromisesByRouteId.delete(routeId);
+      });
+    faresPromisesByRouteId.set(routeId, p);
+  }
 
-  faresCacheByRouteId.set(routeId, { data: fares, timestamp: now });
-  return fares;
+  return faresPromisesByRouteId.get(routeId);
 }
 
 /**
@@ -499,4 +546,50 @@ async function calculateFareQuote(params) {
   };
 }
 
-module.exports = { calculateFareQuote, calculateVehicleFare, invalidateFareCache };
+async function warmupFareCache() {
+  try {
+    const start = Date.now();
+    const [locs, routes, vehicles, allFares] = await Promise.all([
+      prisma.location.findMany({ where: { isActive: true } }),
+      prisma.route.findMany({
+        where: { isActive: true },
+        include: { pickupLocation: true, dropLocation: true },
+      }),
+      prisma.vehicle.findMany({
+        where: { isActive: true },
+        orderBy: [{ displayOrder: 'asc' }, { seatingCapacity: 'asc' }],
+      }),
+      prisma.fare.findMany({
+        where: { isActive: true },
+        include: {
+          fareTolls: { where: { isActive: true } },
+          fareParking: true,
+          fareWaiting: true,
+        },
+      }),
+    ]);
+
+    cachedLocationsMap = new Map(locs.map((l) => [l.id, l]));
+    locationsCacheTime = Date.now();
+
+    cachedRoutesList = routes;
+    routesCacheTime = Date.now();
+
+    cachedVehiclesList = vehicles;
+    vehiclesCacheTime = Date.now();
+
+    faresCacheByRouteId.clear();
+    for (const f of allFares) {
+      if (!faresCacheByRouteId.has(f.routeId)) {
+        faresCacheByRouteId.set(f.routeId, { data: [], timestamp: Date.now() });
+      }
+      faresCacheByRouteId.get(f.routeId).data.push(f);
+    }
+
+    console.log(`[FareCache] Pre-warmed cache with ${locs.length} locations, ${routes.length} routes, ${vehicles.length} vehicles, ${allFares.length} fares in ${Date.now() - start}ms`);
+  } catch (err) {
+    console.warn('[FareCache] Warmup deferred or failed:', err.message);
+  }
+}
+
+module.exports = { calculateFareQuote, calculateVehicleFare, invalidateFareCache, warmupFareCache };

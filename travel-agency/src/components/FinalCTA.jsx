@@ -1,59 +1,70 @@
-import React from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { MessageSquare, Phone, Calendar, Clock, Sparkles, MapPin } from 'lucide-react';
-import { businessConfig } from '../config/business.config';
-import { getWhatsAppLink, getPhoneCallLink } from '../utils/whatsapp';
+import { MessageSquare, Phone, Calendar, Clock, Sparkles, MapPin, ShieldCheck } from 'lucide-react';
+import { getWhatsAppLink } from '../utils/whatsapp';
 import { homepageContent } from '../data/homepageContent';
 
 export const FinalCTA = ({ onOpenEnquiry }) => {
   const ctaData = homepageContent.finalCta;
+  const sectionRef = useRef(null);
+  const [isRevealed, setIsRevealed] = useState(false);
+
+  useEffect(() => {
+    // If IntersectionObserver is not available, immediately reveal content
+    if (typeof window === 'undefined' || !('IntersectionObserver' in window)) {
+      setIsRevealed(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setIsRevealed(true);
+            observer.disconnect();
+          }
+        });
+      },
+      { threshold: 0.2, rootMargin: '0px 0px -40px 0px' }
+    );
+
+    const currentEl = sectionRef.current;
+    if (currentEl) {
+      observer.observe(currentEl);
+    }
+
+    return () => {
+      if (currentEl) observer.unobserve(currentEl);
+    };
+  }, []);
 
   return (
-    <section id="contact" className="section-padding final-cta-section">
+    <section id="contact" ref={sectionRef} className="section-padding final-cta-section">
       <div className="container">
-        <div className="final-cta-box">
-          <div className="final-cta-badge">
+        <div className={`final-cta-box ${isRevealed ? 'is-revealed' : ''}`}>
+          <div className="final-cta-badge anim-item anim-delay-0">
             <Sparkles size={13} color="#38BDF8" />
             <span>{ctaData.badge}</span>
           </div>
 
-          <h2 className="final-cta-title">{ctaData.title}</h2>
-          <p className="final-cta-text">
+          <h2 className="final-cta-title anim-item anim-delay-1">{ctaData.title}</h2>
+          <p className="final-cta-text anim-item anim-delay-2">
             {ctaData.description}
           </p>
 
-          <div className="final-cta-buttons">
-            <a
-              href={getWhatsAppLink({ tripType: 'Intercity Journey' })}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn btn-whatsapp btn-lg"
-            >
-              <MessageSquare size={18} />
-              <span>{ctaData.ctaButtons.whatsapp.toUpperCase()}</span>
-            </a>
-
-            <a href={`tel:${ctaData.phoneRaw}`} className="btn btn-royal btn-lg">
-              <Phone size={18} />
-              <span>{ctaData.ctaButtons.call.toUpperCase()}</span>
-            </a>
-
+          <div className="final-cta-buttons anim-item anim-delay-3">
             <Link to="/booking" className="btn btn-royal btn-lg">
               <Calendar size={18} />
               <span>{ctaData.ctaButtons.online.toUpperCase()}</span>
             </Link>
 
-            <button
-              type="button"
-              onClick={onOpenEnquiry}
-              className="btn btn-outline-white btn-lg"
-            >
-              <Calendar size={18} />
-              <span>{ctaData.ctaButtons.quote.toUpperCase()}</span>
-            </button>
+            <Link to="/fare" className="btn btn-outline-white btn-lg">
+              <ShieldCheck size={18} />
+              <span>CHECK FARES</span>
+            </Link>
           </div>
 
-          <div className="final-contact-details">
+          <div className="final-contact-details anim-item anim-delay-4">
             <div className="contact-detail-item">
               <Phone size={15} color="#38BDF8" />
               <span>Travel Desk: <strong>{ctaData.phoneDisplay}</strong></span>
@@ -99,6 +110,34 @@ export const FinalCTA = ({ onOpenEnquiry }) => {
           box-shadow: 0 20px 50px -8px rgba(11, 25, 44, 0.35);
           position: relative;
           z-index: 2;
+        }
+
+        /* Subtle upward reveal animations */
+        .final-cta-box .anim-item {
+          opacity: 0;
+          transform: translateY(18px);
+          transition: opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1),
+                      transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+          will-change: opacity, transform;
+        }
+
+        .final-cta-box.is-revealed .anim-item {
+          opacity: 1;
+          transform: translateY(0);
+        }
+
+        .anim-delay-0 { transition-delay: 0.05s; }
+        .anim-delay-1 { transition-delay: 0.15s; }
+        .anim-delay-2 { transition-delay: 0.28s; }
+        .anim-delay-3 { transition-delay: 0.40s; }
+        .anim-delay-4 { transition-delay: 0.52s; }
+
+        @media (prefers-reduced-motion: reduce) {
+          .final-cta-box .anim-item {
+            opacity: 1 !important;
+            transform: none !important;
+            transition: none !important;
+          }
         }
 
         .final-cta-badge {
@@ -199,4 +238,3 @@ export const FinalCTA = ({ onOpenEnquiry }) => {
     </section>
   );
 };
-

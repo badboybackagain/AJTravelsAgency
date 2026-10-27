@@ -1,26 +1,12 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Car, User, LogOut, ChevronDown, UserCheck, Menu, X, Phone } from 'lucide-react';
-import { CustomerAuthModal } from './CustomerAuthModal';
+import { Menu, X, Phone, CalendarCheck } from 'lucide-react';
 import { businessConfig } from '../config/business.config';
 
 export const Header = ({ isDark = false, onOpenEnquiry }) => {
   const location = useLocation();
-  const [currentUser, setCurrentUser] = useState(() => {
-    try {
-      const savedUser = localStorage.getItem('customerUser');
-      return savedUser ? JSON.parse(savedUser) : null;
-    } catch (e) {
-      return null;
-    }
-  });
-
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [authMode, setAuthMode] = useState('login');
-  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const userMenuRef = useRef(null);
 
   // Dynamic scroll elevation listener
   useEffect(() => {
@@ -32,34 +18,10 @@ export const Header = ({ isDark = false, onOpenEnquiry }) => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Close user dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
-        setIsUserMenuOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
   // Close mobile menu on route change
   useEffect(() => {
     setIsMobileMenuOpen(false);
   }, [location.pathname]);
-
-  const handleLogout = () => {
-    localStorage.removeItem('customerToken');
-    localStorage.removeItem('customerUser');
-    setCurrentUser(null);
-    setIsUserMenuOpen(false);
-  };
-
-  const openAuthModal = (mode = 'login') => {
-    setAuthMode(mode);
-    setIsAuthModalOpen(true);
-    setIsMobileMenuOpen(false);
-  };
 
   const isActive = (path) => {
     if (path === '/') return location.pathname === '/';
@@ -124,22 +86,16 @@ export const Header = ({ isDark = false, onOpenEnquiry }) => {
             Fleet
           </Link>
           <Link
+            to="/fare"
+            className={`header-nav-link ${isActive('/fare') ? 'active' : ''}`}
+          >
+            Fares
+          </Link>
+          <Link
             to="/blog"
             className={`header-nav-link ${isActive('/blog') ? 'active' : ''}`}
           >
             Blog
-          </Link>
-          <Link
-            to="/fare"
-            className={`header-nav-link ${isActive('/fare') ? 'active' : ''}`}
-          >
-            Fare Calculator
-          </Link>
-          <Link
-            to="/booking"
-            className={`header-nav-link ${isActive('/booking') ? 'active' : ''}`}
-          >
-            Book Cab
           </Link>
           <Link
             to="/contact"
@@ -149,7 +105,7 @@ export const Header = ({ isDark = false, onOpenEnquiry }) => {
           </Link>
         </nav>
 
-        {/* Section 3: Action Controls (Phone & Login) */}
+        {/* Section 3: Action Controls (Direct Call & Trip Enquiry) */}
         <div className="header-actions">
           <a
             href={`tel:${businessConfig.phone}`}
@@ -160,50 +116,22 @@ export const Header = ({ isDark = false, onOpenEnquiry }) => {
             <span className="phone-text">{businessConfig.phoneDisplay}</span>
           </a>
 
-          {currentUser ? (
-            <div className="user-profile-menu" ref={userMenuRef}>
-              <button
-                className="user-pill-btn"
-                onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                aria-expanded={isUserMenuOpen}
-                aria-label="User Account Menu"
-              >
-                <div className="user-avatar">
-                  <UserCheck size={14} />
-                </div>
-                <span className="user-name">
-                  {currentUser.name || currentUser.email?.split('@')[0] || 'Account'}
-                </span>
-                <ChevronDown size={13} className={`chevron-icon ${isUserMenuOpen ? 'open' : ''}`} />
-              </button>
-
-              {/* User Dropdown */}
-              {isUserMenuOpen && (
-                <div className="user-dropdown-card">
-                  <div className="dropdown-user-info">
-                    <div className="user-full-name">{currentUser.name || 'Valued Customer'}</div>
-                    <div className="user-email-text">{currentUser.email}</div>
-                    {currentUser.phone && (
-                      <div className="user-phone-text">📱 {currentUser.phone}</div>
-                    )}
-                  </div>
-                  <div className="dropdown-divider" />
-                  <button className="dropdown-item logout-item" onClick={handleLogout}>
-                    <LogOut size={15} />
-                    <span>Log Out</span>
-                  </button>
-                </div>
-              )}
-            </div>
-          ) : (
+          {onOpenEnquiry ? (
             <button
-              onClick={() => openAuthModal('login')}
-              className="btn-action btn-login"
-              aria-label="Customer Login"
+              onClick={onOpenEnquiry}
+              className="btn-action btn-enquiry-header"
+              aria-label="Request Trip Quotation"
             >
-              <User size={15} />
-              <span>Login</span>
+              <span>Enquire Now</span>
             </button>
+          ) : (
+            <Link
+              to="/booking"
+              className="btn-action btn-enquiry-header"
+              aria-label="Book a Cab"
+            >
+              <span>Book Cab</span>
+            </Link>
           )}
 
           {/* Mobile Menu Hamburger Toggle */}
@@ -254,16 +182,16 @@ export const Header = ({ isDark = false, onOpenEnquiry }) => {
               Fleet & Vehicles
             </Link>
             <Link
-              to="/blog"
-              className={`mobile-nav-link ${isActive('/blog') ? 'active' : ''}`}
-            >
-              Blog & Travel Guides
-            </Link>
-            <Link
               to="/fare"
               className={`mobile-nav-link ${isActive('/fare') ? 'active' : ''}`}
             >
               Fare Calculator
+            </Link>
+            <Link
+              to="/blog"
+              className={`mobile-nav-link ${isActive('/blog') ? 'active' : ''}`}
+            >
+              Blog & Travel Guides
             </Link>
             <Link
               to="/booking"
@@ -287,14 +215,6 @@ export const Header = ({ isDark = false, onOpenEnquiry }) => {
           </div>
         </div>
       )}
-
-      {/* Customer Auth Modal */}
-      <CustomerAuthModal
-        isOpen={isAuthModalOpen}
-        onClose={() => setIsAuthModalOpen(false)}
-        initialMode={authMode}
-        onAuthSuccess={(user) => setCurrentUser(user)}
-      />
 
       <style>{`
         /* ==========================================================================
@@ -491,137 +411,16 @@ export const Header = ({ isDark = false, onOpenEnquiry }) => {
           white-space: nowrap;
         }
 
-        .btn-login {
+        .btn-enquiry-header {
           background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
           color: #FFFFFF !important;
           box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
         }
 
-        .btn-login:hover {
+        .btn-enquiry-header:hover {
           background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
           transform: translateY(-1px);
           box-shadow: 0 6px 20px rgba(37, 99, 235, 0.55);
-        }
-
-        /* User Profile Pill & Dropdown */
-        .user-profile-menu {
-          position: relative;
-        }
-
-        .user-pill-btn {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.45rem;
-          padding: 0 0.85rem 0 0.35rem;
-          height: 38px;
-          background: rgba(255, 255, 255, 0.12);
-          border: 1px solid rgba(255, 255, 255, 0.22);
-          border-radius: 9999px;
-          color: #FFFFFF;
-          font-family: var(--font-heading, 'Outfit', sans-serif);
-          font-weight: 600;
-          font-size: 0.82rem;
-          cursor: pointer;
-          transition: all 0.2s ease;
-        }
-
-        .user-pill-btn:hover {
-          background: rgba(255, 255, 255, 0.2);
-          border-color: #38BDF8;
-        }
-
-        .user-avatar {
-          width: 28px;
-          height: 28px;
-          border-radius: 50%;
-          background: #0284C7;
-          color: #FFFFFF;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-
-        .chevron-icon {
-          color: rgba(255, 255, 255, 0.7);
-          transition: transform 0.2s ease;
-        }
-
-        .chevron-icon.open {
-          transform: rotate(180deg);
-        }
-
-        .user-dropdown-card {
-          position: absolute;
-          top: calc(100% + 8px);
-          right: 0;
-          width: 230px;
-          background: #0F172A;
-          border: 1px solid rgba(255, 255, 255, 0.15);
-          border-radius: 14px;
-          padding: 1rem;
-          box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.6);
-          z-index: 200;
-          animation: dropdownFade 0.2s ease-out;
-        }
-
-        @keyframes dropdownFade {
-          from { opacity: 0; transform: translateY(-6px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-
-        .dropdown-user-info {
-          display: flex;
-          flex-direction: column;
-          gap: 0.25rem;
-        }
-
-        .user-full-name {
-          font-family: var(--font-heading, 'Outfit', sans-serif);
-          font-weight: 700;
-          font-size: 0.9375rem;
-          color: #FFFFFF;
-        }
-
-        .user-email-text {
-          font-size: 0.775rem;
-          color: #94A3B8;
-          word-break: break-all;
-        }
-
-        .user-phone-text {
-          font-size: 0.775rem;
-          color: #38BDF8;
-          margin-top: 0.2rem;
-          font-weight: 600;
-        }
-
-        .dropdown-divider {
-          height: 1px;
-          background: rgba(255, 255, 255, 0.1);
-          margin: 0.75rem 0;
-        }
-
-        .dropdown-item {
-          width: 100%;
-          display: flex;
-          align-items: center;
-          gap: 0.6rem;
-          padding: 0.5rem 0.6rem;
-          border: none;
-          background: transparent;
-          border-radius: 6px;
-          font-size: 0.85rem;
-          font-weight: 600;
-          cursor: pointer;
-          transition: background 0.2s;
-        }
-
-        .logout-item {
-          color: #F87171;
-        }
-
-        .logout-item:hover {
-          background: rgba(239, 68, 68, 0.15);
         }
 
         /* ── Mobile Hamburger Toggle ── */

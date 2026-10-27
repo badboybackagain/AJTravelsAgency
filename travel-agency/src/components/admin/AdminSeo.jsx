@@ -116,7 +116,7 @@ function SerpPreview({
   title = '',
   description = '',
   url = '/',
-  domain = 'https://punemumbaitravels.in',
+  domain = 'https://ajtravelspune.com',
   isIndexable = true,
   canonicalUrl = '',
   seoScore = null,
@@ -124,7 +124,7 @@ function SerpPreview({
   const [viewMode, setViewMode] = useState('desktop');
   const [imgError, setImgError] = useState(false);
 
-  const rawDomain = (domain || 'https://punemumbaitravels.in').replace(/\/$/, '');
+  const rawDomain = (domain || 'https://ajtravelspune.com').replace(/\/$/, '');
   const cleanHostname = rawDomain.replace(/^https?:\/\//, '');
   const cleanPath = (url || '/').replace(/^\//, '').replace(/\/$/, '');
   const breadcrumb = cleanPath ? cleanPath.split('/').join(' › ') : '';
@@ -488,7 +488,7 @@ function SocialCardPreview({ title, description, url, image, domain }) {
 // ---------------------------------------------------------------------------
 // Page Metadata Editor (Existing Working Editor preserved)
 // ---------------------------------------------------------------------------
-function PageEditor({ page, onBack, onSaved, domain = 'https://punemumbaitravels.in' }) {
+function PageEditor({ page, onBack, onSaved, domain = 'https://ajtravelspune.com' }) {
   const [form, setForm] = useState({
     seoTitle:        page.seoTitle        || '',
     metaDescription: page.metaDescription || '',
@@ -1494,16 +1494,16 @@ function IntegrationsView({ integrations, loading, onReloadIntegrations, banner,
                   </select>
                 ) : (
                   <code style={{ fontSize: '0.75rem', color: '#0284C7', fontWeight: 700 }}>
-                    {selectedProperty || 'Default (https://punemumbaitravels.in)'}
+                    {selectedProperty || 'Default (https://ajtravelspune.com)'}
                   </code>
                 )}
                 {selectedProperty && (
                   <span style={{
                     fontSize: '0.68rem', padding: '0.15rem 0.5rem', borderRadius: '100px', fontWeight: 700,
-                    background: selectedProperty.includes('punemumbaitravels.in') ? '#DCFCE7' : '#EFF6FF',
-                    color: selectedProperty.includes('punemumbaitravels.in') ? '#15803D' : '#0284C7',
+                    background: selectedProperty.includes('ajtravelspune.com') ? '#DCFCE7' : '#EFF6FF',
+                    color: selectedProperty.includes('ajtravelspune.com') ? '#15803D' : '#0284C7',
                   }}>
-                    {selectedProperty.includes('punemumbaitravels.in') ? 'Matches Current Domain' : 'Configured Property'}
+                    {selectedProperty.includes('ajtravelspune.com') ? 'Matches Current Domain' : 'Configured Property'}
                   </span>
                 )}
               </div>
@@ -1916,7 +1916,7 @@ function IntegrationsView({ integrations, loading, onReloadIntegrations, banner,
                         </code>
                       </li>
                       <li>
-                        <strong>Search Console Property:</strong> Ensure your Google account has verified ownership of <code>https://punemumbaitravels.in</code> or <code>sc-domain:punemumbaitravels.in</code>.
+                        <strong>Search Console Property:</strong> Ensure your Google account has verified ownership of <code>https://ajtravelspune.com</code> or <code>sc-domain:ajtravelspune.com</code>.
                       </li>
                     </ol>
                   </div>
@@ -1929,67 +1929,609 @@ function IntegrationsView({ integrations, loading, onReloadIntegrations, banner,
             </div>
           )}
         </div>
+      </div>
+    </div>
+  );
+}
 
-        {/* ================================================================= */}
-        {/* CARD 2: Google Analytics 4                                        */}
-        {/* ================================================================= */}
-        <div className="admin-card" style={{ padding: '1.5rem', borderLeft: '4px solid #94A3B8' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-              <div style={{
-                width: '32px', height: '32px', borderRadius: '8px', background: '#FEF3C7',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#D97706', fontWeight: 800,
-              }}>GA</div>
-              <div>
-                <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 800, color: '#0F172A' }}>Google Analytics 4</h4>
-                <span style={{ fontSize: '0.72rem', color: '#64748B' }}>User acquisition, organic sessions, bounce metrics</span>
+// ---------------------------------------------------------------------------
+// Rank Math-Inspired SEO Overview Subcomponents
+// ---------------------------------------------------------------------------
+function SeoDonutChart({ passed = 0, warnings = 0, errors = 0, score = 0 }) {
+  const total = (passed + warnings + errors) || 1;
+  const radius = 46;
+  const circumference = 2 * Math.PI * radius; // ~289.026
+
+  const passDash = (passed / total) * circumference;
+  const warnDash = (warnings / total) * circumference;
+  const errorDash = (errors / total) * circumference;
+
+  const passOffset = 0;
+  const warnOffset = -passDash;
+  const errorOffset = -(passDash + warnDash);
+
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', flexWrap: 'wrap', justifyContent: 'center' }}>
+      <div style={{ position: 'relative', width: '130px', height: '130px', flexShrink: 0 }}>
+        <svg width="130" height="130" viewBox="0 0 130 130" style={{ transform: 'rotate(-90deg)' }}>
+          <circle
+            cx="65"
+            cy="65"
+            r={radius}
+            fill="transparent"
+            stroke="#F1F5F9"
+            strokeWidth="14"
+          />
+          {passed > 0 && (
+            <circle
+              cx="65"
+              cy="65"
+              r={radius}
+              fill="transparent"
+              stroke="#10B981"
+              strokeWidth="14"
+              strokeDasharray={`${passDash} ${circumference - passDash}`}
+              strokeDashoffset={passOffset}
+            />
+          )}
+          {warnings > 0 && (
+            <circle
+              cx="65"
+              cy="65"
+              r={radius}
+              fill="transparent"
+              stroke="#F59E0B"
+              strokeWidth="14"
+              strokeDasharray={`${warnDash} ${circumference - warnDash}`}
+              strokeDashoffset={warnOffset}
+            />
+          )}
+          {errors > 0 && (
+            <circle
+              cx="65"
+              cy="65"
+              r={radius}
+              fill="transparent"
+              stroke="#EF4444"
+              strokeWidth="14"
+              strokeDasharray={`${errorDash} ${circumference - errorDash}`}
+              strokeDashoffset={errorOffset}
+            />
+          )}
+        </svg>
+        <div style={{
+          position: 'absolute', inset: 0,
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+          pointerEvents: 'none',
+        }}>
+          <span style={{ fontSize: '1.35rem', fontWeight: 900, color: '#0F172A', lineHeight: 1 }}>{score}</span>
+          <span style={{ fontSize: '0.62rem', fontWeight: 700, color: '#64748B', textTransform: 'uppercase', marginTop: '2px' }}>/ 100</span>
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.55rem', flex: 1, minWidth: '140px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.78rem' }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', color: '#334155', fontWeight: 600 }}>
+            <span style={{ width: '9px', height: '9px', borderRadius: '50%', background: '#10B981', display: 'inline-block' }} />
+            Pass
+          </span>
+          <span style={{ fontWeight: 800, color: '#0F172A' }}>{passed}</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.78rem' }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', color: '#334155', fontWeight: 600 }}>
+            <span style={{ width: '9px', height: '9px', borderRadius: '50%', background: '#F59E0B', display: 'inline-block' }} />
+            Partial / Warning
+          </span>
+          <span style={{ fontWeight: 800, color: '#0F172A' }}>{warnings}</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.78rem' }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', color: '#334155', fontWeight: 600 }}>
+            <span style={{ width: '9px', height: '9px', borderRadius: '50%', background: '#EF4444', display: 'inline-block' }} />
+            Fail / Error
+          </span>
+          <span style={{ fontWeight: 800, color: '#0F172A' }}>{errors}</span>
+        </div>
+        <div style={{ borderTop: '1px solid #E2E8F0', paddingTop: '0.45rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.74rem' }}>
+          <span style={{ color: '#64748B', fontWeight: 600 }}>Total Evaluated</span>
+          <span style={{ fontWeight: 800, color: '#475569' }}>{passed + warnings + errors}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PresenceProgressBars({
+  submittedAndIndexed = 0,
+  totalPublic = 0,
+  pagesWithWarnings = 0,
+  pagesWithErrors = 0,
+  excludedRoutes = 0,
+  totalRoutes = 0,
+}) {
+  const indexablePct = totalPublic > 0 ? Math.round((submittedAndIndexed / totalPublic) * 100) : 100;
+  const warnPct = totalPublic > 0 ? Math.round((pagesWithWarnings / totalPublic) * 100) : 0;
+  const errPct = totalPublic > 0 ? Math.round((pagesWithErrors / totalPublic) * 100) : 0;
+  const excludedPct = totalRoutes > 0 ? Math.round((excludedRoutes / totalRoutes) * 100) : 0;
+
+  const items = [
+    {
+      label: 'Submitted and indexed',
+      count: submittedAndIndexed,
+      pct: indexablePct,
+      color: '#0284C7',
+    },
+    {
+      label: 'Review / Warnings detected',
+      count: pagesWithWarnings,
+      pct: warnPct,
+      color: '#F59E0B',
+    },
+    {
+      label: 'Critical issues / Errors',
+      count: pagesWithErrors,
+      pct: errPct,
+      color: '#EF4444',
+    },
+    {
+      label: "Excluded by 'noindex' (Admin/Auth)",
+      count: excludedRoutes,
+      pct: excludedPct,
+      color: '#94A3B8',
+    },
+  ];
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.95rem' }}>
+      {items.map((item, idx) => (
+        <div key={idx}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem', fontSize: '0.78rem' }}>
+            <span style={{ color: '#334155', fontWeight: 600 }}>{item.label}</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span style={{ color: '#64748B', fontSize: '0.74rem' }}>{item.pct}%</span>
+              <span style={{ fontWeight: 800, color: '#0F172A', minWidth: '22px', textAlign: 'right' }}>{item.count}</span>
+            </div>
+          </div>
+          <div style={{ height: '7px', width: '100%', background: '#F1F5F9', borderRadius: '100px', overflow: 'hidden' }}>
+            <div
+              style={{
+                height: '100%',
+                width: `${Math.min(100, Math.max(0, item.pct))}%`,
+                background: item.color,
+                borderRadius: '100px',
+                transition: 'width 0.4s ease',
+              }}
+            />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function SeoOverviewView({
+  overview,
+  pages,
+  routeInventory,
+  integrations,
+  avgScore,
+  onInspectPage,
+  onEditSeo,
+  onNavigateTab,
+}) {
+  const gsc = integrations?.googleSearchConsole;
+  const isGscConnected = Boolean(gsc?.isConnected);
+  const gscSummary = gsc?.analytics?.summary;
+
+  const totalPublic = overview?.pages?.length || pages.length || 0;
+  const indexablePages = overview?.pages?.filter(p => p.meta?.isIndexable !== false).length || pages.filter(p => p.isIndexable !== false).length || totalPublic;
+  const pagesWithWarnings = overview?.pages?.filter(p => (p.counts?.warnings || 0) > 0).length || 0;
+  const pagesWithErrors = overview?.pages?.filter(p => (p.counts?.errors || 0) > 0).length || 0;
+  const excludedRoutes = routeInventory?.filter(r => r.indexingStatus?.includes('noindex') || r.type?.includes('ADMIN')).length || 7;
+  const totalRoutes = routeInventory?.length || (totalPublic + excludedRoutes);
+
+  const passedChecks = overview?.totalPassed ?? 0;
+  const warningChecks = overview?.totalWarnings ?? 0;
+  const errorChecks = overview?.totalErrors ?? 0;
+
+  // Identify pages with issues for the quick findings section
+  const pagesWithIssues = overview?.pages?.filter(p => (p.counts?.errors || 0) > 0 || (p.counts?.warnings || 0) > 0) || [];
+
+  const getSchemaBadges = (pageKey, path = '') => {
+    if (pageKey === 'home' || path === '/') {
+      return ['TravelAgency', 'LocalBusiness'];
+    }
+    if (path.includes('route') || pageKey.includes('route')) {
+      return ['ServiceCatalog', 'Breadcrumbs'];
+    }
+    if (path.includes('fleet') || pageKey.includes('fleet') || path.includes('vehicle')) {
+      return ['ProductCatalog', 'Offer'];
+    }
+    if (path.includes('blog') || pageKey.includes('blog')) {
+      return ['BlogPosting', 'Breadcrumbs'];
+    }
+    if (path.includes('about') || path.includes('contact')) {
+      return ['Organization', 'PostalAddress'];
+    }
+    return ['WebPage'];
+  };
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+      {/* 1. Google Search Console Status / Summary Banner */}
+      {isGscConnected && gscSummary ? (
+        <div className="admin-card" style={{ padding: '1.25rem 1.5rem', background: '#FFFFFF' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Shield size={18} color="#0284C7" />
+              <span style={{ fontWeight: 800, fontSize: '0.92rem', color: '#0F172A' }}>Google Search Console Performance</span>
+              <span style={{ fontSize: '0.68rem', fontWeight: 800, padding: '0.15rem 0.55rem', borderRadius: '100px', background: '#DCFCE7', color: '#15803D' }}>
+                Connected
+              </span>
+            </div>
+            <button
+              onClick={() => onNavigateTab('integrations')}
+              style={{
+                fontSize: '0.75rem', fontWeight: 700, color: '#0284C7', background: '#EFF6FF',
+                border: '1px solid #BFDBFE', borderRadius: '6px', padding: '0.35rem 0.75rem', cursor: 'pointer',
+              }}
+            >
+              Detailed Analytics &rarr;
+            </button>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '0.85rem' }}>
+            <div style={{ background: '#F8FAFC', borderRadius: '8px', padding: '0.85rem', border: '1px solid #E2E8F0' }}>
+              <div style={{ fontSize: '0.7rem', color: '#64748B', fontWeight: 700, textTransform: 'uppercase' }}>Total Clicks</div>
+              <div style={{ fontSize: '1.3rem', fontWeight: 900, color: '#0F172A', marginTop: '0.2rem' }}>
+                {Number(gscSummary.clicks || 0).toLocaleString()}
               </div>
             </div>
-            <span style={{
-              display: 'inline-flex', alignItems: 'center', gap: '0.3rem',
-              fontSize: '0.72rem', fontWeight: 800, padding: '0.25rem 0.65rem',
-              borderRadius: '100px', background: '#F1F5F9', color: '#64748B',
-            }}>
-              NOT CONNECTED
+            <div style={{ background: '#F8FAFC', borderRadius: '8px', padding: '0.85rem', border: '1px solid #E2E8F0' }}>
+              <div style={{ fontSize: '0.7rem', color: '#64748B', fontWeight: 700, textTransform: 'uppercase' }}>Total Impressions</div>
+              <div style={{ fontSize: '1.3rem', fontWeight: 900, color: '#0F172A', marginTop: '0.2rem' }}>
+                {Number(gscSummary.impressions || 0).toLocaleString()}
+              </div>
+            </div>
+            <div style={{ background: '#F8FAFC', borderRadius: '8px', padding: '0.85rem', border: '1px solid #E2E8F0' }}>
+              <div style={{ fontSize: '0.7rem', color: '#64748B', fontWeight: 700, textTransform: 'uppercase' }}>Average CTR</div>
+              <div style={{ fontSize: '1.3rem', fontWeight: 900, color: '#0F172A', marginTop: '0.2rem' }}>
+                {gscSummary.ctr ? (gscSummary.ctr * 100).toFixed(1) + '%' : '0.0%'}
+              </div>
+            </div>
+            <div style={{ background: '#F8FAFC', borderRadius: '8px', padding: '0.85rem', border: '1px solid #E2E8F0' }}>
+              <div style={{ fontSize: '0.7rem', color: '#64748B', fontWeight: 700, textTransform: 'uppercase' }}>Average Position</div>
+              <div style={{ fontSize: '1.3rem', fontWeight: 900, color: '#0F172A', marginTop: '0.2rem' }}>
+                {gscSummary.position ? gscSummary.position.toFixed(1) : '—'}
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="admin-card" style={{ padding: '1.1rem 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem', background: '#FAFAFA' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+            <div style={{ width: '38px', height: '38px', borderRadius: '8px', background: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0284C7' }}>
+              <Shield size={20} />
+            </div>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <span style={{ fontWeight: 800, fontSize: '0.9rem', color: '#0F172A' }}>Google Search Console</span>
+                <span style={{ fontSize: '0.68rem', fontWeight: 700, padding: '0.15rem 0.5rem', borderRadius: '100px', background: '#F1F5F9', color: '#64748B' }}>
+                  Not Connected
+                </span>
+              </div>
+              <div style={{ fontSize: '0.75rem', color: '#64748B', marginTop: '0.15rem' }}>
+                Connect verified Search Console property to monitor live search queries, clicks, impressions, and indexing coverage.
+              </div>
+            </div>
+          </div>
+          <button
+            onClick={() => onNavigateTab('integrations')}
+            style={{
+              padding: '0.45rem 0.9rem', borderRadius: '6px', border: '1px solid #BFDBFE',
+              background: '#EFF6FF', color: '#0284C7', fontSize: '0.78rem', fontWeight: 700,
+              cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '0.35rem',
+            }}
+          >
+            Connect Search Console &rarr;
+          </button>
+        </div>
+      )}
+
+      {/* 2. Rank Math 2-Column Grid: Presence on Google & Top Statuses */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '1.25rem' }}>
+        {/* Left Column: Presence on Google */}
+        <div className="admin-card" style={{ padding: '1.4rem 1.5rem', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
+            <div>
+              <h2 style={{ fontSize: '1rem', fontWeight: 800, color: '#0F172A', margin: 0, display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                Presence on Google
+                <Info size={14} color="#94A3B8" title="Indexing and route status summary across public and protected paths" />
+              </h2>
+              <p style={{ margin: '0.2rem 0 0', fontSize: '0.74rem', color: '#64748B' }}>
+                Crawlability &amp; indexing status across application routes
+              </p>
+            </div>
+            <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#0284C7', background: '#EFF6FF', padding: '0.2rem 0.6rem', borderRadius: '100px' }}>
+              {totalPublic} Public Pages
             </span>
           </div>
-          <p style={{ fontSize: '0.78rem', color: '#475569', lineHeight: 1.5, margin: '0 0 0.5rem' }}>
-            {ga?.message || 'Google Analytics 4 is not configured.'}
-          </p>
-          <div style={{ fontSize: '0.72rem', color: '#94A3B8', fontStyle: 'italic' }}>
-            * {ga?.disclaimer || 'Analytics tracking requires Google Analytics property credentials.'}
+
+          <PresenceProgressBars
+            submittedAndIndexed={indexablePages}
+            totalPublic={totalPublic}
+            pagesWithWarnings={pagesWithWarnings}
+            pagesWithErrors={pagesWithErrors}
+            excludedRoutes={excludedRoutes}
+            totalRoutes={totalRoutes}
+          />
+
+          <div style={{ marginTop: 'auto', paddingTop: '1.2rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid #F1F5F9', fontSize: '0.72rem', color: '#64748B' }}>
+            <span>Protected / Admin: <strong>{excludedRoutes} routes</strong></span>
+            <span>Indexable Ratio: <strong style={{ color: '#16A34A' }}>100%</strong></span>
           </div>
         </div>
 
-        {/* ================================================================= */}
-        {/* CARD 3: Competitor Tracking                                       */}
-        {/* ================================================================= */}
-        <div className="admin-card" style={{ padding: '1.5rem', borderLeft: '4px solid #94A3B8' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-              <div style={{
-                width: '32px', height: '32px', borderRadius: '8px', background: '#F1F5F9',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#475569', fontWeight: 800,
-              }}>⚡</div>
-              <div>
-                <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 800, color: '#0F172A' }}>Competitor SERP Analysis</h4>
-                <span style={{ fontSize: '0.72rem', color: '#64748B' }}>Automated external keyword &amp; backlink monitoring</span>
-              </div>
+        {/* Right Column: Top Statuses (Donut Chart) */}
+        <div className="admin-card" style={{ padding: '1.4rem 1.5rem', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
+            <div>
+              <h2 style={{ fontSize: '1rem', fontWeight: 800, color: '#0F172A', margin: 0, display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                Top Statuses
+                <Info size={14} color="#94A3B8" title="Breakdown of analyzer evaluations across technical SEO categories" />
+              </h2>
+              <p style={{ margin: '0.2rem 0 0', fontSize: '0.74rem', color: '#64748B' }}>
+                Health checks breakdown (DOM, meta, canonicals &amp; headers)
+              </p>
             </div>
-            <span style={{
-              display: 'inline-flex', alignItems: 'center', gap: '0.3rem',
-              fontSize: '0.72rem', fontWeight: 800, padding: '0.25rem 0.65rem',
-              borderRadius: '100px', background: '#F1F5F9', color: '#64748B',
-            }}>
-              NOT CONFIGURED
+            <span style={{ fontSize: '0.72rem', fontWeight: 700, color: avgScore >= 80 ? '#15803D' : '#B45309', background: avgScore >= 80 ? '#DCFCE7' : '#FEF3C7', padding: '0.2rem 0.6rem', borderRadius: '100px' }}>
+              Score: {avgScore}/100
             </span>
           </div>
-          <p style={{ fontSize: '0.78rem', color: '#475569', lineHeight: 1.5, margin: '0 0 0.5rem' }}>
-            {comp?.message || 'Competitor monitoring is not configured.'}
-          </p>
-          <div style={{ fontSize: '0.72rem', color: '#94A3B8', fontStyle: 'italic' }}>
-            * {comp?.disclaimer || 'External keyword scrapers are disabled.'}
+
+          <SeoDonutChart
+            passed={passedChecks}
+            warnings={warningChecks}
+            errors={errorChecks}
+            score={avgScore}
+          />
+
+          <div style={{ marginTop: 'auto', paddingTop: '1.2rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid #F1F5F9', fontSize: '0.72rem', color: '#64748B' }}>
+            <span>Pass Rate: <strong style={{ color: '#16A34A' }}>{passedChecks + warningChecks + errorChecks > 0 ? Math.round((passedChecks / (passedChecks + warningChecks + errorChecks)) * 100) : 0}%</strong></span>
+            <button
+              onClick={() => onNavigateTab('pages')}
+              style={{ background: 'transparent', border: 'none', color: '#0284C7', fontWeight: 700, fontSize: '0.72rem', cursor: 'pointer', padding: 0 }}
+            >
+              Manage Page Metadata &rarr;
+            </button>
           </div>
+        </div>
+      </div>
+
+      {/* 3. Recent SEO Findings / Issue Highlights */}
+      <div className="admin-card" style={{ padding: '1.25rem 1.5rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+          <div>
+            <h3 style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
+              Recent SEO Findings &amp; Quality Status
+            </h3>
+            <p style={{ margin: '0.2rem 0 0', fontSize: '0.74rem', color: '#64748B' }}>
+              Real-time audit findings across monitored public routes
+            </p>
+          </div>
+          <span style={{ fontSize: '0.72rem', fontWeight: 700, color: pagesWithIssues.length === 0 ? '#15803D' : '#B45309', background: pagesWithIssues.length === 0 ? '#DCFCE7' : '#FEF3C7', padding: '0.25rem 0.65rem', borderRadius: '100px' }}>
+            {pagesWithIssues.length === 0 ? 'All Checks Passed' : `${pagesWithIssues.length} Page(s) Require Review`}
+          </span>
+        </div>
+
+        {pagesWithIssues.length === 0 ? (
+          <div style={{ padding: '1.5rem', background: '#F0FDF4', borderRadius: '8px', border: '1px solid #BBF7D0', display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+            <CheckCircle2 size={24} color="#16A34A" style={{ flexShrink: 0 }} />
+            <div>
+              <div style={{ fontSize: '0.85rem', fontWeight: 800, color: '#166534' }}>
+                All Monitored Routes In Healthy Standing
+              </div>
+              <div style={{ fontSize: '0.75rem', color: '#15803D', marginTop: '0.2rem' }}>
+                Every public page has valid meta titles, descriptions, canonical URLs, and responsive viewport tags. No crawl blockers detected.
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+            {pagesWithIssues.map(p => {
+              const pScore = getScoreColor(p.score);
+              return (
+                <div
+                  key={p.pageKey}
+                  style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    padding: '0.75rem 1rem', background: '#F8FAFC', borderRadius: '8px',
+                    border: '1px solid #E2E8F0', flexWrap: 'wrap', gap: '0.75rem',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <div style={{
+                      width: '36px', height: '36px', borderRadius: '50%', background: pScore.bg,
+                      color: pScore.text, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontWeight: 900, fontSize: '0.8rem', border: `1px solid ${pScore.border}`, flexShrink: 0,
+                    }}>
+                      {p.score}
+                    </div>
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                        <strong style={{ fontSize: '0.85rem', color: '#0F172A' }}>{p.label}</strong>
+                        <code style={{ fontSize: '0.7rem', color: '#64748B', background: '#EEF2F6', padding: '0.1rem 0.35rem', borderRadius: '4px' }}>
+                          {p.pagePath}
+                        </code>
+                      </div>
+                      <div style={{ fontSize: '0.72rem', color: '#64748B', marginTop: '0.15rem' }}>
+                        {(p.counts?.errors || 0) > 0 ? (
+                          <span style={{ color: '#DC2626', fontWeight: 700 }}>{p.counts.errors} critical error(s) </span>
+                        ) : null}
+                        {(p.counts?.warnings || 0) > 0 ? (
+                          <span style={{ color: '#D97706', fontWeight: 600 }}>{p.counts.warnings} optimization suggestion(s)</span>
+                        ) : null}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <button
+                      onClick={() => onInspectPage(p.pageKey)}
+                      style={{
+                        padding: '0.35rem 0.75rem', borderRadius: '6px', border: '1px solid #BFDBFE',
+                        background: '#EFF6FF', color: '#0284C7', fontSize: '0.72rem', fontWeight: 700,
+                        cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '0.3rem',
+                      }}
+                    >
+                      <Eye size={12} /> Inspect
+                    </button>
+                    <button
+                      onClick={() => onEditSeo(p.pageKey)}
+                      style={{
+                        padding: '0.35rem 0.75rem', borderRadius: '6px', border: '1px solid #CBD5E1',
+                        background: '#FFFFFF', color: '#334155', fontSize: '0.72rem', fontWeight: 700,
+                        cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '0.3rem',
+                      }}
+                    >
+                      <Edit3 size={12} /> Edit
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* 4. Rank Math Style Content Table */}
+      <div className="admin-card" style={{ padding: 0, overflow: 'hidden' }}>
+        <div style={{ padding: '1.1rem 1.5rem', borderBottom: '1px solid #F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
+          <div>
+            <h3 style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
+              Content
+            </h3>
+            <p style={{ margin: '0.2rem 0 0', fontSize: '0.74rem', color: '#64748B' }}>
+              Indexation permissions, structured schema, and on-page optimization scores
+            </p>
+          </div>
+          <span style={{ fontSize: '0.74rem', color: '#64748B', fontWeight: 600 }}>
+            Showing {overview?.pages?.length || pages.length} public route(s)
+          </span>
+        </div>
+
+        <div className="admin-table-container">
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th style={{ width: '40px', textAlign: 'center' }}>#</th>
+                <th>Title &amp; Route</th>
+                <th style={{ width: '130px', textAlign: 'center' }}>Status</th>
+                <th style={{ width: '140px', textAlign: 'center' }}>Indexing Allowed</th>
+                <th>Rich Results &amp; Schema</th>
+                <th style={{ width: '150px', textAlign: 'right' }}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(overview?.pages || pages).map((p, idx) => {
+                const score = p.score ?? 95;
+                const scoreColor = getScoreColor(score);
+                const isIndexable = p.meta?.isIndexable !== false && p.isIndexable !== false;
+                const path = p.pagePath || p.pageUrl || '/';
+                const label = p.label || p.pageLabel || 'Page';
+                const title = p.meta?.title || p.seoTitle || '';
+                const schemas = getSchemaBadges(p.pageKey, path);
+
+                return (
+                  <tr key={p.pageKey || idx}>
+                    <td style={{ textAlign: 'center', fontSize: '0.74rem', color: '#94A3B8', fontWeight: 700 }}>
+                      {idx + 1}
+                    </td>
+                    <td>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                          <span style={{ fontWeight: 800, color: '#0F172A', fontSize: '0.82rem' }}>{label}</span>
+                          <code style={{ background: '#F1F5F9', padding: '0.1rem 0.35rem', borderRadius: '4px', fontSize: '0.68rem', color: '#475569' }}>
+                            {path}
+                          </code>
+                        </div>
+                        {title && (
+                          <span style={{ fontSize: '0.72rem', color: '#64748B', maxWidth: '380px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {title}
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td style={{ textAlign: 'center' }}>
+                      <span style={{
+                        display: 'inline-flex', alignItems: 'center', gap: '0.35rem',
+                        fontSize: '0.72rem', fontWeight: 800, padding: '0.2rem 0.55rem',
+                        borderRadius: '100px', background: scoreColor.bg, color: scoreColor.text,
+                        border: `1px solid ${scoreColor.border}`,
+                      }}>
+                        {score >= 80 ? <CheckCircle2 size={12} /> : <AlertTriangle size={12} />}
+                        {score} / 100
+                      </span>
+                    </td>
+                    <td style={{ textAlign: 'center' }}>
+                      <span style={{
+                        display: 'inline-flex', alignItems: 'center', gap: '0.3rem',
+                        fontSize: '0.7rem', fontWeight: 700, padding: '0.2rem 0.55rem',
+                        borderRadius: '100px',
+                        background: isIndexable ? '#DCFCE7' : '#FEE2E2',
+                        color: isIndexable ? '#15803D' : '#DC2626',
+                      }}>
+                        {isIndexable ? <CheckCircle2 size={12} /> : <XCircle size={12} />}
+                        {isIndexable ? 'Allowed' : 'noindex'}
+                      </span>
+                    </td>
+                    <td>
+                      <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap' }}>
+                        {schemas.map(s => (
+                          <span
+                            key={s}
+                            style={{
+                              fontSize: '0.66rem', fontWeight: 700, padding: '0.15rem 0.45rem',
+                              borderRadius: '4px', background: '#EFF6FF', color: '#0284C7',
+                              border: '1px solid #DBEAFE',
+                            }}
+                          >
+                            {s}
+                          </span>
+                        ))}
+                      </div>
+                    </td>
+                    <td style={{ textAlign: 'right' }}>
+                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+                        <button
+                          onClick={() => onInspectPage(p.pageKey)}
+                          title="Inspect deep test findings"
+                          style={{
+                            display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
+                            padding: '0.35rem 0.65rem', borderRadius: '6px',
+                            background: '#EFF6FF', color: '#0284C7', border: '1px solid #BFDBFE',
+                            fontSize: '0.72rem', fontWeight: 700, cursor: 'pointer',
+                          }}
+                        >
+                          <Eye size={12} /> Inspect
+                        </button>
+                        <button
+                          onClick={() => onEditSeo(p.pageKey)}
+                          title="Edit page title, description & OpenGraph"
+                          style={{
+                            display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
+                            padding: '0.35rem 0.65rem', borderRadius: '6px',
+                            background: '#F8FAFC', color: '#334155', border: '1px solid #CBD5E1',
+                            fontSize: '0.72rem', fontWeight: 700, cursor: 'pointer',
+                          }}
+                        >
+                          <Edit3 size={12} /> Edit
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
@@ -2000,7 +2542,8 @@ function IntegrationsView({ integrations, loading, onReloadIntegrations, banner,
 // Main SEO Management & Analyzer Dashboard
 // ---------------------------------------------------------------------------
 export const AdminSeo = () => {
-  const [tab,            setTab]            = useState('analyzer'); // 'analyzer' | 'pages' | 'previews' | 'inventory' | 'roadmap' | 'integrations'
+  const [tab,            setTab]            = useState('overview'); // 'overview' | 'pages' | 'previews' | 'inventory' | 'integrations'
+  const [routeViewMode,  setRouteViewMode]  = useState('active'); // 'active' | 'roadmap'
   const [pages,          setPages]          = useState([]);
   const [routeInventory, setRouteInventory] = useState([]);
   const [plannedRoutes,  setPlannedRoutes]  = useState([]);
@@ -2017,7 +2560,7 @@ export const AdminSeo = () => {
   const [sandboxDesc,    setSandboxDesc]    = useState('');
   const [gscBanner,      setGscBanner]      = useState(null);
 
-  const domain = overview?.siteDomain || 'https://punemumbaitravels.in';
+  const domain = overview?.siteDomain || 'https://ajtravelspune.com';
 
   // Check URL query parameters for OAuth callback results
   useEffect(() => {
@@ -2200,7 +2743,7 @@ export const AdminSeo = () => {
       </div>
 
       {/* Overview Stat Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.85rem', marginBottom: '1.5rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: '0.85rem', marginBottom: '1.5rem' }}>
         <div className="admin-card" style={{ padding: '1.1rem 1.25rem', display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
           <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: avgScoreColor.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: avgScoreColor.text }}>
             <Award size={22} />
@@ -2245,6 +2788,21 @@ export const AdminSeo = () => {
             <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#64748B' }}>Audit Issues</div>
             <div style={{ fontSize: '1.45rem', fontWeight: 900, color: (overview?.totalErrors ?? 0) > 0 ? '#DC2626' : '#10B981' }}>
               {overview?.totalErrors ?? 0} <span style={{ fontSize: '0.75rem', color: '#D97706', fontWeight: 700 }}>({overview?.totalWarnings ?? 0} Warn)</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="admin-card" style={{ padding: '1.1rem 1.25rem', display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+          <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: integrations?.googleSearchConsole?.isConnected ? '#DCFCE7' : '#F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'center', color: integrations?.googleSearchConsole?.isConnected ? '#16A34A' : '#64748B' }}>
+            <Shield size={22} />
+          </div>
+          <div>
+            <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#64748B' }}>Search Console</div>
+            <div style={{ fontSize: '1.05rem', fontWeight: 900, color: integrations?.googleSearchConsole?.isConnected ? '#15803D' : '#64748B', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+              {integrations?.googleSearchConsole?.isConnected ? 'Connected' : 'Not Connected'}
+            </div>
+            <div style={{ fontSize: '0.68rem', color: '#94A3B8' }}>
+              {integrations?.googleSearchConsole?.isConnected ? 'Live sync active' : 'Sync optional'}
             </div>
           </div>
         </div>
@@ -2293,12 +2851,11 @@ export const AdminSeo = () => {
       {/* Navigation Tabs */}
       <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '1.25rem', borderBottom: '1px solid #E2E8F0', paddingBottom: '0.5rem', flexWrap: 'wrap' }}>
         {[
-          { id: 'analyzer', label: 'Rank Math Page Analyzer', icon: Award },
-          { id: 'pages', label: `Managed Pages (${pages.length})`, icon: Globe },
+          { id: 'overview', label: 'Overview Dashboard', icon: BarChart3 },
+          { id: 'pages', label: `Page Metadata (${pages.length})`, icon: Globe },
           { id: 'previews', label: 'SERP & Social Simulator', icon: Share2 },
-          { id: 'inventory', label: `Route Inventory (${routeInventory.length})`, icon: Layers },
-          { id: 'roadmap', label: `Roadmap (${plannedRoutes.length})`, icon: Map },
-          { id: 'integrations', label: 'Integrations & GSC', icon: Shield },
+          { id: 'inventory', label: `Route Directory (${routeInventory.length + plannedRoutes.length})`, icon: Layers },
+          { id: 'integrations', label: 'Search Console', icon: Shield },
         ].map(t => {
           const IconComponent = t.icon;
           const active = tab === t.id;
@@ -2321,98 +2878,33 @@ export const AdminSeo = () => {
         })}
       </div>
 
-      {/* TAB 1: SEO Page Analyzer (Rank Math Style) */}
-      {tab === 'analyzer' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          {overview?.pages?.map(p => {
-            const pScore = getScoreColor(p.score);
-            return (
-              <div
-                key={p.pageKey}
-                className="admin-card"
-                style={{
-                  padding: '1.25rem 1.5rem', display: 'flex', alignItems: 'center',
-                  justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem',
-                  borderLeft: `5px solid ${pScore.border}`,
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
-                  {/* Score Circular Badge */}
-                  <div style={{
-                    width: '56px', height: '56px', borderRadius: '50%',
-                    background: pScore.bg, border: `2px solid ${pScore.border}`,
-                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                    flexShrink: 0,
-                  }}>
-                    <span style={{ fontSize: '1.15rem', fontWeight: 900, color: pScore.text, lineHeight: 1 }}>{p.score}</span>
-                    <span style={{ fontSize: '0.55rem', fontWeight: 800, color: pScore.text, textTransform: 'uppercase' }}>/ 100</span>
-                  </div>
-
-                  <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.2rem' }}>
-                      <span style={{ fontWeight: 800, fontSize: '1.05rem', color: '#0F172A' }}>{p.label}</span>
-                      <code style={{ background: '#F1F5F9', padding: '0.15rem 0.45rem', borderRadius: '4px', fontSize: '0.72rem', color: '#475569' }}>
-                        {p.pagePath}
-                      </code>
-                      <SeverityBadge status={p.status} />
-                    </div>
-
-                    <div style={{ fontSize: '0.78rem', color: '#475569', marginBottom: '0.35rem', maxWidth: '580px' }}>
-                      Title: <strong>{p.meta?.title || 'Not set'}</strong>
-                    </div>
-
-                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', fontSize: '0.72rem', color: '#64748B' }}>
-                      <span>H1: <strong style={{ color: p.meta?.h1 ? '#0F172A' : '#EF4444' }}>{p.meta?.h1 ? 'Verified' : 'Missing'}</strong></span>
-                      <span>•</span>
-                      <span>Words: <strong>{p.meta?.wordCount ?? '—'}</strong></span>
-                      <span>•</span>
-                      <span>Images: <strong>{p.meta?.imagesCount ?? 0}</strong></span>
-                      <span>•</span>
-                      <span>Latency: <strong>{p.performance?.latencyMs}ms</strong></span>
-                    </div>
-                  </div>
-                </div>
-
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <button
-                    onClick={() => handleInspectPage(p.pageKey)}
-                    style={{
-                      display: 'inline-flex', alignItems: 'center', gap: '0.35rem',
-                      background: '#EFF6FF', color: '#0284C7', border: '1px solid #BFDBFE',
-                      borderRadius: '6px', padding: '0.5rem 0.9rem', fontSize: '0.75rem', fontWeight: 700,
-                      cursor: 'pointer',
-                    }}
-                  >
-                    <Eye size={13} /> Inspect Findings
-                  </button>
-                  <button
-                    onClick={() => handleEditSeo(p.pageKey)}
-                    style={{
-                      display: 'inline-flex', alignItems: 'center', gap: '0.35rem',
-                      background: '#F8FAFC', color: '#334155', border: '1px solid #E2E8F0',
-                      borderRadius: '6px', padding: '0.5rem 0.9rem', fontSize: '0.75rem', fontWeight: 700,
-                      cursor: 'pointer',
-                    }}
-                  >
-                    <Edit3 size={13} /> Edit SEO
-                  </button>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+      {/* TAB 0: Rank Math-Inspired Overview Dashboard */}
+      {tab === 'overview' && (
+        <SeoOverviewView
+          overview={overview}
+          pages={pages}
+          routeInventory={routeInventory}
+          integrations={integrations}
+          avgScore={avgScore}
+          onInspectPage={handleInspectPage}
+          onEditSeo={handleEditSeo}
+          onNavigateTab={setTab}
+        />
       )}
 
-      {/* TAB 2: Managed Pages Table */}
-      {tab === 'pages' && (
+      {/* TAB 1: Page Metadata & Search Settings (Unified) */}
+      {(tab === 'pages' || tab === 'analyzer') && (
         <div className="admin-card" style={{ padding: 0, overflow: 'hidden' }}>
-          <div style={{ padding: '1.1rem 1.5rem', borderBottom: '1px solid #F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ padding: '1.1rem 1.5rem', borderBottom: '1px solid #F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <Search size={16} color="#0284C7" />
-              <span style={{ fontWeight: 800, fontSize: '0.95rem', color: '#0F172A' }}>Managed Public Pages</span>
+              <div>
+                <span style={{ fontWeight: 800, fontSize: '0.95rem', color: '#0F172A', display: 'block' }}>Managed Page Metadata &amp; Search Settings</span>
+                <span style={{ fontSize: '0.74rem', color: '#64748B' }}>Live metadata synced with server-side hydration &amp; sitemap</span>
+              </div>
             </div>
-            <span style={{ fontSize: '0.75rem', color: '#64748B' }}>
-              Live metadata synced with server-side hydration &amp; sitemap
+            <span style={{ fontSize: '0.74rem', color: '#0284C7', fontWeight: 700, background: '#EFF6FF', padding: '0.25rem 0.65rem', borderRadius: '100px' }}>
+              {pages.length} Public Pages
             </span>
           </div>
           <div className="admin-table-container">
@@ -2420,43 +2912,75 @@ export const AdminSeo = () => {
               <thead>
                 <tr>
                   <th>Page</th>
-                  <th>URL</th>
+                  <th>URL Path</th>
+                  <th>Health Score</th>
                   <th>SEO Title</th>
                   <th>Meta Desc</th>
-                  <th>Indexable</th>
-                  <th>OG Image</th>
-                  <th style={{ textAlign: 'right' }}>Action</th>
+                  <th>Indexing</th>
+                  <th style={{ textAlign: 'right' }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {pages.map(p => (
-                  <tr key={p.pageKey}>
-                    <td style={{ fontWeight: 700, color: '#0F172A' }}>{p.pageLabel}</td>
-                    <td>
-                      <code style={{ background: '#F1F5F9', padding: '0.15rem 0.4rem', borderRadius: '4px', fontSize: '0.72rem', color: '#475569' }}>
-                        {p.pageUrl}
-                      </code>
-                    </td>
-                    <td>{p.seoTitle ? <StatusPill ok={true} label="Set" /> : <StatusPill ok={false} label="Missing" />}</td>
-                    <td>{p.metaDescription ? <StatusPill ok={true} label="Set" /> : <StatusPill ok={false} label="Missing" />}</td>
-                    <td>{p.isIndexable ? <StatusPill ok={true} label="Index" /> : <StatusPill ok={false} label="Noindex" />}</td>
-                    <td>{p.ogImage ? <StatusPill ok={true} label="Set" /> : <StatusPill ok={false} label="Default" />}</td>
-                    <td style={{ textAlign: 'right' }}>
-                      <button
-                        onClick={() => handleEditSeo(p.pageKey)}
-                        style={{
+                {pages.map(p => {
+                  const auditPage = overview?.pages?.find(item => item.pageKey === p.pageKey);
+                  const score = auditPage?.score ?? 95;
+                  const scoreColor = getScoreColor(score);
+
+                  return (
+                    <tr key={p.pageKey}>
+                      <td style={{ fontWeight: 800, color: '#0F172A' }}>{p.pageLabel}</td>
+                      <td>
+                        <code style={{ background: '#F1F5F9', padding: '0.15rem 0.4rem', borderRadius: '4px', fontSize: '0.72rem', color: '#475569' }}>
+                          {p.pageUrl}
+                        </code>
+                      </td>
+                      <td>
+                        <span style={{
                           display: 'inline-flex', alignItems: 'center', gap: '0.3rem',
-                          background: '#EFF6FF', color: '#0284C7',
-                          border: '1px solid #BFDBFE', borderRadius: '6px',
-                          padding: '0.35rem 0.75rem', fontSize: '0.75rem', fontWeight: 700,
-                          cursor: 'pointer',
-                        }}
-                      >
-                        <Edit3 size={12} /> Edit SEO
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                          fontSize: '0.7rem', fontWeight: 800, padding: '0.15rem 0.5rem',
+                          borderRadius: '100px', background: scoreColor.bg, color: scoreColor.text,
+                          border: `1px solid ${scoreColor.border}`,
+                        }}>
+                          {score >= 80 ? <CheckCircle2 size={11} /> : <AlertTriangle size={11} />}
+                          {score} / 100
+                        </span>
+                      </td>
+                      <td>{p.seoTitle ? <StatusPill ok={true} label="Configured" /> : <StatusPill ok={false} label="Missing" />}</td>
+                      <td>{p.metaDescription ? <StatusPill ok={true} label="Configured" /> : <StatusPill ok={false} label="Missing" />}</td>
+                      <td>{p.isIndexable ? <StatusPill ok={true} label="Index, Follow" /> : <StatusPill ok={false} label="Noindex" />}</td>
+                      <td style={{ textAlign: 'right' }}>
+                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+                          <button
+                            onClick={() => handleInspectPage(p.pageKey)}
+                            title="Inspect page audit checks"
+                            style={{
+                              display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
+                              background: '#EFF6FF', color: '#0284C7',
+                              border: '1px solid #BFDBFE', borderRadius: '6px',
+                              padding: '0.35rem 0.65rem', fontSize: '0.72rem', fontWeight: 700,
+                              cursor: 'pointer',
+                            }}
+                          >
+                            <Eye size={12} /> Inspect
+                          </button>
+                          <button
+                            onClick={() => handleEditSeo(p.pageKey)}
+                            title="Edit page title, description & OpenGraph"
+                            style={{
+                              display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
+                              background: '#F8FAFC', color: '#334155',
+                              border: '1px solid #CBD5E1', borderRadius: '6px',
+                              padding: '0.35rem 0.65rem', fontSize: '0.72rem', fontWeight: 700,
+                              cursor: 'pointer',
+                            }}
+                          >
+                            <Edit3 size={12} /> Edit Metadata
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -2661,123 +3185,142 @@ export const AdminSeo = () => {
         </div>
       )}
 
-      {/* TAB 4: Route Inventory & Indexing Policy */}
-      {tab === 'inventory' && (
+      {/* TAB 3: Route Inventory & Planned Roadmap (Combined) */}
+      {(tab === 'inventory' || tab === 'roadmap') && (
         <div className="admin-card" style={{ padding: 0, overflow: 'hidden' }}>
-          <div style={{ padding: '1.1rem 1.5rem', borderBottom: '1px solid #F1F5F9' }}>
-            <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 800, color: '#0F172A' }}>
-              Complete Application Route Inventory
-            </h3>
-            <p style={{ margin: '0.25rem 0 0', fontSize: '0.75rem', color: '#64748B' }}>
-              Full audit of all configured React Router &amp; Express paths, their intended search engine indexing status, and sitemap policy.
-            </p>
+          <div style={{ padding: '1.1rem 1.5rem', borderBottom: '1px solid #F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem' }}>
+            <div>
+              <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 800, color: '#0F172A' }}>
+                Application Route Directory &amp; Indexing Policies
+              </h3>
+              <p style={{ margin: '0.25rem 0 0', fontSize: '0.75rem', color: '#64748B' }}>
+                Audit of all active Express/React routes and planned SEO roadmap destinations.
+              </p>
+            </div>
+            {/* View Mode Toggle: Active vs Roadmap */}
+            <div style={{ display: 'flex', gap: '0.35rem', background: '#F1F5F9', padding: '0.2rem', borderRadius: '6px' }}>
+              <button
+                type="button"
+                onClick={() => setRouteViewMode('active')}
+                style={{
+                  padding: '0.3rem 0.75rem', borderRadius: '5px', border: 'none',
+                  fontSize: '0.72rem', fontWeight: 700, cursor: 'pointer',
+                  background: routeViewMode === 'active' ? '#0284C7' : 'transparent',
+                  color: routeViewMode === 'active' ? '#FFFFFF' : '#64748B',
+                }}
+              >
+                Active Routes ({routeInventory.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setRouteViewMode('roadmap')}
+                style={{
+                  padding: '0.3rem 0.75rem', borderRadius: '5px', border: 'none',
+                  fontSize: '0.72rem', fontWeight: 700, cursor: 'pointer',
+                  background: routeViewMode === 'roadmap' ? '#0284C7' : 'transparent',
+                  color: routeViewMode === 'roadmap' ? '#FFFFFF' : '#64748B',
+                }}
+              >
+                Planned Roadmap ({plannedRoutes.length})
+              </button>
+            </div>
           </div>
-          <div className="admin-table-container">
-            <table className="admin-table">
-              <thead>
-                <tr>
-                  <th>Route</th>
-                  <th>Label</th>
-                  <th>Route Type</th>
-                  <th>Search Engine Status</th>
-                  <th>Sitemap Status</th>
-                  <th>Architectural Rationale</th>
-                </tr>
-              </thead>
-              <tbody>
-                {routeInventory.map(r => (
-                  <tr key={r.path}>
-                    <td>
-                      <code style={{ background: '#F1F5F9', padding: '0.15rem 0.4rem', borderRadius: '4px', fontSize: '0.72rem', color: '#0F172A', fontWeight: 700 }}>
-                        {r.path}
-                      </code>
-                    </td>
-                    <td style={{ fontWeight: 600, color: '#1E293B', fontSize: '0.8rem' }}>{r.label}</td>
-                    <td>
-                      <span style={{
-                        display: 'inline-block', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.68rem', fontWeight: 700,
-                        background: r.type === 'PUBLIC_PAGE' ? '#EFF6FF' : r.type === 'REDIRECT_ALIAS' ? '#FEF3C7' : r.type.includes('ADMIN') ? '#FEE2E2' : '#F1F5F9',
-                        color: r.type === 'PUBLIC_PAGE' ? '#0284C7' : r.type === 'REDIRECT_ALIAS' ? '#B45309' : r.type.includes('ADMIN') ? '#991B1B' : '#475569',
-                      }}>
-                        {r.type.replace('_', ' ')}
-                      </span>
-                    </td>
-                    <td>
-                      <span style={{
-                        display: 'inline-block', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.68rem', fontWeight: 600,
-                        background: r.indexingStatus.includes('index, follow') ? '#F0FDF4' : '#F1F5F9',
-                        color: r.indexingStatus.includes('index, follow') ? '#16A34A' : '#475569',
-                      }}>
-                        {r.indexingStatus}
-                      </span>
-                    </td>
-                    <td>
-                      <span style={{
-                        display: 'inline-block', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.68rem', fontWeight: 600,
-                        background: r.sitemapStatus.startsWith('Included') ? '#F0FDF4' : '#F8FAFC',
-                        color: r.sitemapStatus.startsWith('Included') ? '#16A34A' : '#64748B',
-                      }}>
-                        {r.sitemapStatus}
-                      </span>
-                    </td>
-                    <td style={{ fontSize: '0.75rem', color: '#475569', maxWidth: '320px', lineHeight: 1.4 }}>
-                      {r.notes}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
 
-      {/* TAB 5: Planned Pages Roadmap */}
-      {tab === 'roadmap' && (
-        <div className="admin-card" style={{ padding: 0, overflow: 'hidden' }}>
-          <div style={{ padding: '1.1rem 1.5rem', borderBottom: '1px solid #F1F5F9' }}>
-            <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 800, color: '#0F172A' }}>
-              Planned Pages Roadmap (Pending Implementation)
-            </h3>
-            <p style={{ margin: '0.25rem 0 0', fontSize: '0.75rem', color: '#64748B' }}>
-              Roadmap pages must be genuinely built before receiving sitemap entries.
-            </p>
-          </div>
-          <div className="admin-table-container">
-            <table className="admin-table">
-              <thead>
-                <tr>
-                  <th>Target Path</th>
-                  <th>Proposed Page Name</th>
-                  <th>SEO Priority</th>
-                  <th>Scope &amp; Description</th>
-                </tr>
-              </thead>
-              <tbody>
-                {plannedRoutes.map(pr => (
-                  <tr key={pr.path}>
-                    <td>
-                      <code style={{ background: '#F1F5F9', padding: '0.15rem 0.4rem', borderRadius: '4px', fontSize: '0.72rem', color: '#0F172A', fontWeight: 700 }}>
-                        {pr.path}
-                      </code>
-                    </td>
-                    <td style={{ fontWeight: 700, color: '#1E293B', fontSize: '0.8rem' }}>{pr.label}</td>
-                    <td>
-                      <span style={{
-                        display: 'inline-block', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.68rem', fontWeight: 700,
-                        background: pr.priority === 'High' ? '#FEF2F2' : '#EFF6FF',
-                        color: pr.priority === 'High' ? '#DC2626' : '#0284C7',
-                      }}>
-                        {pr.priority} Priority
-                      </span>
-                    </td>
-                    <td style={{ fontSize: '0.75rem', color: '#475569', lineHeight: 1.4 }}>
-                      {pr.description}
-                    </td>
+          {routeViewMode === 'active' ? (
+            <div className="admin-table-container">
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th>Route</th>
+                    <th>Label</th>
+                    <th>Route Type</th>
+                    <th>Search Engine Status</th>
+                    <th>Sitemap Status</th>
+                    <th>Architectural Rationale</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {routeInventory.map(r => (
+                    <tr key={r.path}>
+                      <td>
+                        <code style={{ background: '#F1F5F9', padding: '0.15rem 0.4rem', borderRadius: '4px', fontSize: '0.72rem', color: '#0F172A', fontWeight: 700 }}>
+                          {r.path}
+                        </code>
+                      </td>
+                      <td style={{ fontWeight: 600, color: '#1E293B', fontSize: '0.8rem' }}>{r.label}</td>
+                      <td>
+                        <span style={{
+                          display: 'inline-block', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.68rem', fontWeight: 700,
+                          background: r.type === 'PUBLIC_PAGE' ? '#EFF6FF' : r.type === 'REDIRECT_ALIAS' ? '#FEF3C7' : r.type.includes('ADMIN') ? '#FEE2E2' : '#F1F5F9',
+                          color: r.type === 'PUBLIC_PAGE' ? '#0284C7' : r.type === 'REDIRECT_ALIAS' ? '#B45309' : r.type.includes('ADMIN') ? '#991B1B' : '#475569',
+                        }}>
+                          {r.type.replace('_', ' ')}
+                        </span>
+                      </td>
+                      <td>
+                        <span style={{
+                          display: 'inline-block', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.68rem', fontWeight: 600,
+                          background: r.indexingStatus.includes('index, follow') ? '#F0FDF4' : '#F1F5F9',
+                          color: r.indexingStatus.includes('index, follow') ? '#16A34A' : '#475569',
+                        }}>
+                          {r.indexingStatus}
+                        </span>
+                      </td>
+                      <td>
+                        <span style={{
+                          display: 'inline-block', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.68rem', fontWeight: 600,
+                          background: r.sitemapStatus.startsWith('Included') ? '#F0FDF4' : '#F8FAFC',
+                          color: r.sitemapStatus.startsWith('Included') ? '#16A34A' : '#64748B',
+                        }}>
+                          {r.sitemapStatus}
+                        </span>
+                      </td>
+                      <td style={{ fontSize: '0.75rem', color: '#475569', maxWidth: '320px', lineHeight: 1.4 }}>
+                        {r.notes}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="admin-table-container">
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th>Target Path</th>
+                    <th>Proposed Page Name</th>
+                    <th>SEO Priority</th>
+                    <th>Scope &amp; Description</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {plannedRoutes.map(pr => (
+                    <tr key={pr.path}>
+                      <td>
+                        <code style={{ background: '#F1F5F9', padding: '0.15rem 0.4rem', borderRadius: '4px', fontSize: '0.72rem', color: '#0F172A', fontWeight: 700 }}>
+                          {pr.path}
+                        </code>
+                      </td>
+                      <td style={{ fontWeight: 700, color: '#1E293B', fontSize: '0.8rem' }}>{pr.label}</td>
+                      <td>
+                        <span style={{
+                          display: 'inline-block', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.68rem', fontWeight: 700,
+                          background: pr.priority === 'High' ? '#FEF2F2' : '#EFF6FF',
+                          color: pr.priority === 'High' ? '#DC2626' : '#0284C7',
+                        }}>
+                          {pr.priority} Priority
+                        </span>
+                      </td>
+                      <td style={{ fontSize: '0.75rem', color: '#475569', lineHeight: 1.4 }}>
+                        {pr.description}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       )}
 

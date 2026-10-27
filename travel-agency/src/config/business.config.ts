@@ -109,7 +109,7 @@ export const businessConfig: BusinessConfig = {
       luggage: "3 Large Bags",
       features: ["Premium Interior", "Ambient Lighting", "Complimentary Water", "Quiet Cabin", "Chauffeur Trained"],
       idealFor: "VIP executive travel, corporate delegates, special occasions, and high-comfort rides.",
-      image: "/assets/pune-to-mumbai-premium-travel-banner.webp",
+      image: "/assets/luxury.jpg",
       tag: "Executive Class"
     },
     {
@@ -120,7 +120,7 @@ export const businessConfig: BusinessConfig = {
       luggage: "8 - 14 Bags",
       features: ["Pushback Reclining Seats", "Individual AC Vents", "High Roof & Spacious Aisle", "Dedicated Luggage Space", "Intercity Special Permit"],
       idealFor: "Outing groups, corporate teams, pre-wedding trips, and 7 to 20 passenger group travel.",
-      image: "/assets/pune-mumbai-travel-banner.webp",
+      image: "/assets/minibus.jpg",
       tag: "Group Choice"
     }
   ]

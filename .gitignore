@@ -35,3 +35,8 @@ logs/
 Thumbs.db
 .vscode/
 .idea/
+
+# Diagnostic & audit reports
+audit_results.tsv
+*.tsv
+

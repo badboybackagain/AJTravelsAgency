@@ -7,7 +7,7 @@ import { MobileStickyBar } from '../components/MobileStickyBar';
 import { usePageSeo } from '../hooks/usePageSeo';
 import { getVehicleBySlug, vehiclesData } from '../data/vehiclesData';
 import { vehicleApi } from '../services/api';
-import { resolveMediaUrl } from '../utils/mediaUtils';
+import { resolveMediaUrl, findMatchingDbVehicle } from '../utils/mediaUtils';
 import { 
   Users, 
   Briefcase, 
@@ -42,16 +42,17 @@ export function VehicleDetailPage() {
     return () => { isMounted = false; };
   }, []);
 
-  const dbMatch = vehicle ? dbVehicles.find(db => 
-    db.category === vehicle.category ||
-    (vehicle.id && db.name?.toLowerCase().includes(vehicle.id.toLowerCase()))
-  ) : null;
+  const dbMatch = vehicle ? findMatchingDbVehicle(vehicle, dbVehicles) : null;
   const activeImage = dbMatch?.image ? resolveMediaUrl(dbMatch.image, vehicle.image) : vehicle?.image;
+  const activeStartingFare = dbMatch?.startingBaseFare
+    ? `₹${dbMatch.startingBaseFare.toLocaleString()}`
+    : vehicle?.fareStarting;
 
   usePageSeo(
     vehicle ? `vehicle_${vehicle.slug}` : 'vehicle_not_found',
     vehicle ? vehicle.metaTitle : 'Vehicle Not Found | AJ Travels Fleet',
-    vehicle ? vehicle.metaDesc : 'Executive fleet vehicle specifications and rental details from AJ Travels.'
+    vehicle ? vehicle.metaDesc : 'Executive fleet vehicle specifications and rental details from AJ Travels.',
+    vehicle ? `https://ajtravelspune.com/vehicles/${vehicle.slug}` : undefined
   );
 
   if (!vehicle) {
@@ -141,7 +142,7 @@ export function VehicleDetailPage() {
                 <div>
                   <span className="rate-lbl">ALL-INCLUSIVE ONE-WAY FARE FROM</span>
                   <div className="rate-amount-row">
-                    <span className="rate-amount">{vehicle.fareStarting}*</span>
+                    <span className="rate-amount">{activeStartingFare}*</span>
                     <span className="rate-note">Tolls & Taxes Included</span>
                   </div>
                 </div>
@@ -235,15 +236,22 @@ export function VehicleDetailPage() {
                 <div className="other-veh-list">
                   {vehiclesData
                     .filter(v => v.slug !== vehicle.slug)
-                    .map(v => (
-                      <Link key={v.slug} to={`/vehicles/${v.slug}`} className="other-veh-row">
-                        <div>
-                          <strong>{v.name}</strong>
-                          <span>{v.passengers} • From {v.fareStarting}*</span>
-                        </div>
-                        <ArrowRight size={14} />
-                      </Link>
-                    ))}
+                    .map(v => {
+                      const relDbMatch = findMatchingDbVehicle(v, dbVehicles);
+                      const relFare = relDbMatch?.startingBaseFare
+                        ? `₹${relDbMatch.startingBaseFare.toLocaleString()}`
+                        : v.fareStarting;
+
+                      return (
+                        <Link key={v.slug} to={`/vehicles/${v.slug}`} className="other-veh-row">
+                          <div>
+                            <strong>{v.name}</strong>
+                            <span>{v.passengers} • From {relFare}*</span>
+                          </div>
+                          <ArrowRight size={14} />
+                        </Link>
+                      );
+                    })}
                 </div>
               </div>
             </div>

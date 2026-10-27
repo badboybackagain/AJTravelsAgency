@@ -17,7 +17,6 @@ import {
   X,
   MessageSquare,
   Search,
-  Image as ImageIcon,
   HelpCircle,
 } from 'lucide-react';
 import { adminFareConfigApi, bookingApi, routeApi, vehicleApi, enquiryApi } from '../../services/api';
@@ -28,7 +27,6 @@ import { AdminEnquiries } from './AdminEnquiries';
 import { AdminFareForm, prefetchFareFormData } from './AdminFareForm';
 import { AdminWhatsAppSettings } from './AdminWhatsAppSettings';
 import { AdminSeo } from './AdminSeo';
-import { AdminMediaLibrary } from './AdminMediaLibrary';
 import './admin.css';
 
 export const AdminDashboard = ({ onLogout }) => {
@@ -124,10 +122,13 @@ export const AdminDashboard = ({ onLogout }) => {
         
         {/* Brand Header */}
         <div className="admin-brand">
-          <div className="admin-brand-logo">AJ</div>
-          <div style={{ flex: 1 }}>
-            <div className="admin-brand-title">AJ Travel Agency</div>
-            <div className="admin-brand-sub">Control Center</div>
+          <div className="admin-brand-identity">
+            <img
+              src="/assets/aj-travels-logo.png"
+              alt="AJ Travels"
+              className="admin-brand-logo-img"
+            />
+            <div className="admin-brand-sub">Control Panel</div>
           </div>
           {/* Close button inside mobile drawer */}
           <button
@@ -234,17 +235,6 @@ export const AdminDashboard = ({ onLogout }) => {
             <Search size={18} />
             <span>SEO Management</span>
           </button>
-
-          <button
-            onClick={() => {
-              handleTabChange('media');
-              setIsMobileMenuOpen(false);
-            }}
-            className={`admin-nav-item ${activeTab === 'media' ? 'active' : ''}`}
-          >
-            <ImageIcon size={18} />
-            <span>Media Library</span>
-          </button>
         </nav>
 
         {/* User Profile Card */}
@@ -306,8 +296,6 @@ export const AdminDashboard = ({ onLogout }) => {
                   ? 'WhatsApp Integration'
                   : activeTab === 'seo'
                   ? 'SEO Management'
-                  : activeTab === 'media'
-                  ? 'Media Library'
                   : 'Dashboard Overview'}
               </span>
             </div>
@@ -453,7 +441,12 @@ export const AdminDashboard = ({ onLogout }) => {
                           <th>Vehicle</th>
                           <th>Base Fare</th>
                           <th>Tolls</th>
-                          <th>Total Estimated</th>
+                          <th>
+                            Total Estimated
+                            <span style={{ fontSize: '0.68rem', fontWeight: 500, color: '#64748B', display: 'block' }}>
+                              (incl. 1 hr waiting)
+                            </span>
+                          </th>
                           <th>Status</th>
                         </tr>
                       </thead>
@@ -472,7 +465,15 @@ export const AdminDashboard = ({ onLogout }) => {
                             <td style={{ fontWeight: 700 }}>₹{f.baseFare?.toLocaleString()}</td>
                             <td>₹{f.totalToll?.toLocaleString()}</td>
                             <td>
-                              <span className="admin-total-badge">₹{f.estimatedTotal?.toLocaleString()}</span>
+                              <span
+                                className="admin-total-badge"
+                                title={`Base (₹${f.baseFare}) + Toll (₹${f.totalToll}) + Parking (₹${f.parking?.amount || 0}) + 1 hr Waiting (₹${f.waiting?.perHourCharge || 0})`}
+                              >
+                                ₹{f.estimatedTotal?.toLocaleString()}
+                              </span>
+                              <span style={{ fontSize: '0.68rem', color: '#64748B', display: 'block', marginTop: '0.15rem' }}>
+                                Cust. quote: ₹{(f.baseFare + f.totalToll + (f.parking?.enabled ? f.parking.amount : 0))?.toLocaleString()}
+                              </span>
                             </td>
                             <td>
                               <span className={`admin-status-pill ${f.isActive ? 'available' : 'unavailable'}`}>
@@ -518,11 +519,6 @@ export const AdminDashboard = ({ onLogout }) => {
           {/* TAB 6: SEO MANAGEMENT */}
           <div style={{ display: activeTab === 'seo' ? 'block' : 'none' }}>
             {(visitedTabs.has('seo') || activeTab === 'seo') && <AdminSeo />}
-          </div>
-
-          {/* TAB 7: CENTRAL MEDIA LIBRARY */}
-          <div style={{ display: activeTab === 'media' ? 'block' : 'none' }}>
-            {(visitedTabs.has('media') || activeTab === 'media') && <AdminMediaLibrary />}
           </div>
 
         </main>

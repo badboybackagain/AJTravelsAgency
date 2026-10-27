@@ -72,9 +72,9 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
-      "pickupId": "pune",
-      "dropId": "mumbai",
+      "tripType": "LOCAL",
+      "pickupId": "pcmc",
+      "pickupName": "Pimpri-Chinchwad (PCMC)",
       "category": "SUV"
     }
   },
@@ -145,9 +145,9 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
+      "tripType": "LOCAL",
       "pickupId": "pune",
-      "dropId": "mumbai",
+      "pickupName": "Pune & PCMC",
       "category": "SUV"
     }
   },
@@ -161,7 +161,7 @@ export const livePagesContent = {
     "author": "AJ Travels Editorial Desk",
     "publishedDate": "2025-08-12",
     "readTime": "5 min read",
-    "heroImg": "/assets/suv.webp",
+    "heroImg": "/assets/luxury.jpg",
     "summary": "Executive Toyota Innova Crysta rental in Pune & PCMC with professional chauffeur. Reclining captain seats, supreme safety, and whisper-quiet highway ride.",
     "content": [
       {
@@ -218,9 +218,9 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
+      "tripType": "LOCAL",
       "pickupId": "pune",
-      "dropId": "mumbai",
+      "pickupName": "Pune & PCMC",
       "category": "INNOVA_CRYSTA"
     }
   },
@@ -234,7 +234,7 @@ export const livePagesContent = {
     "author": "AJ Travels Editorial Desk",
     "publishedDate": "2025-06-23",
     "readTime": "5 min read",
-    "heroImg": "/assets/pune-mumbai-travel-banner.webp",
+    "heroImg": "/assets/minibus.jpg",
     "summary": "Rent luxury 13, 17, and 20-seater Force Tempo Travellers in Hinjawadi, Pune with professional chauffeur. Pushback seats, individual AC vents, and expansive luggage decks for group travel.",
     "content": [
       {
@@ -292,9 +292,9 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
-      "pickupId": "pune",
-      "dropId": "mumbai",
+      "tripType": "LOCAL",
+      "pickupId": "hinjawadi",
+      "pickupName": "Hinjawadi, Pune",
       "category": "TEMPO_TRAVELLER"
     }
   },
@@ -308,7 +308,7 @@ export const livePagesContent = {
     "author": "AJ Travels Editorial Desk",
     "publishedDate": "2025-06-20",
     "readTime": "5 min read",
-    "heroImg": "/assets/suv.webp",
+    "heroImg": "/assets/luxury.jpg",
     "summary": "Executive Toyota Innova Crysta rental in Pimpri-Chinchwad (PCMC) with professional chauffeur. Reclining captain seats, supreme safety, and whisper-quiet highway ride.",
     "content": [
       {
@@ -365,9 +365,9 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
-      "pickupId": "pune",
-      "dropId": "mumbai",
+      "tripType": "LOCAL",
+      "pickupId": "pcmc",
+      "pickupName": "Pimpri-Chinchwad (PCMC)",
       "category": "INNOVA_CRYSTA"
     }
   },
@@ -1622,7 +1622,7 @@ export const livePagesContent = {
     "author": "AJ Travels Editorial Desk",
     "publishedDate": "2025-06-20",
     "readTime": "5 min read",
-    "heroImg": "/assets/pune-mumbai-travel-banner.webp",
+    "heroImg": "/assets/img 12.jfif",
     "summary": "Hire 20 to 50 seater luxury AC buses and mini coaches in Aundh, Pune for corporate staff transport, destination weddings, school picnics, and group pilgrimages.",
     "content": [
       {
@@ -1679,10 +1679,10 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
-      "pickupId": "pune",
-      "dropId": "mumbai",
-      "category": "TEMPO_TRAVELLER"
+      "tripType": "LOCAL",
+      "pickupId": "aundh",
+      "pickupName": "Aundh, Pune",
+      "category": "BUS"
     }
   },
   "bus-on-rent-in-wakad": {
@@ -1695,7 +1695,7 @@ export const livePagesContent = {
     "author": "AJ Travels Editorial Desk",
     "publishedDate": "2025-06-20",
     "readTime": "5 min read",
-    "heroImg": "/assets/pune-mumbai-travel-banner.webp",
+    "heroImg": "/assets/img 12.jfif",
     "summary": "Hire 20 to 50 seater luxury AC buses and mini coaches in Wakad, Pune for corporate staff transport, destination weddings, school picnics, and group pilgrimages.",
     "content": [
       {
@@ -1752,10 +1752,10 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
-      "pickupId": "pune",
-      "dropId": "mumbai",
-      "category": "TEMPO_TRAVELLER"
+      "tripType": "LOCAL",
+      "pickupId": "wakad",
+      "pickupName": "Wakad, Pune",
+      "category": "BUS"
     }
   },
   "bus-on-rent-in-wagholi": {
@@ -1768,7 +1768,7 @@ export const livePagesContent = {
     "author": "AJ Travels Editorial Desk",
     "publishedDate": "2025-06-20",
     "readTime": "5 min read",
-    "heroImg": "/assets/pune-mumbai-travel-banner.webp",
+    "heroImg": "/assets/img 12.jfif",
     "summary": "Hire 20 to 50 seater luxury AC buses and mini coaches in Wagholi, Pune for corporate staff transport, destination weddings, school picnics, and group pilgrimages.",
     "content": [
       {
@@ -1825,10 +1825,10 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
-      "pickupId": "pune",
-      "dropId": "mumbai",
-      "category": "TEMPO_TRAVELLER"
+      "tripType": "LOCAL",
+      "pickupId": "wagholi",
+      "pickupName": "Wagholi, Pune",
+      "category": "BUS"
     }
   },
   "bus-on-rent-in-pimpri-chinchwad": {
@@ -1841,7 +1841,7 @@ export const livePagesContent = {
     "author": "AJ Travels Editorial Desk",
     "publishedDate": "2025-06-20",
     "readTime": "5 min read",
-    "heroImg": "/assets/pune-mumbai-travel-banner.webp",
+    "heroImg": "/assets/img 12.jfif",
     "summary": "Hire 20 to 50 seater luxury AC buses and mini coaches in PCMC (Pimpri-Chinchwad) for corporate staff transport, destination weddings, school picnics, and group pilgrimages.",
     "content": [
       {
@@ -1898,10 +1898,10 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
-      "pickupId": "pune",
-      "dropId": "mumbai",
-      "category": "TEMPO_TRAVELLER"
+      "tripType": "LOCAL",
+      "pickupId": "pimpri-chinchwad",
+      "pickupName": "PCMC (Pimpri-Chinchwad)",
+      "category": "BUS"
     }
   },
   "bus-on-rent-in-pimple-saudagar": {
@@ -1914,7 +1914,7 @@ export const livePagesContent = {
     "author": "AJ Travels Editorial Desk",
     "publishedDate": "2025-06-20",
     "readTime": "5 min read",
-    "heroImg": "/assets/pune-mumbai-travel-banner.webp",
+    "heroImg": "/assets/img 12.jfif",
     "summary": "Hire 20 to 50 seater luxury AC buses and mini coaches in Pimple Saudagar, Pune for corporate staff transport, destination weddings, school picnics, and group pilgrimages.",
     "content": [
       {
@@ -1971,10 +1971,10 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
-      "pickupId": "pune",
-      "dropId": "mumbai",
-      "category": "TEMPO_TRAVELLER"
+      "tripType": "LOCAL",
+      "pickupId": "pimple-saudagar",
+      "pickupName": "Pimple Saudagar, Pune",
+      "category": "BUS"
     }
   },
   "bus-on-rent-in-nigdi": {
@@ -1987,7 +1987,7 @@ export const livePagesContent = {
     "author": "AJ Travels Editorial Desk",
     "publishedDate": "2025-06-20",
     "readTime": "5 min read",
-    "heroImg": "/assets/pune-mumbai-travel-banner.webp",
+    "heroImg": "/assets/img 12.jfif",
     "summary": "Hire 20 to 50 seater luxury AC buses and mini coaches in Nigdi, PCMC for corporate staff transport, destination weddings, school picnics, and group pilgrimages.",
     "content": [
       {
@@ -2044,10 +2044,10 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
-      "pickupId": "pune",
-      "dropId": "mumbai",
-      "category": "TEMPO_TRAVELLER"
+      "tripType": "LOCAL",
+      "pickupId": "nigdi",
+      "pickupName": "Nigdi, PCMC",
+      "category": "BUS"
     }
   },
   "bus-on-rent-in-moshi": {
@@ -2060,7 +2060,7 @@ export const livePagesContent = {
     "author": "AJ Travels Editorial Desk",
     "publishedDate": "2025-06-20",
     "readTime": "5 min read",
-    "heroImg": "/assets/pune-mumbai-travel-banner.webp",
+    "heroImg": "/assets/img 12.jfif",
     "summary": "Hire 20 to 50 seater luxury AC buses and mini coaches in Moshi, PCMC for corporate staff transport, destination weddings, school picnics, and group pilgrimages.",
     "content": [
       {
@@ -2117,10 +2117,10 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
-      "pickupId": "pune",
-      "dropId": "mumbai",
-      "category": "TEMPO_TRAVELLER"
+      "tripType": "LOCAL",
+      "pickupId": "moshi",
+      "pickupName": "Moshi, PCMC",
+      "category": "BUS"
     }
   },
   "bus-on-rent-in-kothrud": {
@@ -2133,7 +2133,7 @@ export const livePagesContent = {
     "author": "AJ Travels Editorial Desk",
     "publishedDate": "2025-06-20",
     "readTime": "5 min read",
-    "heroImg": "/assets/pune-mumbai-travel-banner.webp",
+    "heroImg": "/assets/img 12.jfif",
     "summary": "Hire 20 to 50 seater luxury AC buses and mini coaches in Kothrud, Pune for corporate staff transport, destination weddings, school picnics, and group pilgrimages.",
     "content": [
       {
@@ -2190,10 +2190,10 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
-      "pickupId": "pune",
-      "dropId": "mumbai",
-      "category": "TEMPO_TRAVELLER"
+      "tripType": "LOCAL",
+      "pickupId": "kothrud",
+      "pickupName": "Kothrud, Pune",
+      "category": "BUS"
     }
   },
   "bus-on-rent-in-kasarwadi": {
@@ -2206,7 +2206,7 @@ export const livePagesContent = {
     "author": "AJ Travels Editorial Desk",
     "publishedDate": "2025-06-20",
     "readTime": "5 min read",
-    "heroImg": "/assets/pune-mumbai-travel-banner.webp",
+    "heroImg": "/assets/img 12.jfif",
     "summary": "Hire 20 to 50 seater luxury AC buses and mini coaches in Kasarwadi, PCMC for corporate staff transport, destination weddings, school picnics, and group pilgrimages.",
     "content": [
       {
@@ -2263,10 +2263,10 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
-      "pickupId": "pune",
-      "dropId": "mumbai",
-      "category": "TEMPO_TRAVELLER"
+      "tripType": "LOCAL",
+      "pickupId": "kasarwadi",
+      "pickupName": "Kasarwadi, PCMC",
+      "category": "BUS"
     }
   },
   "bus-on-rent-in-hinjawadi": {
@@ -2279,7 +2279,7 @@ export const livePagesContent = {
     "author": "AJ Travels Editorial Desk",
     "publishedDate": "2025-06-20",
     "readTime": "5 min read",
-    "heroImg": "/assets/pune-mumbai-travel-banner.webp",
+    "heroImg": "/assets/img 12.jfif",
     "summary": "Hire 20 to 50 seater luxury AC buses and mini coaches in Hinjawadi, Pune for corporate staff transport, destination weddings, school picnics, and group pilgrimages.",
     "content": [
       {
@@ -2336,10 +2336,10 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
-      "pickupId": "pune",
-      "dropId": "mumbai",
-      "category": "TEMPO_TRAVELLER"
+      "tripType": "LOCAL",
+      "pickupId": "hinjawadi",
+      "pickupName": "Hinjawadi, Pune",
+      "category": "BUS"
     }
   },
   "bus-on-rent-in-bhosari": {
@@ -2352,7 +2352,7 @@ export const livePagesContent = {
     "author": "AJ Travels Editorial Desk",
     "publishedDate": "2025-06-20",
     "readTime": "5 min read",
-    "heroImg": "/assets/pune-mumbai-travel-banner.webp",
+    "heroImg": "/assets/img 12.jfif",
     "summary": "Hire 20 to 50 seater luxury AC buses and mini coaches in Bhosari, PCMC for corporate staff transport, destination weddings, school picnics, and group pilgrimages.",
     "content": [
       {
@@ -2409,10 +2409,10 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
-      "pickupId": "pune",
-      "dropId": "mumbai",
-      "category": "TEMPO_TRAVELLER"
+      "tripType": "LOCAL",
+      "pickupId": "bhosari",
+      "pickupName": "Bhosari, PCMC",
+      "category": "BUS"
     }
   },
   "bus-on-rent-in-bavdhan": {
@@ -2425,7 +2425,7 @@ export const livePagesContent = {
     "author": "AJ Travels Editorial Desk",
     "publishedDate": "2025-06-20",
     "readTime": "5 min read",
-    "heroImg": "/assets/pune-mumbai-travel-banner.webp",
+    "heroImg": "/assets/img 12.jfif",
     "summary": "Hire 20 to 50 seater luxury AC buses and mini coaches in Bavdhan, Pune for corporate staff transport, destination weddings, school picnics, and group pilgrimages.",
     "content": [
       {
@@ -2482,10 +2482,10 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
-      "pickupId": "pune",
-      "dropId": "mumbai",
-      "category": "TEMPO_TRAVELLER"
+      "tripType": "LOCAL",
+      "pickupId": "bavdhan",
+      "pickupName": "Bavdhan, Pune",
+      "category": "BUS"
     }
   },
   "bus-on-rent-in-baner": {
@@ -2498,7 +2498,7 @@ export const livePagesContent = {
     "author": "AJ Travels Editorial Desk",
     "publishedDate": "2025-06-20",
     "readTime": "5 min read",
-    "heroImg": "/assets/pune-mumbai-travel-banner.webp",
+    "heroImg": "/assets/img 12.jfif",
     "summary": "Hire 20 to 50 seater luxury AC buses and mini coaches in Baner, Pune for corporate staff transport, destination weddings, school picnics, and group pilgrimages.",
     "content": [
       {
@@ -2555,10 +2555,10 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
-      "pickupId": "pune",
-      "dropId": "mumbai",
-      "category": "TEMPO_TRAVELLER"
+      "tripType": "LOCAL",
+      "pickupId": "baner",
+      "pickupName": "Baner, Pune",
+      "category": "BUS"
     }
   },
   "bus-on-rent-in-pune": {
@@ -2571,7 +2571,7 @@ export const livePagesContent = {
     "author": "AJ Travels Editorial Desk",
     "publishedDate": "2025-06-20",
     "readTime": "5 min read",
-    "heroImg": "/assets/pune-mumbai-travel-banner.webp",
+    "heroImg": "/assets/img 12.jfif",
     "summary": "Hire 20 to 50 seater luxury AC buses and mini coaches in Pune & PCMC for corporate staff transport, destination weddings, school picnics, and group pilgrimages.",
     "content": [
       {
@@ -2628,10 +2628,10 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
+      "tripType": "LOCAL",
       "pickupId": "pune",
-      "dropId": "mumbai",
-      "category": "TEMPO_TRAVELLER"
+      "pickupName": "Pune & PCMC",
+      "category": "BUS"
     }
   },
   "tempo-traveller-on-rent-in-wakad": {
@@ -2644,7 +2644,7 @@ export const livePagesContent = {
     "author": "AJ Travels Editorial Desk",
     "publishedDate": "2025-06-20",
     "readTime": "5 min read",
-    "heroImg": "/assets/pune-mumbai-travel-banner.webp",
+    "heroImg": "/assets/minibus.jpg",
     "summary": "Rent luxury 13, 17, and 20-seater Force Tempo Travellers in Wakad, Pune with professional chauffeur. Pushback seats, individual AC vents, and expansive luggage decks for group travel.",
     "content": [
       {
@@ -2702,9 +2702,9 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
-      "pickupId": "pune",
-      "dropId": "mumbai",
+      "tripType": "LOCAL",
+      "pickupId": "wakad",
+      "pickupName": "Wakad, Pune",
       "category": "TEMPO_TRAVELLER"
     }
   },
@@ -2718,7 +2718,7 @@ export const livePagesContent = {
     "author": "AJ Travels Editorial Desk",
     "publishedDate": "2025-06-20",
     "readTime": "5 min read",
-    "heroImg": "/assets/pune-mumbai-travel-banner.webp",
+    "heroImg": "/assets/minibus.jpg",
     "summary": "Rent luxury 13, 17, and 20-seater Force Tempo Travellers in Kasarwadi, PCMC with professional chauffeur. Pushback seats, individual AC vents, and expansive luggage decks for group travel.",
     "content": [
       {
@@ -2776,9 +2776,9 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
-      "pickupId": "pune",
-      "dropId": "mumbai",
+      "tripType": "LOCAL",
+      "pickupId": "kasarwadi",
+      "pickupName": "Kasarwadi, PCMC",
       "category": "TEMPO_TRAVELLER"
     }
   },
@@ -2792,7 +2792,7 @@ export const livePagesContent = {
     "author": "AJ Travels Editorial Desk",
     "publishedDate": "2025-06-20",
     "readTime": "5 min read",
-    "heroImg": "/assets/pune-mumbai-travel-banner.webp",
+    "heroImg": "/assets/minibus.jpg",
     "summary": "Rent luxury 13, 17, and 20-seater Force Tempo Travellers in Kothrud, Pune with professional chauffeur. Pushback seats, individual AC vents, and expansive luggage decks for group travel.",
     "content": [
       {
@@ -2850,9 +2850,9 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
-      "pickupId": "pune",
-      "dropId": "mumbai",
+      "tripType": "LOCAL",
+      "pickupId": "kothrud",
+      "pickupName": "Kothrud, Pune",
       "category": "TEMPO_TRAVELLER"
     }
   },
@@ -2866,7 +2866,7 @@ export const livePagesContent = {
     "author": "AJ Travels Editorial Desk",
     "publishedDate": "2025-06-20",
     "readTime": "5 min read",
-    "heroImg": "/assets/pune-mumbai-travel-banner.webp",
+    "heroImg": "/assets/minibus.jpg",
     "summary": "Rent luxury 13, 17, and 20-seater Force Tempo Travellers in Moshi, PCMC with professional chauffeur. Pushback seats, individual AC vents, and expansive luggage decks for group travel.",
     "content": [
       {
@@ -2924,9 +2924,9 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
-      "pickupId": "pune",
-      "dropId": "mumbai",
+      "tripType": "LOCAL",
+      "pickupId": "moshi",
+      "pickupName": "Moshi, PCMC",
       "category": "TEMPO_TRAVELLER"
     }
   },
@@ -2940,7 +2940,7 @@ export const livePagesContent = {
     "author": "AJ Travels Editorial Desk",
     "publishedDate": "2025-06-20",
     "readTime": "5 min read",
-    "heroImg": "/assets/pune-mumbai-travel-banner.webp",
+    "heroImg": "/assets/minibus.jpg",
     "summary": "Rent luxury 13, 17, and 20-seater Force Tempo Travellers in Nigdi, PCMC with professional chauffeur. Pushback seats, individual AC vents, and expansive luggage decks for group travel.",
     "content": [
       {
@@ -2998,9 +2998,9 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
-      "pickupId": "pune",
-      "dropId": "mumbai",
+      "tripType": "LOCAL",
+      "pickupId": "nigdi",
+      "pickupName": "Nigdi, PCMC",
       "category": "TEMPO_TRAVELLER"
     }
   },
@@ -3014,7 +3014,7 @@ export const livePagesContent = {
     "author": "AJ Travels Editorial Desk",
     "publishedDate": "2025-06-20",
     "readTime": "5 min read",
-    "heroImg": "/assets/pune-mumbai-travel-banner.webp",
+    "heroImg": "/assets/minibus.jpg",
     "summary": "Rent luxury 13, 17, and 20-seater Force Tempo Travellers in Pimple Saudagar, Pune with professional chauffeur. Pushback seats, individual AC vents, and expansive luggage decks for group travel.",
     "content": [
       {
@@ -3072,9 +3072,9 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
-      "pickupId": "pune",
-      "dropId": "mumbai",
+      "tripType": "LOCAL",
+      "pickupId": "pimple-saudagar",
+      "pickupName": "Pimple Saudagar, Pune",
       "category": "TEMPO_TRAVELLER"
     }
   },
@@ -3088,7 +3088,7 @@ export const livePagesContent = {
     "author": "AJ Travels Editorial Desk",
     "publishedDate": "2025-06-20",
     "readTime": "5 min read",
-    "heroImg": "/assets/pune-mumbai-travel-banner.webp",
+    "heroImg": "/assets/minibus.jpg",
     "summary": "Rent luxury 13, 17, and 20-seater Force Tempo Travellers in PCMC (Pimpri-Chinchwad) with professional chauffeur. Pushback seats, individual AC vents, and expansive luggage decks for group travel.",
     "content": [
       {
@@ -3146,9 +3146,9 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
-      "pickupId": "pune",
-      "dropId": "mumbai",
+      "tripType": "LOCAL",
+      "pickupId": "pimpri-chinchwad",
+      "pickupName": "PCMC (Pimpri-Chinchwad)",
       "category": "TEMPO_TRAVELLER"
     }
   },
@@ -3162,7 +3162,7 @@ export const livePagesContent = {
     "author": "AJ Travels Editorial Desk",
     "publishedDate": "2025-06-20",
     "readTime": "5 min read",
-    "heroImg": "/assets/pune-mumbai-travel-banner.webp",
+    "heroImg": "/assets/minibus.jpg",
     "summary": "Rent luxury 13, 17, and 20-seater Force Tempo Travellers in Wagholi, Pune with professional chauffeur. Pushback seats, individual AC vents, and expansive luggage decks for group travel.",
     "content": [
       {
@@ -3220,9 +3220,9 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
-      "pickupId": "pune",
-      "dropId": "mumbai",
+      "tripType": "LOCAL",
+      "pickupId": "wagholi",
+      "pickupName": "Wagholi, Pune",
       "category": "TEMPO_TRAVELLER"
     }
   },
@@ -3236,7 +3236,7 @@ export const livePagesContent = {
     "author": "AJ Travels Editorial Desk",
     "publishedDate": "2026-08-27",
     "readTime": "5 min read",
-    "heroImg": "/assets/pune-mumbai-travel-banner.webp",
+    "heroImg": "/assets/minibus.jpg",
     "summary": "Rent luxury 13, 17, and 20-seater Force Tempo Travellers in Pune & PCMC with professional chauffeur. Pushback seats, individual AC vents, and expansive luggage decks for group travel.",
     "content": [
       {
@@ -3294,9 +3294,9 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
+      "tripType": "LOCAL",
       "pickupId": "pune",
-      "dropId": "mumbai",
+      "pickupName": "Pune & PCMC",
       "category": "TEMPO_TRAVELLER"
     }
   },
@@ -3367,9 +3367,9 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
-      "pickupId": "pune",
-      "dropId": "mumbai",
+      "tripType": "LOCAL",
+      "pickupId": "pcmc",
+      "pickupName": "Pimpri-Chinchwad (PCMC)",
       "category": "SEDAN"
     }
   },
@@ -3440,9 +3440,9 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
+      "tripType": "LOCAL",
       "pickupId": "pune",
-      "dropId": "mumbai",
+      "pickupName": "Pune & PCMC",
       "category": "SEDAN"
     }
   },
@@ -3513,9 +3513,9 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
-      "pickupId": "pune",
-      "dropId": "mumbai",
+      "tripType": "LOCAL",
+      "pickupId": "pcmc",
+      "pickupName": "Pimpri-Chinchwad (PCMC)",
       "category": "SUV"
     }
   },
@@ -3586,9 +3586,9 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
+      "tripType": "LOCAL",
       "pickupId": "pune",
-      "dropId": "mumbai",
+      "pickupName": "Pune & PCMC",
       "category": "SUV"
     }
   },
@@ -3659,9 +3659,9 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
+      "tripType": "LOCAL",
       "pickupId": "pune",
-      "dropId": "mumbai",
+      "pickupName": "Pune & PCMC",
       "category": "SEDAN"
     }
   },
@@ -3732,9 +3732,9 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
+      "tripType": "OUTSTATION",
       "pickupId": "pune",
-      "dropId": "mumbai",
+      "pickupName": "Pune & PCMC",
       "category": "SEDAN"
     }
   },
@@ -3805,9 +3805,9 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
+      "tripType": "CORPORATE",
       "pickupId": "pune",
-      "dropId": "mumbai",
+      "pickupName": "Pune & PCMC",
       "category": "SEDAN"
     }
   },
@@ -3878,9 +3878,9 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
-      "pickupId": "pune",
-      "dropId": "mumbai",
+      "tripType": "CORPORATE",
+      "pickupId": "pcmc",
+      "pickupName": "Pimpri-Chinchwad (PCMC)",
       "category": "INNOVA_CRYSTA"
     }
   },
@@ -3951,10 +3951,10 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
+      "tripType": "CORPORATE",
       "pickupId": "pune",
-      "dropId": "mumbai",
-      "category": "INNOVA_CRYSTA"
+      "pickupName": "Pune & PCMC",
+      "category": "SEDAN"
     }
   },
   "corporate-car-leasing-agency-in-pcmc": {
@@ -4024,9 +4024,9 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
-      "pickupId": "pune",
-      "dropId": "mumbai",
+      "tripType": "CORPORATE",
+      "pickupId": "pcmc",
+      "pickupName": "Pimpri-Chinchwad (PCMC)",
       "category": "INNOVA_CRYSTA"
     }
   },
@@ -4097,9 +4097,9 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
-      "pickupId": "pune",
-      "dropId": "mumbai",
+      "tripType": "LOCAL",
+      "pickupId": "moshi",
+      "pickupName": "Moshi, PCMC",
       "category": "SEDAN"
     }
   },
@@ -4170,9 +4170,9 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
-      "pickupId": "pune",
-      "dropId": "mumbai",
+      "tripType": "LOCAL",
+      "pickupId": "baner",
+      "pickupName": "Baner, Pune",
       "category": "SEDAN"
     }
   },
@@ -4252,53 +4252,54 @@ export const livePagesContent = {
   "9-seater-cabs-on-rent-from-mumbai-to-pune": {
     "slug": "9-seater-cabs-on-rent-from-mumbai-to-pune",
     "canonicalUrl": "https://ajtravelspune.com/9-seater-cabs-on-rent-from-mumbai-to-pune/",
-    "h1": "Car on Rent in Pune & PCMC with Driver",
-    "metaTitle": "Car on Rent in Pune with Driver | Cab Hire - AJ Travels",
-    "metaDesc": "Book car on rent in Pune & PCMC with driver at transparent rates. Clean AC sedans and SUVs for local running, outstation tours, and Pune-Mumbai transfers.",
-    "category": "Car Rentals",
+    "h1": "9-Seater Cab on Rent from Mumbai to Pune (Luxury Tempo Traveller)",
+    "metaTitle": "9-Seater Cab on Rent from Mumbai to Pune | Tempo Traveller - AJ Travels",
+    "metaDesc": "Hire 9-seater luxury cabs and Force Tempo Travellers from Mumbai to Pune. Direct pickup from Mumbai Airport BOM, BKC, and suburbs with experienced highway drivers.",
+    "category": "Tempo Traveller Rentals",
     "author": "AJ Travels Editorial Desk",
     "publishedDate": "2024-07-24",
     "readTime": "5 min read",
-    "heroImg": "/assets/sedan.webp",
-    "summary": "Reliable car rental service in Pune & PCMC with verified chauffeurs. Choose from Swift Dzire, Maruti Ertiga, and Innova Crysta for local and outstation trips.",
+    "heroImg": "/assets/minibus.jpg",
+    "summary": "Direct 9-seater group cab hire from Mumbai to Pune. Comfortable pushback seats, dual AC, large luggage space, and fixed rates with expressway tolls included.",
     "content": [
       {
         "type": "intro",
-        "text": "Looking for reliable car rental in Pune & PCMC with a professional driver? AJ Travels offers clean, sanitized AC vehicles with experienced highway chauffeurs. Serving all prime neighborhoods in Pune, we ensure prompt doorstep pickup, transparent billing, and 24/7 travel desk support."
+        "text": "Traveling from Mumbai to Pune with a group or extended family? AJ Travels provides luxury 9-seater Force Tempo Travellers and spacious multi-seater cabs with professional highway chauffeurs. Whether you are arriving at Mumbai Airport (BOM T1 or T2), corporate offsite transit from BKC, or returning home to Pune, we ensure comfortable, stress-free group transportation."
       },
       {
         "type": "heading",
         "level": 2,
-        "title": "Why Choose AJ Travels for Car Hire in Pune"
+        "title": "Why Book a 9-Seater Cab from Mumbai to Pune"
       },
       {
         "type": "points",
-        "title": "Service Highlights in Pune:",
+        "title": "9-Seater Coach Highlights:",
         "items": [
-          "Prompt Doorstep Pickup: Chauffeur arrives at your exact residence or office in Pune.",
-          "Transparent Pricing: Fixed quotes with expressway tolls, parking, and driver allowances accounted for.",
-          "Versatile Fleet: Swift Dzire sedans, 6-seater Ertiga SUVs, and luxury Toyota Innova Crysta.",
-          "Verified Highway Drivers: Experienced in expressway traffic, ghat curves, and night travel."
+          "Direct Mumbai Airport Pickup: Chauffeur meets your party at BOM Terminal 1 or 2 with luggage assistance.",
+          "Plush Pushback Seating: Comfortable 2x1 seating with individual armrests and generous legroom.",
+          "High-Capacity Roof AC: Powerful climate control ensuring comfort across the entire journey.",
+          "Expansive Luggage Hold: Dedicated rear luggage compartment accommodating international baggage easily.",
+          "All-Inclusive Expressway Pricing: Fixed rates including all Mumbai-Pune Expressway toll charges."
         ]
       },
       {
         "type": "heading",
         "level": 2,
-        "title": "Popular Travel Corridors from Pune"
+        "title": "Drop Locations Across Pune & PCMC"
       },
       {
         "type": "paragraph",
-        "text": "From Pune, our chauffeur-driven cars regularly provide seamless transfers to Mumbai (BKC, South Mumbai, and BOM Airport), Pune Airport (PNQ), and weekend holiday retreats like Mahabaleshwar, Shirdi, Nashik, and Lonavala."
+        "text": "We provide direct doorstep drops across Pune including Hinjawadi IT Park, Wakad, Baner, Kothrud, Viman Nagar, Kharadi, Magarpatta, and PCMC industrial zones without multiple vehicle transfers."
       }
     ],
     "faqs": [
       {
-        "q": "Can I hire a car in Pune for hourly local city travel?",
-        "a": "Yes, we provide 4-hour/40 km, 8-hour/80 km, and 12-hour/120 km local rental packages in Pune for business meetings, shopping, and city duty."
+        "q": "Can the 9-seater Tempo Traveller pick us up directly from Mumbai Airport T2 arrivals?",
+        "a": "Yes, our driver coordinates in advance and meets your group directly at the passenger pickup area of Mumbai Airport Terminal 2 or Terminal 1."
       },
       {
-        "q": "How quickly can a cab be dispatched to my address in Pune?",
-        "a": "We maintain active fleet distribution across Pune with an average dispatch target of 30 to 45 minutes for confirmed bookings."
+        "q": "Are expressway tolls and driver allowances included in the fare?",
+        "a": "Yes, all quoted fares from Mumbai to Pune include expressway tolls and driver charges."
       }
     ],
     "relatedLinks": [
@@ -4311,67 +4312,68 @@ export const livePagesContent = {
         "url": "/tempo-traveller-on-rent-in-pune/"
       },
       {
-        "title": "Car Rental in Pune with Driver",
-        "url": "/car-rental-in-pune-with-driver/"
+        "title": "7-Seater Cab Mumbai to Pune",
+        "url": "/7-seater-cabs-on-rent-from-mumbai-to-pune/"
       }
     ],
     "bookingDefaults": {
       "tripType": "ONE_WAY",
-      "pickupId": "pune",
-      "dropId": "mumbai",
-      "category": "SEDAN"
+      "pickupId": "mumbai",
+      "dropId": "pune",
+      "category": "TEMPO_TRAVELLER"
     }
   },
   "7-seater-cabs-on-rent-from-pune-to-mumbai": {
     "slug": "7-seater-cabs-on-rent-from-pune-to-mumbai",
     "canonicalUrl": "https://ajtravelspune.com/7-seater-cabs-on-rent-from-pune-to-mumbai/",
-    "h1": "Car on Rent in Pune & PCMC with Driver",
-    "metaTitle": "Car on Rent in Pune with Driver | Cab Hire - AJ Travels",
-    "metaDesc": "Book car on rent in Pune & PCMC with driver at transparent rates. Clean AC sedans and SUVs for local running, outstation tours, and Pune-Mumbai transfers.",
+    "h1": "7-Seater Cab on Rent from Pune to Mumbai (Ertiga & Innova Crysta)",
+    "metaTitle": "7-Seater Cab on Rent from Pune to Mumbai | SUV & Crysta Hire - AJ Travels",
+    "metaDesc": "Hire 7-seater cabs from Pune to Mumbai with driver. Clean AC Maruti Ertiga & Toyota Innova Crysta for family trips, airport drops, and group expressway travel.",
     "category": "Car Rentals",
     "author": "AJ Travels Editorial Desk",
     "publishedDate": "2024-07-24",
     "readTime": "5 min read",
-    "heroImg": "/assets/sedan.webp",
-    "summary": "Reliable car rental service in Pune & PCMC with verified chauffeurs. Choose from Swift Dzire, Maruti Ertiga, and Innova Crysta for local and outstation trips.",
+    "heroImg": "/assets/suv.webp",
+    "summary": "Book spacious 7-seater cabs on rent from Pune to Mumbai with verified drivers. Perfect for families and groups traveling via Mumbai-Pune Expressway with luggage.",
     "content": [
       {
         "type": "intro",
-        "text": "Looking for reliable car rental in Pune & PCMC with a professional driver? AJ Travels offers clean, sanitized AC vehicles with experienced highway chauffeurs. Serving all prime neighborhoods in Pune, we ensure prompt doorstep pickup, transparent billing, and 24/7 travel desk support."
+        "text": "Need a spacious 7-seater cab for your journey from Pune to Mumbai? AJ Travels offers premium 6 to 7-passenger SUVs including Maruti Ertiga, Kia Carens, and executive Toyota Innova Crysta. Enjoy comfortable seating for the whole family, generous luggage room, and verified highway chauffeurs."
       },
       {
         "type": "heading",
         "level": 2,
-        "title": "Why Choose AJ Travels for Car Hire in Pune"
+        "title": "Benefits of Booking a 7-Seater Cab for Mumbai Travel"
       },
       {
         "type": "points",
-        "title": "Service Highlights in Pune:",
+        "title": "7-Seater SUV Amenities:",
         "items": [
-          "Prompt Doorstep Pickup: Chauffeur arrives at your exact residence or office in Pune.",
-          "Transparent Pricing: Fixed quotes with expressway tolls, parking, and driver allowances accounted for.",
-          "Versatile Fleet: Swift Dzire sedans, 6-seater Ertiga SUVs, and luxury Toyota Innova Crysta.",
-          "Verified Highway Drivers: Experienced in expressway traffic, ghat curves, and night travel."
+          "Flexible 3-Row Seating: Accommodates up to 6–7 passengers comfortably with foldable third-row options.",
+          "Roof-Mounted Dual AC: Dedicated cooling vents for 2nd and 3rd row passengers.",
+          "Generous Boot Space: Ample room for airport luggage, strollers, and shopping bags.",
+          "Expressway Cruise Stability: Smooth, stable ride on the Bhor Ghat curves and Pune-Mumbai Expressway.",
+          "Doorstep Pune Pickup: Punctual arrival at your home or office anywhere in Pune or PCMC."
         ]
       },
       {
         "type": "heading",
         "level": 2,
-        "title": "Popular Travel Corridors from Pune"
+        "title": "Popular Mumbai Drop-Off Destinations"
       },
       {
         "type": "paragraph",
-        "text": "From Pune, our chauffeur-driven cars regularly provide seamless transfers to Mumbai (BKC, South Mumbai, and BOM Airport), Pune Airport (PNQ), and weekend holiday retreats like Mahabaleshwar, Shirdi, Nashik, and Lonavala."
+        "text": "Our 7-seater cabs regularly transport passengers from Pune to Mumbai International Airport (BOM T2), Domestic Terminal (T1), Bandra-Kurla Complex (BKC), South Mumbai, Thane, and Navi Mumbai."
       }
     ],
     "faqs": [
       {
-        "q": "Can I hire a car in Pune for hourly local city travel?",
-        "a": "Yes, we provide 4-hour/40 km, 8-hour/80 km, and 12-hour/120 km local rental packages in Pune for business meetings, shopping, and city duty."
+        "q": "What vehicles are available in the 7-seater category?",
+        "a": "We offer Maruti Suzuki Ertiga (6-seater), Kia Carens, and Toyota Innova Crysta (6-7 passenger luxury)."
       },
       {
-        "q": "How quickly can a cab be dispatched to my address in Pune?",
-        "a": "We maintain active fleet distribution across Pune with an average dispatch target of 30 to 45 minutes for confirmed bookings."
+        "q": "Is the toll plaza charge included in the Pune to Mumbai 7-seater fare?",
+        "a": "Yes, our one-way 7-seater fares are 100% all-inclusive with Yashwantrao Chavan Expressway tolls covered."
       }
     ],
     "relatedLinks": [
@@ -4380,144 +4382,146 @@ export const livePagesContent = {
         "url": "/pune-to-mumbai-one-way-cab/"
       },
       {
-        "title": "Tempo Traveller on Rent in Pune",
-        "url": "/tempo-traveller-on-rent-in-pune/"
+        "title": "Innova Crysta on Rent in Pune",
+        "url": "/innova-car-on-rent-in-pune/"
       },
       {
-        "title": "Car Rental in Pune with Driver",
-        "url": "/car-rental-in-pune-with-driver/"
+        "title": "9-Seater Cab Pune to Mumbai",
+        "url": "/9-seater-cabs-on-rent-from-pune-to-mumbai/"
       }
     ],
     "bookingDefaults": {
       "tripType": "ONE_WAY",
       "pickupId": "pune",
       "dropId": "mumbai",
-      "category": "SEDAN"
+      "category": "INNOVA_CRYSTA"
     }
   },
   "7-seater-cabs-on-rent-from-mumbai-to-pune": {
     "slug": "7-seater-cabs-on-rent-from-mumbai-to-pune",
     "canonicalUrl": "https://ajtravelspune.com/7-seater-cabs-on-rent-from-mumbai-to-pune/",
-    "h1": "Car on Rent in Pune & PCMC with Driver",
-    "metaTitle": "Car on Rent in Pune with Driver | Cab Hire - AJ Travels",
-    "metaDesc": "Book car on rent in Pune & PCMC with driver at transparent rates. Clean AC sedans and SUVs for local running, outstation tours, and Pune-Mumbai transfers.",
+    "h1": "7-Seater Cab on Rent from Mumbai to Pune (Airport & City Pickup)",
+    "metaTitle": "7-Seater Cab on Rent from Mumbai to Pune | BOM Airport & City Taxi - AJ Travels",
+    "metaDesc": "Book 7-seater cabs from Mumbai to Pune with driver. Spacious Innova Crysta & Ertiga SUVs for airport pickup from BOM T1/T2 and Mumbai city to all Pune areas.",
     "category": "Car Rentals",
     "author": "AJ Travels Editorial Desk",
     "publishedDate": "2024-07-24",
     "readTime": "5 min read",
-    "heroImg": "/assets/sedan.webp",
-    "summary": "Reliable car rental service in Pune & PCMC with verified chauffeurs. Choose from Swift Dzire, Maruti Ertiga, and Innova Crysta for local and outstation trips.",
+    "heroImg": "/assets/suv.webp",
+    "summary": "Hire comfortable 7-seater cabs on rent from Mumbai to Pune. Guaranteed doorstep and airport terminal pickups with all-inclusive flat rates and verified chauffeurs.",
     "content": [
       {
         "type": "intro",
-        "text": "Looking for reliable car rental in Pune & PCMC with a professional driver? AJ Travels offers clean, sanitized AC vehicles with experienced highway chauffeurs. Serving all prime neighborhoods in Pune, we ensure prompt doorstep pickup, transparent billing, and 24/7 travel desk support."
+        "text": "Returning to Pune from Mumbai with family or corporate colleagues? AJ Travels provides reliable 7-seater SUV cab rentals from Mumbai to Pune. We specialize in terminal pickups from Chhatrapati Shivaji Maharaj International Airport (BOM) as well as doorstep pickups across Mumbai, BKC, and suburbs."
       },
       {
         "type": "heading",
         "level": 2,
-        "title": "Why Choose AJ Travels for Car Hire in Pune"
+        "title": "Why Hire a 7-Seater from Mumbai to Pune with AJ Travels"
       },
       {
         "type": "points",
-        "title": "Service Highlights in Pune:",
+        "title": "Service Advantages:",
         "items": [
-          "Prompt Doorstep Pickup: Chauffeur arrives at your exact residence or office in Pune.",
-          "Transparent Pricing: Fixed quotes with expressway tolls, parking, and driver allowances accounted for.",
-          "Versatile Fleet: Swift Dzire sedans, 6-seater Ertiga SUVs, and luxury Toyota Innova Crysta.",
-          "Verified Highway Drivers: Experienced in expressway traffic, ghat curves, and night travel."
+          "Flight-Tracked Airport Pickup: Driver tracks your incoming flight to BOM T1 or T2 for zero waiting hassle.",
+          "Spacious Luggage Capacity: Fits 4-5 large international suitcases plus cabin bags comfortably.",
+          "Luxury Toyota Innova Crysta & Ertiga: Plush captain chairs, silent cabin, and multi-zone AC.",
+          "Experienced Highway Chauffeurs: Courteous drivers trained in safe night and expressway driving.",
+          "Flat All-Inclusive Pricing: No surge pricing, hidden parking fees, or separate toll charges."
         ]
       },
       {
         "type": "heading",
         "level": 2,
-        "title": "Popular Travel Corridors from Pune"
+        "title": "Direct Drop Across All Pune Localities"
       },
       {
         "type": "paragraph",
-        "text": "From Pune, our chauffeur-driven cars regularly provide seamless transfers to Mumbai (BKC, South Mumbai, and BOM Airport), Pune Airport (PNQ), and weekend holiday retreats like Mahabaleshwar, Shirdi, Nashik, and Lonavala."
+        "text": "Travel in complete peace of mind with direct doorstep drop to any location in Pune, including Hinjawadi, Wakad, Baner, Aundh, Kothrud, Kalyani Nagar, Viman Nagar, Magarpatta, and PCMC."
       }
     ],
     "faqs": [
       {
-        "q": "Can I hire a car in Pune for hourly local city travel?",
-        "a": "Yes, we provide 4-hour/40 km, 8-hour/80 km, and 12-hour/120 km local rental packages in Pune for business meetings, shopping, and city duty."
+        "q": "How does pickup work at Mumbai Airport T2 for 7-seater cabs?",
+        "a": "Our chauffeur will coordinate with you via call/WhatsApp before landing and meet you at the designated arrival pickup zone with luggage assistance."
       },
       {
-        "q": "How quickly can a cab be dispatched to my address in Pune?",
-        "a": "We maintain active fleet distribution across Pune with an average dispatch target of 30 to 45 minutes for confirmed bookings."
+        "q": "Are night travel charges included in the Mumbai to Pune return trip?",
+        "a": "Yes, our quotes are fully transparent and clearly cover driver allowance and highway toll charges."
       }
     ],
     "relatedLinks": [
       {
-        "title": "Pune to Mumbai Cab Service",
-        "url": "/pune-to-mumbai-one-way-cab/"
+        "title": "Mumbai to Pune Cab Service",
+        "url": "/mumbai-to-pune-cab/"
       },
       {
-        "title": "Tempo Traveller on Rent in Pune",
-        "url": "/tempo-traveller-on-rent-in-pune/"
+        "title": "7-Seater Cab Pune to Mumbai",
+        "url": "/7-seater-cabs-on-rent-from-pune-to-mumbai/"
       },
       {
-        "title": "Car Rental in Pune with Driver",
-        "url": "/car-rental-in-pune-with-driver/"
+        "title": "9-Seater Cab Mumbai to Pune",
+        "url": "/9-seater-cabs-on-rent-from-mumbai-to-pune/"
       }
     ],
     "bookingDefaults": {
       "tripType": "ONE_WAY",
-      "pickupId": "pune",
-      "dropId": "mumbai",
-      "category": "SEDAN"
+      "pickupId": "mumbai",
+      "dropId": "pune",
+      "category": "INNOVA_CRYSTA"
     }
   },
   "9-seater-cabs-on-rent-from-pune-to-mumbai": {
     "slug": "9-seater-cabs-on-rent-from-pune-to-mumbai",
     "canonicalUrl": "https://ajtravelspune.com/9-seater-cabs-on-rent-from-pune-to-mumbai/",
-    "h1": "Car on Rent in Pune & PCMC with Driver",
-    "metaTitle": "Car on Rent in Pune with Driver | Cab Hire - AJ Travels",
-    "metaDesc": "Book car on rent in Pune & PCMC with driver at transparent rates. Clean AC sedans and SUVs for local running, outstation tours, and Pune-Mumbai transfers.",
-    "category": "Car Rentals",
+    "h1": "9-Seater Cab on Rent from Pune to Mumbai (Luxury Tempo Traveller)",
+    "metaTitle": "9-Seater Cab on Rent from Pune to Mumbai | Tempo Traveller Hire - AJ Travels",
+    "metaDesc": "Rent 9-seater luxury cabs and Force Tempo Travellers from Pune to Mumbai. Pushback AC seats, dedicated luggage hold, and all-inclusive fares with driver.",
+    "category": "Tempo Traveller Rentals",
     "author": "AJ Travels Editorial Desk",
     "publishedDate": "2024-07-24",
     "readTime": "5 min read",
-    "heroImg": "/assets/sedan.webp",
-    "summary": "Reliable car rental service in Pune & PCMC with verified chauffeurs. Choose from Swift Dzire, Maruti Ertiga, and Innova Crysta for local and outstation trips.",
+    "heroImg": "/assets/minibus.jpg",
+    "summary": "Spacious 9-seater group cabs and Force Tempo Travellers on rent from Pune to Mumbai. Travel together in comfort with individual pushback seats and high-capacity AC.",
     "content": [
       {
         "type": "intro",
-        "text": "Looking for reliable car rental in Pune & PCMC with a professional driver? AJ Travels offers clean, sanitized AC vehicles with experienced highway chauffeurs. Serving all prime neighborhoods in Pune, we ensure prompt doorstep pickup, transparent billing, and 24/7 travel desk support."
+        "text": "Planning a group journey from Pune to Mumbai? Skip the hassle of booking multiple small cars. AJ Travels offers luxury 9-seater Force Tempo Travellers on rent with experienced commercial drivers. Keep your entire family or team traveling together in comfort with pushback seats and powerful dual AC."
       },
       {
         "type": "heading",
         "level": 2,
-        "title": "Why Choose AJ Travels for Car Hire in Pune"
+        "title": "Why Choose a 9-Seater Cab for Pune to Mumbai Travel"
       },
       {
         "type": "points",
-        "title": "Service Highlights in Pune:",
+        "title": "9-Seater Travel Highlights:",
         "items": [
-          "Prompt Doorstep Pickup: Chauffeur arrives at your exact residence or office in Pune.",
-          "Transparent Pricing: Fixed quotes with expressway tolls, parking, and driver allowances accounted for.",
-          "Versatile Fleet: Swift Dzire sedans, 6-seater Ertiga SUVs, and luxury Toyota Innova Crysta.",
-          "Verified Highway Drivers: Experienced in expressway traffic, ghat curves, and night travel."
+          "Group Travel Convenience: Entire group travels together, avoiding coordination delays across multiple cabs.",
+          "Pushback Reclining Seats: Individual luxury seats with ample legroom for relaxed highway cruising.",
+          "High-Roof Walk-In Cabin: Stand-up cabin height with wide panoramic windows and music system.",
+          "Dedicated Large Luggage Hold: Rear boot easily holds all group suitcases, boxes, and gear.",
+          "All Tolls Covered: 100% transparent pricing with expressway tolls and driver allowance included."
         ]
       },
       {
         "type": "heading",
         "level": 2,
-        "title": "Popular Travel Corridors from Pune"
+        "title": "Ideal for Mumbai Airport Drops & Group Events"
       },
       {
         "type": "paragraph",
-        "text": "From Pune, our chauffeur-driven cars regularly provide seamless transfers to Mumbai (BKC, South Mumbai, and BOM Airport), Pune Airport (PNQ), and weekend holiday retreats like Mahabaleshwar, Shirdi, Nashik, and Lonavala."
+        "text": "Our 9-seater cabs are chartered regularly for wedding guest airport shuttles, international group departures at Mumbai Airport (BOM T2), and corporate delegations attending conferences in BKC and South Mumbai."
       }
     ],
     "faqs": [
       {
-        "q": "Can I hire a car in Pune for hourly local city travel?",
-        "a": "Yes, we provide 4-hour/40 km, 8-hour/80 km, and 12-hour/120 km local rental packages in Pune for business meetings, shopping, and city duty."
+        "q": "What is the luggage capacity in a 9-seater Tempo Traveller?",
+        "a": "A 9-seater Tempo Traveller features a large dedicated rear luggage deck capable of holding 8–10 large suitcases easily."
       },
       {
-        "q": "How quickly can a cab be dispatched to my address in Pune?",
-        "a": "We maintain active fleet distribution across Pune with an average dispatch target of 30 to 45 minutes for confirmed bookings."
+        "q": "Can the 9-seater cab pick up passengers from multiple locations in Pune?",
+        "a": "Yes, we can arrange customized multiple pickup points across Pune or PCMC before joining the Expressway."
       }
     ],
     "relatedLinks": [
@@ -4530,15 +4534,15 @@ export const livePagesContent = {
         "url": "/tempo-traveller-on-rent-in-pune/"
       },
       {
-        "title": "Car Rental in Pune with Driver",
-        "url": "/car-rental-in-pune-with-driver/"
+        "title": "7-Seater Cab Pune to Mumbai",
+        "url": "/7-seater-cabs-on-rent-from-pune-to-mumbai/"
       }
     ],
     "bookingDefaults": {
       "tripType": "ONE_WAY",
       "pickupId": "pune",
       "dropId": "mumbai",
-      "category": "SEDAN"
+      "category": "TEMPO_TRAVELLER"
     }
   },
   "pune-to-goa-pickup-and-drop-cab-service": {
@@ -4770,7 +4774,7 @@ export const livePagesContent = {
     "author": "AJ Travels Editorial Desk",
     "publishedDate": "2024-06-30",
     "readTime": "5 min read",
-    "heroImg": "/assets/pune-mumbai-travel-banner.webp",
+    "heroImg": "/assets/minibus.jpg",
     "summary": "Rent luxury 13, 17, and 20-seater Force Tempo Travellers in Bavdhan, Pune with professional chauffeur. Pushback seats, individual AC vents, and expansive luggage decks for group travel.",
     "content": [
       {
@@ -4828,9 +4832,9 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
-      "pickupId": "pune",
-      "dropId": "mumbai",
+      "tripType": "LOCAL",
+      "pickupId": "bavdhan",
+      "pickupName": "Bavdhan, Pune",
       "category": "TEMPO_TRAVELLER"
     }
   },
@@ -4901,9 +4905,9 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
-      "pickupId": "pune",
-      "dropId": "mumbai",
+      "tripType": "LOCAL",
+      "pickupId": "bavdhan",
+      "pickupName": "Bavdhan, Pune",
       "category": "SEDAN"
     }
   },
@@ -4974,9 +4978,9 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
-      "pickupId": "pune",
-      "dropId": "mumbai",
+      "tripType": "LOCAL",
+      "pickupId": "wagholi",
+      "pickupName": "Wagholi, Pune",
       "category": "SEDAN"
     }
   },
@@ -5047,9 +5051,9 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
-      "pickupId": "pune",
-      "dropId": "mumbai",
+      "tripType": "LOCAL",
+      "pickupId": "kothrud",
+      "pickupName": "Kothrud, Pune",
       "category": "SEDAN"
     }
   },
@@ -5063,7 +5067,7 @@ export const livePagesContent = {
     "author": "AJ Travels Editorial Desk",
     "publishedDate": "2024-06-20",
     "readTime": "5 min read",
-    "heroImg": "/assets/pune-mumbai-travel-banner.webp",
+    "heroImg": "/assets/minibus.jpg",
     "summary": "Rent luxury 13, 17, and 20-seater Force Tempo Travellers in Aundh, Pune with professional chauffeur. Pushback seats, individual AC vents, and expansive luggage decks for group travel.",
     "content": [
       {
@@ -5121,9 +5125,9 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
-      "pickupId": "pune",
-      "dropId": "mumbai",
+      "tripType": "LOCAL",
+      "pickupId": "aundh",
+      "pickupName": "Aundh, Pune",
       "category": "TEMPO_TRAVELLER"
     }
   },
@@ -5194,9 +5198,9 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
-      "pickupId": "pune",
-      "dropId": "mumbai",
+      "tripType": "LOCAL",
+      "pickupId": "aundh",
+      "pickupName": "Aundh, Pune",
       "category": "SEDAN"
     }
   },
@@ -5267,9 +5271,9 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
-      "pickupId": "pune",
-      "dropId": "mumbai",
+      "tripType": "LOCAL",
+      "pickupId": "hinjawadi",
+      "pickupName": "Hinjawadi, Pune",
       "category": "SEDAN"
     }
   },
@@ -5340,9 +5344,9 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
-      "pickupId": "pune",
-      "dropId": "mumbai",
+      "tripType": "LOCAL",
+      "pickupId": "wakad",
+      "pickupName": "Wakad, Pune",
       "category": "SEDAN"
     }
   },
@@ -5413,9 +5417,9 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
-      "pickupId": "pune",
-      "dropId": "mumbai",
+      "tripType": "LOCAL",
+      "pickupId": "nigdi",
+      "pickupName": "Nigdi, PCMC",
       "category": "SEDAN"
     }
   },
@@ -5486,9 +5490,9 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
-      "pickupId": "pune",
-      "dropId": "mumbai",
+      "tripType": "LOCAL",
+      "pickupId": "bhosari",
+      "pickupName": "Bhosari, PCMC",
       "category": "SEDAN"
     }
   },
@@ -5502,7 +5506,7 @@ export const livePagesContent = {
     "author": "AJ Travels Editorial Desk",
     "publishedDate": "2024-05-28",
     "readTime": "5 min read",
-    "heroImg": "/assets/pune-mumbai-travel-banner.webp",
+    "heroImg": "/assets/minibus.jpg",
     "summary": "Rent luxury 13, 17, and 20-seater Force Tempo Travellers in Bhosari, PCMC with professional chauffeur. Pushback seats, individual AC vents, and expansive luggage decks for group travel.",
     "content": [
       {
@@ -5560,9 +5564,9 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
-      "pickupId": "pune",
-      "dropId": "mumbai",
+      "tripType": "LOCAL",
+      "pickupId": "bhosari",
+      "pickupName": "Bhosari, PCMC",
       "category": "TEMPO_TRAVELLER"
     }
   },
@@ -5633,9 +5637,9 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
-      "pickupId": "pune",
-      "dropId": "mumbai",
+      "tripType": "LOCAL",
+      "pickupId": "pimple-saudagar",
+      "pickupName": "Pimple Saudagar, Pune",
       "category": "SEDAN"
     }
   },
@@ -5706,9 +5710,9 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
+      "tripType": "OUTSTATION",
       "pickupId": "pune",
-      "dropId": "mumbai",
+      "pickupName": "Pune & PCMC",
       "category": "SEDAN"
     }
   },
@@ -5722,7 +5726,7 @@ export const livePagesContent = {
     "author": "AJ Travels Editorial Desk",
     "publishedDate": "2024-05-22",
     "readTime": "5 min read",
-    "heroImg": "/assets/pune-mumbai-travel-banner.webp",
+    "heroImg": "/assets/minibus.jpg",
     "summary": "Rent luxury 13, 17, and 20-seater Force Tempo Travellers in Baner, Pune with professional chauffeur. Pushback seats, individual AC vents, and expansive luggage decks for group travel.",
     "content": [
       {
@@ -5780,9 +5784,9 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
-      "pickupId": "pune",
-      "dropId": "mumbai",
+      "tripType": "LOCAL",
+      "pickupId": "baner",
+      "pickupName": "Baner, Pune",
       "category": "TEMPO_TRAVELLER"
     }
   },
@@ -5853,9 +5857,9 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
-      "pickupId": "pune",
-      "dropId": "mumbai",
+      "tripType": "LOCAL",
+      "pickupId": "kasarwadi",
+      "pickupName": "Kasarwadi, PCMC",
       "category": "SEDAN"
     }
   },
@@ -5926,9 +5930,9 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
+      "tripType": "OUTSTATION",
       "pickupId": "pune",
-      "dropId": "mumbai",
+      "pickupName": "Pune & PCMC",
       "category": "SEDAN"
     }
   },
@@ -5999,9 +6003,9 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
-      "pickupId": "pune",
-      "dropId": "mumbai",
+      "tripType": "LOCAL",
+      "pickupId": "pimpri-chinchwad",
+      "pickupName": "PCMC (Pimpri-Chinchwad)",
       "category": "SEDAN"
     }
   },
@@ -6072,9 +6076,9 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
+      "tripType": "LOCAL",
       "pickupId": "pune",
-      "dropId": "mumbai",
+      "pickupName": "Pune & PCMC",
       "category": "SEDAN"
     }
   },
@@ -6220,7 +6224,9 @@ export const livePagesContent = {
     "bookingDefaults": {
       "tripType": "ONE_WAY",
       "pickupId": "pune",
-      "dropId": "mumbai",
+      "dropId": "mahabaleshwar",
+      "pickupName": "Pune (All Areas)",
+      "dropName": "Mahabaleshwar",
       "category": "SEDAN"
     }
   },
@@ -6291,9 +6297,9 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
+      "tripType": "OUTSTATION",
       "pickupId": "pune",
-      "dropId": "mumbai",
+      "pickupName": "Pune & PCMC",
       "category": "SEDAN"
     }
   },
@@ -6437,9 +6443,9 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
+      "tripType": "OUTSTATION",
       "pickupId": "pune",
-      "dropId": "mumbai",
+      "pickupName": "Pune & PCMC",
       "category": "SEDAN"
     }
   },
@@ -6510,9 +6516,9 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
+      "tripType": "OUTSTATION",
       "pickupId": "pune",
-      "dropId": "mumbai",
+      "pickupName": "Pune & PCMC",
       "category": "SEDAN"
     }
   },
@@ -6585,7 +6591,9 @@ export const livePagesContent = {
     "bookingDefaults": {
       "tripType": "ONE_WAY",
       "pickupId": "pune",
-      "dropId": "mumbai",
+      "dropId": "goa",
+      "pickupName": "Pune (All Areas)",
+      "dropName": "Goa",
       "category": "SEDAN"
     }
   },
@@ -6656,9 +6664,9 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
+      "tripType": "OUTSTATION",
       "pickupId": "pune",
-      "dropId": "mumbai",
+      "pickupName": "Pune & PCMC",
       "category": "SEDAN"
     }
   },
@@ -6729,9 +6737,9 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
+      "tripType": "OUTSTATION",
       "pickupId": "pune",
-      "dropId": "mumbai",
+      "pickupName": "Pune & PCMC",
       "category": "SEDAN"
     }
   },
@@ -6802,9 +6810,9 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
+      "tripType": "OUTSTATION",
       "pickupId": "pune",
-      "dropId": "mumbai",
+      "pickupName": "Pune & PCMC",
       "category": "SEDAN"
     }
   },
@@ -6875,9 +6883,9 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
+      "tripType": "OUTSTATION",
       "pickupId": "pune",
-      "dropId": "mumbai",
+      "pickupName": "Pune & PCMC",
       "category": "SEDAN"
     }
   },
@@ -6891,7 +6899,7 @@ export const livePagesContent = {
     "author": "AJ Travels Editorial Desk",
     "publishedDate": "2025-06-23",
     "readTime": "5 min read",
-    "heroImg": "/assets/pune-mumbai-travel-banner.webp",
+    "heroImg": "/assets/minibus.jpg",
     "summary": "Rent luxury 13, 17, and 20-seater Force Tempo Travellers in Pune & PCMC with professional chauffeur. Pushback seats, individual AC vents, and expansive luggage decks for group travel.",
     "content": [
       {
@@ -7022,9 +7030,9 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
+      "tripType": "OUTSTATION",
       "pickupId": "pune",
-      "dropId": "mumbai",
+      "pickupName": "Pune & PCMC",
       "category": "SEDAN"
     }
   },
@@ -7095,9 +7103,9 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
+      "tripType": "OUTSTATION",
       "pickupId": "pune",
-      "dropId": "mumbai",
+      "pickupName": "Pune & PCMC",
       "category": "SEDAN"
     }
   },
@@ -7168,9 +7176,9 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
+      "tripType": "OUTSTATION",
       "pickupId": "pune",
-      "dropId": "mumbai",
+      "pickupName": "Pune & PCMC",
       "category": "SEDAN"
     }
   },
@@ -7241,9 +7249,9 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
+      "tripType": "OUTSTATION",
       "pickupId": "pune",
-      "dropId": "mumbai",
+      "pickupName": "Pune & PCMC",
       "category": "SEDAN"
     }
   },
@@ -7314,9 +7322,9 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
+      "tripType": "OUTSTATION",
       "pickupId": "pune",
-      "dropId": "mumbai",
+      "pickupName": "Pune & PCMC",
       "category": "SEDAN"
     }
   },
@@ -7460,9 +7468,9 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
+      "tripType": "OUTSTATION",
       "pickupId": "pune",
-      "dropId": "mumbai",
+      "pickupName": "Pune & PCMC",
       "category": "SEDAN"
     }
   },
@@ -7533,9 +7541,9 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
+      "tripType": "OUTSTATION",
       "pickupId": "pune",
-      "dropId": "mumbai",
+      "pickupName": "Pune & PCMC",
       "category": "SEDAN"
     }
   },
@@ -7606,9 +7614,9 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
+      "tripType": "OUTSTATION",
       "pickupId": "pune",
-      "dropId": "mumbai",
+      "pickupName": "Pune & PCMC",
       "category": "SEDAN"
     }
   },
@@ -7679,9 +7687,9 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
+      "tripType": "OUTSTATION",
       "pickupId": "pune",
-      "dropId": "mumbai",
+      "pickupName": "Pune & PCMC",
       "category": "SEDAN"
     }
   },
@@ -7752,9 +7760,9 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
+      "tripType": "OUTSTATION",
       "pickupId": "pune",
-      "dropId": "mumbai",
+      "pickupName": "Pune & PCMC",
       "category": "SEDAN"
     }
   },
@@ -7825,9 +7833,9 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
+      "tripType": "OUTSTATION",
       "pickupId": "pune",
-      "dropId": "mumbai",
+      "pickupName": "Pune & PCMC",
       "category": "SEDAN"
     }
   },
@@ -7898,9 +7906,9 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
+      "tripType": "OUTSTATION",
       "pickupId": "pune",
-      "dropId": "mumbai",
+      "pickupName": "Pune & PCMC",
       "category": "SEDAN"
     }
   },
@@ -7971,9 +7979,9 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
+      "tripType": "OUTSTATION",
       "pickupId": "pune",
-      "dropId": "mumbai",
+      "pickupName": "Pune & PCMC",
       "category": "SEDAN"
     }
   },
@@ -8046,7 +8054,9 @@ export const livePagesContent = {
     "bookingDefaults": {
       "tripType": "ONE_WAY",
       "pickupId": "pune",
-      "dropId": "mumbai",
+      "dropId": "matheran",
+      "pickupName": "Pune (All Areas)",
+      "dropName": "Matheran",
       "category": "SEDAN"
     }
   },
@@ -8117,9 +8127,9 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
+      "tripType": "OUTSTATION",
       "pickupId": "pune",
-      "dropId": "mumbai",
+      "pickupName": "Pune & PCMC",
       "category": "SEDAN"
     }
   },
@@ -8133,7 +8143,7 @@ export const livePagesContent = {
     "author": "AJ Travels Editorial Desk",
     "publishedDate": "2024-07-30",
     "readTime": "5 min read",
-    "heroImg": "/assets/pune-mumbai-travel-banner.webp",
+    "heroImg": "/assets/minibus.jpg",
     "summary": "Rent luxury 13, 17, and 20-seater Force Tempo Travellers in Pune & PCMC with professional chauffeur. Pushback seats, individual AC vents, and expansive luggage decks for group travel.",
     "content": [
       {
@@ -8264,9 +8274,9 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
+      "tripType": "OUTSTATION",
       "pickupId": "pune",
-      "dropId": "mumbai",
+      "pickupName": "Pune & PCMC",
       "category": "SEDAN"
     }
   },
@@ -8483,9 +8493,9 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
+      "tripType": "OUTSTATION",
       "pickupId": "pune",
-      "dropId": "mumbai",
+      "pickupName": "Pune & PCMC",
       "category": "SEDAN"
     }
   },
@@ -8556,9 +8566,9 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
+      "tripType": "OUTSTATION",
       "pickupId": "pune",
-      "dropId": "mumbai",
+      "pickupName": "Pune & PCMC",
       "category": "SEDAN"
     }
   },
@@ -8629,9 +8639,9 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
+      "tripType": "OUTSTATION",
       "pickupId": "pune",
-      "dropId": "mumbai",
+      "pickupName": "Pune & PCMC",
       "category": "SEDAN"
     }
   },
@@ -8702,9 +8712,9 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
+      "tripType": "OUTSTATION",
       "pickupId": "pune",
-      "dropId": "mumbai",
+      "pickupName": "Pune & PCMC",
       "category": "SEDAN"
     }
   },
@@ -8791,7 +8801,7 @@ export const livePagesContent = {
     "author": "AJ Travels Editorial Desk",
     "publishedDate": "2024-05-08",
     "readTime": "5 min read",
-    "heroImg": "/assets/pune-mumbai-travel-banner.webp",
+    "heroImg": "/assets/minibus.jpg",
     "summary": "Rent luxury 13, 17, and 20-seater Force Tempo Travellers in Pune & PCMC with professional chauffeur. Pushback seats, individual AC vents, and expansive luggage decks for group travel.",
     "content": [
       {
@@ -8922,9 +8932,9 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
+      "tripType": "OUTSTATION",
       "pickupId": "pune",
-      "dropId": "mumbai",
+      "pickupName": "Pune & PCMC",
       "category": "SEDAN"
     }
   },
@@ -8938,7 +8948,7 @@ export const livePagesContent = {
     "author": "AJ Travels Editorial Desk",
     "publishedDate": "2024-04-25",
     "readTime": "5 min read",
-    "heroImg": "/assets/pune-mumbai-travel-banner.webp",
+    "heroImg": "/assets/minibus.jpg",
     "summary": "Rent luxury 13, 17, and 20-seater Force Tempo Travellers in Pune & PCMC with professional chauffeur. Pushback seats, individual AC vents, and expansive luggage decks for group travel.",
     "content": [
       {
@@ -9069,9 +9079,9 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
+      "tripType": "OUTSTATION",
       "pickupId": "pune",
-      "dropId": "mumbai",
+      "pickupName": "Pune & PCMC",
       "category": "SEDAN"
     }
   },
@@ -9142,9 +9152,9 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
+      "tripType": "OUTSTATION",
       "pickupId": "pune",
-      "dropId": "mumbai",
+      "pickupName": "Pune & PCMC",
       "category": "SEDAN"
     }
   },
@@ -9215,9 +9225,9 @@ export const livePagesContent = {
       }
     ],
     "bookingDefaults": {
-      "tripType": "ONE_WAY",
+      "tripType": "OUTSTATION",
       "pickupId": "pune",
-      "dropId": "mumbai",
+      "pickupName": "Pune & PCMC",
       "category": "SEDAN"
     }
   }

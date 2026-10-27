@@ -7,7 +7,7 @@ import { MobileStickyBar } from '../components/MobileStickyBar';
 import { usePageSeo } from '../hooks/usePageSeo';
 import { vehiclesData } from '../data/vehiclesData';
 import { vehicleApi } from '../services/api';
-import { resolveMediaUrl } from '../utils/mediaUtils';
+import { resolveMediaUrl, findMatchingDbVehicle } from '../utils/mediaUtils';
 import { 
   Car, 
   Users, 
@@ -23,7 +23,8 @@ export function VehiclesPage() {
   usePageSeo(
     'vehicles',
     'Rental Cars & Tempo Travellers in Pune | Fleet Options - AJ Travels',
-    'Hire rental cars with driver in Pune: Swift Dzire, 6-seater Ertiga, Toyota Innova Crysta, and luxury 13 to 20-seater Force Tempo Travellers for outstation & airport trips.'
+    'Hire rental cars with driver in Pune: Swift Dzire, 6-seater Ertiga, Toyota Innova Crysta, and luxury 13 to 20-seater Force Tempo Travellers for outstation & airport trips.',
+    'https://ajtravelspune.com/vehicles/'
   );
 
   const navigate = useNavigate();
@@ -86,11 +87,11 @@ export function VehiclesPage() {
         <div className="container">
           <div className="fleet-cards-grid">
             {vehiclesData.map(v => {
-              const dbMatch = dbVehicles.find(db => 
-                db.category === v.category ||
-                (v.id && db.name?.toLowerCase().includes(v.id.toLowerCase()))
-              );
+              const dbMatch = findMatchingDbVehicle(v, dbVehicles);
               const cardImage = dbMatch?.image ? resolveMediaUrl(dbMatch.image, v.image) : v.image;
+              const displayStartingFare = dbMatch?.startingBaseFare
+                ? `₹${dbMatch.startingBaseFare.toLocaleString()}`
+                : v.fareStarting;
 
               return (
               <div key={v.slug} className="fleet-card">
@@ -139,7 +140,7 @@ export function VehiclesPage() {
                   <div className="fleet-footer-row">
                     <div className="fleet-price-box">
                       <span className="rate-lbl">STARTING FROM</span>
-                      <strong className="rate-val">{v.fareStarting}*</strong>
+                      <strong className="rate-val">{displayStartingFare}*</strong>
                     </div>
 
                     <div className="fleet-btns-group">

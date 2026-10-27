@@ -4,7 +4,7 @@ import { Users, Briefcase, CheckCircle2, Car, ArrowRight } from 'lucide-react';
 import { buildFareUrl } from '../utils/fareNavigation';
 import { homepageContent } from '../data/homepageContent';
 import { vehicleApi } from '../services/api';
-import { resolveMediaUrl } from '../utils/mediaUtils';
+import { resolveMediaUrl, findMatchingDbVehicle } from '../utils/mediaUtils';
 
 export const VehicleDiscovery = () => {
   const navigate = useNavigate();
@@ -66,16 +66,7 @@ export const VehicleDiscovery = () => {
         {/* Vehicles Cards Grid */}
         <div className="vehicles-grid">
           {vehicles.map((v, idx) => {
-            const targetCat = 
-              v.id === 'suv' || v.name?.toLowerCase().includes('suv') ? 'SUV' :
-              v.id === 'premium' || v.name?.toLowerCase().includes('crysta') ? 'INNOVA_CRYSTA' :
-              v.id === 'minibus' || v.name?.toLowerCase().includes('tempo') ? 'TEMPO_TRAVELLER' :
-              'SEDAN';
-
-            const dbMatch = dbVehicles.find(db => 
-              db.category === targetCat ||
-              (v.id && db.name?.toLowerCase().includes(v.id.toLowerCase()))
-            );
+            const dbMatch = findMatchingDbVehicle(v, dbVehicles);
             const activeImg = dbMatch?.image ? resolveMediaUrl(dbMatch.image, v.image) : v.image;
 
             return (

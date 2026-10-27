@@ -4,10 +4,10 @@
  * Centralized production base domain for canonical URLs, sitemaps, robots.txt,
  * OpenGraph metadata, and analyzer evaluations.
  * 
- * Current production default: https://punemumbaitravels.in
+ * Official production domain: https://ajtravelspune.com
  * Migration ready: Configurable via process.env.SITE_DOMAIN without code modifications.
  */
-const DEFAULT_SITE_DOMAIN = 'https://punemumbaitravels.in';
+const DEFAULT_SITE_DOMAIN = 'https://ajtravelspune.com';
 const SITE_DOMAIN = (process.env.SITE_DOMAIN || DEFAULT_SITE_DOMAIN).replace(/\/$/, '');
 
 module.exports = {

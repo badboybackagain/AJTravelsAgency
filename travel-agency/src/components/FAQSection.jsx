@@ -61,19 +61,6 @@ export const FAQSection = () => {
         <div className={`faq-card-content-wrapper ${isOpen ? 'expanded' : ''}`}>
           <div className="faq-card-content-inner">
             <p className="faq-card-answer">{faq.a}</p>
-            <div className="faq-card-footer">
-              <a
-                href={getWhatsAppLink({
-                  tripType: `FAQ: ${faq.q}`,
-                })}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="faq-wa-action-btn"
-              >
-                <MessageSquare size={13} />
-                <span>Ask on WhatsApp</span>
-              </a>
-            </div>
           </div>
         </div>
       </div>

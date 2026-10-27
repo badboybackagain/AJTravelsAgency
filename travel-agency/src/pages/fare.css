@@ -1486,4 +1486,117 @@
   }
 }
 
+/* ==========================================================================
+   FAST FARE LOADING SKELETONS & NON-BLOCKING REFRESHING INDICATORS
+   ========================================================================== */
+
+.fare-skeleton-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.5rem;
+  margin: 2rem 0;
+}
+
+.fare-skeleton-card {
+  background: #FFFFFF;
+  border-radius: 16px;
+  border: 1px solid #E2E8F0;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+}
+
+.fare-skeleton-img {
+  width: 100%;
+  height: 180px;
+  background: linear-gradient(90deg, #F1F5F9 25%, #E2E8F0 50%, #F1F5F9 75%);
+  background-size: 200% 100%;
+  animation: fareShimmer 1.5s infinite;
+}
+
+.fare-skeleton-body {
+  padding: 1.25rem;
+}
+
+.fare-skeleton-line {
+  height: 14px;
+  border-radius: 6px;
+  background: linear-gradient(90deg, #F1F5F9 25%, #E2E8F0 50%, #F1F5F9 75%);
+  background-size: 200% 100%;
+  animation: fareShimmer 1.5s infinite;
+  margin-bottom: 0.75rem;
+}
+
+.fare-skeleton-line.title {
+  width: 70%;
+  height: 20px;
+  margin-bottom: 0.5rem;
+}
+
+.fare-skeleton-line.subtitle {
+  width: 45%;
+  height: 12px;
+  margin-bottom: 1.25rem;
+}
+
+.fare-skeleton-pills {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.fare-skeleton-pill {
+  width: 60px;
+  height: 24px;
+  border-radius: 12px;
+  background: linear-gradient(90deg, #F1F5F9 25%, #E2E8F0 50%, #F1F5F9 75%);
+  background-size: 200% 100%;
+  animation: fareShimmer 1.5s infinite;
+}
+
+.fare-skeleton-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 1rem;
+  border-top: 1px solid #F1F5F9;
+}
+
+.fare-skeleton-price {
+  width: 90px;
+  height: 28px;
+  border-radius: 8px;
+  background: linear-gradient(90deg, #F1F5F9 25%, #E2E8F0 50%, #F1F5F9 75%);
+  background-size: 200% 100%;
+  animation: fareShimmer 1.5s infinite;
+}
+
+.fare-skeleton-btn {
+  width: 110px;
+  height: 38px;
+  border-radius: 10px;
+  background: linear-gradient(90deg, #F1F5F9 25%, #E2E8F0 50%, #F1F5F9 75%);
+  background-size: 200% 100%;
+  animation: fareShimmer 1.5s infinite;
+}
+
+@keyframes fareShimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.fare-refreshing-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 1rem;
+  background: #EFF6FF;
+  border: 1px solid #BFDBFE;
+  border-radius: 9999px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #1D4ED8;
+  margin-bottom: 1rem;
+  animation: fadeIn 0.2s ease;
+}
+
 

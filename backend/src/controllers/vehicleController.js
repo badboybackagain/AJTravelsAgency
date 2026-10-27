@@ -9,9 +9,39 @@ const getAllVehicles = async (req, res, next) => {
   try {
     const vehicles = await prisma.vehicle.findMany({
       where: { isActive: true },
-      orderBy: [{ displayOrder: 'asc' }, { seatingCapacity: 'asc' }]
+      include: {
+        fares: {
+          where: { isActive: true },
+          select: {
+            baseFare: true,
+            tripType: true,
+          },
+        },
+      },
+      orderBy: [{ displayOrder: 'asc' }, { seatingCapacity: 'asc' }],
     });
-    res.json({ success: true, data: vehicles });
+
+    const data = vehicles.map((v) => {
+      const oneWayFares = (v.fares || []).filter(
+        (f) => f.tripType === 'ONE_WAY' && Number(f.baseFare) > 0
+      );
+      const activeFares =
+        oneWayFares.length > 0
+          ? oneWayFares
+          : (v.fares || []).filter((f) => Number(f.baseFare) > 0);
+      const minBaseFare =
+        activeFares.length > 0
+          ? Math.min(...activeFares.map((f) => Number(f.baseFare)))
+          : null;
+
+      const { fares, ...vehicleProps } = v;
+      return {
+        ...vehicleProps,
+        startingBaseFare: minBaseFare,
+      };
+    });
+
+    res.json({ success: true, data });
   } catch (err) {
     next(err);
   }
@@ -23,10 +53,39 @@ const getAllVehicles = async (req, res, next) => {
 const getVehicle = async (req, res, next) => {
   try {
     const vehicle = await prisma.vehicle.findUnique({
-      where: { id: req.params.id }
+      where: { id: req.params.id },
+      include: {
+        fares: {
+          where: { isActive: true },
+          select: {
+            baseFare: true,
+            tripType: true,
+          },
+        },
+      },
     });
     if (!vehicle) return next(new AppError('Vehicle not found.', 404));
-    res.json({ success: true, data: vehicle });
+
+    const oneWayFares = (vehicle.fares || []).filter(
+      (f) => f.tripType === 'ONE_WAY' && Number(f.baseFare) > 0
+    );
+    const activeFares =
+      oneWayFares.length > 0
+        ? oneWayFares
+        : (vehicle.fares || []).filter((f) => Number(f.baseFare) > 0);
+    const minBaseFare =
+      activeFares.length > 0
+        ? Math.min(...activeFares.map((f) => Number(f.baseFare)))
+        : null;
+
+    const { fares, ...vehicleProps } = vehicle;
+    res.json({
+      success: true,
+      data: {
+        ...vehicleProps,
+        startingBaseFare: minBaseFare,
+      },
+    });
   } catch (err) {
     next(err);
   }

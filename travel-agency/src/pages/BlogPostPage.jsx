@@ -7,6 +7,7 @@ import { MobileStickyBar } from '../components/MobileStickyBar';
 import { usePageSeo } from '../hooks/usePageSeo';
 import { getPostBySlug, blogPosts } from '../data/blogData';
 import { businessConfig } from '../config/business.config';
+import { getLocationDisplayName } from '../utils/locationNames';
 import { 
   Clock, 
   Calendar, 
@@ -26,12 +27,14 @@ export function BlogPostPage() {
   const navigate = useNavigate();
   const [isEnquiryOpen, setIsEnquiryOpen] = useState(false);
 
-  const post = getPostBySlug(slug);
+  const cleanSlug = slug ? slug.replace(/^\/|\/$/g, '') : '';
+  const post = getPostBySlug(cleanSlug);
 
   usePageSeo(
     post ? `post_${post.slug}` : 'post_not_found',
     post ? post.metaTitle : 'Article Not Found | AJ Travels Blog',
-    post ? post.metaDesc : 'Travel guide and intercity cab advice from AJ Travels.'
+    post ? post.metaDesc : 'Travel guide and intercity cab advice from AJ Travels.',
+    post ? `https://ajtravelspune.com/${post.slug}/` : undefined
   );
 
   // Inject BlogPosting JSON-LD structured data into head
@@ -75,6 +78,21 @@ export function BlogPostPage() {
 
     scriptTag.text = JSON.stringify(schemaData);
 
+    // Maintain document canonical tag
+    const postCanonical = `https://ajtravelspune.com/${post.slug}/`;
+    const canonicalTags = document.querySelectorAll('link[rel="canonical"]');
+    if (canonicalTags.length > 0) {
+      canonicalTags[0].setAttribute('href', postCanonical);
+      for (let i = 1; i < canonicalTags.length; i++) {
+        canonicalTags[i].remove();
+      }
+    } else {
+      const canonicalTag = document.createElement('link');
+      canonicalTag.setAttribute('rel', 'canonical');
+      canonicalTag.setAttribute('href', postCanonical);
+      document.head.appendChild(canonicalTag);
+    }
+
     return () => {
       const tag = document.getElementById(schemaId);
       if (tag) tag.remove();
@@ -98,15 +116,22 @@ export function BlogPostPage() {
     );
   }
 
+  const pId = post.pickupDefault || 'pune';
+  const dId = post.dropDefault || 'mumbai';
+  const isPuneMumbaiCorridor =
+    (post.slug?.includes('pune-to-mumbai') || post.slug?.includes('mumbai-to-pune')) &&
+    Boolean(post.dropDefault) &&
+    ((pId === 'pune' && dId === 'mumbai') || (pId === 'mumbai' && dId === 'pune'));
+
   const handleBookNow = () => {
-    const pId = post.pickupDefault || 'pune';
-    const dId = post.dropDefault || 'mumbai';
+    const pName = getLocationDisplayName(pId);
+    const dName = getLocationDisplayName(dId);
     const params = new URLSearchParams({
       tripType: 'ONE_WAY',
       pickupId: pId,
       dropId: dId,
-      pickupName: pId === 'mumbai' ? 'Mumbai (All Areas)' : 'Pune (All Areas)',
-      dropName: dId === 'pune' ? 'Pune (All Areas)' : 'Mumbai (All Areas)'
+      pickupName: pName,
+      dropName: dName
     });
     navigate(`/fare?${params.toString()}`);
   };
@@ -294,7 +319,9 @@ export function BlogPostPage() {
                   <span className="corridor-point">{post.dropDefault ? post.dropDefault.toUpperCase() : 'MUMBAI'}</span>
                 </div>
                 <p className="sidebar-card-desc">
-                  Doorstep pickup across Pune & Mumbai with verified drivers and 100% expressway toll-inclusive flat fares.
+                  {isPuneMumbaiCorridor
+                    ? 'Doorstep pickup across Pune & Mumbai with verified drivers and 100% expressway toll-inclusive flat fares.'
+                    : `Doorstep pickup from ${getLocationDisplayName(pId)} to ${getLocationDisplayName(dId)} with verified chauffeurs and all-inclusive pricing.`}
                 </p>
                 <button 
                   type="button" 
@@ -321,30 +348,32 @@ export function BlogPostPage() {
                 </div>
               </div>
 
-              {/* Widget 2: Route Quick Specs */}
-              <div className="sidebar-card sidebar-specs-card">
-                <h4 className="sidebar-specs-heading">Corridor Highway Specs</h4>
-                <div className="sidebar-spec-row">
-                  <span className="spec-label">Route</span>
-                  <span className="spec-value">Expressway (NH 48)</span>
+              {/* Widget 2: Route Quick Specs (Only shown on verified Pune-Mumbai Expressway routes) */}
+              {isPuneMumbaiCorridor && (
+                <div className="sidebar-card sidebar-specs-card">
+                  <h4 className="sidebar-specs-heading">Corridor Highway Specs</h4>
+                  <div className="sidebar-spec-row">
+                    <span className="spec-label">Route</span>
+                    <span className="spec-value">Expressway (NH 48)</span>
+                  </div>
+                  <div className="sidebar-spec-row">
+                    <span className="spec-label">Est. Distance</span>
+                    <span className="spec-value">~150 KMs</span>
+                  </div>
+                  <div className="sidebar-spec-row">
+                    <span className="spec-label">Travel Time</span>
+                    <span className="spec-value">2.5 – 3.5 Hours</span>
+                  </div>
+                  <div className="sidebar-spec-row">
+                    <span className="spec-label">Toll Charges</span>
+                    <span className="spec-value text-green">100% Included</span>
+                  </div>
+                  <div className="sidebar-spec-row">
+                    <span className="spec-label">Available Cabs</span>
+                    <span className="spec-value">Sedan, Ertiga, Crysta</span>
+                  </div>
                 </div>
-                <div className="sidebar-spec-row">
-                  <span className="spec-label">Est. Distance</span>
-                  <span className="spec-value">~150 KMs</span>
-                </div>
-                <div className="sidebar-spec-row">
-                  <span className="spec-label">Travel Time</span>
-                  <span className="spec-value">2.5 – 3.5 Hours</span>
-                </div>
-                <div className="sidebar-spec-row">
-                  <span className="spec-label">Toll Charges</span>
-                  <span className="spec-value text-green">100% Included</span>
-                </div>
-                <div className="sidebar-spec-row">
-                  <span className="spec-label">Available Cabs</span>
-                  <span className="spec-value">Sedan, Ertiga, Crysta</span>
-                </div>
-              </div>
+              )}
 
               {/* Widget 3: Popular Guides List */}
               {related.length > 0 && (

@@ -186,7 +186,7 @@ export const blogPosts = [
     author: 'AJ Travels Fleet Operations',
     publishedDate: 'March 02, 2026',
     readTime: '6 min read',
-    featuredImage: '/assets/pune-mumbai-travel-banner.webp',
+    featuredImage: '/assets/minibus.jpg',
     summary: 'Everything you need to know about renting a 13-seater, 17-seater, or 20-seater Force Tempo Traveller in Pune for weddings, corporate retreats, and outstation family trips.',
     pickupDefault: 'pune',
     dropDefault: 'mumbai',

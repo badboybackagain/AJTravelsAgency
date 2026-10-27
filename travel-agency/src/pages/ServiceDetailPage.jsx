@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
@@ -6,6 +6,7 @@ import { EnquiryModal } from '../components/EnquiryModal';
 import { MobileStickyBar } from '../components/MobileStickyBar';
 import { usePageSeo } from '../hooks/usePageSeo';
 import { getServiceBySlug, servicesData } from '../data/servicesData';
+import { vehicleApi } from '../services/api';
 import { 
   Navigation, 
   Clock, 
@@ -15,22 +16,49 @@ import {
   ArrowLeft, 
   ArrowRight, 
   ShieldCheck, 
-  Sparkles,
-  HelpCircle,
-  Users
+  Sparkles, 
+  HelpCircle, 
+  Users 
 } from 'lucide-react';
 
 export function ServiceDetailPage() {
   const { slug } = useParams();
   const navigate = useNavigate();
   const [isEnquiryOpen, setIsEnquiryOpen] = useState(false);
+  const [dbVehicles, setDbVehicles] = useState([]);
 
   const service = getServiceBySlug(slug);
+
+  useEffect(() => {
+    let isMounted = true;
+    vehicleApi
+      .getAll()
+      .then((res) => {
+        if (isMounted && res.data?.data) {
+          setDbVehicles(res.data.data);
+        }
+      })
+      .catch((err) => {
+        console.warn('ServiceDetailPage: Failed to load dynamic fleet fares:', err?.message);
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const sedanMatch = dbVehicles.find((v) => v.category === 'SEDAN');
+  const suvMatch = dbVehicles.find((v) => v.category === 'SUV' || v.category === 'ERTIGA');
+  const crystaMatch = dbVehicles.find((v) => v.category === 'LUXURY' || v.category === 'INNOVA_CRYSTA');
+
+  const sedanFare = sedanMatch?.startingBaseFare ? `₹${sedanMatch.startingBaseFare.toLocaleString()}` : '₹2,300';
+  const suvFare = suvMatch?.startingBaseFare ? `₹${suvMatch.startingBaseFare.toLocaleString()}` : '₹2,800';
+  const crystaFare = crystaMatch?.startingBaseFare ? `₹${crystaMatch.startingBaseFare.toLocaleString()}` : '₹4,200';
 
   usePageSeo(
     service ? `service_${service.slug}` : 'service_not_found',
     service ? service.metaTitle : 'Corridor Service Not Found | AJ Travels',
-    service ? service.metaDesc : 'Chauffeured intercity corridor travel service from AJ Travels.'
+    service ? service.metaDesc : 'Chauffeured intercity corridor travel service from AJ Travels.',
+    service ? `https://ajtravelspune.com/services/${service.slug}` : undefined
   );
 
   if (!service) {
@@ -216,7 +244,7 @@ export function ServiceDetailPage() {
                       <strong>Executive Sedan</strong>
                       <span>4 Seater • Dzire / Etios</span>
                     </div>
-                    <span className="sb-from-rate">From ₹2,490*</span>
+                    <span className="sb-from-rate">From {sedanFare}*</span>
                   </div>
 
                   <div className="sb-vehicle-row">
@@ -225,7 +253,7 @@ export function ServiceDetailPage() {
                       <strong>Family SUV</strong>
                       <span>6 Seater • Maruti Ertiga</span>
                     </div>
-                    <span className="sb-from-rate">From ₹3,490*</span>
+                    <span className="sb-from-rate">From {suvFare}*</span>
                   </div>
 
                   <div className="sb-vehicle-row">
@@ -234,7 +262,7 @@ export function ServiceDetailPage() {
                       <strong>Innova Crysta</strong>
                       <span>6-7 Seater • Luxury Captain</span>
                     </div>
-                    <span className="sb-from-rate">From ₹4,490*</span>
+                    <span className="sb-from-rate">From {crystaFare}*</span>
                   </div>
                 </div>
 

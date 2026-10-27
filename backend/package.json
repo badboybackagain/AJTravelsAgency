@@ -11,6 +11,7 @@
     "test:media": "node tests/media.test.js",
     "test:analyzer": "node tests/seoAnalyzer.test.js",
     "test:gsc": "node tests/seoGsc.test.js",
+    "test:fares": "node tests/adminFarePriceSync.test.js",
     "prisma:migrate": "npx prisma migrate dev",
     "prisma:generate": "npx prisma generate",
     "prisma:seed": "node prisma/seed.js",

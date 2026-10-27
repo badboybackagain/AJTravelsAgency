@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Car, Phone, MessageSquare, Mail, MapPin, Shield, Calendar } from 'lucide-react';
+import { Phone, MessageSquare, Mail, MapPin, Shield, Clock, ExternalLink } from 'lucide-react';
 import { businessConfig } from '../config/business.config';
 
 export const Footer = () => {
@@ -8,7 +8,7 @@ export const Footer = () => {
     <footer className="footer-wrapper">
       <div className="container">
         <div className="footer-top-grid">
-          {/* Brand Info */}
+          {/* Column 1: Brand Info & Dispatch Guarantee */}
           <div className="footer-brand-col">
             <Link to="/" className="footer-brand" aria-label="AJ Travels Home">
               <img
@@ -21,27 +21,28 @@ export const Footer = () => {
               Maharashtra's premier executive intercity cab network. Clean private sedans, family SUVs, and luxury tempo travellers connecting Pune, Mumbai, and International Airports with 100% all-inclusive fares.
             </p>
             <div className="footer-dispatch-note">
-              <Shield size={14} color="#38BDF8" />
+              <Shield size={15} color="#38BDF8" className="dispatch-icon" />
               <span>{businessConfig.dispatchDisclaimer}</span>
             </div>
           </div>
 
-          {/* Quick Links */}
+          {/* Column 2: Quick Links */}
           <div className="footer-links-col">
             <h4 className="footer-col-title">Quick Links</h4>
             <ul className="footer-links-list">
               <li><Link to="/">Home</Link></li>
-              <li><Link to="/about">About Us</Link></li>
               <li><Link to="/services">Our Services</Link></li>
               <li><Link to="/vehicles">Fleet & Vehicles</Link></li>
-              <li><Link to="/blog">Blog & Travel Guides</Link></li>
-              <li><Link to="/contact">Contact Support</Link></li>
               <li><Link to="/fare">Fare Calculator & Tolls</Link></li>
               <li><Link to="/booking">Book Cab Online</Link></li>
+              <li><Link to="/blog">Blog & Travel Guides</Link></li>
+              <li><Link to="/about">About Us</Link></li>
+              <li><Link to="/contact">Contact Support</Link></li>
+              <li><Link to="/sitemap">Sitemap</Link></li>
             </ul>
           </div>
 
-          {/* Our Services & Corridors */}
+          {/* Column 3: Verified Travel Corridors */}
           <div className="footer-links-col">
             <h4 className="footer-col-title">Our Corridors</h4>
             <ul className="footer-links-list">
@@ -54,51 +55,74 @@ export const Footer = () => {
             </ul>
           </div>
 
-          {/* Contact Details */}
+          {/* Column 4: Contact & Operations Desk */}
           <div className="footer-contact-col">
             <h4 className="footer-col-title">Contact Information</h4>
             <div className="footer-contact-info">
-              {businessConfig.phone ? (
-                <p>
-                  <Phone size={14} color="#38BDF8" /> <span>Phone: <a href={`tel:${businessConfig.phone}`}>{businessConfig.phoneDisplay}</a></span>
-                </p>
-              ) : (
-                <p>
-                  <Calendar size={14} color="#38BDF8" /> <span>Online Desk: <Link to="/booking" style={{ color: '#38BDF8' }}>Instant Booking</Link></span>
-                </p>
-              )}
               <p>
-                <MessageSquare size={14} color="#25D366" /> <span>WhatsApp: <a href={`https://wa.me/${businessConfig.whatsapp}`} target="_blank" rel="noreferrer">24/7 Operations Desk</a></span>
+                <Phone size={14} color="#38BDF8" />
+                <span>
+                  Phone: <a href={`tel:${businessConfig.phone}`}>{businessConfig.phoneDisplay}</a>
+                </span>
               </p>
               <p>
-                <Mail size={14} color="#38BDF8" /> <span>Email: <a href={`mailto:${businessConfig.email}`}>{businessConfig.email}</a></span>
+                <MessageSquare size={14} color="#25D366" />
+                <span>
+                  WhatsApp:{' '}
+                  <a
+                    href={`https://wa.me/${businessConfig.whatsapp}`}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    24/7 Operations Desk
+                  </a>
+                </span>
               </p>
               <p>
-                <MapPin size={14} color="#38BDF8" /> <span>Hub: {businessConfig.address}</span>
+                <Mail size={14} color="#38BDF8" />
+                <span>
+                  Email: <a href={`mailto:${businessConfig.email}`}>{businessConfig.email}</a>
+                </span>
               </p>
+              <p>
+                <MapPin size={14} color="#38BDF8" />
+                <span>Hub: {businessConfig.address}</span>
+              </p>
+              <div className="footer-hours-pill">
+                <Clock size={13} color="#10B981" />
+                <span>24 Hours / 7 Days a Week (Always Open)</span>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Footer Bottom Bar */}
+        {/* Footer Bottom Bar with Floating Buttons Clearance */}
         <div className="footer-bottom">
-          <p>© {new Date().getFullYear()} {businessConfig.businessName}. All rights reserved.</p>
+          <div className="footer-bottom-info">
+            <p className="copyright-text">
+              © {new Date().getFullYear()} {businessConfig.businessName} (AJ Tours & Travels Pune). All rights reserved.
+            </p>
+            <p className="sub-legal-note">
+              Verified Chauffeur-Driven Car & Tempo Traveller Hire • GST Invoicing Available
+            </p>
+          </div>
+
           <div className="legal-links">
             <Link to="/">Home</Link>
-            <span>•</span>
-            <Link to="/about">About Us</Link>
-            <span>•</span>
+            <span className="dot-sep">•</span>
             <Link to="/services">Services</Link>
-            <span>•</span>
+            <span className="dot-sep">•</span>
             <Link to="/vehicles">Fleet</Link>
-            <span>•</span>
+            <span className="dot-sep">•</span>
+            <Link to="/fare">Fares</Link>
+            <span className="dot-sep">•</span>
             <Link to="/blog">Blog</Link>
-            <span>•</span>
+            <span className="dot-sep">•</span>
+            <Link to="/about">About</Link>
+            <span className="dot-sep">•</span>
             <Link to="/contact">Contact</Link>
-            <span>•</span>
-            <Link to="/fare">Fare Calculator</Link>
-            <span>•</span>
-            <Link to="/booking">Online Booking</Link>
+            <span className="dot-sep">•</span>
+            <Link to="/sitemap">Sitemap</Link>
           </div>
         </div>
       </div>
@@ -106,11 +130,11 @@ export const Footer = () => {
       <style>{`
         .footer-wrapper {
           position: relative;
-          background: linear-gradient(180deg, rgba(8, 14, 28, 0.86) 0%, rgba(11, 22, 45, 0.82) 50%, rgba(6, 10, 20, 0.92) 100%),
+          background: linear-gradient(180deg, rgba(8, 14, 28, 0.92) 0%, rgba(11, 22, 45, 0.90) 50%, rgba(6, 10, 20, 0.96) 100%),
                       url('/assets/hero-luxury-cars.jpg') center/cover no-repeat;
           border-top: 1px solid rgba(255, 255, 255, 0.12);
           padding-top: 4.5rem;
-          padding-bottom: 2.5rem;
+          padding-bottom: 5.5rem; /* Clearance for floating WhatsApp & Concierge triggers */
           color: #E2E8F0;
           overflow: hidden;
         }
@@ -127,7 +151,7 @@ export const Footer = () => {
           display: grid;
           grid-template-columns: 2fr 1fr 1fr 1.5fr;
           gap: 2.75rem;
-          margin-bottom: 3.5rem;
+          margin-bottom: 3rem;
           position: relative;
           z-index: 2;
         }
@@ -168,12 +192,18 @@ export const Footer = () => {
           gap: 0.55rem;
           font-size: 0.78rem;
           color: #E2E8F0;
-          background: rgba(15, 23, 42, 0.7);
+          background: rgba(15, 23, 42, 0.75);
           padding: 0.65rem 0.95rem;
           border-radius: 10px;
           border: 1px solid rgba(255, 255, 255, 0.15);
           backdrop-filter: blur(8px);
           text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+          max-width: 380px;
+        }
+
+        .dispatch-icon {
+          flex-shrink: 0;
+          margin-top: 2px;
         }
 
         .footer-col-title {
@@ -194,6 +224,8 @@ export const Footer = () => {
           display: flex;
           flex-direction: column;
           gap: 0.65rem;
+          padding: 0;
+          margin: 0;
         }
 
         .footer-links-list a {
@@ -233,6 +265,21 @@ export const Footer = () => {
           color: #38BDF8;
         }
 
+        .footer-hours-pill {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.45rem;
+          margin-top: 0.5rem;
+          padding: 0.35rem 0.75rem;
+          background: rgba(16, 185, 129, 0.12);
+          border: 1px solid rgba(16, 185, 129, 0.25);
+          border-radius: 9999px;
+          font-size: 0.75rem;
+          color: #6EE7B7;
+          font-weight: 600;
+        }
+
+        /* ── Footer Bottom Bar ── */
         .footer-bottom {
           display: flex;
           align-items: center;
@@ -244,12 +291,31 @@ export const Footer = () => {
           text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
           position: relative;
           z-index: 2;
+          gap: 1.5rem;
+          /* Ensure desktop layout leaves room for bottom-right floating buttons */
+          padding-right: 210px;
+        }
+
+        .footer-bottom-info {
+          display: flex;
+          flex-direction: column;
+          gap: 0.25rem;
+        }
+
+        .copyright-text {
+          font-weight: 600;
+          color: #F8FAFC;
+        }
+
+        .sub-legal-note {
+          font-size: 0.75rem;
+          color: #94A3B8;
         }
 
         .legal-links {
           display: flex;
           align-items: center;
-          gap: 0.75rem;
+          gap: 0.65rem;
           flex-wrap: wrap;
         }
 
@@ -257,10 +323,24 @@ export const Footer = () => {
           color: #CBD5E1;
           transition: color 0.2s ease;
           text-decoration: none;
+          font-weight: 500;
         }
 
         .legal-links a:hover {
           color: #38BDF8;
+        }
+
+        .dot-sep {
+          color: rgba(255, 255, 255, 0.25);
+        }
+
+        @media (max-width: 1200px) {
+          .footer-bottom {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1rem;
+            padding-right: 210px;
+          }
         }
 
         @media (max-width: 1024px) {
@@ -270,15 +350,24 @@ export const Footer = () => {
           }
         }
 
-        @media (max-width: 640px) {
+        @media (max-width: 768px) {
+          .footer-wrapper {
+            padding-top: 3.5rem;
+            padding-bottom: 7.5rem; /* Full clearance for mobile sticky bottom bar */
+          }
           .footer-top-grid {
             grid-template-columns: 1fr;
             gap: 1.75rem;
           }
           .footer-bottom {
             flex-direction: column;
-            gap: 1rem;
             text-align: center;
+            align-items: center;
+            gap: 1rem;
+            padding-right: 0;
+          }
+          .legal-links {
+            justify-content: center;
           }
         }
       `}</style>

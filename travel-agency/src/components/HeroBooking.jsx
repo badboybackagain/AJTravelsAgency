@@ -372,9 +372,7 @@ export const HeroBooking = () => {
             <span className="hero-title-sub">{homepageContent.hero.titleSecondary}</span>
           </h1>
 
-          <p className="hero-description">
-            {homepageContent.hero.description}
-          </p>
+
 
           <div className="hero-trust-chips">
             {homepageContent.hero.trustChips.map((chip, idx) => (

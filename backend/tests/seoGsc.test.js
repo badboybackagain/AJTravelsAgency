@@ -255,9 +255,9 @@ async function runTests() {
   section('7. Managed Pages URL Matching');
   {
     const landingPageRows = [
-      { keys: ['https://punemumbaitravels.in/'], clicks: 65, impressions: 850, ctr: 0.076, position: 3.1 },
-      { keys: ['https://punemumbaitravels.in/fare'], clicks: 35, impressions: 420, ctr: 0.083, position: 4.2 },
-      { keys: ['https://punemumbaitravels.in/booking'], clicks: 20, impressions: 310, ctr: 0.064, position: 5.0 },
+      { keys: ['https://ajtravelspune.com/'], clicks: 65, impressions: 850, ctr: 0.076, position: 3.1 },
+      { keys: ['https://ajtravelspune.com/fare'], clicks: 35, impressions: 420, ctr: 0.083, position: 4.2 },
+      { keys: ['https://ajtravelspune.com/booking'], clicks: 20, impressions: 310, ctr: 0.064, position: 5.0 },
     ];
     const transformedPages = googleSearchConsoleService.transformDimensionRows(landingPageRows, 'page');
     const managedAttribution = googleSearchConsoleService.attributeManagedPages(transformedPages);
@@ -290,8 +290,8 @@ async function runTests() {
     // Install safe test mock adapter
     googleSearchConsoleService.setTestMockAdapter({
       fetchProperties: async () => [
-        { siteUrl: 'https://punemumbaitravels.in/', permissionLevel: 'siteOwner' },
-        { siteUrl: 'sc-domain:punemumbaitravels.in', permissionLevel: 'siteOwner' }
+        { siteUrl: 'https://ajtravelspune.com/', permissionLevel: 'siteOwner' },
+        { siteUrl: 'sc-domain:ajtravelspune.com', permissionLevel: 'siteOwner' }
       ],
       queryPerformance: async ({ range }) => ({
         success: true,
@@ -303,7 +303,7 @@ async function runTests() {
           { date: '2026-10-02', clicks: 14, impressions: 210, ctr: 6.6, position: 4.2 }
         ],
         topQueries: [{ query: 'pune to mumbai cab', clicks: 16, impressions: 220, ctr: 7.2, position: 3.8 }],
-        topPages: [{ pageUrl: 'https://punemumbaitravels.in/', clicks: 18, impressions: 240, ctr: 7.5, position: 3.5 }],
+        topPages: [{ pageUrl: 'https://ajtravelspune.com/', clicks: 18, impressions: 240, ctr: 7.5, position: 3.5 }],
         deviceBreakdown: [
           { device: 'MOBILE', clicks: 20, impressions: 280, ctr: 7.1, position: 4.0 },
           { device: 'DESKTOP', clicks: 6, impressions: 110, ctr: 5.4, position: 4.8 }
@@ -331,10 +331,10 @@ async function runTests() {
 
     const properties = await googleSearchConsoleService.fetchProperties();
     assert(properties.length === 2, 'Lists 2 Search Console properties');
-    assert(properties[0].siteUrl.includes('punemumbaitravels.in'), 'Includes punemumbaitravels.in property');
+    assert(properties[0].siteUrl.includes('ajtravelspune.com'), 'Includes ajtravelspune.com property');
 
-    const selected = googleSearchConsoleService.selectProperty('https://punemumbaitravels.in/');
-    assert(selected.selectedProperty === 'https://punemumbaitravels.in/', 'Selected property updated');
+    const selected = googleSearchConsoleService.selectProperty('https://ajtravelspune.com/');
+    assert(selected.selectedProperty === 'https://ajtravelspune.com/', 'Selected property updated');
 
     const perfData = await googleSearchConsoleService.queryPerformance({ range: '28d' });
     assert(perfData.summary?.clicks === 26, 'Calculates total clicks across days (12 + 14 = 26)');

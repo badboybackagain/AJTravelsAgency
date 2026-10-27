@@ -18,6 +18,7 @@ import {
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
 import { quoteApi } from '../services/api';
+import { businessConfig } from '../config/business.config';
 
 export function CustomerQuotePage() {
   const { token } = useParams();
@@ -167,7 +168,7 @@ export function CustomerQuotePage() {
                 <ChevronRight size={16} />
               </Link>
               <a
-                href="https://wa.me/919156183915"
+                href={`https://wa.me/${businessConfig.whatsapp}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{
@@ -577,14 +578,14 @@ export function CustomerQuotePage() {
                 <span>Questions about this quote?</span>
                 <div style={{ display: 'flex', gap: '0.75rem' }}>
                   <a
-                    href="tel:+919156183915"
+                    href={`tel:${businessConfig.phone}`}
                     style={{ color: '#0284C7', textDecoration: 'none', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}
                   >
                     <Phone size={14} />
-                    <span>+91 91561 83915</span>
+                    <span>{businessConfig.phoneDisplay}</span>
                   </a>
                   <a
-                    href={`https://wa.me/919156183915?text=${encodeURIComponent(
+                    href={`https://wa.me/${businessConfig.whatsapp}?text=${encodeURIComponent(
                       `Hello AJ Travels, I have a question regarding Quotation #Q-${quote.quoteRef}.`
                     )}`}
                     target="_blank"

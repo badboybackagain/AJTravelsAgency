@@ -116,10 +116,10 @@ const prepareQuote = async (req, res, next) => {
 
     let quote;
     try {
-      // Execute atomically: mark previous QUOTED quotes as SUPERSEDED, create new quote, and update enquiry status
-      quote = await prisma.$transaction(async (tx) => {
+      // Execute atomically in a single batch roundtrip (prevents interactive transaction timeout over WAN)
+      const [, newQuote] = await prisma.$transaction([
         // 1. Mark existing pending quotes for this enquiry as SUPERSEDED
-        await tx.quote.updateMany({
+        prisma.quote.updateMany({
           where: {
             enquiryId: enquiry.id,
             status: 'QUOTED',
@@ -127,21 +127,20 @@ const prepareQuote = async (req, res, next) => {
           data: {
             status: 'SUPERSEDED',
           },
-        });
+        }),
 
         // 2. Create the new quote with status QUOTED
-        const newQuote = await tx.quote.create({
+        prisma.quote.create({
           data: quoteData,
-        });
+        }),
 
         // 3. Update enquiry status to CONTACTED
-        await tx.enquiry.update({
+        prisma.enquiry.update({
           where: { id: enquiry.id },
           data: { status: 'CONTACTED' },
-        });
-
-        return newQuote;
-      });
+        }),
+      ]);
+      quote = newQuote;
     } catch (dbErr) {
       return handleMigrationPendingError(dbErr, next);
     }
@@ -540,6 +539,9 @@ const convertToBooking = async (req, res, next) => {
         });
 
         return { booking: newBooking, quote: lockedQuote, enquiry };
+      }, {
+        maxWait: 15000,
+        timeout: 30000,
       });
     } catch (txErr) {
       return handleMigrationPendingError(txErr, next);

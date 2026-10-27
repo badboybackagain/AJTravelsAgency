@@ -24,6 +24,8 @@ async function startServer() {
       await prisma.$connect();
       setDbConnected(true, null);
       console.log('✅ Database connected successfully');
+      const { warmupFareCache } = require('./services/fareCalculationService');
+      warmupFareCache().catch(() => {});
     } catch (error) {
       setDbConnected(false, error.message);
       if (isProduction) {

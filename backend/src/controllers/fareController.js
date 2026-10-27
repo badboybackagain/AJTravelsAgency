@@ -146,6 +146,9 @@ const createFare = async (req, res, next) => {
       });
 
       return created;
+    }, {
+      maxWait: 15000,
+      timeout: 30000,
     });
 
     invalidateFareCache();
@@ -202,6 +205,9 @@ const updateFare = async (req, res, next) => {
       });
 
       return fare;
+    }, {
+      maxWait: 15000,
+      timeout: 30000,
     });
 
     invalidateFareCache();
@@ -232,6 +238,9 @@ const deleteFare = async (req, res, next) => {
           newValue: JSON.stringify({ isActive: false }),
         }
       });
+    }, {
+      maxWait: 15000,
+      timeout: 30000,
     });
 
     invalidateFareCache();

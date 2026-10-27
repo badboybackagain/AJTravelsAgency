@@ -31,7 +31,7 @@ export const homepageContent = {
     eyebrow: "AJ TRAVELS • CHAUFFEUR-DRIVEN CAR RENTAL IN PUNE & OUTSTATION CABS",
     titlePrimary: "Car Rental in Pune with Driver & Outstation Cabs",
     titleSecondary: "Intercity Cabs, Airport Transfers & Chauffeur-Driven Vehicles",
-    description: "Doorstep pickup across Pune and PCMC with sanitized Sedans, Maruti Ertiga, Toyota Innova Crysta, and luxury Tempo Travellers. Experienced highway chauffeurs, 24/7 travel desk, and transparent pricing with expressway tolls included.",
+    description: "",
     bgImage: "/assets/hero-luxury-cars.jpg",
     bgImageAlt: "AJ Travels Executive Cab Fleet - Sedans, SUVs and Tempo Travellers in Pune",
     trustChips: [
@@ -191,7 +191,7 @@ export const homepageContent = {
         id: "minibus",
         title: "TEMPO TRAVELLER ON RENT",
         badge: "12, 17 & 20-SEATER COACHES",
-        bgImg: "/assets/pune-mumbai-travel-banner.webp",
+        bgImg: "/assets/img 4.jfif",
         description: "Luxury high-roof Force Tempo Travellers with pushback seats, individual AC vents, and large luggage space. Ideal for wedding guest transfers, corporate offsites, and group pilgrimage tours.",
         routes: [
           { from: "PUNE / PCMC", to: "MUMBAI EVENTS", type: "13-Seater Tempo", est: "Special Permit", note: "Pushback Seats & Music System", link: "/tempo-traveller-on-rent-in-pune/" },
@@ -319,7 +319,7 @@ export const homepageContent = {
         luggage: "4 - 5 Large Bags",
         features: ["Plush Captain Seats", "Whisper Quiet Cabin", "Rear Climate Control", "Executive Chauffeur"],
         idealFor: "Innova rental in Pune for corporate delegations, VIP airport pickups, and long-distance luxury.",
-        image: "/assets/pune-to-mumbai-premium-travel-banner.webp",
+        image: "/assets/luxury.jpg",
         tag: "Executive Class",
         url: "/innova-car-on-rent-in-pune/"
       },
@@ -331,7 +331,7 @@ export const homepageContent = {
         luggage: "10 - 16 Large Bags",
         features: ["Pushback Reclining Seats", "Individual AC Vents", "High Ceiling & Wide Aisle", "Interstate State Permits"],
         idealFor: "Tempo Traveller on rent in Pune for weddings, pilgrimage groups, and corporate offsites.",
-        image: "/assets/pune-mumbai-travel-banner.webp",
+        image: "/assets/minibus.jpg",
         tag: "Group Choice",
         url: "/tempo-traveller-on-rent-in-pune/"
       }

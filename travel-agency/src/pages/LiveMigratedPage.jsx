@@ -9,10 +9,13 @@ import { getLivePage } from '../data/livePagesContent';
 import { AboutPage } from './AboutPage';
 import { ContactPage } from './ContactPage';
 import { BlogPage } from './BlogPage';
+import { SitemapPage } from './SitemapPage';
 import { NotFoundPage } from './NotFoundPage';
 import { businessConfig } from '../config/business.config';
+import { getLocationDisplayName } from '../utils/locationNames';
 import { 
   Car, 
+  Bus,
   ArrowRight, 
   Clock, 
   Calendar, 
@@ -42,6 +45,9 @@ export function LiveMigratedPage() {
   if (currentSlug === 'blog') {
     return <BlogPage />;
   }
+  if (currentSlug === 'sitemap') {
+    return <SitemapPage />;
+  }
 
   return <LiveMigratedContent currentSlug={currentSlug} />;
 }
@@ -54,12 +60,29 @@ function LiveMigratedContent({ currentSlug }) {
   usePageSeo(
     page ? `live_${page.slug}` : 'page_not_found',
     page ? page.metaTitle : 'Page Not Found | AJ Travels',
-    page ? page.metaDesc : 'AJ Travels intercity chauffeured travel service.'
+    page ? page.metaDesc : 'AJ Travels intercity chauffeured travel service.',
+    page ? page.canonicalUrl : undefined
   );
 
-  // Inject JSON-LD Schema
+  // Inject JSON-LD Schema & Maintain Canonical Tag
   useEffect(() => {
     if (!page) return;
+
+    // Synchronize canonical tag in document head
+    if (page.canonicalUrl) {
+      const canonicalTags = document.querySelectorAll('link[rel="canonical"]');
+      if (canonicalTags.length > 0) {
+        canonicalTags[0].setAttribute('href', page.canonicalUrl);
+        for (let i = 1; i < canonicalTags.length; i++) {
+          canonicalTags[i].remove();
+        }
+      } else {
+        const canonicalTag = document.createElement('link');
+        canonicalTag.setAttribute('rel', 'canonical');
+        canonicalTag.setAttribute('href', page.canonicalUrl);
+        document.head.appendChild(canonicalTag);
+      }
+    }
 
     const schemaId = 'live-page-schema';
     let scriptTag = document.getElementById(schemaId);
@@ -105,18 +128,83 @@ function LiveMigratedContent({ currentSlug }) {
     return <NotFoundPage />;
   }
 
+  const isEditorialBlog = page.category === 'Travel Guide' || page.category === 'Blog';
+  const isLocalityPage = 
+    page.category === 'Car Rentals' || 
+    page.category === 'Tempo Traveller Rentals' || 
+    page.category === 'Bus & Coach Rentals' ||
+    page.slug?.startsWith('car-on-rent-') ||
+    page.slug?.startsWith('tempo-traveller-on-rent-') ||
+    page.slug?.startsWith('bus-on-rent-') ||
+    page.slug?.endsWith('-in-pcmc');
+
+  // Extract locality name if present in H1 e.g. "Car on Rent in Moshi, PCMC with Driver" -> "Moshi, PCMC"
+  const extractLocalityName = () => {
+    if (page.bookingDefaults?.pickupName) return page.bookingDefaults.pickupName;
+    const match = page.h1?.match(/in\s+([^|(,]+)/i);
+    if (match) {
+      const loc = match[1].trim();
+      return page.h1.includes('PCMC') && !loc.includes('PCMC') ? `${loc}, PCMC` : loc;
+    }
+    return 'Pune & PCMC';
+  };
+  const localityName = extractLocalityName();
+
+  const pId = page.bookingDefaults?.pickupId || 'pune';
+  const dId = page.bookingDefaults?.dropId || null;
+  const isPuneMumbaiCorridor =
+    Boolean(dId) &&
+    ((pId === 'pune' && dId === 'mumbai') || (pId === 'mumbai' && dId === 'pune'));
+
   const handleBookNow = () => {
-    const pId = page.bookingDefaults?.pickupId || 'pune';
-    const dId = page.bookingDefaults?.dropId || 'mumbai';
+    const pName = page.bookingDefaults?.pickupName || getLocationDisplayName(pId);
     const params = new URLSearchParams({
-      tripType: page.bookingDefaults?.tripType || 'ONE_WAY',
+      tripType: page.bookingDefaults?.tripType || (dId ? 'ONE_WAY' : 'LOCAL'),
       pickupId: pId,
-      dropId: dId,
-      pickupName: pId === 'mumbai' ? 'Mumbai (All Areas)' : 'Pune (All Areas)',
-      dropName: dId === 'pune' ? 'Pune (All Areas)' : 'Mumbai (All Areas)',
+      pickupName: pName,
       category: page.bookingDefaults?.category || 'SEDAN'
     });
+    if (dId) {
+      const dName = page.bookingDefaults?.dropName || getLocationDisplayName(dId);
+      params.set('dropId', dId);
+      params.set('dropName', dName);
+    } else {
+      params.set('city', 'Pune');
+    }
     navigate(`/fare?${params.toString()}`);
+  };
+
+  const getCategoryBreadcrumb = (category) => {
+    switch (category) {
+      case 'Travel Guide':
+      case 'Blog':
+        return { label: 'Travel Guides & Blog', path: '/blog' };
+      case 'Car Rentals':
+        return { label: isLocalityPage ? 'Locality Rentals (Pune & PCMC)' : 'Fleet & Vehicles', path: '/sitemap#locality-rentals' };
+      case 'Tempo Traveller Rentals':
+        return { label: isLocalityPage ? 'Tempo Traveller by Locality' : 'Fleet & Vehicles', path: '/sitemap#locality-rentals' };
+      case 'Bus & Coach Rentals':
+        return { label: isLocalityPage ? 'Bus on Rent by Locality' : 'Fleet & Vehicles', path: '/sitemap#locality-rentals' };
+      case 'Pickup & Drop Corridors':
+        return { label: 'Corridor Services', path: '/services' };
+      case 'Corporate Travel':
+        return { label: 'Corporate Solutions', path: '/services' };
+      default:
+        return { label: 'Services', path: '/services' };
+    }
+  };
+
+  const bcParent = getCategoryBreadcrumb(page.category);
+
+  const getCategoryBadgeLabel = () => {
+    if (isLocalityPage) {
+      if (page.category === 'Bus & Coach Rentals') return `BUS & COACH HIRE • ${localityName.toUpperCase()}`;
+      if (page.category === 'Tempo Traveller Rentals') return `TEMPO TRAVELLER RENTAL • ${localityName.toUpperCase()}`;
+      return `CAR RENTAL WITH DRIVER • ${localityName.toUpperCase()}`;
+    }
+    if (page.category === 'Pickup & Drop Corridors') return 'INTERCITY PICKUP & DROP CORRIDOR';
+    if (page.category === 'Corporate Travel') return 'CORPORATE LEASING & FLEET';
+    return page.category;
   };
 
   return (
@@ -129,7 +217,7 @@ function LiveMigratedContent({ currentSlug }) {
           <div className="breadcrumbs-nav">
             <Link to="/">Home</Link>
             <span className="bc-sep">/</span>
-            <Link to="/blog">{page.category}</Link>
+            <Link to={bcParent.path}>{bcParent.label}</Link>
             <span className="bc-sep">/</span>
             <span className="bc-current">{page.h1}</span>
           </div>
@@ -140,39 +228,77 @@ function LiveMigratedContent({ currentSlug }) {
       <main className="article-content-container">
         <div className="container">
           <div className="article-2col-layout">
-            {/* Left Column: Full Editorial Content */}
+            {/* Left Column: Content */}
             <div className="article-main-col">
               {/* Header */}
               <header className="article-header-section">
-                <div className="article-category-chip">{page.category}</div>
+                <div className="article-category-chip">{getCategoryBadgeLabel()}</div>
                 <h1 className="article-main-title">{page.h1}</h1>
                 <p className="article-main-summary">{page.summary}</p>
 
-                <div className="article-author-meta-bar">
-                  <div className="author-pill">
-                    <User size={15} color="#2563EB" />
-                    <span>{page.author}</span>
+                {isEditorialBlog ? (
+                  /* Editorial Author Meta Bar — Only for Travel Guides and Blog Articles */
+                  <div className="article-author-meta-bar">
+                    <div className="author-pill">
+                      <User size={15} color="#2563EB" />
+                      <span>{page.author || 'AJ Travels Editorial Desk'}</span>
+                    </div>
+                    <div className="meta-split-dot">•</div>
+                    <div className="meta-pill">
+                      <Calendar size={14} />
+                      <span>{page.publishedDate || '2026-03-15'}</span>
+                    </div>
+                    <div className="meta-split-dot">•</div>
+                    <div className="meta-pill">
+                      <Clock size={14} />
+                      <span>{page.readTime || '5 min read'}</span>
+                    </div>
                   </div>
-                  <div className="meta-split-dot">•</div>
-                  <div className="meta-pill">
-                    <Calendar size={14} />
-                    <span>{page.publishedDate}</span>
+                ) : (
+                  /* Commercial Service Trust Highlights Bar — For Locality, Fleet & Corridor Pages */
+                  <div className="commercial-service-trust-bar">
+                    <div className="trust-pill">
+                      <MapPin size={15} color="#2563EB" />
+                      <span>Doorstep Pickup in {localityName}</span>
+                    </div>
+                    <div className="trust-pill">
+                      <ShieldCheck size={15} color="#10B981" />
+                      <span>Verified Chauffeurs</span>
+                    </div>
+                    <div className="trust-pill">
+                      <CheckCircle2 size={15} color="#10B981" />
+                      <span>Sanitized AC Vehicles</span>
+                    </div>
+                    <div className="trust-pill">
+                      <Clock size={15} color="#2563EB" />
+                      <span>24/7 Dispatch Desk</span>
+                    </div>
                   </div>
-                  <div className="meta-split-dot">•</div>
-                  <div className="meta-pill">
-                    <Clock size={14} />
-                    <span>{page.readTime}</span>
-                  </div>
-                </div>
+                )}
               </header>
 
-              {/* Featured Hero Banner */}
+              {/* Featured Vehicle / Route Banner */}
               <div className="article-hero-img-box" style={{ marginBottom: '2rem' }}>
                 <img 
                   src={page.heroImg} 
-                  alt={page.h1} 
+                  alt={page.category === 'Bus & Coach Rentals' ? `${page.h1} - 20 to 50 Seater Luxury AC Coach Interior` : page.h1} 
                   className="article-featured-photo"
+                  style={{
+                    objectPosition: page.category === 'Bus & Coach Rentals' ? 'center 25%' : 'center center'
+                  }}
                 />
+                {!isEditorialBlog && (
+                  <div className="commercial-image-overlay-badge">
+                    {page.category === 'Bus & Coach Rentals' ? <Bus size={16} /> : <Car size={16} />}
+                    <span>
+                      {page.category === 'Bus & Coach Rentals'
+                        ? `20 to 50 Seater Luxury AC Coaches • Available in ${localityName}`
+                        : page.category === 'Tempo Traveller Rentals'
+                        ? `13, 17 & 20 Seater AC Force Tempo Travellers • Doorstep Pickup in ${localityName}`
+                        : `Executive Sedans & Family SUVs • Doorstep Pickup in ${localityName}`}
+                    </span>
+                  </div>
+                )}
               </div>
 
               {/* Key Takeaways Callout */}
@@ -182,7 +308,9 @@ function LiveMigratedContent({ currentSlug }) {
                   <strong>Trip Assurance by AJ Travels</strong>
                 </div>
                 <p>
-                  100% all-inclusive pricing with expressway tolls included, verified courteous chauffeurs, sanitized vehicles with dual air conditioning, and 24/7 customer support desk.
+                  {isLocalityPage 
+                    ? `Reliable chauffeur-driven transport in ${localityName}. Transparent fixed rates with no hidden surprises, punctual doorstep arrival, and full AC comfort.`
+                    : '100% all-inclusive pricing with expressway tolls included, verified courteous chauffeurs, sanitized vehicles with dual air conditioning, and 24/7 customer support desk.'}
                 </p>
               </div>
 
@@ -225,8 +353,12 @@ function LiveMigratedContent({ currentSlug }) {
               <div className="article-booking-cta-card">
                 <div className="cta-left">
                   <span className="cta-badge">INSTANT ALL-INCLUSIVE QUOTE</span>
-                  <h3>Need a Cab for this Route?</h3>
-                  <p>Calculate your exact fare online in seconds. Tolls, taxes, and driver charges included.</p>
+                  <h3>{isLocalityPage ? `Need a Cab in ${localityName}?` : 'Need a Cab for this Route?'}</h3>
+                  <p>
+                    {isLocalityPage 
+                      ? `Book doorstep car rental in ${localityName} with professional driver. Hourly packages and outstation rates available.`
+                      : 'Calculate your exact fare online in seconds. Tolls, taxes, and driver charges included.'}
+                  </p>
                   <div className="cta-fleet-links">
                     <span>Fleet options: </span>
                     <Link to="/swift-dzire-car-on-rent-with-driver-in-pune/">Sedan</Link> • 
@@ -242,7 +374,7 @@ function LiveMigratedContent({ currentSlug }) {
                     className="btn-cta-calculate"
                   >
                     <Car size={18} />
-                    <span>Calculate Cab Fare</span>
+                    <span>{isLocalityPage ? `Book Car in ${localityName}` : 'Calculate Cab Fare'}</span>
                     <ArrowRight size={16} />
                   </button>
                 </div>
@@ -267,19 +399,36 @@ function LiveMigratedContent({ currentSlug }) {
               )}
             </div>
 
-            {/* Right Column: Sticky Sidebar Booking Card & Highway Specs */}
+            {/* Right Column: Sticky Sidebar Booking Card & Highway/Locality Specs */}
             <aside className="article-sidebar-col">
               {/* Widget 1: Direct Cab Fare & Booking CTA */}
               <div className="sidebar-card sidebar-booking-card">
-                <div className="sidebar-card-badge">DIRECT BOOKING</div>
-                <h3 className="sidebar-card-title">Book Cab For This Route</h3>
-                <div className="sidebar-corridor-pill">
-                  <span className="corridor-point">{page.bookingDefaults?.pickupId ? page.bookingDefaults.pickupId.toUpperCase() : 'PUNE'}</span>
-                  <ArrowRight size={14} color="#1D4ED8" />
-                  <span className="corridor-point">{page.bookingDefaults?.dropId ? page.bookingDefaults.dropId.toUpperCase() : 'MUMBAI'}</span>
+                <div className="sidebar-card-badge">
+                  {isLocalityPage ? 'LOCALITY RENTAL' : 'DIRECT BOOKING'}
                 </div>
+                <h3 className="sidebar-card-title">
+                  {isLocalityPage ? `Book Cab in ${localityName}` : 'Book Cab For This Route'}
+                </h3>
+                {dId ? (
+                  <div className="sidebar-corridor-pill">
+                    <span className="corridor-point">{pId.toUpperCase()}</span>
+                    <ArrowRight size={14} color="#1D4ED8" />
+                    <span className="corridor-point">{dId.toUpperCase()}</span>
+                  </div>
+                ) : (
+                  <div className="sidebar-corridor-pill">
+                    <MapPin size={14} color="#1D4ED8" />
+                    <span className="corridor-point">
+                      {localityName.toUpperCase()}
+                    </span>
+                  </div>
+                )}
                 <p className="sidebar-card-desc">
-                  Doorstep pickup across Pune & Mumbai with verified drivers and 100% expressway toll-inclusive flat fares.
+                  {isPuneMumbaiCorridor
+                    ? 'Doorstep pickup across Pune & Mumbai with verified drivers and 100% expressway toll-inclusive flat fares.'
+                    : dId
+                    ? `Doorstep pickup from ${getLocationDisplayName(pId)} to ${getLocationDisplayName(dId)} with verified chauffeurs and all-inclusive pricing.`
+                    : `Doorstep pickup across ${localityName} with verified drivers for local city running, airport transfers, and flexible hourly or outstation rental options.`}
                 </p>
                 <button 
                   type="button" 
@@ -287,7 +436,7 @@ function LiveMigratedContent({ currentSlug }) {
                   className="sidebar-btn-book"
                 >
                   <Car size={16} />
-                  <span>Check Fare & Availability</span>
+                  <span>{isLocalityPage ? `Book in ${localityName}` : 'Check Fare & Availability'}</span>
                   <ArrowRight size={14} />
                 </button>
 
@@ -296,7 +445,7 @@ function LiveMigratedContent({ currentSlug }) {
                     <span>📞 Call 24/7 Desk: {businessConfig.phoneDisplay}</span>
                   </a>
                   <a 
-                    href={`https://wa.me/${businessConfig.whatsapp}?text=${encodeURIComponent(`Hi AJ Travels, I am on "${page.h1}" and would like to enquire about cab availability.`)}`}
+                    href={`https://wa.me/${businessConfig.whatsapp}?text=${encodeURIComponent(`Hi AJ Travels, I am on "${page.h1}" and would like to enquire about cab availability in ${localityName}.`)}`}
                     target="_blank" 
                     rel="noopener noreferrer" 
                     className="sidebar-desk-link whatsapp"
@@ -306,30 +455,59 @@ function LiveMigratedContent({ currentSlug }) {
                 </div>
               </div>
 
-              {/* Widget 2: Route Quick Specs */}
-              <div className="sidebar-card sidebar-specs-card">
-                <h4 className="sidebar-specs-heading">Corridor Highway Specs</h4>
-                <div className="sidebar-spec-row">
-                  <span className="spec-label">Route</span>
-                  <span className="spec-value">Expressway (NH 48)</span>
+              {/* Widget 2: Corridor Highway Specs (Shown only when Expressway specs are factually verified) */}
+              {isPuneMumbaiCorridor && (
+                <div className="sidebar-card sidebar-specs-card">
+                  <h4 className="sidebar-specs-heading">Corridor Highway Specs</h4>
+                  <div className="sidebar-spec-row">
+                    <span className="spec-label">Route</span>
+                    <span className="spec-value">Expressway (NH 48)</span>
+                  </div>
+                  <div className="sidebar-spec-row">
+                    <span className="spec-label">Est. Distance</span>
+                    <span className="spec-value">~150 KMs</span>
+                  </div>
+                  <div className="sidebar-spec-row">
+                    <span className="spec-label">Travel Time</span>
+                    <span className="spec-value">2.5 – 3.5 Hours</span>
+                  </div>
+                  <div className="sidebar-spec-row">
+                    <span className="spec-label">Toll Charges</span>
+                    <span className="spec-value text-green">100% Included</span>
+                  </div>
+                  <div className="sidebar-spec-row">
+                    <span className="spec-label">Available Cabs</span>
+                    <span className="spec-value">Sedan, Ertiga, Crysta</span>
+                  </div>
                 </div>
-                <div className="sidebar-spec-row">
-                  <span className="spec-label">Est. Distance</span>
-                  <span className="spec-value">~150 KMs</span>
+              )}
+
+              {/* Widget 2b: Locality Rental Specs (Shown for Locality pages) */}
+              {isLocalityPage && (
+                <div className="sidebar-card sidebar-specs-card">
+                  <h4 className="sidebar-specs-heading">Locality Rental Details</h4>
+                  <div className="sidebar-spec-row">
+                    <span className="spec-label">Service Area</span>
+                    <span className="spec-value">{localityName}</span>
+                  </div>
+                  <div className="sidebar-spec-row">
+                    <span className="spec-label">Local Packages</span>
+                    <span className="spec-value">4h/40km, 8h/80km, 12h/120km</span>
+                  </div>
+                  <div className="sidebar-spec-row">
+                    <span className="spec-label">Outstation</span>
+                    <span className="spec-value">Mumbai, Shirdi, Konkan</span>
+                  </div>
+                  <div className="sidebar-spec-row">
+                    <span className="spec-label">Airport Drop</span>
+                    <span className="spec-value">Pune (PNQ) & Mumbai (BOM)</span>
+                  </div>
+                  <div className="sidebar-spec-row">
+                    <span className="spec-label">Chauffeur</span>
+                    <span className="spec-value text-green">Verified Highway Driver</span>
+                  </div>
                 </div>
-                <div className="sidebar-spec-row">
-                  <span className="spec-label">Travel Time</span>
-                  <span className="spec-value">2.5 – 3.5 Hours</span>
-                </div>
-                <div className="sidebar-spec-row">
-                  <span className="spec-label">Toll Charges</span>
-                  <span className="spec-value text-green">100% Included</span>
-                </div>
-                <div className="sidebar-spec-row">
-                  <span className="spec-label">Available Cabs</span>
-                  <span className="spec-value">Sedan, Ertiga, Crysta</span>
-                </div>
-              </div>
+              )}
 
               {/* Widget 3: AJ Travels Guarantee Box */}
               <div className="sidebar-card sidebar-trust-box">
@@ -446,6 +624,27 @@ function LiveMigratedContent({ currentSlug }) {
           margin-bottom: 1.5rem;
         }
 
+        .commercial-service-trust-bar {
+          display: flex;
+          align-items: center;
+          gap: 0.65rem;
+          flex-wrap: wrap;
+          margin-bottom: 1.5rem;
+        }
+
+        .trust-pill {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.4rem;
+          font-size: 0.825rem;
+          font-weight: 600;
+          color: #1E293B;
+          background: #F1F5F9;
+          padding: 0.4rem 0.85rem;
+          border-radius: 9999px;
+          border: 1px solid #E2E8F0;
+        }
+
         .author-pill, .meta-pill {
           display: inline-flex;
           align-items: center;
@@ -465,6 +664,18 @@ function LiveMigratedContent({ currentSlug }) {
           overflow: hidden;
           box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
           border: 1px solid #E2E8F0;
+        }
+
+        .commercial-image-overlay-badge {
+          background: #0F172A;
+          color: #F8FAFC;
+          padding: 0.75rem 1.25rem;
+          display: flex;
+          align-items: center;
+          gap: 0.6rem;
+          font-size: 0.85rem;
+          font-weight: 600;
+          border-top: 1px solid #1E293B;
         }
 
         .article-featured-photo {

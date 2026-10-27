@@ -35,8 +35,9 @@ import { usePageSeo } from '../hooks/usePageSeo';
 import { useScrollReveal } from '../hooks/useScrollReveal';
 import './fare.css';
 
-// In-memory cache for locations across user session
+// In-memory cache for locations and quotes across user session
 let locationsCache = null;
+const quoteGlobalCache = new Map();
 const getCachedLocations = async () => {
   if (locationsCache && locationsCache.length > 0) return locationsCache;
   try {
@@ -115,6 +116,7 @@ export const FarePage = () => {
   // Request cancellation and race condition mitigation
   const abortControllerRef = useRef(null);
   const latestRequestIdRef = useRef(0);
+  const quoteCacheRef = useRef(new Map());
 
   // Cached locations for autocomplete
   const [allLocations, setAllLocations] = useState([]);
@@ -357,6 +359,15 @@ export const FarePage = () => {
         }
       }
 
+      const cacheKey = `${tripType}:${activePickupId}:${activeDropId}:${city}:${duration}:${passengers}`;
+      const cached = quoteGlobalCache.get(cacheKey);
+      if (cached && (Date.now() - cached.timestamp < 15 * 60 * 1000)) {
+        setQuoteData(cached.data);
+        setIsCustomRoute(false);
+        setLoading(false);
+        return;
+      }
+
       const payload = {
         tripType,
         pickupLocationId: activePickupId || undefined,
@@ -378,6 +389,7 @@ export const FarePage = () => {
       }
 
       if (res.data?.success) {
+        quoteGlobalCache.set(cacheKey, { data: res.data, timestamp: Date.now() });
         setQuoteData(res.data);
         setIsCustomRoute(false);
       } else {
@@ -896,7 +908,7 @@ export const FarePage = () => {
   }
 
   // Reactive Page SEO hook
-  usePageSeo('fare', seoPageTitle);
+  usePageSeo('fare', seoPageTitle, undefined, 'https://ajtravelspune.com/fare');
 
   return (
     <div className="fare-page-wrapper">
@@ -1427,11 +1439,25 @@ export const FarePage = () => {
         )}
 
         {/* Results Area */}
-        {loading ? (
-          <div className="fare-loading-box">
-            <Loader2 size={36} className="animate-spin" color="#1D4ED8" />
-            <h3>Checking vehicle availability & toll rates...</h3>
-            <p>Fetching real-time server verified pricing for your trip</p>
+        {loading && !quoteData ? (
+          <div className="fare-skeleton-grid" aria-busy="true" aria-label="Loading verified vehicle fares">
+            {[1, 2, 3, 4].map((n) => (
+              <div key={n} className="fare-skeleton-card">
+                <div className="fare-skeleton-img"></div>
+                <div className="fare-skeleton-body">
+                  <div className="fare-skeleton-line title"></div>
+                  <div className="fare-skeleton-line subtitle"></div>
+                  <div className="fare-skeleton-pills">
+                    <div className="fare-skeleton-pill"></div>
+                    <div className="fare-skeleton-pill"></div>
+                  </div>
+                  <div className="fare-skeleton-footer">
+                    <div className="fare-skeleton-price"></div>
+                    <div className="fare-skeleton-btn"></div>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         ) : error ? (
           <div

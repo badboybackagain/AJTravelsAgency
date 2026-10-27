@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
   X,
-  Upload,
   Plus,
   Trash2,
   Car,
@@ -10,11 +9,9 @@ import {
   AlertCircle,
   Loader2,
   Sparkles,
-  Image as ImageIcon,
   ArrowLeft,
 } from 'lucide-react';
 import { adminFareConfigApi, locationApi, routeApi, vehicleApi, API_BASE_URL } from '../../services/api';
-import { MediaPickerModal } from './MediaPickerModal';
 // In-memory cache for instant dropdown loading across modal opens
 let cachedRoutes = null;
 let cachedLocations = null;
@@ -51,8 +48,6 @@ export const AdminFareForm = ({ isOpen, onClose, onSuccess, initialData = null }
   const [existingVehicles, setExistingVehicles] = useState(cachedVehicles || []);
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
-  const [uploadingImage, setUploadingImage] = useState(false);
-  const [isMediaPickerOpen, setIsMediaPickerOpen] = useState(false);
 
   // Form State
   const [routeMode, setRouteMode] = useState('existing'); // 'existing' | 'new'
@@ -221,27 +216,6 @@ export const AdminFareForm = ({ isOpen, onClose, onSuccess, initialData = null }
     const updated = [...tolls];
     updated[index][field] = field === 'amount' ? parseFloat(value) || 0 : value;
     setTolls(updated);
-  };
-
-  // Image Upload handler
-  const handleImageUpload = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const formData = new FormData();
-    formData.append('image', file);
-
-    setUploadingImage(true);
-    try {
-      const res = await vehicleApi.uploadImage(formData);
-      if (res.data?.imageUrl) {
-        setVehicleImage(res.data.imageUrl);
-      }
-    } catch (err) {
-      setErrorMsg(err.response?.data?.message || 'Failed to upload vehicle image');
-    } finally {
-      setUploadingImage(false);
-    }
   };
 
   // Live Fare Calculation preview
@@ -596,29 +570,16 @@ export const AdminFareForm = ({ isOpen, onClose, onSuccess, initialData = null }
                   </div>
                 </div>
 
-                {/* Vehicle Image */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                {/* Vehicle Image Preview (Read-Only) */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.5rem 0.75rem', background: '#F8FAFC', borderRadius: '8px', border: '1px solid #E2E8F0' }}>
                   <img
                     src={vehicleImage.startsWith('http') || vehicleImage.startsWith('/uploads') ? `${vehicleImage.startsWith('/uploads') ? API_BASE_URL : ''}${vehicleImage}` : vehicleImage}
                     alt="Vehicle"
-                    style={{ width: '48px', height: '34px', borderRadius: '6px', objectFit: 'contain', backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', padding: '2px', flexShrink: 0 }}
+                    style={{ width: '48px', height: '34px', borderRadius: '6px', objectFit: 'contain', backgroundColor: '#FFFFFF', border: '1px solid #CBD5E1', padding: '2px', flexShrink: 0 }}
                     onError={(e) => { e.target.src = '/assets/sedan.webp'; }}
                   />
-                  <div style={{ display: 'flex', gap: '0.5rem', flex: 1 }}>
-                    <button
-                      type="button"
-                      onClick={() => setIsMediaPickerOpen(true)}
-                      className="admin-btn-secondary"
-                      style={{ flex: 1, height: '36px', fontSize: '0.78rem' }}
-                    >
-                      <ImageIcon size={13} />
-                      <span>Choose from Library</span>
-                    </button>
-                    <label className="admin-btn-secondary" style={{ flex: 1, height: '36px', cursor: 'pointer', fontSize: '0.78rem' }}>
-                      <Upload size={13} />
-                      <span>{uploadingImage ? 'Uploading...' : 'Upload File'}</span>
-                      <input type="file" accept="image/*" onChange={handleImageUpload} style={{ display: 'none' }} />
-                    </label>
+                  <div style={{ fontSize: '0.78rem', color: '#64748B' }}>
+                    Assigned Fleet Photo: <code style={{ color: '#0284C7', fontWeight: 600 }}>{vehicleImage.split('/').pop()}</code>
                   </div>
                 </div>
               </div>
@@ -772,18 +733,6 @@ export const AdminFareForm = ({ isOpen, onClose, onSuccess, initialData = null }
           </form>
 
       </div>
-
-      {/* Media Picker Modal */}
-      <MediaPickerModal
-        isOpen={isMediaPickerOpen}
-        onClose={() => setIsMediaPickerOpen(false)}
-        onSelect={(asset) => {
-          setVehicleImage(asset.url);
-        }}
-        initialCategory="vehicles"
-        currentValue={vehicleImage}
-        title="Select Vehicle Image"
-      />
     </div>
   );
 };

@@ -95,6 +95,8 @@ const listFareConfigs = async (req, res, next) => {
           availableToTime: '23:59',
         },
         estimatedTotal,
+        customerQuoteTotal: toNum(toNum(f.baseFare) + totalToll + parkingAmount),
+        waitingAllowanceAmount: stayAmount,
       };
     });
 
@@ -183,6 +185,8 @@ const getFareConfig = async (req, res, next) => {
           availableToTime: '23:59',
         },
         estimatedTotal,
+        customerQuoteTotal: toNum(toNum(fare.baseFare) + totalToll + parkingAmount),
+        waitingAllowanceAmount: stayAmount,
       },
     });
   } catch (err) {
@@ -398,6 +402,9 @@ const createFareConfig = async (req, res, next) => {
       }
 
       return newFare;
+    }, {
+      maxWait: 15000,
+      timeout: 30000,
     });
 
     // Return the full structured object
@@ -592,6 +599,9 @@ const updateFareConfig = async (req, res, next) => {
           },
         });
       }
+    }, {
+      maxWait: 15000,
+      timeout: 30000,
     });
 
     const updated = await prisma.fare.findUnique({
@@ -695,6 +705,9 @@ const deleteFareConfig = async (req, res, next) => {
           },
         });
       }
+    }, {
+      maxWait: 15000,
+      timeout: 30000,
     });
 
     invalidateFareCache();
@@ -802,6 +815,9 @@ const duplicateFareConfig = async (req, res, next) => {
       }
 
       return newFare;
+    }, {
+      maxWait: 15000,
+      timeout: 30000,
     });
 
     const complete = await prisma.fare.findUnique({

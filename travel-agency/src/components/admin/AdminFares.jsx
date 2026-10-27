@@ -24,6 +24,7 @@ export const AdminFares = () => {
   const [error, setError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL'); // ALL, ACTIVE, INACTIVE
+  const [tripTypeFilter, setTripTypeFilter] = useState('ALL'); // ALL, ONE_WAY, ROUND_TRIP
   
   // Modal states
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -113,6 +114,9 @@ export const AdminFares = () => {
     if (statusFilter === 'ACTIVE' && !f.isActive) return false;
     if (statusFilter === 'INACTIVE' && f.isActive) return false;
 
+    // Trip type filter
+    if (tripTypeFilter !== 'ALL' && f.tripType !== tripTypeFilter) return false;
+
     // Search query
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
@@ -121,7 +125,9 @@ export const AdminFares = () => {
         f.route?.dropLocation?.name?.toLowerCase().includes(q);
       const vehicleMatch = f.vehicle?.name?.toLowerCase().includes(q) ||
         f.vehicle?.category?.toLowerCase().includes(q);
-      return routeMatch || vehicleMatch;
+      const tripMatch = f.tripType?.toLowerCase().includes(q) ||
+        (f.tripType === 'ONE_WAY' ? 'one way' : 'round trip').includes(q);
+      return routeMatch || vehicleMatch || tripMatch;
     }
     return true;
   });
@@ -228,6 +234,25 @@ export const AdminFares = () => {
           >
             Disabled ({fares.filter((f) => !f.isActive).length})
           </button>
+          <span style={{ color: '#CBD5E1', margin: '0 0.25rem' }}>|</span>
+          <button
+            onClick={() => setTripTypeFilter('ALL')}
+            className={`admin-filter-btn ${tripTypeFilter === 'ALL' ? 'active' : ''}`}
+          >
+            All Modes
+          </button>
+          <button
+            onClick={() => setTripTypeFilter('ONE_WAY')}
+            className={`admin-filter-btn ${tripTypeFilter === 'ONE_WAY' ? 'active' : ''}`}
+          >
+            One Way ({fares.filter((f) => f.tripType === 'ONE_WAY').length})
+          </button>
+          <button
+            onClick={() => setTripTypeFilter('ROUND_TRIP')}
+            className={`admin-filter-btn ${tripTypeFilter === 'ROUND_TRIP' ? 'active' : ''}`}
+          >
+            Round Trip ({fares.filter((f) => f.tripType === 'ROUND_TRIP').length})
+          </button>
         </div>
 
       </div>
@@ -271,7 +296,12 @@ export const AdminFares = () => {
                   <th style={{ minWidth: '110px' }}>Base Fare</th>
                   <th style={{ minWidth: '110px' }}>Tolls</th>
                   <th style={{ minWidth: '140px' }}>Parking / Stay</th>
-                  <th style={{ minWidth: '120px' }}>Estimated Total</th>
+                  <th style={{ minWidth: '130px' }}>
+                    Estimated Total
+                    <span style={{ fontSize: '0.68rem', fontWeight: 500, color: '#64748B', display: 'block' }}>
+                      (incl. 1 hr waiting)
+                    </span>
+                  </th>
                   <th style={{ minWidth: '140px' }}>Availability</th>
                   <th style={{ minWidth: '130px', textAlign: 'right' }}>Actions</th>
                 </tr>
@@ -291,8 +321,24 @@ export const AdminFares = () => {
                       
                       {/* Route */}
                       <td>
-                        <div style={{ fontWeight: 800, color: '#0F172A', fontSize: '0.88rem' }}>
-                          {f.route?.routeName || 'Unnamed Route'}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', flexWrap: 'wrap' }}>
+                          <span style={{ fontWeight: 800, color: '#0F172A', fontSize: '0.88rem' }}>
+                            {f.route?.routeName || 'Unnamed Route'}
+                          </span>
+                          <span
+                            style={{
+                              fontSize: '0.66rem',
+                              fontWeight: 800,
+                              padding: '0.12rem 0.45rem',
+                              borderRadius: '6px',
+                              letterSpacing: '0.04em',
+                              backgroundColor: f.tripType === 'ROUND_TRIP' ? '#EEF2FF' : '#ECFDF5',
+                              color: f.tripType === 'ROUND_TRIP' ? '#4F46E5' : '#059669',
+                              border: f.tripType === 'ROUND_TRIP' ? '1px solid #C7D2FE' : '1px solid #A7F3D0',
+                            }}
+                          >
+                            {f.tripType === 'ROUND_TRIP' ? 'ROUND TRIP' : 'ONE WAY'}
+                          </span>
                         </div>
                         <div style={{ fontSize: '0.74rem', color: '#64748B', display: 'flex', alignItems: 'center', gap: '0.35rem', marginTop: '0.25rem' }}>
                           <MapPin size={12} color="#0284C7" />
@@ -321,7 +367,7 @@ export const AdminFares = () => {
                           </div>
                         </div>
                       </td>
-
+ 
                       {/* Base Fare */}
                       <td style={{ whiteSpace: 'nowrap' }}>
                         <span style={{ fontWeight: 800, color: '#0F172A', fontSize: '0.92rem' }}>
@@ -367,8 +413,14 @@ export const AdminFares = () => {
 
                       {/* Calculated Estimated Total */}
                       <td style={{ whiteSpace: 'nowrap' }}>
-                        <span className="admin-total-badge">
+                        <span
+                          className="admin-total-badge"
+                          title={`Base (₹${f.baseFare}) + Tolls (₹${f.totalToll}) + Parking (₹${f.parking?.amount || 0}) + 1 hr Waiting (₹${f.waiting?.perHourCharge || 0})`}
+                        >
                           ₹{f.estimatedTotal?.toLocaleString()}
+                        </span>
+                        <span style={{ fontSize: '0.68rem', color: '#64748B', display: 'block', marginTop: '0.2rem' }}>
+                          Cust. quote: ₹{(f.baseFare + f.totalToll + (f.parking?.enabled ? f.parking.amount : 0))?.toLocaleString()}
                         </span>
                       </td>
 

@@ -15,7 +15,7 @@ export const vehiclesData = [
     image: '/assets/sedan.webp',
     passengers: '4 Passengers',
     luggage: '2-3 Medium Bags',
-    fareStarting: '₹2,490',
+    fareStarting: '₹2,300',
     overview: 'Our Executive Sedan fleet features fuel-efficient, well-maintained Swift Dzire and Toyota Etios cars with experienced drivers. Ideal for solo business travelers, couples, and small nuclear families seeking dependable point-to-point and outstation car rental in Pune.',
     features: [
       'Dual Air-Conditioning with rapid cooling',
@@ -44,7 +44,7 @@ export const vehiclesData = [
     image: '/assets/suv.webp',
     passengers: '6 Passengers',
     luggage: '4 Large Bags',
-    fareStarting: '₹3,490',
+    fareStarting: '₹3,199',
     overview: 'The Maruti Suzuki Ertiga and Kia Carens are Maharashtra’s favorite 6-seater family SUVs. Designed with three comfortable seating rows, roof-mounted rear AC blowers, and flexible luggage capacity, this category delivers supreme highway ride quality without the bulk of larger commercial vehicles.',
     features: [
       'Roof-mounted rear AC vents keeping 2nd and 3rd row passengers cool',
@@ -70,10 +70,10 @@ export const vehiclesData = [
     tag: 'SUPREME COMFORT & LUXURY',
     metaTitle: 'Innova Crysta on Rent in Pune with Driver | Luxury Cab Hire - AJ Travels',
     metaDesc: 'Rent Toyota Innova Crysta in Pune with professional chauffeur. Executive 7-seater luxury cab hire for corporate travel, VIP airport transfers, and family tours.',
-    image: '/assets/suv.webp',
+    image: '/assets/luxury.jpg',
     passengers: '6-7 Passengers',
     luggage: '4-5 Large Bags',
-    fareStarting: '₹4,490',
+    fareStarting: '₹4,899',
     overview: 'The Toyota Innova Crysta is the gold standard in executive long-distance highway comfort. Featuring ergonomic reclining captain seats, exceptional sound insulation, and bulletproof reliability, it turns every road journey into first-class travel.',
     features: [
       'Ultra-comfortable ergonomic captain chairs with armrests',
@@ -99,10 +99,10 @@ export const vehiclesData = [
     tag: 'BEST FOR WEDDINGS & GROUPS',
     metaTitle: 'Tempo Traveller on Rent in Pune | 13, 17 & 20 Seater AC Hire - AJ Travels',
     metaDesc: 'Rent luxury Force Tempo Traveller in Pune with driver for outstation trips, weddings, and corporate outings. 13-seater, 17-seater, and 20-seater pushback AC coaches.',
-    image: '/assets/pune-mumbai-travel-banner.webp',
+    image: '/assets/minibus.jpg',
     passengers: '12 - 20 Passengers',
     luggage: '10+ Big Bags',
-    fareStarting: '₹6,490',
+    fareStarting: '₹7,999',
     overview: 'Keep your entire group comfortable and traveling together. Our 13-seater, 17-seater, and 20-seater Force Tempo Travellers are outfitted with individual luxury pushback seats, wide panoramic windows, personal charging sockets, and expansive rear luggage compartments.',
     features: [
       '2x1 or 1x1 luxury high-back reclining captain seats',

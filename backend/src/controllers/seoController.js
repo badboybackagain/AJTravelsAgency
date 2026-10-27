@@ -7,6 +7,40 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const { SITE_DOMAIN } = require('../config/seoConfig');
 
+// Migrated live website routes and content metadata
+let migratedPagesMap = {};
+try {
+  migratedPagesMap = require('../data/migratedPagesSeo.json');
+} catch (e) {
+  // Non-fatal if map not present
+}
+
+// Raw sitemap data with reliable historical lastmod timestamps
+let rawSitemapData = null;
+try {
+  rawSitemapData = require('../../../travel-agency/src/data/sitemapRawData.json');
+} catch (e) {
+  // Non-fatal if raw sitemap data not present
+}
+
+const reliableLastmodMap = new Map();
+if (rawSitemapData) {
+  const entries = [
+    ...(rawSitemapData.pageEntries || []),
+    ...(rawSitemapData.postEntries || []),
+  ];
+  for (const entry of entries) {
+    if (entry.url && entry.lastmod) {
+      try {
+        const u = new URL(entry.url);
+        const normPath = u.pathname.replace(/\/$/, '') || '/';
+        const dateStr = entry.lastmod.split('T')[0];
+        reliableLastmodMap.set(normPath, dateStr);
+      } catch (_) {}
+    }
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Public pages tracked by the SEO module
 // These are the canonical indexable pages (no admin, no API, no query strings)
@@ -299,39 +333,94 @@ const updatePage = async (req, res) => {
 
 // ---------------------------------------------------------------------------
 // GET /sitemap.xml  — generate XML sitemap (public, no auth)
+// Includes all eligible canonical public pages (core SPA pages + migrated pages)
 // ---------------------------------------------------------------------------
 const getSitemap = async (req, res) => {
   try {
     const domain = SITE_DOMAIN;
-    const pages  = await prisma.seoMeta.findMany({
-      where:   { isIndexable: true },
-      orderBy: { pageUrl: 'asc' },   // deterministic: / → /booking → /fare
-    });
+    let dbPages = [];
+    try {
+      dbPages = await prisma.seoMeta.findMany({
+        where:   { isIndexable: true },
+        orderBy: { pageUrl: 'asc' },
+      });
+    } catch (dbErr) {
+      console.warn('[SEO] getSitemap DB query warning:', dbErr.message);
+    }
 
-    const today = new Date().toISOString().split('T')[0];
+    const urlMap = new Map();
 
-    const urlEntries = pages.map(p => {
-      // Prefer explicit canonicalUrl; fall back to domain + pageUrl
+    // 1. Core pages (from DB or fallback PUBLIC_PAGES)
+    const coreList = dbPages.length > 0 ? dbPages : PUBLIC_PAGES;
+    for (const p of coreList) {
+      if (p.isIndexable === false) continue;
+      const pathPart = p.pageUrl || '/';
       const loc = p.canonicalUrl
         ? (p.canonicalUrl.startsWith('http') ? p.canonicalUrl : `${domain}${p.canonicalUrl}`)
-        : `${domain}${p.pageUrl}`;
+        : (pathPart === '/' ? `${domain}/` : `${domain}${pathPart}`);
 
-      // Homepage is the most important page; all others are secondary
-      const priority = p.pageUrl === '/' ? '1.0' : '0.8';
-
-      // Use the record's updatedAt date if available, otherwise today
-      const lastmod = p.updatedAt
+      const priority = pathPart === '/' ? '1.0' : '0.8';
+      const changefreq = 'weekly';
+      const reliableDate = p.updatedAt
         ? new Date(p.updatedAt).toISOString().split('T')[0]
-        : today;
+        : (reliableLastmodMap.get(pathPart) || null);
 
-      return [
+      urlMap.set(loc, {
+        loc,
+        lastmod: reliableDate,
+        changefreq,
+        priority,
+      });
+    }
+
+    // 2. Migrated content pages (articles, corridors, locality rentals, vehicles, corporate)
+    for (const [slug, meta] of Object.entries(migratedPagesMap)) {
+      if (!meta || !meta.canonical) continue;
+
+      try {
+        const u = new URL(meta.canonical);
+        const cleanPath = u.pathname;
+        const normPath = cleanPath.replace(/\/$/, '') || '/';
+        const loc = `${domain}${cleanPath}`;
+
+        // Avoid duplicate canonical entries (e.g. 'about' and 'about-us' both point to /about-us/)
+        if (!urlMap.has(loc)) {
+          const lm = reliableLastmodMap.get(normPath) || null;
+          urlMap.set(loc, {
+            loc,
+            lastmod: lm,
+            changefreq: 'monthly',
+            priority: '0.7',
+          });
+        }
+      } catch (_) {}
+    }
+
+    // Deterministic sorting: / (home) first, then /booking, /fare, then alphabetical
+    const entries = Array.from(urlMap.values()).sort((a, b) => {
+      if (a.loc === `${domain}/`) return -1;
+      if (b.loc === `${domain}/`) return 1;
+      if (a.loc === `${domain}/booking` && b.loc === `${domain}/fare`) return -1;
+      if (a.loc === `${domain}/fare` && b.loc === `${domain}/booking`) return 1;
+      return a.loc.localeCompare(b.loc);
+    });
+
+    const urlEntries = entries.map(entry => {
+      const lines = [
         '  <url>',
-        `    <loc>${loc}</loc>`,
-        `    <lastmod>${lastmod}</lastmod>`,
-        `    <changefreq>weekly</changefreq>`,
-        `    <priority>${priority}</priority>`,
-        '  </url>',
-      ].join('\n');
+        `    <loc>${entry.loc}</loc>`,
+      ];
+      if (entry.lastmod) {
+        lines.push(`    <lastmod>${entry.lastmod}</lastmod>`);
+      }
+      if (entry.changefreq) {
+        lines.push(`    <changefreq>${entry.changefreq}</changefreq>`);
+      }
+      if (entry.priority) {
+        lines.push(`    <priority>${entry.priority}</priority>`);
+      }
+      lines.push('  </url>');
+      return lines.join('\n');
     }).join('\n');
 
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
@@ -339,7 +428,7 @@ const getSitemap = async (req, res) => {
 ${urlEntries}
 </urlset>`;
 
-    res.set('Content-Type', 'application/xml');
+    res.set('Content-Type', 'application/xml; charset=utf-8');
     res.send(xml);
   } catch (err) {
     console.error('[SEO] getSitemap error:', err);

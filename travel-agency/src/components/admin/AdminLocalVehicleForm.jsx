@@ -11,11 +11,9 @@ import {
   CheckCircle2,
   AlertCircle,
   Sparkles,
-  Image as ImageIcon,
   ArrowLeft,
 } from 'lucide-react';
 import { adminLocalVehicleApi, API_BASE_URL } from '../../services/api';
-import { MediaPickerModal } from './MediaPickerModal';
 import './admin.css';
 
 const PRESET_IMAGES = [
@@ -46,7 +44,6 @@ export const AdminLocalVehicleForm = ({ isOpen, vehicle, onClose, onSuccess }) =
 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
-  const [isMediaPickerOpen, setIsMediaPickerOpen] = useState(false);
 
   useEffect(() => {
     if (vehicle) {
@@ -317,15 +314,6 @@ export const AdminLocalVehicleForm = ({ isOpen, vehicle, onClose, onSuccess }) =
                   Active Photo: <code style={{ fontSize: '0.7rem', color: '#0284C7' }}>{formData.image?.split('/').pop()}</code>
                 </span>
               </div>
-              <button
-                type="button"
-                onClick={() => setIsMediaPickerOpen(true)}
-                className="admin-btn-secondary"
-                style={{ height: '32px', fontSize: '0.75rem', padding: '0 0.75rem' }}
-              >
-                <ImageIcon size={13} />
-                <span>Choose from Library</span>
-              </button>
             </div>
           </div>
 
@@ -491,17 +479,6 @@ export const AdminLocalVehicleForm = ({ isOpen, vehicle, onClose, onSuccess }) =
           </div>
         </form>
       </div>
-
-      <MediaPickerModal
-        isOpen={isMediaPickerOpen}
-        onClose={() => setIsMediaPickerOpen(false)}
-        onSelect={(asset) => {
-          setFormData((prev) => ({ ...prev, image: asset.url }));
-        }}
-        initialCategory="vehicles"
-        currentValue={formData.image}
-        title="Select Vehicle Photo"
-      />
     </div>
   );
 };
