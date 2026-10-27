@@ -185,7 +185,9 @@ export const HeroBooking = () => {
         duration: 0.35,
         ease: 'back.out(2)',
         onComplete: () => {
-          gsap.to(swapBtnRef.current, { scale: 1, duration: 0.15 });
+          if (swapBtnRef.current) {
+            gsap.to(swapBtnRef.current, { scale: 1, duration: 0.15 });
+          }
         },
       });
     }

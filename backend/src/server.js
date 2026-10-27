@@ -35,6 +35,20 @@ async function startServer() {
       }
       console.warn('⚠️  Warning: Database connection failed. Server starting in offline development mode.');
       console.warn(`   Reason: ${error.message}`);
+      if (!isProduction) {
+        const retryTimer = setInterval(async () => {
+          try {
+            await prisma.$connect();
+            setDbConnected(true, null);
+            clearInterval(retryTimer);
+            console.log('✅ Database connected successfully (recovered in background)');
+            const { warmupFareCache } = require('./services/fareCalculationService');
+            warmupFareCache().catch(() => {});
+          } catch {
+            // Will retry in 5 seconds
+          }
+        }, 5000);
+      }
     }
   }
 

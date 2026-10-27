@@ -52,16 +52,19 @@ export function useScrollReveal(dependencies = []) {
 
           // Desktop-only subtle parallax on hero background on scroll (disabled on touch/mobile for performance)
           if (window.innerWidth >= 768) {
-            gsap.to('.hero-bg-img', {
-              yPercent: 8,
-              ease: 'none',
-              scrollTrigger: {
-                trigger: heroSection,
-                start: 'top top',
-                end: 'bottom top',
-                scrub: 0.4,
-              },
-            });
+            const heroBg = heroSection.querySelector('.hero-bg-img');
+            if (heroBg) {
+              gsap.to(heroBg, {
+                yPercent: 8,
+                ease: 'none',
+                scrollTrigger: {
+                  trigger: heroSection,
+                  start: 'top top',
+                  end: 'bottom top',
+                  scrub: 0.4,
+                },
+              });
+            }
           }
         }
 

@@ -68,12 +68,6 @@ export const Header = ({ isDark = false, onOpenEnquiry }) => {
             Home
           </Link>
           <Link
-            to="/about"
-            className={`header-nav-link ${isActive('/about') ? 'active' : ''}`}
-          >
-            About Us
-          </Link>
-          <Link
             to="/services"
             className={`header-nav-link ${isActive('/services') ? 'active' : ''}`}
           >
@@ -96,6 +90,12 @@ export const Header = ({ isDark = false, onOpenEnquiry }) => {
             className={`header-nav-link ${isActive('/blog') ? 'active' : ''}`}
           >
             Blog
+          </Link>
+          <Link
+            to="/about"
+            className={`header-nav-link ${isActive('/about') ? 'active' : ''}`}
+          >
+            About Us
           </Link>
           <Link
             to="/contact"
@@ -164,12 +164,6 @@ export const Header = ({ isDark = false, onOpenEnquiry }) => {
               Home
             </Link>
             <Link
-              to="/about"
-              className={`mobile-nav-link ${isActive('/about') ? 'active' : ''}`}
-            >
-              About Us
-            </Link>
-            <Link
               to="/services"
               className={`mobile-nav-link ${isActive('/services') ? 'active' : ''}`}
             >
@@ -198,6 +192,12 @@ export const Header = ({ isDark = false, onOpenEnquiry }) => {
               className={`mobile-nav-link ${isActive('/booking') ? 'active' : ''}`}
             >
               Book Cab Online
+            </Link>
+            <Link
+              to="/about"
+              className={`mobile-nav-link ${isActive('/about') ? 'active' : ''}`}
+            >
+              About Us
             </Link>
             <Link
               to="/contact"

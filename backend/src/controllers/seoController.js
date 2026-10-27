@@ -3,8 +3,7 @@
 // Admin: manage per-page SEO metadata, sitemap, robots.txt
 // ============================================================
 
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+const prisma = require('../utils/prisma');
 const { SITE_DOMAIN } = require('../config/seoConfig');
 
 // Migrated live website routes and content metadata
