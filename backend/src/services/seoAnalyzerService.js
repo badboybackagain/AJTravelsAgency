@@ -264,14 +264,24 @@ function extractVisibleText(html) {
 // Single Page Analysis Function
 // ---------------------------------------------------------------------------
 async function analyzePage(pageKey, options = {}) {
-  let dbBlogs = [];
-  let dbPages = [];
-  try {
-    const prisma = require('../utils/prisma');
-    dbPages = await prisma.seoMeta.findMany({ orderBy: { pageKey: 'asc' } });
-    dbBlogs = await prisma.blogPost.findMany({ where: { isPublished: true }, orderBy: { createdAt: 'desc' } });
-  } catch (_e) {}
-  const allCatalog = typeof getAllPublicPagesCatalog === 'function' ? getAllPublicPagesCatalog(dbPages, dbBlogs) : [];
+  let dbBlogs = options.dbBlogs;
+  let dbPages = options.dbPages;
+  let allCatalog = options.allCatalog;
+
+  if (!allCatalog) {
+    if (!dbPages || !dbBlogs) {
+      try {
+        const prisma = require('../utils/prisma');
+        dbPages = await prisma.seoMeta.findMany({ orderBy: { pageKey: 'asc' } });
+        dbBlogs = await prisma.blogPost.findMany({ where: { isPublished: true }, orderBy: { createdAt: 'desc' } });
+      } catch (_e) {
+        dbPages = dbPages || [];
+        dbBlogs = dbBlogs || [];
+      }
+    }
+    allCatalog = typeof getAllPublicPagesCatalog === 'function' ? getAllPublicPagesCatalog(dbPages, dbBlogs) : [];
+  }
+
   const publicPageDef = PUBLIC_PAGES.find(p => p.pageKey === pageKey)
     || allCatalog.find(p => p.pageKey === pageKey);
   const routeDef = ROUTE_INVENTORY.find(r => r.managedPageKey === pageKey || r.path === (publicPageDef ? publicPageDef.pageUrl : null))
@@ -1327,9 +1337,18 @@ async function analyzeAllPages(options = {}) {
     ? PUBLIC_PAGES
     : (allCatalog.length > 0 ? allCatalog : PUBLIC_PAGES);
 
+  const sharedOptions = {
+    ...options,
+    dbPages,
+    dbBlogs,
+    allCatalog,
+    useHttp: false,
+    useBrowser: false,
+  };
+
   for (const page of pagesToAudit) {
     try {
-      const pageResult = await analyzePage(page.pageKey, { ...options, useHttp: false, useBrowser: false });
+      const pageResult = await analyzePage(page.pageKey, sharedOptions);
       results.push(pageResult);
     } catch (err) {
       console.error(`[SEO Analyzer] Failed analyzing page ${page.pageKey}:`, err);

@@ -62,7 +62,7 @@ export const AdminFareForm = ({ isOpen, onClose, onSuccess, initialData = null }
   const [vehicleSelectionType, setVehicleSelectionType] = useState('existing'); // 'existing' | 'new'
   const [vehicleId, setVehicleId] = useState('');
   const [vehicleName, setVehicleName] = useState('');
-  const [vehicleCategory, setVehicleCategory] = useState('SEDAN');
+  const [vehicleCategory, setVehicleCategory] = useState('');
   const [seatingCapacity, setSeatingCapacity] = useState('');
   const [vehicleImage, setVehicleImage] = useState('');
   const [vehicleDescription, setVehicleDescription] = useState('');
@@ -165,7 +165,7 @@ export const AdminFareForm = ({ isOpen, onClose, onSuccess, initialData = null }
       setVehicleSelectionType('existing');
       setVehicleId('');
       setVehicleName('');
-      setVehicleCategory('SEDAN');
+      setVehicleCategory('');
       setSeatingCapacity('');
       setVehicleImage('');
       setVehicleDescription('');
@@ -210,12 +210,31 @@ export const AdminFareForm = ({ isOpen, onClose, onSuccess, initialData = null }
     });
   }, [isOpen, initialData]);
 
+  // Handle selecting an existing route from dropdown
+  const handleExistingRouteSelect = (selectedId) => {
+    setRouteId(selectedId);
+    if (!selectedId) {
+      setPickupInput('');
+      setDropInput('');
+      setPickupLocationId('');
+      setDropLocationId('');
+      return;
+    }
+    const found = routes.find((r) => r.id === selectedId);
+    if (found) {
+      setPickupInput(found.pickupLocation?.name || '');
+      setDropInput(found.dropLocation?.name || '');
+      setPickupLocationId(found.pickupLocationId || '');
+      setDropLocationId(found.dropLocationId || '');
+    }
+  };
+
   // Handle selecting an existing vehicle from dropdown
   const handleExistingVehicleChange = (selectedVehId) => {
     setVehicleId(selectedVehId);
     if (!selectedVehId) {
       setVehicleName('');
-      setVehicleCategory('SEDAN');
+      setVehicleCategory('');
       setSeatingCapacity('');
       setVehicleImage('');
       setVehicleDescription('');
@@ -224,7 +243,7 @@ export const AdminFareForm = ({ isOpen, onClose, onSuccess, initialData = null }
     const found = existingVehicles.find((v) => v.id === selectedVehId);
     if (found) {
       setVehicleName(found.name);
-      setVehicleCategory(found.category);
+      setVehicleCategory(found.category || '');
       setSeatingCapacity(found.seatingCapacity !== undefined ? found.seatingCapacity : '');
       setVehicleImage(found.image || '');
       setVehicleDescription(found.description || '');
@@ -234,20 +253,36 @@ export const AdminFareForm = ({ isOpen, onClose, onSuccess, initialData = null }
   const handlePickupInputChange = (val) => {
     setPickupInput(val);
     const matched = locations.find((loc) => loc.name.toLowerCase() === val.trim().toLowerCase());
-    if (matched) {
-      setPickupLocationId(matched.id);
+    setPickupLocationId(matched ? matched.id : '');
+
+    // Check if combined with current dropInput it matches an existing route
+    if (val.trim() && dropInput.trim()) {
+      const matchedRoute = routes.find(
+        (r) =>
+          r.pickupLocation?.name?.toLowerCase() === val.trim().toLowerCase() &&
+          r.dropLocation?.name?.toLowerCase() === dropInput.trim().toLowerCase()
+      );
+      setRouteId(matchedRoute ? matchedRoute.id : '');
     } else {
-      setPickupLocationId('');
+      setRouteId('');
     }
   };
 
   const handleDropInputChange = (val) => {
     setDropInput(val);
     const matched = locations.find((loc) => loc.name.toLowerCase() === val.trim().toLowerCase());
-    if (matched) {
-      setDropLocationId(matched.id);
+    setDropLocationId(matched ? matched.id : '');
+
+    // Check if combined with current pickupInput it matches an existing route
+    if (pickupInput.trim() && val.trim()) {
+      const matchedRoute = routes.find(
+        (r) =>
+          r.pickupLocation?.name?.toLowerCase() === pickupInput.trim().toLowerCase() &&
+          r.dropLocation?.name?.toLowerCase() === val.trim().toLowerCase()
+      );
+      setRouteId(matchedRoute ? matchedRoute.id : '');
     } else {
-      setDropLocationId('');
+      setRouteId('');
     }
   };
 
@@ -283,16 +318,9 @@ export const AdminFareForm = ({ isOpen, onClose, onSuccess, initialData = null }
       return;
     }
 
-    if (routeMode === 'existing' && !routeId) {
-      setErrorMsg('Please select a valid Route.');
+    if (!pickupInput.trim() || !dropInput.trim()) {
+      setErrorMsg('Please specify both Pickup and Drop locations.');
       return;
-    }
-
-    if (routeMode === 'new') {
-      if (!pickupInput.trim() || !dropInput.trim()) {
-        setErrorMsg('Please specify both Pickup and Drop locations.');
-        return;
-      }
     }
 
     if (vehicleSelectionType === 'existing' && !vehicleId && !isEditMode) {
@@ -305,12 +333,17 @@ export const AdminFareForm = ({ isOpen, onClose, onSuccess, initialData = null }
       return;
     }
 
+    if (!vehicleCategory) {
+      setErrorMsg('Vehicle Category is required.');
+      return;
+    }
+
     const payload = {
-      routeId: routeMode === 'existing' ? routeId : undefined,
-      pickupLocationId: routeMode === 'new' && pickupLocationId ? pickupLocationId : undefined,
-      dropLocationId: routeMode === 'new' && dropLocationId ? dropLocationId : undefined,
-      pickupLocationName: routeMode === 'new' && !pickupLocationId ? pickupInput.trim() : undefined,
-      dropLocationName: routeMode === 'new' && !dropLocationId ? dropInput.trim() : undefined,
+      routeId: routeId || undefined,
+      pickupLocationId: pickupLocationId || undefined,
+      dropLocationId: dropLocationId || undefined,
+      pickupLocationName: !pickupLocationId ? pickupInput.trim() : undefined,
+      dropLocationName: !dropLocationId ? dropInput.trim() : undefined,
       vehicle: {
         id: (vehicleSelectionType === 'existing' && vehicleId) ? vehicleId : (isEditMode ? vehicleId : undefined),
         name: vehicleName.trim(),
@@ -507,15 +540,18 @@ export const AdminFareForm = ({ isOpen, onClose, onSuccess, initialData = null }
                   )}
                 </div>
 
-                {routeMode === 'existing' ? (
-                  <div className="admin-input-group" style={{ margin: 0 }}>
+                {routeMode === 'existing' && (
+                  <div className="admin-input-group" style={{ marginBottom: '0.75rem' }}>
+                    <label className="admin-input-label" style={{ fontSize: '0.74rem', color: '#64748B', marginBottom: '0.25rem' }}>
+                      Select Existing Route (Quick Autofill)
+                    </label>
                     <select
                       value={routeId}
-                      onChange={(e) => setRouteId(e.target.value)}
+                      onChange={(e) => handleExistingRouteSelect(e.target.value)}
                       className="admin-input-control"
-                      style={{ height: '40px', fontSize: '0.86rem', fontWeight: 600 }}
+                      style={{ height: '38px', fontSize: '0.84rem', fontWeight: 600 }}
                     >
-                      <option value="">-- Select Existing Route --</option>
+                      <option value="">-- Choose from Existing Predefined Routes --</option>
                       {routes.map((r) => (
                         <option key={r.id} value={r.id}>
                           {r.routeName} ({r.pickupLocation?.name} → {r.dropLocation?.name})
@@ -523,51 +559,69 @@ export const AdminFareForm = ({ isOpen, onClose, onSuccess, initialData = null }
                       ))}
                     </select>
                   </div>
-                ) : (
-                  <div className="admin-form-grid-2" style={{ margin: 0 }}>
-                    <div className="admin-input-group" style={{ margin: 0 }}>
-                      <label className="admin-input-label">
-                        Pickup Location / City <span className="admin-required">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        list="fare-pickup-locations"
-                        value={pickupInput}
-                        onChange={(e) => handlePickupInputChange(e.target.value)}
-                        placeholder="Select or enter custom pickup (e.g. Pune, Wakad)"
-                        className="admin-input-control"
-                        style={{ height: '38px', fontSize: '0.84rem' }}
-                      />
-                      <datalist id="fare-pickup-locations">
-                        {locations.map((loc) => (
-                          <option key={loc.id} value={loc.name}>
-                            {loc.name} ({loc.city})
-                          </option>
-                        ))}
-                      </datalist>
-                    </div>
+                )}
 
-                    <div className="admin-input-group" style={{ margin: 0 }}>
-                      <label className="admin-input-label">
-                        Drop Location / City <span className="admin-required">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        list="fare-drop-locations"
-                        value={dropInput}
-                        onChange={(e) => handleDropInputChange(e.target.value)}
-                        placeholder="Select or enter custom drop (e.g. Mumbai, Shirdi)"
-                        className="admin-input-control"
-                        style={{ height: '38px', fontSize: '0.84rem' }}
-                      />
-                      <datalist id="fare-drop-locations">
-                        {locations.map((loc) => (
-                          <option key={loc.id} value={loc.name}>
-                            {loc.name} ({loc.city})
-                          </option>
-                        ))}
-                      </datalist>
-                    </div>
+                <div className="admin-form-grid-2" style={{ margin: 0 }}>
+                  <div className="admin-input-group" style={{ margin: 0 }}>
+                    <label className="admin-input-label">
+                      Pickup Location / City <span className="admin-required">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      list="fare-pickup-locations"
+                      value={pickupInput}
+                      onChange={(e) => handlePickupInputChange(e.target.value)}
+                      placeholder="Select or enter custom pickup (e.g. Pune, Wakad)"
+                      className="admin-input-control"
+                      style={{ height: '38px', fontSize: '0.84rem' }}
+                      required
+                    />
+                    <datalist id="fare-pickup-locations">
+                      {locations.map((loc) => (
+                        <option key={loc.id} value={loc.name}>
+                          {loc.name} ({loc.city})
+                        </option>
+                      ))}
+                    </datalist>
+                  </div>
+
+                  <div className="admin-input-group" style={{ margin: 0 }}>
+                    <label className="admin-input-label">
+                      Drop Location / City <span className="admin-required">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      list="fare-drop-locations"
+                      value={dropInput}
+                      onChange={(e) => handleDropInputChange(e.target.value)}
+                      placeholder="Select or enter custom drop (e.g. Mumbai, Shirdi)"
+                      className="admin-input-control"
+                      style={{ height: '38px', fontSize: '0.84rem' }}
+                      required
+                    />
+                    <datalist id="fare-drop-locations">
+                      {locations.map((loc) => (
+                        <option key={loc.id} value={loc.name}>
+                          {loc.name} ({loc.city})
+                        </option>
+                      ))}
+                    </datalist>
+                  </div>
+                </div>
+
+                {pickupInput && dropInput && (
+                  <div style={{ marginTop: '0.6rem', fontSize: '0.72rem', color: routeId ? '#0369A1' : '#059669', display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 600 }}>
+                    {routeId ? (
+                      <>
+                        <CheckCircle2 size={13} color="#0284C7" />
+                        <span>Predefined Route linked: {pickupInput} → {dropInput}. You can edit pickup/drop above to customize.</span>
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles size={13} color="#059669" />
+                        <span>Custom Route ({pickupInput} → {dropInput}) will be created & saved automatically.</span>
+                      </>
+                    )}
                   </div>
                 )}
               </div>
@@ -652,6 +706,7 @@ export const AdminFareForm = ({ isOpen, onClose, onSuccess, initialData = null }
                       className="admin-input-control"
                       style={{ height: '38px', fontSize: '0.84rem' }}
                     >
+                      <option value="">-- Select Category --</option>
                       <option value="HATCHBACK">HATCHBACK</option>
                       <option value="SEDAN">SEDAN</option>
                       <option value="SUV">SUV</option>

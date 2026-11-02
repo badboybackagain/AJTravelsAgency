@@ -28,7 +28,7 @@ export const AdminVehicleForm = ({ isOpen, vehicle, onClose, onSuccess }) => {
 
   const [formData, setFormData] = useState({
     name: '',
-    category: 'SEDAN',
+    category: '',
     seatingCapacity: '',
     displayOrder: 0,
     image: '',
@@ -55,7 +55,7 @@ export const AdminVehicleForm = ({ isOpen, vehicle, onClose, onSuccess }) => {
     } else {
       setFormData({
         name: '',
-        category: 'SEDAN',
+        category: '',
         seatingCapacity: '',
         displayOrder: 0,
         image: '',
@@ -144,6 +144,11 @@ export const AdminVehicleForm = ({ isOpen, vehicle, onClose, onSuccess }) => {
 
     if (!formData.name.trim()) {
       setErrorMsg('Vehicle Name is required.');
+      return;
+    }
+
+    if (!formData.category) {
+      setErrorMsg('Vehicle Category is required.');
       return;
     }
 
@@ -352,7 +357,9 @@ export const AdminVehicleForm = ({ isOpen, vehicle, onClose, onSuccess }) => {
                     onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                     className="admin-input-control"
                     style={{ height: '38px', fontSize: '0.86rem' }}
+                    required
                   >
+                    <option value="">-- Select Category --</option>
                     <option value="SEDAN">SEDAN</option>
                     <option value="SUV">SUV</option>
                     <option value="LUXURY">LUXURY</option>

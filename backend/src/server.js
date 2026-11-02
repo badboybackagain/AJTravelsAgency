@@ -53,7 +53,9 @@ async function startServer() {
   }
 
   // Start HTTP server
-  const server = app.listen(PORT, () => {
+  const http = require('http');
+  const server = http.createServer(app);
+  server.listen({ port: PORT, exclusive: false }, () => {
     const dbStatus = getDbStatus();
     console.log(`\n🚀 Pune ↔ Mumbai Travel API`);
     console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);

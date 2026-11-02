@@ -3,6 +3,8 @@
 // Admin: manage per-page SEO metadata, sitemap, robots.txt
 // ============================================================
 
+const fs = require('fs');
+const path = require('path');
 const prisma = require('../utils/prisma');
 const { SITE_DOMAIN } = require('../config/seoConfig');
 

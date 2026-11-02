@@ -34,6 +34,7 @@ import {
   ExternalLink,
   X,
   Wrench,
+  Sparkles,
 } from 'lucide-react';
 import { seoApi, gscApi } from '../../services/api';
 import { API_BASE_URL } from '../../services/api';
@@ -855,10 +856,58 @@ function PageEditor({ page, onBack, onSaved, domain = 'https://ajtravelspune.com
   const [saved,    setSaved]    = useState(false);
   const [error,    setError]    = useState(null);
   const [warnings, setWarnings] = useState([]);
+  const [fixAppliedToast, setFixAppliedToast] = useState('');
+
+  // Clean canonical without trailing slash (unless root /)
+  const cleanPath = page.pageUrl === '/' ? '/' : page.pageUrl.replace(/\/+$/, '');
+  const recommendedCanonical = `${domain}${cleanPath}`;
+  const isCanonicalMismatched = Boolean(form.canonicalUrl && form.canonicalUrl !== recommendedCanonical);
+
+  // Recommended title (50-60 chars)
+  const defaultTitleBase = page.pageLabel || 'AJ Travels';
+  const recommendedTitle = page.pageUrl === '/'
+    ? 'AJ Travels — Trusted Vehicle Rental Service in Pune | Car Rental & Cabs'
+    : (defaultTitleBase.includes('AJ Travels') ? defaultTitleBase : `${defaultTitleBase} | AJ Travels Pune`);
+
+  // Recommended description (130-155 chars)
+  const recommendedDescription = page.pageUrl === '/'
+    ? 'AJ Travels offers reliable car rentals, Pune to Mumbai cabs, airport transfers, and corporate travel across Maharashtra with verified chauffeurs.'
+    : `Read the official ${defaultTitleBase.toLowerCase()} of AJ Travels Pune. Information on services, booking terms, passenger safety, and transparent pricing standards.`;
+
+  const isTitleSuboptimal = !form.seoTitle || form.seoTitle.length < 35 || form.seoTitle.length > 65;
+  const isDescSuboptimal = !form.metaDescription || form.metaDescription.length < 100 || form.metaDescription.length > 165;
+  const hasActionableFixes = isCanonicalMismatched || isTitleSuboptimal || isDescSuboptimal || Boolean(page.initialSuggestedFix);
 
   const handleChange = (field, val) => {
     setForm(prev => ({ ...prev, [field]: val }));
     setSaved(false);
+  };
+
+  const showToast = (msg) => {
+    setFixAppliedToast(msg);
+    setTimeout(() => setFixAppliedToast(''), 4500);
+  };
+
+  const applyCanonicalFix = () => {
+    handleChange('canonicalUrl', recommendedCanonical);
+    showToast(`⚡ Canonical URL fixed: ${recommendedCanonical}`);
+  };
+
+  const applyTitleSuggestion = () => {
+    handleChange('seoTitle', recommendedTitle);
+    showToast('⚡ SEO Title updated with recommended formulation.');
+  };
+
+  const applyDescSuggestion = () => {
+    handleChange('metaDescription', recommendedDescription);
+    showToast('⚡ Meta Description updated with recommended formulation.');
+  };
+
+  const applyAllSuggestions = () => {
+    if (isCanonicalMismatched || form.canonicalUrl) handleChange('canonicalUrl', recommendedCanonical);
+    if (!form.seoTitle || isTitleSuboptimal) handleChange('seoTitle', recommendedTitle);
+    if (!form.metaDescription || isDescSuboptimal) handleChange('metaDescription', recommendedDescription);
+    showToast('⚡ All recommended SEO fixes applied! Click "Save SEO Metadata" below to save.');
   };
 
   const handleSave = async (e) => {
@@ -903,6 +952,7 @@ function PageEditor({ page, onBack, onSaved, domain = 'https://ajtravelspune.com
         <StatusPill ok={form.isIndexable} label={form.isIndexable ? 'Indexable (index, follow)' : 'Noindex (noindex, follow)'} />
       </div>
 
+      {/* Real-time Google SERP Preview */}
       <div style={{ marginBottom: '1.5rem' }}>
         <SerpPreview
           title={form.seoTitle}
@@ -913,6 +963,191 @@ function PageEditor({ page, onBack, onSaved, domain = 'https://ajtravelspune.com
           canonicalUrl={form.canonicalUrl || (domain + page.pageUrl)}
         />
       </div>
+
+      {/* 1-Click Fix Applied Toast */}
+      {fixAppliedToast && (
+        <div style={{
+          background: '#DCFCE7', border: '1.5px solid #22C55E', borderRadius: '10px',
+          padding: '0.85rem 1.25rem', color: '#15803D', fontSize: '0.82rem', fontWeight: 700,
+          display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.25rem',
+          boxShadow: '0 2px 5px rgba(34, 197, 94, 0.15)',
+        }}>
+          <CheckCircle2 size={16} color="#16A34A" /> {fixAppliedToast}
+        </div>
+      )}
+
+      {/* Top Actionable 1-Click Fixes Banner */}
+      {hasActionableFixes && (
+        <div style={{
+          backgroundColor: '#F0FDF4',
+          border: '1.5px solid #86EFAC',
+          borderRadius: '12px',
+          padding: '1.1rem 1.25rem',
+          marginBottom: '1.5rem',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '0.75rem',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Sparkles size={18} color="#15803D" />
+              <span style={{ fontWeight: 800, fontSize: '0.92rem', color: '#166534' }}>
+                1-Click SEO Fix Recommendations
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={applyAllSuggestions}
+              style={{
+                backgroundColor: '#16A34A',
+                color: '#FFFFFF',
+                padding: '0.4rem 0.95rem',
+                fontSize: '0.78rem',
+                fontWeight: 800,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.35rem',
+                borderRadius: '6px',
+                border: 'none',
+                cursor: 'pointer',
+                boxShadow: '0 1px 2px rgba(22, 163, 74, 0.3)',
+              }}
+            >
+              <CheckCircle2 size={14} /> ⚡ Apply All Fixes (1-Click)
+            </button>
+          </div>
+
+          {/* Canonical Fix Banner */}
+          {isCanonicalMismatched && (
+            <div style={{
+              backgroundColor: '#FEF2F2',
+              border: '1px solid #FECACA',
+              borderRadius: '8px',
+              padding: '0.65rem 0.85rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: '0.5rem',
+            }}>
+              <div>
+                <div style={{ fontSize: '0.78rem', fontWeight: 800, color: '#991B1B' }}>
+                  ❌ Canonical URL Mismatch: Currently has trailing slash ("...{page.pageUrl}/")
+                </div>
+                <div style={{ fontSize: '0.73rem', color: '#B91C1C', marginTop: '0.15rem' }}>
+                  Actionable Fix: Update canonical to <code style={{ background: '#fff', padding: '0.1rem 0.35rem', borderRadius: '4px', fontWeight: 700, color: '#0F172A' }}>{recommendedCanonical}</code>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={applyCanonicalFix}
+                style={{
+                  backgroundColor: '#DC2626',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '6px',
+                  padding: '0.35rem 0.85rem',
+                  fontSize: '0.75rem',
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.3rem',
+                }}
+              >
+                <Sparkles size={12} /> ⚡ 1-Click Fix Canonical
+              </button>
+            </div>
+          )}
+
+          {/* Title Improvement Banner */}
+          {isTitleSuboptimal && (
+            <div style={{
+              backgroundColor: '#FFFBEB',
+              border: '1px solid #FDE68A',
+              borderRadius: '8px',
+              padding: '0.65rem 0.85rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: '0.5rem',
+            }}>
+              <div style={{ maxWidth: '75%' }}>
+                <div style={{ fontSize: '0.78rem', fontWeight: 800, color: '#92400E' }}>
+                  ⚠️ SEO Title Length Optimization ({form.seoTitle.length} chars)
+                </div>
+                <div style={{ fontSize: '0.73rem', color: '#B45309', marginTop: '0.15rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  Recommended: "{recommendedTitle}"
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={applyTitleSuggestion}
+                style={{
+                  backgroundColor: '#D97706',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '6px',
+                  padding: '0.35rem 0.85rem',
+                  fontSize: '0.75rem',
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.3rem',
+                }}
+              >
+                <Sparkles size={12} /> ⚡ Apply Title (1-Click)
+              </button>
+            </div>
+          )}
+
+          {/* Description Improvement Banner */}
+          {isDescSuboptimal && (
+            <div style={{
+              backgroundColor: '#EFF6FF',
+              border: '1px solid #BFDBFE',
+              borderRadius: '8px',
+              padding: '0.65rem 0.85rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: '0.5rem',
+            }}>
+              <div style={{ maxWidth: '75%' }}>
+                <div style={{ fontSize: '0.78rem', fontWeight: 800, color: '#1E40AF' }}>
+                  💡 Meta Description Optimization ({form.metaDescription.length} chars)
+                </div>
+                <div style={{ fontSize: '0.73rem', color: '#1D4ED8', marginTop: '0.15rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  Recommended: "{recommendedDescription}"
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={applyDescSuggestion}
+                style={{
+                  backgroundColor: '#0284C7',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '6px',
+                  padding: '0.35rem 0.85rem',
+                  fontSize: '0.75rem',
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.3rem',
+                }}
+              >
+                <Sparkles size={12} /> ⚡ Apply Description (1-Click)
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       {saved && (
         <div style={{ background: '#DCFCE7', border: '1px solid #86EFAC', borderRadius: '10px', padding: '0.85rem 1.25rem', color: '#15803D', fontSize: '0.82rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.25rem' }}>
@@ -937,13 +1172,27 @@ function PageEditor({ page, onBack, onSaved, domain = 'https://ajtravelspune.com
       <form onSubmit={handleSave} className="admin-card" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
         {/* SEO Title */}
         <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.35rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
             <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#334155' }}>
               SEO Title (Title Tag) <span style={{ color: '#EF4444' }}>*</span>
             </label>
-            <span style={{ fontSize: '0.72rem', fontWeight: 700, color: charColor(form.seoTitle.length, 60, 70) }}>
-              {form.seoTitle.length} / 60 chars
-            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <button
+                type="button"
+                onClick={applyTitleSuggestion}
+                style={{
+                  background: '#F0F9FF', border: '1px solid #BAE6FD', color: '#0284C7',
+                  padding: '0.15rem 0.5rem', borderRadius: '4px', fontSize: '0.68rem', fontWeight: 700,
+                  cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
+                }}
+                title="Click to paste suggested optimized title"
+              >
+                <Sparkles size={11} /> 1-Click Suggest Title
+              </button>
+              <span style={{ fontSize: '0.72rem', fontWeight: 700, color: charColor(form.seoTitle.length, 60, 70) }}>
+                {form.seoTitle.length} / 60 chars
+              </span>
+            </div>
           </div>
           <input
             type="text"
@@ -957,13 +1206,27 @@ function PageEditor({ page, onBack, onSaved, domain = 'https://ajtravelspune.com
 
         {/* Meta Description */}
         <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.35rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
             <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#334155' }}>
               Meta Description <span style={{ color: '#EF4444' }}>*</span>
             </label>
-            <span style={{ fontSize: '0.72rem', fontWeight: 700, color: charColor(form.metaDescription.length, 160, 170) }}>
-              {form.metaDescription.length} / 160 chars
-            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <button
+                type="button"
+                onClick={applyDescSuggestion}
+                style={{
+                  background: '#F0F9FF', border: '1px solid #BAE6FD', color: '#0284C7',
+                  padding: '0.15rem 0.5rem', borderRadius: '4px', fontSize: '0.68rem', fontWeight: 700,
+                  cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
+                }}
+                title="Click to paste suggested description"
+              >
+                <Sparkles size={11} /> 1-Click Suggest Description
+              </button>
+              <span style={{ fontSize: '0.72rem', fontWeight: 700, color: charColor(form.metaDescription.length, 160, 170) }}>
+                {form.metaDescription.length} / 160 chars
+              </span>
+            </div>
           </div>
           <textarea
             className="admin-input"
@@ -977,17 +1240,58 @@ function PageEditor({ page, onBack, onSaved, domain = 'https://ajtravelspune.com
 
         {/* Canonical URL */}
         <div>
-          <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '0.35rem' }}>
-            Explicit Canonical URL (Optional Override)
-          </label>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
+            <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#334155' }}>
+              Explicit Canonical URL (Optional Override)
+            </label>
+            {isCanonicalMismatched ? (
+              <button
+                type="button"
+                onClick={applyCanonicalFix}
+                style={{
+                  background: '#FEF2F2', border: '1.5px solid #FCA5A5', color: '#DC2626',
+                  padding: '0.2rem 0.65rem', borderRadius: '4px', fontSize: '0.7rem', fontWeight: 800,
+                  cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
+                  boxShadow: '0 1px 2px rgba(220, 38, 38, 0.1)',
+                }}
+                title="Fix canonical URL to match clean page path without trailing slash"
+              >
+                <Sparkles size={11} /> ⚡ 1-Click Fix to: {cleanPath}
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={applyCanonicalFix}
+                style={{
+                  background: '#F0FDF4', border: '1px solid #BBF7D0', color: '#16A34A',
+                  padding: '0.15rem 0.5rem', borderRadius: '4px', fontSize: '0.68rem', fontWeight: 700,
+                  cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
+                }}
+              >
+                <CheckCircle2 size={11} /> Reset to Clean Standard
+              </button>
+            )}
+          </div>
           <input
             type="text"
             className="admin-input"
             value={form.canonicalUrl}
             onChange={e => handleChange('canonicalUrl', e.target.value)}
-            placeholder={`Defaults to: ${domain}${page.pageUrl}`}
-            style={{ width: '100%', boxSizing: 'border-box' }}
+            placeholder={`Defaults to: ${recommendedCanonical}`}
+            style={{
+              width: '100%',
+              boxSizing: 'border-box',
+              borderColor: isCanonicalMismatched ? '#F87171' : undefined,
+              backgroundColor: isCanonicalMismatched ? '#FFF1F2' : undefined,
+              fontWeight: isCanonicalMismatched ? 700 : undefined,
+            }}
           />
+          {isCanonicalMismatched && (
+            <div style={{ fontSize: '0.74rem', color: '#DC2626', fontWeight: 700, marginTop: '0.3rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+              <AlertTriangle size={13} color="#DC2626" />
+              <span>Trailing slash error detected! Click "⚡ 1-Click Fix to: {cleanPath}" above to resolve instantly.</span>
+            </div>
+          )}
         </div>
 
         {/* Indexable Toggle */}
@@ -1012,9 +1316,21 @@ function PageEditor({ page, onBack, onSaved, domain = 'https://ajtravelspune.com
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
             <div>
-              <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '0.25rem' }}>
-                OG Title (Facebook / WhatsApp)
-              </label>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.25rem' }}>
+                <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#475569' }}>
+                  OG Title (Facebook / WhatsApp)
+                </label>
+                <button
+                  type="button"
+                  onClick={() => handleChange('ogTitle', form.seoTitle)}
+                  style={{
+                    background: 'transparent', border: 'none', color: '#0284C7',
+                    fontSize: '0.68rem', fontWeight: 700, cursor: 'pointer',
+                  }}
+                >
+                  ⚡ Copy Title
+                </button>
+              </div>
               <input
                 type="text"
                 className="admin-input"
@@ -1055,9 +1371,9 @@ function PageEditor({ page, onBack, onSaved, domain = 'https://ajtravelspune.com
             type="submit"
             disabled={saving}
             className="admin-btn-primary"
-            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '0.55rem 1.5rem' }}
           >
-            {saving ? <Loader2 size={15} className="spin" /> : <Save size={15} />}
+            {saving ? <Loader2 size={16} className="spin" /> : <Save size={16} />}
             {saving ? 'Saving Changes...' : 'Save SEO Metadata'}
           </button>
         </div>
@@ -1431,15 +1747,20 @@ function PageInspectorView({ pageAnalysis, onBack, onEditSeo, onReanalyze, isAna
               </div>
               {f.isAutomatedSafe && (
                 <button
-                  onClick={() => onEditSeo(pageAnalysis.pageKey)}
+                  onClick={() => onEditSeo(pageAnalysis.pageKey, f)}
                   style={{
-                    display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
-                    background: '#F0F9FF', color: '#0284C7', border: '1px solid #BAE6FD',
-                    padding: '0.25rem 0.6rem', borderRadius: '4px',
-                    fontSize: '0.7rem', fontWeight: 700, cursor: 'pointer',
+                    display: 'inline-flex', alignItems: 'center', gap: '0.3rem',
+                    background: f.status === 'ERROR' ? '#FEF2F2' : '#F0F9FF',
+                    color: f.status === 'ERROR' ? '#DC2626' : '#0284C7',
+                    border: `1.5px solid ${f.status === 'ERROR' ? '#FCA5A5' : '#BAE6FD'}`,
+                    padding: '0.3rem 0.75rem', borderRadius: '6px',
+                    fontSize: '0.72rem', fontWeight: 800, cursor: 'pointer',
+                    boxShadow: f.status === 'ERROR' ? '0 1px 3px rgba(220, 38, 38, 0.15)' : 'none',
+                    transition: 'all 0.15s ease',
                   }}
+                  title="Open editor with 1-click suggested text to fix this error"
                 >
-                  <Edit3 size={11} /> Edit in SEO Settings
+                  <Sparkles size={12} /> {f.status === 'ERROR' ? '⚡ 1-Click Fix in SEO Settings' : 'Edit in SEO Settings'}
                 </button>
               )}
             </div>
@@ -3161,6 +3482,39 @@ export const AdminSeo = () => {
     }
   }, [sandboxPageKey, activeSandboxPage]);
 
+  // Primary key pages for SERP & Social Simulator (clean 8-9 high-impact pages)
+  const KEY_PREVIEW_PAGES = useMemo(() => [
+    'home',
+    'fare',
+    'booking',
+    'pune-to-mumbai-taxi',
+    'mumbai-to-pune-taxi',
+    'vehicles',
+    'blog',
+    'contact',
+    'services',
+  ], []);
+
+  const keyPages = useMemo(() => {
+    const matched = KEY_PREVIEW_PAGES
+      .map(k => pages.find(p => p.pageKey === k || p.pageUrl === `/${k}` || p.pageUrl === `/${k}/`))
+      .filter(Boolean);
+    return matched.length >= 6 ? matched : pages.slice(0, 8);
+  }, [pages, KEY_PREVIEW_PAGES]);
+
+  const otherPages = useMemo(() => {
+    const keySet = new Set(keyPages.map(p => p.pageKey));
+    return pages.filter(p => !keySet.has(p.pageKey));
+  }, [pages, keyPages]);
+
+  const previewCardsList = useMemo(() => {
+    const list = [...keyPages];
+    if (activeSandboxPage && !list.some(p => p.pageKey === activeSandboxPage.pageKey)) {
+      list.unshift(activeSandboxPage);
+    }
+    return list;
+  }, [keyPages, activeSandboxPage]);
+
   // Run full audit
   const handleRunFullAudit = async () => {
     setAnalyzing(true);
@@ -3209,9 +3563,14 @@ export const AdminSeo = () => {
   };
 
   // Edit SEO metadata for page
-  const handleEditSeo = (pageKey) => {
+  const handleEditSeo = (pageKey, suggestedFix = null) => {
     const p = pages.find(item => item.pageKey === pageKey);
-    if (p) setEditingPage(p);
+    if (p) {
+      setEditingPage({
+        ...p,
+        initialSuggestedFix: suggestedFix,
+      });
+    }
   };
 
   // Real, evidence-based page-level SEO score evaluation for all catalog entries
@@ -3721,28 +4080,64 @@ export const AdminSeo = () => {
                 </p>
               </div>
 
-              {/* Page Selector Pills */}
-              <div style={{ display: 'flex', gap: '0.35rem', background: '#F1F5F9', padding: '0.25rem', borderRadius: '8px', flexWrap: 'wrap' }}>
-                {pages.map(p => (
-                  <button
-                    key={p.pageKey}
-                    type="button"
-                    onClick={() => {
-                      setSandboxPageKey(p.pageKey);
-                      setSandboxTitle(p.seoTitle || '');
-                      setSandboxDesc(p.metaDescription || '');
+              {/* Page Selector: 8-9 Key Primary Pages + Clean Dropdown */}
+              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', gap: '0.35rem', background: '#F1F5F9', padding: '0.25rem', borderRadius: '8px', flexWrap: 'wrap' }}>
+                  {keyPages.map(p => (
+                    <button
+                      key={p.pageKey}
+                      type="button"
+                      onClick={() => {
+                        setSandboxPageKey(p.pageKey);
+                        setSandboxTitle(p.seoTitle || '');
+                        setSandboxDesc(p.metaDescription || '');
+                      }}
+                      style={{
+                        padding: '0.35rem 0.75rem', borderRadius: '6px', border: 'none',
+                        background: sandboxPageKey === p.pageKey ? '#0284C7' : 'transparent',
+                        color: sandboxPageKey === p.pageKey ? '#fff' : '#475569',
+                        fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer',
+                        transition: 'all 0.15s ease',
+                      }}
+                    >
+                      {p.pageLabel}
+                    </button>
+                  ))}
+                </div>
+
+                {otherPages.length > 0 && (
+                  <select
+                    value={keyPages.some(p => p.pageKey === sandboxPageKey) ? '' : sandboxPageKey}
+                    onChange={(e) => {
+                      if (!e.target.value) return;
+                      const selected = pages.find(p => p.pageKey === e.target.value);
+                      if (selected) {
+                        setSandboxPageKey(selected.pageKey);
+                        setSandboxTitle(selected.seoTitle || '');
+                        setSandboxDesc(selected.metaDescription || '');
+                      }
                     }}
                     style={{
-                      padding: '0.35rem 0.75rem', borderRadius: '6px', border: 'none',
-                      background: sandboxPageKey === p.pageKey ? '#0284C7' : 'transparent',
-                      color: sandboxPageKey === p.pageKey ? '#fff' : '#475569',
-                      fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer',
-                      transition: 'all 0.15s ease',
+                      height: '32px',
+                      fontSize: '0.75rem',
+                      fontWeight: 600,
+                      padding: '0 0.6rem',
+                      borderRadius: '6px',
+                      border: '1px solid #CBD5E1',
+                      backgroundColor: '#FFFFFF',
+                      color: keyPages.some(p => p.pageKey === sandboxPageKey) ? '#64748B' : '#0284C7',
+                      cursor: 'pointer',
                     }}
+                    title="Select any other page to test in simulator"
                   >
-                    {p.pageLabel}
-                  </button>
-                ))}
+                    <option value="">-- Other Pages ({otherPages.length}) ▾ --</option>
+                    {otherPages.map(p => (
+                      <option key={p.pageKey} value={p.pageKey}>
+                        {p.pageLabel} ({p.pageUrl})
+                      </option>
+                    ))}
+                  </select>
+                )}
               </div>
             </div>
 
@@ -3850,15 +4245,15 @@ export const AdminSeo = () => {
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
               <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: 800, color: '#0F172A' }}>
-                Published Search &amp; Social Cards ({pages.length} Pages)
+                Published Search &amp; Social Previews ({previewCardsList.length} Key Pages)
               </h4>
               <p style={{ margin: '0.2rem 0 0', fontSize: '0.75rem', color: '#64748B' }}>
-                Currently active metadata as rendered for search engines and social platforms.
+                Currently active metadata as rendered for search engines and social platforms. Showing primary revenue and landing pages. Full inventory of {pages.length} pages is available in the Page Metadata tab.
               </p>
             </div>
           </div>
 
-          {pages.map(p => (
+          {previewCardsList.map(p => (
             <div key={p.pageKey} className="admin-card" style={{ padding: '1.5rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
                 <div>
