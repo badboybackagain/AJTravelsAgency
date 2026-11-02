@@ -13,9 +13,31 @@ const toNum = (val, fallback = 0) => {
 /**
  * GET /api/fares/admin/configs — List all unified fare configurations
  */
+// In-memory caching for admin fare configs & dashboard stats
+let adminFareConfigsCache = null;
+let adminFareConfigsCacheTime = 0;
+const ADMIN_FARE_CONFIGS_CACHE_TTL = 45000; // 45 seconds
+
+let dashboardStatsCache = null;
+let dashboardStatsCacheTime = 0;
+const DASHBOARD_STATS_CACHE_TTL = 30000; // 30 seconds
+
+const invalidateAdminFareConfigCache = () => {
+  adminFareConfigsCache = null;
+  adminFareConfigsCacheTime = 0;
+  dashboardStatsCache = null;
+  dashboardStatsCacheTime = 0;
+};
+
 const listFareConfigs = async (req, res, next) => {
   try {
     const { routeId, vehicleId, isActive, search } = req.query;
+    const isUnfiltered = !routeId && !vehicleId && isActive === undefined && !search;
+    const now = Date.now();
+
+    if (isUnfiltered && adminFareConfigsCache && (now - adminFareConfigsCacheTime < ADMIN_FARE_CONFIGS_CACHE_TTL)) {
+      return res.json({ success: true, data: adminFareConfigsCache, count: adminFareConfigsCache.length });
+    }
 
     const whereClause = {
       ...(routeId && { routeId }),
@@ -114,6 +136,10 @@ const listFareConfigs = async (req, res, next) => {
       );
     }
 
+        if (isUnfiltered) {
+      adminFareConfigsCache = configsWithDetails;
+      adminFareConfigsCacheTime = Date.now();
+    }
     res.json({ success: true, data: result, count: result.length });
   } catch (err) {
     next(err);
@@ -203,6 +229,8 @@ const createFareConfig = async (req, res, next) => {
       routeId,
       pickupLocationId,
       dropLocationId,
+      pickupLocationName,
+      dropLocationName,
       vehicle,
       fare,
       tolls = [],
@@ -213,21 +241,64 @@ const createFareConfig = async (req, res, next) => {
 
     // 1. Resolve Route
     let targetRouteId = routeId;
-    if (!targetRouteId && pickupLocationId && dropLocationId) {
+    let finalPickupId = pickupLocationId;
+    let finalDropId = dropLocationId;
+
+    if (!finalPickupId && pickupLocationName && pickupLocationName.trim()) {
+      const pName = pickupLocationName.trim();
+      let loc = await prisma.location.findFirst({
+        where: { name: { equals: pName, mode: 'insensitive' } },
+      });
+      if (!loc) {
+        const isMumbai = /mumbai|thane|navi/i.test(pName);
+        loc = await prisma.location.create({
+          data: {
+            name: pName,
+            city: pName,
+            type: 'OTHER',
+            side: isMumbai ? 'MUMBAI_SIDE' : 'PUNE_SIDE',
+            isActive: true,
+          },
+        });
+      }
+      finalPickupId = loc.id;
+    }
+
+    if (!finalDropId && dropLocationName && dropLocationName.trim()) {
+      const dName = dropLocationName.trim();
+      let loc = await prisma.location.findFirst({
+        where: { name: { equals: dName, mode: 'insensitive' } },
+      });
+      if (!loc) {
+        const isPune = /pune|hinjawadi|wakad|baner|pimpr/i.test(dName);
+        loc = await prisma.location.create({
+          data: {
+            name: dName,
+            city: dName,
+            type: 'OTHER',
+            side: isPune ? 'PUNE_SIDE' : 'MUMBAI_SIDE',
+            isActive: true,
+          },
+        });
+      }
+      finalDropId = loc.id;
+    }
+
+    if (!targetRouteId && finalPickupId && finalDropId) {
       let r = await prisma.route.findFirst({
-        where: { pickupLocationId, dropLocationId },
+        where: { pickupLocationId: finalPickupId, dropLocationId: finalDropId },
       });
       if (!r) {
-        const pickup = await prisma.location.findUnique({ where: { id: pickupLocationId } });
-        const drop = await prisma.location.findUnique({ where: { id: dropLocationId } });
+        const pickup = await prisma.location.findUnique({ where: { id: finalPickupId } });
+        const drop = await prisma.location.findUnique({ where: { id: finalDropId } });
         if (!pickup || !drop) {
           return next(new AppError('Pickup and drop locations must be valid.', 400));
         }
         r = await prisma.route.create({
           data: {
             routeName: `${pickup.name} to ${drop.name}`,
-            pickupLocationId,
-            dropLocationId,
+            pickupLocationId: finalPickupId,
+            dropLocationId: finalDropId,
             isActive: true,
           },
         });
@@ -420,6 +491,7 @@ const createFareConfig = async (req, res, next) => {
     });
 
     invalidateFareCache();
+    invalidateAdminFareConfigCache();
     res.status(201).json({
       success: true,
       message: 'Fare configuration created successfully!',
@@ -616,6 +688,7 @@ const updateFareConfig = async (req, res, next) => {
     });
 
     invalidateFareCache();
+    invalidateAdminFareConfigCache();
     res.json({
       success: true,
       message: 'Fare configuration updated successfully!',
@@ -660,6 +733,7 @@ const toggleFareStatus = async (req, res, next) => {
     }
 
     invalidateFareCache();
+    invalidateAdminFareConfigCache();
     res.json({
       success: true,
       message: `Fare configuration ${newStatus ? 'activated' : 'deactivated'} successfully.`,
@@ -711,6 +785,7 @@ const deleteFareConfig = async (req, res, next) => {
     });
 
     invalidateFareCache();
+    invalidateAdminFareConfigCache();
     res.json({ success: true, message: 'Fare configuration deleted permanently.' });
   } catch (err) {
     next(err);
@@ -832,11 +907,99 @@ const duplicateFareConfig = async (req, res, next) => {
     });
 
     invalidateFareCache();
+    invalidateAdminFareConfigCache();
     res.status(201).json({
       success: true,
       message: 'Fare configuration duplicated successfully!',
       data: complete,
     });
+  } catch (err) {
+    next(err);
+  }
+};
+
+
+/**
+ * GET /api/admin/dashboard-stats — Aggregated fast counts & recent fares for dashboard
+ */
+const getDashboardStats = async (req, res, next) => {
+  try {
+    const now = Date.now();
+    if (dashboardStatsCache && (now - dashboardStatsCacheTime < DASHBOARD_STATS_CACHE_TTL)) {
+      return res.json({ success: true, data: dashboardStatsCache });
+    }
+
+    const [
+      activeFares,
+      vehiclesCount,
+      routesCount,
+      bookingsCount,
+      enquiriesCount,
+      newEnquiriesCount,
+      blogsCount,
+      recentFares
+    ] = await Promise.all([
+      prisma.fare.count({ where: { isActive: true } }),
+      prisma.vehicle.count({ where: { isActive: true } }),
+      prisma.route.count({ where: { isActive: true } }),
+      prisma.booking.count(),
+      prisma.enquiry.count(),
+      prisma.enquiry.count({ where: { status: 'NEW' } }),
+      prisma.blogPost.count({ where: { isPublished: true } }),
+      prisma.fare.findMany({
+        take: 5,
+        orderBy: { updatedAt: 'desc' },
+        include: {
+          route: {
+            include: {
+              pickupLocation: { select: { id: true, name: true, city: true } },
+              dropLocation: { select: { id: true, name: true, city: true } },
+            },
+          },
+          vehicle: { select: { id: true, name: true, category: true, image: true } },
+          fareTolls: { where: { isActive: true } },
+          fareParking: true,
+          fareWaiting: true,
+        },
+      }),
+    ]);
+
+    const formattedRecentFares = recentFares.map((f) => {
+      const totalToll = toNum((f.fareTolls || []).reduce((sum, t) => sum + toNum(t.amount), 0));
+      const parkingAmount = f.fareParking && f.fareParking.enabled ? toNum(f.fareParking.amount) : 0;
+      const stayAmount = f.fareWaiting && f.fareWaiting.enabled ? toNum(f.fareWaiting.perHourCharge) : 0;
+      return {
+        id: f.id,
+        routeId: f.routeId,
+        vehicleId: f.vehicleId,
+        baseFare: toNum(f.baseFare),
+        isActive: f.isActive,
+        createdAt: f.createdAt,
+        updatedAt: f.updatedAt,
+        route: f.route,
+        vehicle: f.vehicle,
+        totalToll,
+        estimatedTotal: toNum(toNum(f.baseFare) + totalToll + parkingAmount + stayAmount),
+      };
+    });
+
+    const result = {
+      stats: {
+        activeFares,
+        vehiclesCount,
+        routesCount,
+        bookingsCount,
+        enquiriesCount,
+        newEnquiriesCount,
+        blogsCount,
+      },
+      recentFares: formattedRecentFares,
+    };
+
+    dashboardStatsCache = result;
+    dashboardStatsCacheTime = now;
+
+    res.json({ success: true, data: result });
   } catch (err) {
     next(err);
   }
@@ -850,4 +1013,6 @@ module.exports = {
   deleteFareConfig,
   toggleFareStatus,
   duplicateFareConfig,
+  getDashboardStats,
+  invalidateAdminFareConfigCache,
 };

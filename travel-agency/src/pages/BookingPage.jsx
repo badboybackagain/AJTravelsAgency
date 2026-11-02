@@ -357,7 +357,9 @@ export const BookingPage = () => {
                 <Car size={15} color="#2563EB" />
                 <div>
                   <span className="chip-lbl">ASSIGNED VEHICLE</span>
-                  <strong>{selectedVehicle?.name || 'Executive Cab'}</strong>
+                  <strong>
+                    {selectedVehicle?.name || (!recalculatingQuote && searchParams.get('vehicleName')) || (recalculatingQuote ? 'Calculating Cab Fare...' : 'Executive Cab')}
+                  </strong>
                 </div>
               </div>
 
@@ -422,7 +424,7 @@ export const BookingPage = () => {
                 </div>
                 <div>
                   <span className="confirmed-label">Vehicle Selected:</span>
-                  <strong>{selectedVehicle?.name || 'Executive Cab'}</strong>
+                  <strong>{selectedVehicle?.name || searchParams.get('vehicleName') || 'Executive Cab'}</strong>
                 </div>
                 <div>
                   <span className="confirmed-label">Payment Mode:</span>
@@ -883,7 +885,15 @@ export const BookingPage = () => {
               </div>
 
               {/* Vehicle Mini Card */}
-              {selectedVehicle ? (
+              {recalculatingQuote ? (
+                <div className="booking-vehicle-compact-card" aria-busy="true" aria-label="Calculating vehicle quote">
+                  <div className="booking-skeleton-box" style={{ width: '70px', height: '52px', borderRadius: '8px', flexShrink: 0 }}></div>
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <div className="booking-skeleton-box" style={{ width: '70%', height: '16px', marginBottom: '6px' }}></div>
+                    <div className="booking-skeleton-box" style={{ width: '45%', height: '12px' }}></div>
+                  </div>
+                </div>
+              ) : selectedVehicle ? (
                 <div className="booking-vehicle-compact-card">
                   <img
                     src={

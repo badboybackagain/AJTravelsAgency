@@ -1,45 +1,88 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Users, Briefcase, CheckCircle2, Car, ArrowRight } from 'lucide-react';
+import { Users, Briefcase, CheckCircle2, Car, ArrowRight, AlertCircle, RotateCcw } from 'lucide-react';
 import { buildFareUrl } from '../utils/fareNavigation';
 import { homepageContent } from '../data/homepageContent';
 import { vehicleApi } from '../services/api';
-import { resolveMediaUrl, findMatchingDbVehicle } from '../utils/mediaUtils';
+import { resolveMediaUrl, findMatchingDbVehicle, getCanonicalTemplateForDbVehicle } from '../utils/mediaUtils';
+import { vehiclesData } from '../data/vehiclesData';
 
 export const VehicleDiscovery = () => {
   const navigate = useNavigate();
   const fleetData = homepageContent.fleet;
-  const vehicles = fleetData.vehicles || [];
   const [dbVehicles, setDbVehicles] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  useEffect(() => {
-    let isMounted = true;
-    vehicleApi.getAll()
+  const fetchFleet = (forceRefresh = false) => {
+    setLoading(true);
+    setError('');
+    vehicleApi.getAll({ forceRefresh })
       .then(res => {
-        if (isMounted && res.data?.data) {
+        if (res.data?.data) {
           setDbVehicles(res.data.data);
         }
+        setLoading(false);
       })
-      .catch(() => {});
-    return () => { isMounted = false; };
+      .catch(err => {
+        console.warn('VehicleDiscovery: Failed to load dynamic fleet:', err?.message);
+        setError('Unable to load fleet vehicles at this time.');
+        setLoading(false);
+      });
+  };
+
+  useEffect(() => {
+    fetchFleet();
   }, []);
 
   const handleBookVehicle = (v) => {
-    let cat = 'SEDAN';
-    if (v.id === 'suv' || v.name.toLowerCase().includes('suv')) cat = 'SUV';
-    else if (v.id === 'premium' || v.name.toLowerCase().includes('luxury') || v.name.toLowerCase().includes('crysta')) cat = 'INNOVA_CRYSTA';
-    else if (v.id === 'minibus' || v.name.toLowerCase().includes('mini bus') || v.name.toLowerCase().includes('tempo')) cat = 'TEMPO_TRAVELLER';
-    else if (v.id === 'sedan' || v.name.toLowerCase().includes('sedan')) cat = 'SEDAN';
-
     const fareUrl = buildFareUrl({
       tripType: 'ONE_WAY',
-      category: cat,
+      category: v.category,
+      vehicleId: v.id || '',
       vehicleName: v.name,
-      passengers: v.id === 'suv' ? '6' : v.id === 'minibus' ? '12' : '4',
+      passengers: String(v.seatingCapacity || (v.category === 'SUV' ? 6 : v.category === 'MINIBUS' ? 12 : 4)),
     });
 
     navigate(fareUrl);
   };
+
+  // Authoritative fleet list: live active DB vehicles only (no stale hardcoded fallback)
+  const displayedVehicles = dbVehicles.map(db => {
+    const canonical = getCanonicalTemplateForDbVehicle(db, vehiclesData);
+    const staticMatch = canonical ? findMatchingDbVehicle(canonical, fleetData.vehicles || []) : null;
+
+    const slug = canonical?.slug
+      ? `/vehicles/${canonical.slug}`
+      : staticMatch?.url
+      ? staticMatch.url
+      : `/vehicles/${db.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || db.id}`;
+
+    const categoryFallback = (
+      db.category === 'SUV' ? '/assets/suv.webp' :
+      db.category === 'LUXURY' ? '/assets/luxury.jpg' :
+      db.category === 'MINIBUS' ? '/assets/minibus.jpg' :
+      db.category === 'HATCHBACK' ? '/assets/hatchback.jpg' :
+      '/assets/sedan.webp'
+    );
+
+    const activeImg = resolveMediaUrl(db.image, canonical?.image || staticMatch?.image || categoryFallback);
+
+    return {
+      id: db.id,
+      name: db.name, // DB source of truth
+      category: db.category, // DB source of truth
+      seatingCapacity: db.seatingCapacity, // DB source of truth
+      passengers: `${db.seatingCapacity} Passengers`,
+      luggage: canonical?.luggage || staticMatch?.luggage || (db.seatingCapacity <= 4 ? '2 Medium Bags' : '4 Large Bags'),
+      features: canonical?.features || staticMatch?.features || ['Dual Air-Conditioning', 'Generous Legroom', 'USB Phone Charging', 'Experienced Highway Driver'],
+      idealFor: db.description || canonical?.idealFor || staticMatch?.idealFor || `Comfortable ${db.name} rental in Pune with verified chauffeur.`,
+      image: activeImg,
+      tag: canonical?.tag || (db.category === 'LUXURY' ? 'Executive Class' : 'Fleet Addition'),
+      url: slug,
+      rawDb: db,
+    };
+  });
 
   return (
     <section id="vehicles" className="section-padding bg-cool-gray" style={{ position: 'relative' }}>
@@ -63,89 +106,210 @@ export const VehicleDiscovery = () => {
           </div>
         </div>
 
-        {/* Vehicles Cards Grid */}
-        <div className="vehicles-grid">
-          {vehicles.map((v, idx) => {
-            const dbMatch = findMatchingDbVehicle(v, dbVehicles);
-            const activeImg = dbMatch?.image ? resolveMediaUrl(dbMatch.image, v.image) : v.image;
-
-            return (
-            <div key={v.id} className={`vehicle-card reveal stagger-${(idx % 3) + 1}`}>
-              {/* Vehicle Image Container */}
-              <div className="vehicle-img-wrapper">
-                <img
-                  src={activeImg}
-                  alt={`${v.name} cab rental with chauffeur by AJ Travels`}
-                  className="vehicle-img"
-                  loading="lazy"
-                  onError={(e) => {
-                    e.target.src = v.image || '/assets/sedan.webp';
-                  }}
-                />
-                <div className="vehicle-img-overlay"></div>
-                {v.tag && <span className="vehicle-gold-tag">{v.tag}</span>}
+        {/* Vehicles Cards Grid / Skeleton / Error States */}
+        {loading ? (
+          <div className="vehicles-grid" aria-busy="true" aria-label="Loading verified vehicles">
+            {[1, 2, 3, 4, 5, 6].map(n => (
+              <div key={n} className="vehicle-card vehicle-card-skeleton">
+                <div className="vehicle-img-wrapper veh-skeleton-box veh-skeleton-img"></div>
+                <div className="vehicle-body">
+                  <div className="veh-skeleton-box veh-skeleton-cat"></div>
+                  <div className="veh-skeleton-box veh-skeleton-title"></div>
+                  <div className="vehicle-specs-row" style={{ marginTop: '0.85rem' }}>
+                    <div className="veh-skeleton-box veh-skeleton-pill"></div>
+                    <div className="veh-skeleton-box veh-skeleton-pill"></div>
+                  </div>
+                  <div className="vehicle-features-list" style={{ marginTop: '0.85rem' }}>
+                    <div className="veh-skeleton-box veh-skeleton-chip"></div>
+                    <div className="veh-skeleton-box veh-skeleton-chip"></div>
+                  </div>
+                  <div className="veh-skeleton-box veh-skeleton-text" style={{ marginTop: '1.1rem', width: '90%' }}></div>
+                  <div className="veh-skeleton-box veh-skeleton-text" style={{ marginTop: '0.35rem', width: '70%' }}></div>
+                  <div className="veh-skeleton-box veh-skeleton-btn" style={{ marginTop: '1.25rem' }}></div>
+                </div>
               </div>
-
-              {/* Vehicle Content Body */}
-              <div className="vehicle-body">
-                <span className="vehicle-category-label">{v.category}</span>
-                <h3 className="vehicle-title">{v.name}</h3>
-
-                {/* Specs Row */}
-                <div className="vehicle-specs-row">
-                  <div className="spec-badge-pill">
-                    <Users size={14} color="#2563EB" />
-                    <span>{v.passengers}</span>
-                  </div>
-                  <div className="spec-badge-pill">
-                    <Briefcase size={14} color="#2563EB" />
-                    <span>{v.luggage}</span>
-                  </div>
+            ))}
+          </div>
+        ) : error && dbVehicles.length === 0 ? (
+          <div className="vehicle-discovery-error-box">
+            <AlertCircle size={40} color="#DC2626" style={{ margin: '0 auto 0.75rem' }} />
+            <h3 style={{ color: '#991B1B', fontWeight: 800, fontSize: '1.25rem', marginBottom: '0.35rem' }}>
+              Fleet Catalogue Temporarily Unavailable
+            </h3>
+            <p style={{ color: '#64748B', fontSize: '0.92rem', maxWidth: '440px', margin: '0 auto 1.25rem', lineHeight: 1.5 }}>
+              We were unable to load live vehicle details. Please retry to refresh the fleet data.
+            </p>
+            <button
+              type="button"
+              onClick={() => fetchFleet(true)}
+              className="vehicle-discovery-retry-btn"
+            >
+              <RotateCcw size={16} />
+              <span>Retry Fleet Loading</span>
+            </button>
+          </div>
+        ) : (
+          <div className="vehicles-grid">
+            {displayedVehicles.map((v, idx) => {
+              return (
+              <div key={v.id || idx} className={`vehicle-card reveal stagger-${(idx % 3) + 1}`}>
+                {/* Vehicle Image Container */}
+                <div className="vehicle-img-wrapper">
+                  <img
+                    src={v.image}
+                    alt={`${v.name} cab rental with chauffeur by AJ Travels`}
+                    className="vehicle-img"
+                    loading="lazy"
+                    onError={(e) => {
+                      e.target.src = '/assets/sedan.webp';
+                    }}
+                  />
+                  <div className="vehicle-img-overlay"></div>
+                  {v.tag && <span className="vehicle-gold-tag">{v.tag}</span>}
                 </div>
 
-                {/* Features List */}
-                <div className="vehicle-features-list">
-                  {v.features.map((feat, i) => (
-                    <span key={i} className="feat-chip">
-                      <CheckCircle2 size={12} color="#2563EB" /> {feat}
-                    </span>
-                  ))}
-                </div>
+                {/* Vehicle Content Body */}
+                <div className="vehicle-body">
+                  <span className="vehicle-category-label">{v.category}</span>
+                  <h3 className="vehicle-title">{v.name}</h3>
 
-                <p className="vehicle-ideal-text">
-                  <strong>Ideal for:</strong> {v.idealFor}
-                </p>
+                  {/* Specs Row */}
+                  <div className="vehicle-specs-row">
+                    <div className="spec-badge-pill">
+                      <Users size={14} color="#2563EB" />
+                      <span>{v.passengers}</span>
+                    </div>
+                    <div className="spec-badge-pill">
+                      <Briefcase size={14} color="#2563EB" />
+                      <span>{v.luggage}</span>
+                    </div>
+                  </div>
 
-                {/* Action Buttons Row */}
-                <div style={{ display: 'flex', gap: '0.65rem', marginTop: '1.25rem' }}>
-                  <button
-                    type="button"
-                    onClick={() => handleBookVehicle(v)}
-                    className="vehicle-btn"
-                    style={{ cursor: 'pointer', border: 'none', flex: 1 }}
-                  >
-                    <Car size={16} />
-                    <span>Check Fare & Book</span>
-                    <ArrowRight size={15} />
-                  </button>
-                  {v.url && (
-                    <Link
-                      to={v.url}
-                      className="vehicle-detail-link"
-                      title={`View specifications for ${v.name}`}
+                  {/* Features List */}
+                  <div className="vehicle-features-list">
+                    {(v.features || []).map((feat, i) => (
+                      <span key={i} className="feat-chip">
+                        <CheckCircle2 size={12} color="#2563EB" /> {feat}
+                      </span>
+                    ))}
+                  </div>
+
+                  <p className="vehicle-ideal-text">
+                    <strong>Ideal for:</strong> {v.idealFor}
+                  </p>
+
+                  {/* Action Buttons Row */}
+                  <div style={{ display: 'flex', gap: '0.65rem', marginTop: '1.25rem' }}>
+                    <button
+                      type="button"
+                      onClick={() => handleBookVehicle(v)}
+                      className="vehicle-btn"
+                      style={{ cursor: 'pointer', border: 'none', flex: 1 }}
                     >
-                      <span>Specs</span>
-                    </Link>
-                  )}
+                      <Car size={16} />
+                      <span>Check Fare & Book</span>
+                      <ArrowRight size={15} />
+                    </button>
+                    {v.url && (
+                      <Link
+                        to={v.url}
+                        className="vehicle-detail-link"
+                        title={`View specifications for ${v.name}`}
+                      >
+                        <span>Specs</span>
+                      </Link>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       <style>{`
+        /* Fleet Loading Skeletons & Shimmer Animation */
+        .veh-skeleton-box {
+          background: linear-gradient(90deg, #F1F5F9 25%, #E2E8F0 50%, #F1F5F9 75%);
+          background-size: 200% 100%;
+          animation: vehShimmer 1.5s infinite;
+          border-radius: 6px;
+        }
+
+        @keyframes vehShimmer {
+          0% { background-position: 200% 0; }
+          100% { background-position: -200% 0; }
+        }
+
+        .veh-skeleton-img {
+          width: 100%;
+          height: 210px;
+          border-radius: 0;
+        }
+
+        .veh-skeleton-cat {
+          width: 70px;
+          height: 13px;
+        }
+
+        .veh-skeleton-title {
+          width: 70%;
+          height: 22px;
+          margin-top: 0.5rem;
+        }
+
+        .veh-skeleton-pill {
+          width: 85px;
+          height: 28px;
+          border-radius: 20px;
+        }
+
+        .veh-skeleton-chip {
+          width: 130px;
+          height: 22px;
+          border-radius: 12px;
+        }
+
+        .veh-skeleton-text {
+          height: 12px;
+        }
+
+        .veh-skeleton-btn {
+          width: 100%;
+          height: 44px;
+          border-radius: 8px;
+        }
+
+        .vehicle-discovery-error-box {
+          text-align: center;
+          padding: 3.5rem 1.5rem;
+          background: #FEF2F2;
+          border: 1px solid #FECACA;
+          border-radius: 16px;
+          max-width: 580px;
+          margin: 2rem auto;
+        }
+
+        .vehicle-discovery-retry-btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.5rem;
+          background: #2563EB;
+          color: #FFFFFF;
+          border: none;
+          padding: 0.7rem 1.4rem;
+          border-radius: 8px;
+          font-weight: 700;
+          font-size: 0.88rem;
+          cursor: pointer;
+          transition: background 0.2s;
+        }
+
+        .vehicle-discovery-retry-btn:hover {
+          background: #1D4ED8;
+        }
+
         .campaign-title-desc {
           font-size: 1.05rem;
           color: #64748B;
@@ -341,7 +505,6 @@ export const VehicleDiscovery = () => {
           color: #1E40AF;
           transform: translateY(-2px);
         }
-
 
         @media (max-width: 1024px) {
           .vehicles-grid {

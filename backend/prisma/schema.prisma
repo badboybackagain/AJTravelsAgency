@@ -443,3 +443,35 @@ model MediaAsset {
   @@map("media_assets")
 }
 
+model BlogPost {
+  id            String    @id @default(cuid())
+  slug          String    @unique
+  title         String
+  metaTitle     String?
+  metaDesc      String?   @db.Text
+  canonicalUrl  String?
+  category      String
+  categorySlug  String?
+  author        String    @default("AJ Travels Editorial Team")
+  publishedAt   DateTime?
+  readTime      String?   @default("5 min read")
+  featuredImage String    @default("/assets/pune-to-mumbai-premium-travel-banner.webp")
+  imageAlt      String?   @db.Text
+  summary       String    @db.Text
+  pickupDefault String?   @default("pune")
+  dropDefault   String?   @default("mumbai")
+  content       Json
+  faqs          Json?
+  relatedPosts  Json?
+  isPublished   Boolean   @default(true)
+  isFeatured    Boolean   @default(false)
+  displayOrder  Int       @default(0)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([isPublished])
+  @@index([category])
+  @@index([slug])
+  @@map("blog_posts")
+}
+

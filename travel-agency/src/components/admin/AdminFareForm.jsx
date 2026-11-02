@@ -12,6 +12,7 @@ import {
   ArrowLeft,
 } from 'lucide-react';
 import { adminFareConfigApi, locationApi, routeApi, vehicleApi, API_BASE_URL } from '../../services/api';
+
 // In-memory cache for instant dropdown loading across modal opens
 let cachedRoutes = null;
 let cachedLocations = null;
@@ -54,41 +55,41 @@ export const AdminFareForm = ({ isOpen, onClose, onSuccess, initialData = null }
   const [routeId, setRouteId] = useState('');
   const [pickupLocationId, setPickupLocationId] = useState('');
   const [dropLocationId, setDropLocationId] = useState('');
+  const [pickupInput, setPickupInput] = useState('');
+  const [dropInput, setDropInput] = useState('');
 
-  // Vehicle State
-  const [vehicleSelectionType, setVehicleSelectionType] = useState('new'); // 'new' | 'existing'
+  // Vehicle State (defaults to selecting existing fleet vehicle)
+  const [vehicleSelectionType, setVehicleSelectionType] = useState('existing'); // 'existing' | 'new'
   const [vehicleId, setVehicleId] = useState('');
-  const [vehicleName, setVehicleName] = useState('Executive Sedan');
+  const [vehicleName, setVehicleName] = useState('');
   const [vehicleCategory, setVehicleCategory] = useState('SEDAN');
-  const [seatingCapacity, setSeatingCapacity] = useState(4);
-  const [vehicleImage, setVehicleImage] = useState('/assets/sedan.webp');
-  const [vehicleDescription, setVehicleDescription] = useState('Air-conditioned sedan for 1-4 passengers with ample luggage room.');
+  const [seatingCapacity, setSeatingCapacity] = useState('');
+  const [vehicleImage, setVehicleImage] = useState('');
+  const [vehicleDescription, setVehicleDescription] = useState('');
 
   // Fare State
   const [tripType, setTripType] = useState('ONE_WAY'); // 'ONE_WAY' | 'ROUND_TRIP'
-  const [baseFare, setBaseFare] = useState(2200);
-  const [perKmFare, setPerKmFare] = useState(0);
-  const [minimumFare, setMinimumFare] = useState(2200);
+  const [baseFare, setBaseFare] = useState('');
+  const [perKmFare, setPerKmFare] = useState('');
+  const [minimumFare, setMinimumFare] = useState('');
   const [isFareActive, setIsFareActive] = useState(true);
 
   // Tolls State
-  const [tolls, setTolls] = useState([
-    { name: 'Mumbai-Pune Expressway Toll', amount: 320, isActive: true },
-  ]);
+  const [tolls, setTolls] = useState([]);
 
   // Parking State
-  const [parkingEnabled, setParkingEnabled] = useState(true);
-  const [parkingAmount, setParkingAmount] = useState(100);
+  const [parkingEnabled, setParkingEnabled] = useState(false);
+  const [parkingAmount, setParkingAmount] = useState('');
   const [parkingType, setParkingType] = useState('FIXED');
 
   // Waiting State
-  const [waitingEnabled, setWaitingEnabled] = useState(true);
+  const [waitingEnabled, setWaitingEnabled] = useState(false);
   const [freeMinutes, setFreeMinutes] = useState(30);
-  const [perHourCharge, setPerHourCharge] = useState(150);
+  const [perHourCharge, setPerHourCharge] = useState('');
 
   // Availability State
   const [availStatus, setAvailStatus] = useState('AVAILABLE');
-  const [availQuantity, setAvailQuantity] = useState(5);
+  const [availQuantity, setAvailQuantity] = useState(1);
   const [availFromTime, setAvailFromTime] = useState('00:00');
   const [availToTime, setAvailToTime] = useState('23:59');
 
@@ -100,20 +101,24 @@ export const AdminFareForm = ({ isOpen, onClose, onSuccess, initialData = null }
     if (initialData) {
       setRouteId(initialData.routeId || '');
       setRouteMode('existing');
+      setPickupLocationId(initialData.route?.pickupLocationId || '');
+      setDropLocationId(initialData.route?.dropLocationId || '');
+      setPickupInput(initialData.route?.pickupLocation?.name || '');
+      setDropInput(initialData.route?.dropLocation?.name || '');
 
       if (initialData.vehicle) {
         setVehicleSelectionType('existing');
         setVehicleId(initialData.vehicle.id || '');
         setVehicleName(initialData.vehicle.name || '');
         setVehicleCategory(initialData.vehicle.category || 'SEDAN');
-        setSeatingCapacity(initialData.vehicle.seatingCapacity || 4);
-        setVehicleImage(initialData.vehicle.image || '/assets/sedan.webp');
+        setSeatingCapacity(initialData.vehicle.seatingCapacity !== undefined ? initialData.vehicle.seatingCapacity : '');
+        setVehicleImage(initialData.vehicle.image || '');
         setVehicleDescription(initialData.vehicle.description || '');
       }
 
       setTripType(initialData.tripType || 'ONE_WAY');
       setBaseFare(initialData.baseFare !== undefined ? initialData.baseFare : '');
-      setPerKmFare(initialData.perKmFare || 0);
+      setPerKmFare(initialData.perKmFare !== undefined && initialData.perKmFare > 0 ? initialData.perKmFare : '');
       setMinimumFare(initialData.minimumFare || '');
       setIsFareActive(initialData.isActive !== undefined ? initialData.isActive : true);
 
@@ -125,14 +130,22 @@ export const AdminFareForm = ({ isOpen, onClose, onSuccess, initialData = null }
 
       if (initialData.parking) {
         setParkingEnabled(Boolean(initialData.parking.enabled));
-        setParkingAmount(initialData.parking.amount || 0);
+        setParkingAmount(initialData.parking.amount !== undefined ? initialData.parking.amount : '');
         setParkingType(initialData.parking.chargingType || 'FIXED');
+      } else {
+        setParkingEnabled(false);
+        setParkingAmount('');
+        setParkingType('FIXED');
       }
 
       if (initialData.waiting) {
         setWaitingEnabled(Boolean(initialData.waiting.enabled));
-        setFreeMinutes(initialData.waiting.freeMinutes || 30);
-        setPerHourCharge(initialData.waiting.perHourCharge || 0);
+        setFreeMinutes(initialData.waiting.freeMinutes !== undefined ? initialData.waiting.freeMinutes : 30);
+        setPerHourCharge(initialData.waiting.perHourCharge !== undefined ? initialData.waiting.perHourCharge : '');
+      } else {
+        setWaitingEnabled(false);
+        setFreeMinutes(30);
+        setPerHourCharge('');
       }
 
       if (initialData.availability) {
@@ -142,27 +155,34 @@ export const AdminFareForm = ({ isOpen, onClose, onSuccess, initialData = null }
         setAvailToTime(initialData.availability.availableToTime || '23:59');
       }
     } else {
-      // Default create mode
-      setVehicleSelectionType('new');
+      // Clean Create Mode - NO default pre-filled data
+      setRouteId('');
+      setRouteMode('existing');
+      setPickupLocationId('');
+      setDropLocationId('');
+      setPickupInput('');
+      setDropInput('');
+      setVehicleSelectionType('existing');
       setVehicleId('');
-      setVehicleName('Executive Sedan');
+      setVehicleName('');
       setVehicleCategory('SEDAN');
-      setSeatingCapacity(4);
-      setVehicleImage('/assets/sedan.webp');
-      setVehicleDescription('Air-conditioned sedan for 1-4 passengers with ample luggage room.');
+      setSeatingCapacity('');
+      setVehicleImage('');
+      setVehicleDescription('');
       setTripType('ONE_WAY');
-      setBaseFare(2200);
-      setMinimumFare(2200);
-      setPerKmFare(0);
+      setBaseFare('');
+      setMinimumFare('');
+      setPerKmFare('');
       setIsFareActive(true);
-      setTolls([{ name: 'Mumbai-Pune Expressway Toll', amount: 320, isActive: true }]);
-      setParkingEnabled(true);
-      setParkingAmount(100);
-      setWaitingEnabled(true);
+      setTolls([]);
+      setParkingEnabled(false);
+      setParkingAmount('');
+      setParkingType('FIXED');
+      setWaitingEnabled(false);
       setFreeMinutes(30);
-      setPerHourCharge(150);
+      setPerHourCharge('');
       setAvailStatus('AVAILABLE');
-      setAvailQuantity(5);
+      setAvailQuantity(1);
     }
   }, [isOpen, initialData]);
 
@@ -170,13 +190,15 @@ export const AdminFareForm = ({ isOpen, onClose, onSuccess, initialData = null }
   useEffect(() => {
     if (!isOpen) return;
 
+    const applyDefaultSelection = (rList, vList) => {
+      // Do not auto-select route or vehicle in create mode; admin selects explicitly
+    };
+
     if (cachedRoutes && cachedLocations && cachedVehicles) {
       setRoutes(cachedRoutes);
       setLocations(cachedLocations);
       setExistingVehicles(cachedVehicles);
-      if (!initialData && cachedRoutes.length > 0 && !routeId) {
-        setRouteId(cachedRoutes[0].id);
-      }
+      applyDefaultSelection(cachedRoutes, cachedVehicles);
       return;
     }
 
@@ -184,22 +206,48 @@ export const AdminFareForm = ({ isOpen, onClose, onSuccess, initialData = null }
       setRoutes(r);
       setLocations(l);
       setExistingVehicles(v);
-      if (!initialData && r && r.length > 0) {
-        setRouteId((curr) => curr || r[0].id);
-      }
+      applyDefaultSelection(r, v);
     });
-  }, [isOpen]);
+  }, [isOpen, initialData]);
 
   // Handle selecting an existing vehicle from dropdown
   const handleExistingVehicleChange = (selectedVehId) => {
     setVehicleId(selectedVehId);
+    if (!selectedVehId) {
+      setVehicleName('');
+      setVehicleCategory('SEDAN');
+      setSeatingCapacity('');
+      setVehicleImage('');
+      setVehicleDescription('');
+      return;
+    }
     const found = existingVehicles.find((v) => v.id === selectedVehId);
     if (found) {
       setVehicleName(found.name);
       setVehicleCategory(found.category);
-      setSeatingCapacity(found.seatingCapacity);
-      setVehicleImage(found.image || '/assets/sedan.webp');
+      setSeatingCapacity(found.seatingCapacity !== undefined ? found.seatingCapacity : '');
+      setVehicleImage(found.image || '');
       setVehicleDescription(found.description || '');
+    }
+  };
+
+  const handlePickupInputChange = (val) => {
+    setPickupInput(val);
+    const matched = locations.find((loc) => loc.name.toLowerCase() === val.trim().toLowerCase());
+    if (matched) {
+      setPickupLocationId(matched.id);
+    } else {
+      setPickupLocationId('');
+    }
+  };
+
+  const handleDropInputChange = (val) => {
+    setDropInput(val);
+    const matched = locations.find((loc) => loc.name.toLowerCase() === val.trim().toLowerCase());
+    if (matched) {
+      setDropLocationId(matched.id);
+    } else {
+      setDropLocationId('');
     }
   };
 
@@ -240,8 +288,15 @@ export const AdminFareForm = ({ isOpen, onClose, onSuccess, initialData = null }
       return;
     }
 
-    if (routeMode === 'new' && (!pickupLocationId || !dropLocationId)) {
-      setErrorMsg('Please select both Pickup and Drop locations.');
+    if (routeMode === 'new') {
+      if (!pickupInput.trim() || !dropInput.trim()) {
+        setErrorMsg('Please specify both Pickup and Drop locations.');
+        return;
+      }
+    }
+
+    if (vehicleSelectionType === 'existing' && !vehicleId && !isEditMode) {
+      setErrorMsg('Please select a vehicle from Fleet Vehicles.');
       return;
     }
 
@@ -252,15 +307,17 @@ export const AdminFareForm = ({ isOpen, onClose, onSuccess, initialData = null }
 
     const payload = {
       routeId: routeMode === 'existing' ? routeId : undefined,
-      pickupLocationId: routeMode === 'new' ? pickupLocationId : undefined,
-      dropLocationId: routeMode === 'new' ? dropLocationId : undefined,
+      pickupLocationId: routeMode === 'new' && pickupLocationId ? pickupLocationId : undefined,
+      dropLocationId: routeMode === 'new' && dropLocationId ? dropLocationId : undefined,
+      pickupLocationName: routeMode === 'new' && !pickupLocationId ? pickupInput.trim() : undefined,
+      dropLocationName: routeMode === 'new' && !dropLocationId ? dropInput.trim() : undefined,
       vehicle: {
-        id: vehicleSelectionType === 'existing' ? vehicleId : undefined,
+        id: (vehicleSelectionType === 'existing' && vehicleId) ? vehicleId : (isEditMode ? vehicleId : undefined),
         name: vehicleName.trim(),
         category: vehicleCategory,
         seatingCapacity: parseInt(seatingCapacity, 10) || 4,
-        image: vehicleImage,
-        description: vehicleDescription,
+        image: vehicleImage || undefined,
+        description: vehicleDescription || undefined,
         isActive: true,
       },
       fare: {
@@ -305,38 +362,66 @@ export const AdminFareForm = ({ isOpen, onClose, onSuccess, initialData = null }
     }
   };
 
-  // Close modal on Escape key press
+  // Lock background scrolling and close modal on Escape key press
   useEffect(() => {
     if (!isOpen) return;
+
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') {
         onClose();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      window.removeEventListener('keydown', handleKeyDown);
+    };
   }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
   return (
     <div
-      className="admin-modal-backdrop"
+      className="admin-modal-backdrop admin-modal-overlay"
       onClick={(e) => {
         if (e.target === e.currentTarget) {
           onClose();
         }
       }}
+      style={{
+        position: 'fixed',
+        inset: 0,
+        backgroundColor: 'rgba(15, 23, 42, 0.65)',
+        backdropFilter: 'blur(4px)',
+        zIndex: 9999,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '1.25rem',
+        overflowY: 'auto',
+      }}
     >
-      <div className="admin-modal-card compact" style={{ display: 'flex', flexDirection: 'column', maxHeight: '90vh' }}>
-        
-        {/* Modal Header */}
-        <div className="admin-modal-header">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', minWidth: 0 }}>
+      <div
+        className="admin-modal-card admin-modal-container"
+        style={{
+          maxWidth: '780px',
+          maxHeight: '92vh',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden'
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Sticky Modal Header */}
+        <div className="admin-modal-header" style={{ flexShrink: 0, padding: '0.85rem 1.25rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', minWidth: 0 }}>
             <div style={{
-              width: '38px',
-              height: '38px',
-              borderRadius: '10px',
+              width: '36px',
+              height: '36px',
+              borderRadius: '8px',
               backgroundColor: '#E0F2FE',
               color: '#0284C7',
               display: 'flex',
@@ -428,50 +513,60 @@ export const AdminFareForm = ({ isOpen, onClose, onSuccess, initialData = null }
                       value={routeId}
                       onChange={(e) => setRouteId(e.target.value)}
                       className="admin-input-control"
-                      style={{ height: '38px', fontSize: '0.84rem' }}
+                      style={{ height: '40px', fontSize: '0.86rem', fontWeight: 600 }}
                     >
-                      <option value="">-- Choose Intercity Route --</option>
+                      <option value="">-- Select Existing Route --</option>
                       {routes.map((r) => (
                         <option key={r.id} value={r.id}>
-                          {r.routeName} ({r.pickupLocation?.name || 'Pickup'} ➔ {r.dropLocation?.name || 'Drop'})
+                          {r.routeName} ({r.pickupLocation?.name} → {r.dropLocation?.name})
                         </option>
                       ))}
                     </select>
                   </div>
                 ) : (
-                  <div className="admin-form-grid-2">
+                  <div className="admin-form-grid-2" style={{ margin: 0 }}>
                     <div className="admin-input-group" style={{ margin: 0 }}>
-                      <label className="admin-input-label">Pickup Location</label>
-                      <select
-                        value={pickupLocationId}
-                        onChange={(e) => setPickupLocationId(e.target.value)}
+                      <label className="admin-input-label">
+                        Pickup Location / City <span className="admin-required">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        list="fare-pickup-locations"
+                        value={pickupInput}
+                        onChange={(e) => handlePickupInputChange(e.target.value)}
+                        placeholder="Select or enter custom pickup (e.g. Pune, Wakad)"
                         className="admin-input-control"
                         style={{ height: '38px', fontSize: '0.84rem' }}
-                      >
-                        <option value="">-- Select Pickup --</option>
+                      />
+                      <datalist id="fare-pickup-locations">
                         {locations.map((loc) => (
-                          <option key={loc.id} value={loc.id}>
+                          <option key={loc.id} value={loc.name}>
                             {loc.name} ({loc.city})
                           </option>
                         ))}
-                      </select>
+                      </datalist>
                     </div>
 
                     <div className="admin-input-group" style={{ margin: 0 }}>
-                      <label className="admin-input-label">Drop Location</label>
-                      <select
-                        value={dropLocationId}
-                        onChange={(e) => setDropLocationId(e.target.value)}
+                      <label className="admin-input-label">
+                        Drop Location / City <span className="admin-required">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        list="fare-drop-locations"
+                        value={dropInput}
+                        onChange={(e) => handleDropInputChange(e.target.value)}
+                        placeholder="Select or enter custom drop (e.g. Mumbai, Shirdi)"
                         className="admin-input-control"
                         style={{ height: '38px', fontSize: '0.84rem' }}
-                      >
-                        <option value="">-- Select Drop --</option>
+                      />
+                      <datalist id="fare-drop-locations">
                         {locations.map((loc) => (
-                          <option key={loc.id} value={loc.id}>
+                          <option key={loc.id} value={loc.name}>
                             {loc.name} ({loc.city})
                           </option>
                         ))}
-                      </select>
+                      </datalist>
                     </div>
                   </div>
                 )}
@@ -489,19 +584,24 @@ export const AdminFareForm = ({ isOpen, onClose, onSuccess, initialData = null }
                     <div className="admin-filter-pills" style={{ padding: '0.15rem' }}>
                       <button
                         type="button"
-                        onClick={() => setVehicleSelectionType('new')}
-                        className={`admin-filter-btn ${vehicleSelectionType === 'new' ? 'active' : ''}`}
-                        style={{ padding: '0.2rem 0.6rem', fontSize: '0.72rem' }}
-                      >
-                        New Vehicle
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setVehicleSelectionType('existing')}
+                        onClick={() => {
+                          setVehicleSelectionType('existing');
+                        }}
                         className={`admin-filter-btn ${vehicleSelectionType === 'existing' ? 'active' : ''}`}
                         style={{ padding: '0.2rem 0.6rem', fontSize: '0.72rem' }}
                       >
                         Choose from Fleet
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setVehicleSelectionType('new');
+                          setVehicleId('');
+                        }}
+                        className={`admin-filter-btn ${vehicleSelectionType === 'new' ? 'active' : ''}`}
+                        style={{ padding: '0.2rem 0.6rem', fontSize: '0.72rem' }}
+                      >
+                        New Vehicle
                       </button>
                     </div>
                   )}
@@ -513,7 +613,7 @@ export const AdminFareForm = ({ isOpen, onClose, onSuccess, initialData = null }
                       value={vehicleId}
                       onChange={(e) => handleExistingVehicleChange(e.target.value)}
                       className="admin-input-control"
-                      style={{ height: '38px', fontSize: '0.84rem' }}
+                      style={{ height: '38px', fontSize: '0.84rem', fontWeight: 600, borderColor: '#10B981', backgroundColor: '#F0FDF4' }}
                     >
                       <option value="">-- Pick from Fleet Vehicles --</option>
                       {existingVehicles.map((v) => (
@@ -522,6 +622,11 @@ export const AdminFareForm = ({ isOpen, onClose, onSuccess, initialData = null }
                         </option>
                       ))}
                     </select>
+                    {vehicleId && (
+                      <div style={{ fontSize: '0.7rem', color: '#047857', marginTop: '0.25rem', fontWeight: 600 }}>
+                        ✓ Reusing existing Fleet Vehicle record. To manage full fleet specs, use the Fleet Vehicles tab.
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -572,15 +677,23 @@ export const AdminFareForm = ({ isOpen, onClose, onSuccess, initialData = null }
 
                 {/* Vehicle Image Preview (Read-Only) */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.5rem 0.75rem', background: '#F8FAFC', borderRadius: '8px', border: '1px solid #E2E8F0' }}>
-                  <img
-                    src={vehicleImage.startsWith('http') || vehicleImage.startsWith('/uploads') ? `${vehicleImage.startsWith('/uploads') ? API_BASE_URL : ''}${vehicleImage}` : vehicleImage}
-                    alt="Vehicle"
-                    style={{ width: '48px', height: '34px', borderRadius: '6px', objectFit: 'contain', backgroundColor: '#FFFFFF', border: '1px solid #CBD5E1', padding: '2px', flexShrink: 0 }}
-                    onError={(e) => { e.target.src = '/assets/sedan.webp'; }}
-                  />
-                  <div style={{ fontSize: '0.78rem', color: '#64748B' }}>
-                    Assigned Fleet Photo: <code style={{ color: '#0284C7', fontWeight: 600 }}>{vehicleImage.split('/').pop()}</code>
-                  </div>
+                  {vehicleImage ? (
+                    <>
+                      <img
+                        src={vehicleImage.startsWith('http') || vehicleImage.startsWith('/uploads') ? `${vehicleImage.startsWith('/uploads') ? API_BASE_URL : ''}${vehicleImage}` : vehicleImage}
+                        alt="Vehicle"
+                        style={{ width: '48px', height: '34px', borderRadius: '6px', objectFit: 'contain', backgroundColor: '#FFFFFF', border: '1px solid #CBD5E1', padding: '2px', flexShrink: 0 }}
+                        onError={(e) => { e.target.src = '/assets/sedan.webp'; }}
+                      />
+                      <div style={{ fontSize: '0.78rem', color: '#64748B' }}>
+                        Assigned Fleet Photo: <code style={{ color: '#0284C7', fontWeight: 600 }}>{vehicleImage.split('/').pop()}</code>
+                      </div>
+                    </>
+                  ) : (
+                    <div style={{ fontSize: '0.78rem', color: '#94A3B8' }}>
+                      No vehicle photo assigned yet. Select a vehicle from the fleet or assign photo.
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -648,10 +761,14 @@ export const AdminFareForm = ({ isOpen, onClose, onSuccess, initialData = null }
                     <input
                       type="number"
                       step="1"
-                      value={tolls[0]?.amount || 0}
+                      value={tolls[0]?.amount !== undefined ? tolls[0].amount : ''}
                       onChange={(e) => {
-                        const val = parseFloat(e.target.value) || 0;
-                        setTolls([{ name: 'Expressway Toll', amount: val, isActive: true }]);
+                        const val = e.target.value;
+                        if (val === '') {
+                          setTolls([]);
+                        } else {
+                          setTolls([{ name: 'Expressway Toll', amount: parseFloat(val) || 0, isActive: true }]);
+                        }
                       }}
                       placeholder="e.g. 320"
                       className="admin-input-control"
@@ -660,37 +777,149 @@ export const AdminFareForm = ({ isOpen, onClose, onSuccess, initialData = null }
                   </div>
                 </div>
 
-                {/* Parking & Waiting Inline Options */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', backgroundColor: '#F8FAFC', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1px solid #E2E8F0' }}>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontSize: '0.78rem', fontWeight: 600, color: '#334155', cursor: 'pointer' }}>
+                {/* Extra Kilometre Rate & Status */}
+                <div className="admin-form-grid-2" style={{ marginBottom: '0.75rem' }}>
+                  <div className="admin-input-group" style={{ margin: 0 }}>
+                    <label className="admin-input-label">Extra Kilometre Rate (₹ / km)</label>
                     <input
-                      type="checkbox"
-                      checked={parkingEnabled}
-                      onChange={(e) => setParkingEnabled(e.target.checked)}
+                      type="number"
+                      step="0.5"
+                      min="0"
+                      value={perKmFare}
+                      onChange={(e) => setPerKmFare(e.target.value)}
+                      placeholder="e.g. 14"
+                      className="admin-input-control"
+                      style={{ height: '38px', fontSize: '0.84rem' }}
                     />
-                    <span>Airport Parking (+₹{parkingAmount})</span>
-                  </label>
-
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <span style={{ fontSize: '0.76rem', fontWeight: 700, color: '#64748B' }}>Active Status:</span>
-                    <button
-                      type="button"
-                      onClick={() => setIsFareActive(!isFareActive)}
-                      style={{
-                        padding: '0.2rem 0.6rem',
-                        borderRadius: '6px',
-                        border: '1px solid',
-                        borderColor: isFareActive ? '#BBF7D0' : '#E2E8F0',
-                        backgroundColor: isFareActive ? '#DCFCE7' : '#F1F5F9',
-                        color: isFareActive ? '#15803D' : '#64748B',
-                        fontSize: '0.74rem',
-                        fontWeight: 700,
-                        cursor: 'pointer',
-                      }}
-                    >
-                      {isFareActive ? '● Active' : '○ Disabled'}
-                    </button>
+                    <span style={{ fontSize: '0.68rem', color: '#64748B', marginTop: '0.2rem', display: 'block' }}>
+                      Chargeable when customer journey exceeds route included distance
+                    </span>
                   </div>
+
+                  <div className="admin-input-group" style={{ margin: 0 }}>
+                    <label className="admin-input-label">Fare Status</label>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', height: '38px' }}>
+                      <button
+                        type="button"
+                        onClick={() => setIsFareActive(!isFareActive)}
+                        style={{
+                          height: '38px',
+                          padding: '0 1rem',
+                          borderRadius: '8px',
+                          border: '1.5px solid',
+                          borderColor: isFareActive ? '#BBF7D0' : '#E2E8F0',
+                          backgroundColor: isFareActive ? '#DCFCE7' : '#F1F5F9',
+                          color: isFareActive ? '#15803D' : '#64748B',
+                          fontSize: '0.82rem',
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.4rem',
+                        }}
+                      >
+                        <span>{isFareActive ? '● Active & Bookable' : '○ Disabled'}</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Configurable Parking Pricing */}
+                <div style={{ backgroundColor: '#F8FAFC', padding: '0.85rem 1rem', borderRadius: '10px', border: '1px solid #E2E8F0', marginBottom: '0.75rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: parkingEnabled ? '0.65rem' : 0 }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.82rem', fontWeight: 700, color: '#1E293B', cursor: 'pointer' }}>
+                      <input
+                        type="checkbox"
+                        checked={parkingEnabled}
+                        onChange={(e) => setParkingEnabled(e.target.checked)}
+                        style={{ width: '16px', height: '16px', accentColor: '#0284C7' }}
+                      />
+                      <span>Parking Charges Apply</span>
+                    </label>
+                    <span style={{ fontSize: '0.72rem', color: parkingEnabled ? '#0284C7' : '#94A3B8', fontWeight: 600 }}>
+                      {parkingEnabled ? 'Configured' : 'Not Applicable / Included'}
+                    </span>
+                  </div>
+
+                  {parkingEnabled && (
+                    <div className="admin-form-grid-2" style={{ marginTop: '0.5rem' }}>
+                      <div className="admin-input-group" style={{ margin: 0 }}>
+                        <label className="admin-input-label">Parking Amount (₹)</label>
+                        <input
+                          type="number"
+                          step="1"
+                          min="0"
+                          value={parkingAmount}
+                          onChange={(e) => setParkingAmount(e.target.value)}
+                          placeholder="e.g. 100"
+                          className="admin-input-control"
+                          style={{ height: '36px', fontSize: '0.84rem' }}
+                        />
+                      </div>
+                      <div className="admin-input-group" style={{ margin: 0 }}>
+                        <label className="admin-input-label">Charging Rule</label>
+                        <select
+                          value={parkingType}
+                          onChange={(e) => setParkingType(e.target.value)}
+                          className="admin-input-control"
+                          style={{ height: '36px', fontSize: '0.84rem' }}
+                        >
+                          <option value="FIXED">Fixed Amount</option>
+                          <option value="AIRPORT_ENTRY">Airport Entry Parking</option>
+                          <option value="ACTUALS">At Actuals (Receipt)</option>
+                        </select>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Configurable Stay / Driver Waiting Allowance */}
+                <div style={{ backgroundColor: '#F8FAFC', padding: '0.85rem 1rem', borderRadius: '10px', border: '1px solid #E2E8F0' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: waitingEnabled ? '0.65rem' : 0 }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.82rem', fontWeight: 700, color: '#1E293B', cursor: 'pointer' }}>
+                      <input
+                        type="checkbox"
+                        checked={waitingEnabled}
+                        onChange={(e) => setWaitingEnabled(e.target.checked)}
+                        style={{ width: '16px', height: '16px', accentColor: '#0284C7' }}
+                      />
+                      <span>Stay / Driver Waiting Allowance Applies</span>
+                    </label>
+                    <span style={{ fontSize: '0.72rem', color: waitingEnabled ? '#D97706' : '#94A3B8', fontWeight: 600 }}>
+                      {waitingEnabled ? 'Configured' : 'Not Applicable / Included'}
+                    </span>
+                  </div>
+
+                  {waitingEnabled && (
+                    <div className="admin-form-grid-2" style={{ marginTop: '0.5rem' }}>
+                      <div className="admin-input-group" style={{ margin: 0 }}>
+                        <label className="admin-input-label">Hourly Stay Charge (₹ / hr)</label>
+                        <input
+                          type="number"
+                          step="1"
+                          min="0"
+                          value={perHourCharge}
+                          onChange={(e) => setPerHourCharge(e.target.value)}
+                          placeholder="e.g. 150"
+                          className="admin-input-control"
+                          style={{ height: '36px', fontSize: '0.84rem' }}
+                        />
+                      </div>
+                      <div className="admin-input-group" style={{ margin: 0 }}>
+                        <label className="admin-input-label">Free Waiting Included (Minutes)</label>
+                        <input
+                          type="number"
+                          step="5"
+                          min="0"
+                          value={freeMinutes}
+                          onChange={(e) => setFreeMinutes(e.target.value)}
+                          placeholder="e.g. 30"
+                          className="admin-input-control"
+                          style={{ height: '36px', fontSize: '0.84rem' }}
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -698,7 +927,6 @@ export const AdminFareForm = ({ isOpen, onClose, onSuccess, initialData = null }
 
             </div>
 
-            {/* Sticky Modal Footer (Always Visible at Bottom) */}
             {/* Sticky Modal Footer (Always Visible at Bottom) */}
             <div className="admin-modal-footer" style={{ justifyContent: 'flex-end', gap: '0.75rem' }}>
               <button

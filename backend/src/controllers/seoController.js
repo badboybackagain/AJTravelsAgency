@@ -397,75 +397,139 @@ const STATIC_CODE_PAGES = [
   },
 ];
 
-function getAllPublicPagesCatalog(dbPages = []) {
+let cachedDbBlogs = null;
+let cachedDbPages = null;
+
+function getAllPublicPagesCatalog(dbPages = null, dbBlogs = null) {
+  const pagesToUse = dbPages !== null ? dbPages : (cachedDbPages || []);
+  const blogsToUse = dbBlogs !== null ? dbBlogs : (cachedDbBlogs || []);
+
   const dbMap = new Map();
-  for (const p of dbPages) {
+  for (const p of pagesToUse) {
     dbMap.set(p.pageKey, p);
   }
 
+  const seenCanonicals = new Set();
+  const seenPageKeys = new Set();
+
+  // 1. Core pages (3)
   const coreList = PUBLIC_PAGES.map(p => {
     const override = dbMap.get(p.pageKey);
+    const canonical = override?.canonicalUrl || (p.pageUrl === '/' ? `${SITE_DOMAIN}/` : `${SITE_DOMAIN}${p.pageUrl}`);
+    seenCanonicals.add(canonical);
+    seenPageKeys.add(p.pageKey);
+    const isIndex = override ? (override.isIndexable ?? true) : true;
     return {
       pageKey: p.pageKey,
       pageLabel: p.pageLabel,
       pageUrl: p.pageUrl,
-      canonicalUrl: override?.canonicalUrl || (p.pageUrl === '/' ? `${SITE_DOMAIN}/` : `${SITE_DOMAIN}${p.pageUrl}`),
+      canonicalUrl: canonical,
       seoTitle: override?.seoTitle || p.seoTitle,
       metaDescription: override?.metaDescription || p.metaDescription,
-      isIndexable: override ? (override.isIndexable ?? true) : true,
-      indexingDirective: 'index, follow',
+      isIndexable: isIndex,
+      indexingDirective: isIndex ? 'index, follow' : 'noindex, nofollow',
       sitemapInclusion: p.pageUrl === '/' ? 'Included (Priority 1.0)' : 'Included (Priority 0.8)',
       metadataCompleteness: 'Complete (Title, Desc, Canonical, OG)',
-      metadataSource: 'DATABASE_OVERRIDE',
+      metadataSource: override ? 'DATABASE_OVERRIDE' : 'CORE_SPA',
       isDbEditable: true,
+      category: 'Core',
     };
   });
 
-  const seenCanonicals = new Set();
-  coreList.forEach(p => seenCanonicals.add(p.canonicalUrl));
-
+  // 2. Static Code Pages (14)
   const staticList = STATIC_CODE_PAGES.map(p => {
     const override = dbMap.get(p.pageKey);
-    const item = {
+    const canonical = override?.canonicalUrl || p.canonicalUrl;
+    seenCanonicals.add(canonical);
+    seenPageKeys.add(p.pageKey);
+    const isIndex = override ? (override.isIndexable ?? true) : p.isIndexable;
+    let cat = 'Static / Legal';
+    if (p.pageUrl.includes('/vehicles')) cat = 'Fleet';
+    else if (p.pageUrl.includes('taxi') || p.pageUrl.includes('cab')) cat = 'Routes';
+    else if (p.pageUrl === '/blog') cat = 'Blog';
+
+    return {
       ...p,
       seoTitle: override?.seoTitle || p.seoTitle,
       metaDescription: override?.metaDescription || p.metaDescription,
-      canonicalUrl: override?.canonicalUrl || p.canonicalUrl,
-      isIndexable: override ? (override.isIndexable ?? true) : p.isIndexable,
+      canonicalUrl: canonical,
+      isIndexable: isIndex,
+      indexingDirective: isIndex ? 'index, follow' : 'noindex, nofollow',
+      metadataSource: override ? 'DATABASE_OVERRIDE' : 'STATIC_CODE',
       isDbEditable: true,
+      category: cat,
     };
-    seenCanonicals.add(item.canonicalUrl);
-    return item;
   });
 
+  // 3. Database Blog Articles (Dynamic from PostgreSQL)
+  const blogList = [];
+  for (const b of blogsToUse) {
+    const canonical = b.canonicalUrl || `${SITE_DOMAIN}/${b.slug}/`;
+    if (seenCanonicals.has(canonical) || seenPageKeys.has(b.slug)) continue;
+    seenCanonicals.add(canonical);
+    seenPageKeys.add(b.slug);
+
+    const override = dbMap.get(b.slug);
+    const title = override?.seoTitle || b.metaTitle || b.title;
+    const desc = override?.metaDescription || b.metaDesc || b.excerpt || '';
+    const isIndex = override ? (override.isIndexable ?? true) : b.isPublished;
+
+    blogList.push({
+      pageKey: b.slug,
+      pageLabel: b.title ? (b.title.length > 50 ? b.title.slice(0, 50) + '...' : b.title) : b.slug,
+      pageUrl: `/${b.slug}/`,
+      canonicalUrl: override?.canonicalUrl || canonical,
+      seoTitle: title,
+      metaDescription: desc,
+      isIndexable: isIndex,
+      indexingDirective: isIndex ? 'index, follow' : 'noindex, nofollow',
+      sitemapInclusion: 'Included (Priority 0.7)',
+      metadataCompleteness: (title && desc) ? 'Complete (Title, Desc, Canonical)' : (!desc ? 'Missing Description' : 'Missing Title'),
+      metadataSource: override ? 'DATABASE_OVERRIDE' : 'DATABASE_BLOG',
+      isDbEditable: true,
+      category: 'Blog',
+    });
+  }
+
+  // 4. Migrated Landing Pages & Corridors (120 remaining)
   const contentStoreList = [];
   for (const [slug, entry] of Object.entries(migratedPagesMap)) {
     if (!entry || !entry.canonical) continue;
-    if (seenCanonicals.has(entry.canonical)) continue;
+    if (seenCanonicals.has(entry.canonical) || seenPageKeys.has(slug)) continue;
     seenCanonicals.add(entry.canonical);
+    seenPageKeys.add(slug);
 
     let cleanLabel = entry.title ? entry.title.split('|')[0].split('-')[0].trim() : slug;
     if (cleanLabel.length > 50) cleanLabel = cleanLabel.slice(0, 50) + '...';
 
     const override = dbMap.get(slug);
+    const title = override?.seoTitle || entry.title || `${cleanLabel} | AJ Travels`;
+    const desc = override?.metaDescription || entry.description || 'Reliable chauffeured intercity and rental service across Maharashtra.';
+    const isIndex = override ? (override.isIndexable ?? true) : true;
+
+    let cat = 'Corridors / Routes';
+    if (slug.includes('airport')) cat = 'Airport Transfer';
+    else if (slug.includes('pune') || slug.includes('mumbai')) cat = 'Corridors / Routes';
+    else cat = 'Local Area';
 
     contentStoreList.push({
       pageKey: slug,
       pageLabel: cleanLabel,
       pageUrl: `/${slug}/`,
       canonicalUrl: override?.canonicalUrl || entry.canonical,
-      seoTitle: override?.seoTitle || entry.title || `${cleanLabel} | AJ Travels`,
-      metaDescription: override?.metaDescription || entry.description || 'Reliable chauffeured intercity and rental service across Maharashtra.',
-      isIndexable: override ? (override.isIndexable ?? true) : true,
-      indexingDirective: 'index, follow',
+      seoTitle: title,
+      metaDescription: desc,
+      isIndexable: isIndex,
+      indexingDirective: isIndex ? 'index, follow' : 'noindex, nofollow',
       sitemapInclusion: 'Included (Priority 0.7)',
-      metadataCompleteness: 'Complete (Title, Desc, Canonical)',
+      metadataCompleteness: (title && desc) ? 'Complete (Title, Desc, Canonical)' : 'Missing Details',
       metadataSource: override ? 'DATABASE_OVERRIDE' : 'GENERATED_CONTENT_STORE',
       isDbEditable: true,
+      category: cat,
     });
   }
 
-  return [...coreList, ...staticList, ...contentStoreList];
+  return [...coreList, ...staticList, ...blogList, ...contentStoreList];
 }
 
 // ---------------------------------------------------------------------------
@@ -519,43 +583,56 @@ const getPages = async (req, res) => {
     }
 
     await seedPages();
-    let pages = [];
+    let dbPages = [];
     try {
-      pages = await prisma.seoMeta.findMany({ orderBy: { pageKey: 'asc' } });
+      dbPages = await prisma.seoMeta.findMany({ orderBy: { pageKey: 'asc' } });
+      cachedDbPages = dbPages;
     } catch (dbErr) {
       console.warn('[SEO] DB query fallback:', dbErr.message);
     }
 
-    if (!pages || pages.length === 0) {
-      pages = PUBLIC_PAGES.map(p => ({
-        ...p,
-        canonicalUrl: null,
-        ogTitle: null,
-        ogDescription: null,
-        ogImage: null,
-        slug: null,
-        updatedAt: new Date().toISOString(),
-      }));
+    let dbBlogs = [];
+    try {
+      dbBlogs = await prisma.blogPost.findMany({ where: { isPublished: true }, orderBy: { createdAt: 'desc' } });
+      cachedDbBlogs = dbBlogs;
+    } catch (bErr) {
+      console.warn('[SEO] Failed to fetch dbBlogs:', bErr.message);
     }
 
-    const missingTitle = pages.filter(p => !p.seoTitle).length;
-    const missingDesc  = pages.filter(p => !p.metaDescription).length;
+    const unifiedCatalog = getAllPublicPagesCatalog(dbPages, dbBlogs);
+
+    const missingTitle = unifiedCatalog.filter(p => !p.seoTitle).length;
+    const missingDesc  = unifiedCatalog.filter(p => !p.metaDescription).length;
+    const indexableCount = unifiedCatalog.filter(p => p.isIndexable).length;
+
+    const routeInventory = unifiedCatalog.map(p => ({
+      path: p.pageUrl,
+      label: p.pageLabel,
+      type: p.category || (p.pageUrl === '/' ? 'CORE_PAGE' : 'PUBLIC_PAGE'),
+      isPublic: true,
+      hasContent: true,
+      indexingStatus: p.isIndexable ? 'index, follow' : 'noindex, nofollow',
+      sitemapStatus: p.sitemapInclusion || 'Included',
+      managedPageKey: p.pageKey,
+      canonicalUrl: p.canonicalUrl,
+      notes: p.seoTitle || p.metaDescription || '',
+    }));
 
     const payloadData = {
       siteDomain: SITE_DOMAIN,
-      pages,
+      pages: unifiedCatalog,
+      allPublicPages: unifiedCatalog,
       stats: {
-        total:        pages.length,
-        indexable:    pages.filter(p => p.isIndexable).length,
-        noindex:      pages.filter(p => !p.isIndexable).length,
+        total:        unifiedCatalog.length,
+        indexable:    indexableCount,
+        noindex:      unifiedCatalog.length - indexableCount,
         missingTitle,
         missingDesc,
-        routesCount:  ROUTE_INVENTORY.length,
+        routesCount:  unifiedCatalog.length,
         plannedCount: PLANNED_ROUTES.length,
       },
-      routeInventory: ROUTE_INVENTORY,
+      routeInventory,
       plannedRoutes:  PLANNED_ROUTES,
-      allPublicPages: getAllPublicPagesCatalog(pages),
     };
 
     pagesCache = payloadData;
@@ -597,12 +674,11 @@ const updatePage = async (req, res) => {
       isIndexable, ogTitle, ogDescription, ogImage, slug,
     } = req.body;
 
-    // Validate lengths (guidance only — we persist regardless)
     const warnings = [];
-    if (seoTitle && seoTitle.length > 60)       warnings.push('SEO title exceeds recommended 60 characters.');
+    if (seoTitle && seoTitle.length > 60) warnings.push('SEO title exceeds recommended 60 characters.');
     if (metaDescription && metaDescription.length > 160) warnings.push('Meta description exceeds recommended 160 characters.');
 
-    const allCatalog = getAllPublicPagesCatalog();
+    const allCatalog = getAllPublicPagesCatalog(cachedDbPages, cachedDbBlogs);
     const existingEntry = allCatalog.find(p => p.pageKey === pageKey);
     const pageLabel = existingEntry?.pageLabel || pageKey;
     const pageUrl = existingEntry?.pageUrl || `/${pageKey}/`;
@@ -634,13 +710,29 @@ const updatePage = async (req, res) => {
       },
     });
 
+    // If this is a blog post, also update prisma.blogPost
+    try {
+      const blog = await prisma.blogPost.findUnique({ where: { slug: pageKey } });
+      if (blog) {
+        await prisma.blogPost.update({
+          where: { slug: pageKey },
+          data: {
+            metaTitle: seoTitle !== undefined ? seoTitle : undefined,
+            metaDesc: metaDescription !== undefined ? metaDescription : undefined,
+            canonicalUrl: canonicalUrl !== undefined ? canonicalUrl : undefined,
+          },
+        });
+        cachedDbBlogs = await prisma.blogPost.findMany({ where: { isPublished: true } });
+      }
+    } catch (bErr) {
+      console.warn('[SEO] Failed to sync blog post metadata:', bErr.message);
+    }
+
     // Also persist to migratedPagesSeo.json if this is a migrated landing page
     if (migratedPagesMap && migratedPagesMap[pageKey]) {
       if (seoTitle) migratedPagesMap[pageKey].title = seoTitle;
       if (metaDescription) migratedPagesMap[pageKey].description = metaDescription;
       try {
-        const fs = require('fs');
-        const path = require('path');
         const dataPath = path.join(__dirname, '../data/migratedPagesSeo.json');
         fs.writeFileSync(dataPath, JSON.stringify(migratedPagesMap, null, 2), 'utf-8');
       } catch (fErr) {
@@ -648,8 +740,18 @@ const updatePage = async (req, res) => {
       }
     }
 
-    // Invalidate in-memory pages cache on update
+    // Invalidate in-memory caches
     pagesCache = null;
+    try {
+      cachedDbPages = await prisma.seoMeta.findMany({ orderBy: { pageKey: 'asc' } });
+    } catch (_e) {}
+
+    try {
+      const seoAnalyzerService = require('../services/seoAnalyzerService');
+      if (typeof seoAnalyzerService.clearAnalysisCache === 'function') {
+        seoAnalyzerService.clearAnalysisCache(pageKey);
+      }
+    } catch (_e) {}
 
     res.json({ success: true, data: page, warnings });
   } catch (err) {

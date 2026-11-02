@@ -42,33 +42,73 @@ api.interceptors.response.use(
   }
 );
 
-// Unified Admin Fare Config API with in-flight request deduplication
+// Admin Dashboard Aggregated Stats API
+export const adminDashboardApi = {
+  getStats: () => api.get('/admin/dashboard-stats'),
+};
+
+// Unified Admin Fare Config API with safe short-term caching & in-flight deduplication
+let sharedFareConfigsCache = null;
+let sharedFareConfigsCacheTime = 0;
 let inFlightFareConfigsPromise = null;
+const FARE_CONFIGS_FRONTEND_TTL = 30000; // 30 seconds
 
 export const adminFareConfigApi = {
-  getAll: (params) => {
-    // If no params are passed (full list on mount), reuse the in-flight request
+  getAll: (params, config = {}) => {
+    if (config?.forceRefresh) {
+      sharedFareConfigsCache = null;
+      inFlightFareConfigsPromise = null;
+    }
+    // If no params are passed (full list on mount), check cache first
     if (!params || Object.keys(params).length === 0) {
+      const now = Date.now();
+      if (sharedFareConfigsCache && (now - sharedFareConfigsCacheTime < FARE_CONFIGS_FRONTEND_TTL)) {
+        return Promise.resolve({ data: { success: true, count: sharedFareConfigsCache.length, data: sharedFareConfigsCache } });
+      }
       if (inFlightFareConfigsPromise) {
         return inFlightFareConfigsPromise;
       }
       inFlightFareConfigsPromise = api.get('/fares/admin/configs')
+        .then((res) => {
+          sharedFareConfigsCache = res.data?.data || [];
+          sharedFareConfigsCacheTime = Date.now();
+          return res;
+        })
         .finally(() => {
-          setTimeout(() => {
-            inFlightFareConfigsPromise = null;
-          }, 300);
+          inFlightFareConfigsPromise = null;
         });
       return inFlightFareConfigsPromise;
     }
     return api.get('/fares/admin/configs', { params });
   },
+  clearCache: () => {
+    sharedFareConfigsCache = null;
+    sharedFareConfigsCacheTime = 0;
+    inFlightFareConfigsPromise = null;
+  },
   getById: (id) => api.get(`/fares/admin/configs/${id}`),
-  create: (data) => api.post('/fares/admin/configs', data),
-  update: (id, data) => api.put(`/fares/admin/configs/${id}`, data),
-  toggleStatus: (id, isActive) => api.patch(`/fares/admin/configs/${id}/toggle-status`, { isActive }),
-  delete: (id) => api.delete(`/fares/admin/configs/${id}`),
-  duplicate: (id) => api.post(`/fares/admin/configs/${id}/duplicate`),
+  create: (data) => {
+    adminFareConfigApi.clearCache();
+    return api.post('/fares/admin/configs', data);
+  },
+  update: (id, data) => {
+    adminFareConfigApi.clearCache();
+    return api.put(`/fares/admin/configs/${id}`, data);
+  },
+  toggleStatus: (id, isActive) => {
+    adminFareConfigApi.clearCache();
+    return api.patch(`/fares/admin/configs/${id}/toggle-status`, { isActive });
+  },
+  delete: (id) => {
+    adminFareConfigApi.clearCache();
+    return api.delete(`/fares/admin/configs/${id}`);
+  },
+  duplicate: (id) => {
+    adminFareConfigApi.clearCache();
+    return api.post(`/fares/admin/configs/${id}/duplicate`);
+  },
 };
+
 
 // Admin Local Vehicles API (Hourly Packages)
 export const adminLocalVehicleApi = {
@@ -131,14 +171,75 @@ export const locationApi = {
   },
 };
 
-// Fleet Vehicles API
+// Fleet Vehicles API with In-Flight De-duplication and Session Caching
+let sharedVehiclesCache = null;
+let sharedVehiclesPromise = null;
+let sharedAdminVehiclesCache = null;
+let sharedAdminVehiclesPromise = null;
+
 export const vehicleApi = {
-  getAll: () => api.get('/vehicles'),
+  getAll: (config = {}) => {
+    if (config?.forceRefresh) {
+      sharedVehiclesCache = null;
+      sharedVehiclesPromise = null;
+    }
+    if (sharedVehiclesCache && sharedVehiclesCache.length > 0) {
+      return Promise.resolve({ data: { success: true, data: sharedVehiclesCache } });
+    }
+    if (sharedVehiclesPromise) {
+      return sharedVehiclesPromise;
+    }
+    sharedVehiclesPromise = api
+      .get('/vehicles', config)
+      .then((res) => {
+        sharedVehiclesCache = res.data?.data || [];
+        return res;
+      })
+      .finally(() => {
+        sharedVehiclesPromise = null;
+      });
+    return sharedVehiclesPromise;
+  },
+  clearCache: () => {
+    sharedVehiclesCache = null;
+    sharedVehiclesPromise = null;
+    sharedAdminVehiclesCache = null;
+    sharedAdminVehiclesPromise = null;
+  },
   getById: (id) => api.get(`/vehicles/${id}`),
-  adminGetAll: () => api.get('/vehicles/admin/all'),
-  create: (data) => api.post('/vehicles', data),
-  update: (id, data) => api.put(`/vehicles/${id}`, data),
-  delete: (id) => api.delete(`/vehicles/${id}`),
+  adminGetAll: (config = {}) => {
+    if (config?.forceRefresh) {
+      sharedAdminVehiclesCache = null;
+      sharedAdminVehiclesPromise = null;
+    }
+    if (sharedAdminVehiclesCache && sharedAdminVehiclesCache.length > 0) {
+      return Promise.resolve({ data: { success: true, data: sharedAdminVehiclesCache } });
+    }
+    if (sharedAdminVehiclesPromise) {
+      return sharedAdminVehiclesPromise;
+    }
+    sharedAdminVehiclesPromise = api.get('/vehicles/admin/all', config)
+      .then((res) => {
+        sharedAdminVehiclesCache = res.data?.data || [];
+        return res;
+      })
+      .finally(() => {
+        sharedAdminVehiclesPromise = null;
+      });
+    return sharedAdminVehiclesPromise;
+  },
+  create: (data) => {
+    vehicleApi.clearCache();
+    return api.post('/vehicles', data);
+  },
+  update: (id, data) => {
+    vehicleApi.clearCache();
+    return api.put(`/vehicles/${id}`, data);
+  },
+  delete: (id) => {
+    vehicleApi.clearCache();
+    return api.delete(`/vehicles/${id}`);
+  },
   uploadImage: (formData) =>
     api.post('/vehicles/upload-image', formData, {
       headers: { 'Content-Type': undefined },
@@ -281,6 +382,139 @@ export const mediaApi = {
   delete: (id, force = false) => api.delete(`/media/${id}`, { params: { force } }),
 };
 
+// Blog API (Public & Admin Blog Management)
+let sharedBlogsCache = null;
+let sharedBlogsPromise = null;
+
+export function formatMediaUrl(url, fallback = '/assets/pune-to-mumbai-premium-travel-banner.webp') {
+  if (!url || typeof url !== 'string') return fallback;
+  const trimmed = url.trim();
+  if (!trimmed) return fallback;
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://') || trimmed.startsWith('data:')) {
+    return trimmed;
+  }
+  if (trimmed.startsWith('/uploads')) {
+    return `${API_BASE_URL || ''}${trimmed}`;
+  }
+  return trimmed;
+}
+
+export function normalizeBlogPost(post) {
+  if (!post) return null;
+  const publishedDate = post.publishedDate || (post.publishedAt
+    ? new Date(post.publishedAt).toLocaleDateString('en-US', {
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric',
+      })
+    : '');
+
+  let readTime = post.readTime;
+  if (!readTime || readTime === 'min read') {
+    let wordCount = 0;
+    if (Array.isArray(post.content)) {
+      post.content.forEach((b) => {
+        if (b.text) wordCount += b.text.split(/\s+/).filter(Boolean).length;
+        if (b.title) wordCount += b.title.split(/\s+/).filter(Boolean).length;
+        if (Array.isArray(b.items)) wordCount += b.items.join(' ').split(/\s+/).filter(Boolean).length;
+        if (Array.isArray(b.rows)) wordCount += b.rows.map(r => Array.isArray(r) ? r.join(' ') : '').join(' ').split(/\s+/).filter(Boolean).length;
+      });
+    }
+    if (post.summary) wordCount += post.summary.split(/\s+/).filter(Boolean).length;
+    readTime = `${Math.max(1, Math.ceil(wordCount / 200))} min read`;
+  }
+
+  const featuredImage = formatMediaUrl(
+    post.featuredImage,
+    '/assets/pune-to-mumbai-premium-travel-banner.webp'
+  );
+
+  const content = Array.isArray(post.content)
+    ? post.content.map((block) => {
+        if (block && block.type === 'image' && block.url) {
+          return {
+            ...block,
+            url: formatMediaUrl(block.url, '/assets/pune-to-mumbai-premium-travel-banner.webp'),
+          };
+        }
+        return block;
+      })
+    : [];
+
+  return {
+    ...post,
+    publishedDate,
+    readTime,
+    featuredImage,
+    summary: post.summary || post.excerpt || '',
+    metaDesc: post.metaDesc || post.metaDescription || post.summary || '',
+    faqs: Array.isArray(post.faqs) ? post.faqs : [],
+    content,
+    relatedPosts: Array.isArray(post.relatedPosts) ? post.relatedPosts : [],
+  };
+}
+
+export const blogApi = {
+  getAll: (params, config = {}) => {
+    if (config?.forceRefresh) {
+      sharedBlogsCache = null;
+      sharedBlogsPromise = null;
+    }
+    if (!params || Object.keys(params).length === 0) {
+      if (sharedBlogsCache && sharedBlogsCache.length > 0) {
+        return Promise.resolve({ data: { success: true, data: sharedBlogsCache } });
+      }
+      if (sharedBlogsPromise) {
+        return sharedBlogsPromise;
+      }
+      sharedBlogsPromise = api
+        .get('/blogs')
+        .then((res) => {
+          if (res.data?.success && Array.isArray(res.data?.data)) {
+            sharedBlogsCache = res.data.data;
+          }
+          return res;
+        })
+        .finally(() => {
+          setTimeout(() => {
+            sharedBlogsPromise = null;
+          }, 300);
+        });
+      return sharedBlogsPromise;
+    }
+    return api.get('/blogs', { params, ...config });
+  },
+  getCategories: () => api.get('/blogs/categories'),
+  getBySlug: (slug) => api.get('/blogs/' + slug),
+  clearCache: () => {
+    sharedBlogsCache = null;
+    sharedBlogsPromise = null;
+  },
+};
+
+export const adminBlogApi = {
+  getAll: (params) => api.get('/admin/blogs', { params }),
+  getById: (id) => api.get('/admin/blogs/' + id),
+  create: (data) => {
+    blogApi.clearCache();
+    return api.post('/admin/blogs', data);
+  },
+  update: (id, data) => {
+    blogApi.clearCache();
+    return api.put('/admin/blogs/' + id, data);
+  },
+  togglePublishStatus: (id, isPublished) => {
+    blogApi.clearCache();
+    return api.patch('/admin/blogs/' + id + '/publish-status', { isPublished });
+  },
+  delete: (id) => {
+    blogApi.clearCache();
+    return api.delete('/admin/blogs/' + id);
+  },
+  uploadImage: (formData) =>
+    api.post('/admin/blogs/upload-image', formData, {
+      headers: { 'Content-Type': undefined },
+    }),
+};
+
 export default api;
-
-

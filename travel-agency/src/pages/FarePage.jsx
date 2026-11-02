@@ -725,6 +725,7 @@ export const FarePage = () => {
       return (
         catUpper === 'TEMPO_TRAVELLER' ||
         catUpper === 'TWENTY_SEATER' ||
+        catUpper === 'MINIBUS' ||
         nameLower.includes('tempo') ||
         nameLower.includes('mini bus')
       );
@@ -1831,6 +1832,12 @@ export const FarePage = () => {
                                   <div className="breakdown-row">
                                     <span>Airport / City Parking:</span>
                                     <span>+₹{v.fare.parking?.toLocaleString()}</span>
+                                  </div>
+                                )}
+                                {v.fare.extraKmCharge > 0 && (
+                                  <div className="breakdown-row" style={{ color: '#0369A1', fontWeight: 600 }}>
+                                    <span>Extra Distance ({v.fare.extraKm} km @ ₹{v.fare.extraKmRate}/km):</span>
+                                    <span>+₹{v.fare.extraKmCharge?.toLocaleString()}</span>
                                   </div>
                                 )}
                                 {v.fare.extraHourCharge > 0 && (

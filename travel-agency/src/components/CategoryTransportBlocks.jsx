@@ -1,20 +1,90 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { ArrowRight, Car, CheckCircle2 } from 'lucide-react';
 import { buildFareUrl, normalizeCorridorKey } from '../utils/fareNavigation';
 import { homepageContent } from '../data/homepageContent';
+import { vehicleApi } from '../services/api';
+import { resolveMediaUrl } from '../utils/mediaUtils';
 
 export const CategoryTransportBlocks = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('ALL');
+  const [dbVehicles, setDbVehicles] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    vehicleApi.getAll()
+      .then(res => {
+        if (res.data?.data) {
+          setDbVehicles(res.data.data);
+        }
+        setLoading(false);
+      })
+      .catch(err => {
+        console.warn('CategoryTransportBlocks: Failed to load dynamic fleet:', err?.message);
+        setLoading(false);
+      });
+  }, []);
 
   const catData = homepageContent.categoriesSection;
-  const categories = catData.categories || [];
+  const rawCategories = catData.categories || [];
+
+  // Match live DB vehicles for dynamic images and badges
+  const sedanVeh = dbVehicles.find(v => v.category === 'SEDAN');
+  const suvVeh = dbVehicles.find(v => v.category === 'SUV');
+  const minibusVeh = dbVehicles.find(v => v.category === 'MINIBUS' || v.category === 'TEMPO_TRAVELLER');
+
+  const categories = rawCategories.map(cat => {
+    if (cat.id === 'cabs') {
+      const badgeText = sedanVeh
+        ? `${sedanVeh.seatingCapacity}-SEATER ${sedanVeh.name.toUpperCase()}`
+        : 'EXECUTIVE SEDAN CAB';
+      return {
+        ...cat,
+        bgImg: sedanVeh ? resolveMediaUrl(sedanVeh.image, cat.bgImg) : cat.bgImg,
+        badge: badgeText,
+        isLoading: loading,
+      };
+    }
+    if (cat.id === 'suv') {
+      const badgeText = suvVeh
+        ? `${suvVeh.seatingCapacity}-SEATER ${suvVeh.name.toUpperCase()}`
+        : 'SPACIOUS 6-SEATER SUV';
+      return {
+        ...cat,
+        bgImg: suvVeh ? resolveMediaUrl(suvVeh.image, cat.bgImg) : cat.bgImg,
+        badge: badgeText,
+        isLoading: loading,
+      };
+    }
+    if (cat.id === 'minibus') {
+      const badgeText = minibusVeh
+        ? `${minibusVeh.seatingCapacity}-SEATER ${minibusVeh.name.toUpperCase()}`
+        : 'GROUP TEMPO TRAVELLER';
+      return {
+        ...cat,
+        bgImg: minibusVeh ? resolveMediaUrl(minibusVeh.image, cat.bgImg) : cat.bgImg,
+        badge: badgeText,
+        isLoading: loading,
+      };
+    }
+    return { ...cat, isLoading: loading };
+  });
 
   const handleBookCategory = (catTitle, r) => {
     let category = 'SEDAN';
-    if (catTitle.includes('SUV')) category = 'SUV';
-    else if (catTitle.includes('MINI') || catTitle.includes('TEMPO') || catTitle.includes('BUS')) category = 'TEMPO_TRAVELLER';
+    let assignedVehicleId = '';
+    let assignedVehicleName = '';
+
+    if (catTitle.includes('SUV')) {
+      category = 'SUV';
+      if (suvVeh) { assignedVehicleId = suvVeh.id; assignedVehicleName = suvVeh.name; }
+    } else if (catTitle.includes('MINI') || catTitle.includes('TEMPO') || catTitle.includes('BUS')) {
+      category = 'TEMPO_TRAVELLER';
+      if (minibusVeh) { assignedVehicleId = minibusVeh.id; assignedVehicleName = minibusVeh.name; }
+    } else {
+      if (sedanVeh) { assignedVehicleId = sedanVeh.id; assignedVehicleName = sedanVeh.name; }
+    }
 
     const pKey = normalizeCorridorKey(r.from);
     const dKey = normalizeCorridorKey(r.to);
@@ -27,6 +97,8 @@ export const CategoryTransportBlocks = () => {
       pickupName: r.from,
       dropName: r.to,
       category,
+      vehicleId: assignedVehicleId,
+      vehicleName: assignedVehicleName,
       isCustomRoute: !isCorridor,
     });
 
@@ -92,7 +164,7 @@ export const CategoryTransportBlocks = () => {
               <div className="category-banner-side">
                 <img src={cat.bgImg} alt={cat.title} className="category-banner-img" loading="lazy" decoding="async" />
                 <div className="category-banner-overlay">
-                  <span className="category-badge-chip">{cat.badge}</span>
+                  <span className={`category-badge-chip ${cat.isLoading ? "cat-badge-skeleton" : ""}`}>{cat.badge}</span>
                   <h3 className="category-banner-heading">{cat.title}</h3>
                 </div>
               </div>
@@ -281,6 +353,21 @@ export const CategoryTransportBlocks = () => {
           display: flex;
           flex-direction: column;
           justify-content: space-between;
+        }
+
+        
+        .cat-badge-skeleton {
+          color: transparent !important;
+          background: linear-gradient(90deg, rgba(255, 255, 255, 0.15) 25%, rgba(255, 255, 255, 0.4) 50%, rgba(255, 255, 255, 0.15) 75%) !important;
+          background-size: 200% 100% !important;
+          animation: catBadgeShimmer 1.5s infinite !important;
+          min-width: 130px;
+          display: inline-block;
+        }
+
+        @keyframes catBadgeShimmer {
+          0% { background-position: 200% 0; }
+          100% { background-position: -200% 0; }
         }
 
         .category-badge-chip {

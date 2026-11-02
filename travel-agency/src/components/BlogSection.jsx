@@ -1,11 +1,44 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Calendar, Clock, ArrowRight, BookOpen, Sparkles } from 'lucide-react';
-import { blogPosts } from '../data/blogData';
+import { blogApi, normalizeBlogPost } from '../services/api';
 
 export const BlogSection = () => {
-  // Show top 3 featured guides on homepage
-  const featuredArticles = blogPosts.slice(0, 3);
+  const [featuredArticles, setFeaturedArticles] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    let isSubscribed = true;
+
+    const fetchFeatured = async () => {
+      try {
+        setLoading(true);
+        const res = await blogApi.getAll();
+        const rawList = res.data?.data || [];
+        const normalized = rawList.map(normalizeBlogPost);
+        if (isSubscribed) {
+          setFeaturedArticles(normalized.slice(0, 3));
+          setError(null);
+        }
+      } catch (err) {
+        console.error('Error fetching homepage blog showcase:', err);
+        if (isSubscribed) {
+          setError('Unable to load featured articles.');
+        }
+      } finally {
+        if (isSubscribed) {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchFeatured();
+
+    return () => {
+      isSubscribed = false;
+    };
+  }, []);
 
   return (
     <section className="blog-showcase-section" id="travel-guides">
@@ -17,7 +50,7 @@ export const BlogSection = () => {
             <span>TRAVEL INSIGHTS & HIGHWAY ADVICE</span>
           </div>
           <h2 className="section-title">
-            Featured Route Guides & <span className="text-gradient">Travel Tips</span>
+            Featured Route Guides &amp; <span className="text-gradient">Travel Tips</span>
           </h2>
           <p className="section-subtitle">
             Essential intelligence on Pune–Mumbai Expressway transit, vehicle luggage capacities, airport transfer timing, and Maharashtra road trips.
@@ -26,53 +59,78 @@ export const BlogSection = () => {
 
         {/* Blog Cards Grid */}
         <div className="blog-grid-3col">
-          {featuredArticles.map((article) => (
-            <article key={article.slug} className="blog-card">
-              <Link to={`/blog/${article.slug}`} className="blog-card-media" aria-label={article.title}>
-                <img
-                  src={article.featuredImage}
-                  alt={article.title}
-                  loading="lazy"
-                  className="blog-card-img"
-                />
-                <span className="blog-card-badge">{article.category}</span>
-              </Link>
-
-              <div className="blog-card-body">
-                <div className="blog-card-meta">
-                  <span className="meta-item">
-                    <Calendar size={13} />
-                    <span>{article.publishedDate}</span>
-                  </span>
-                  <span className="meta-sep">•</span>
-                  <span className="meta-item">
-                    <Clock size={13} />
-                    <span>{article.readTime}</span>
-                  </span>
-                </div>
-
-                <h3 className="blog-card-title">
-                  <Link to={`/blog/${article.slug}`}>{article.title}</Link>
-                </h3>
-
-                <p className="blog-card-excerpt">{article.summary}</p>
-
-                <div className="blog-card-footer">
-                  <Link to={`/blog/${article.slug}`} className="blog-read-link">
-                    <span>Read Travel Guide</span>
-                    <ArrowRight size={14} />
-                  </Link>
+          {loading ? (
+            // 3 skeleton cards during loading - zero static content flash
+            Array.from({ length: 3 }).map((_, idx) => (
+              <div key={`blog-skeleton-${idx}`} className="blog-card skeleton-card">
+                <div className="skeleton-media shimmer" />
+                <div className="blog-card-body">
+                  <div className="skeleton-meta shimmer" />
+                  <div className="skeleton-title shimmer" />
+                  <div className="skeleton-excerpt shimmer" />
+                  <div className="skeleton-excerpt short shimmer" />
+                  <div className="blog-card-footer">
+                    <div className="skeleton-btn shimmer" />
+                  </div>
                 </div>
               </div>
-            </article>
-          ))}
+            ))
+          ) : error && featuredArticles.length === 0 ? (
+            <div className="blog-error-box">
+              <p>Articles are temporarily unavailable. Browse our fleet and fares above.</p>
+            </div>
+          ) : (
+            featuredArticles.map((article) => (
+              <article key={article.slug} className="blog-card">
+                <Link to={`/blog/${article.slug}`} className="blog-card-media" aria-label={article.title}>
+                  <img
+                    src={article.featuredImage}
+                    alt={article.title}
+                    loading="lazy"
+                    className="blog-card-img"
+                    onError={(e) => {
+                      e.currentTarget.src = '/assets/pune-to-mumbai-premium-travel-banner.webp';
+                    }}
+                  />
+                  <span className="blog-card-badge">{article.category}</span>
+                </Link>
+
+                <div className="blog-card-body">
+                  <div className="blog-card-meta">
+                    <span className="meta-item">
+                      <Calendar size={13} />
+                      <span>{article.publishedDate}</span>
+                    </span>
+                    <span className="meta-sep">•</span>
+                    <span className="meta-item">
+                      <Clock size={13} />
+                      <span>{article.readTime}</span>
+                    </span>
+                  </div>
+
+                  <h3 className="blog-card-title">
+                    <Link to={`/blog/${article.slug}`}>{article.title}</Link>
+                  </h3>
+
+                  <p className="blog-card-excerpt">{article.summary}</p>
+
+                  <div className="blog-card-footer">
+                    <Link to={`/blog/${article.slug}`} className="blog-read-link">
+                      <span>Read Travel Guide</span>
+                      <ArrowRight size={14} />
+                    </Link>
+                  </div>
+                </div>
+              </article>
+            ))
+          )}
         </div>
 
         {/* View All CTA Strip */}
         <div className="blog-view-all-cta">
           <Link to="/blog" className="btn-view-all-articles">
             <BookOpen size={16} />
-            <span>View All Travel Guides & Articles</span>
+            <span>View All Travel Guides &amp; Articles</span>
             <ArrowRight size={15} />
           </Link>
         </div>
@@ -299,6 +357,84 @@ export const BlogSection = () => {
           border-color: #38BDF8;
           transform: translateY(-2px);
           box-shadow: 0 8px 24px rgba(2, 132, 199, 0.4);
+        }
+
+        /* Skeleton Styles */
+        .skeleton-card {
+          pointer-events: none;
+        }
+
+        .skeleton-media {
+          aspect-ratio: 16 / 10;
+          width: 100%;
+          background: #1E293B;
+        }
+
+        .skeleton-meta {
+          width: 45%;
+          height: 14px;
+          border-radius: 4px;
+          background: #1E293B;
+          margin-bottom: 1rem;
+        }
+
+        .skeleton-title {
+          width: 85%;
+          height: 22px;
+          border-radius: 4px;
+          background: #1E293B;
+          margin-bottom: 1rem;
+        }
+
+        .skeleton-excerpt {
+          width: 100%;
+          height: 14px;
+          border-radius: 4px;
+          background: #1E293B;
+          margin-bottom: 0.5rem;
+        }
+
+        .skeleton-excerpt.short {
+          width: 60%;
+          margin-bottom: 1.5rem;
+        }
+
+        .skeleton-btn {
+          width: 40%;
+          height: 16px;
+          border-radius: 4px;
+          background: #1E293B;
+        }
+
+        .shimmer {
+          position: relative;
+          overflow: hidden;
+        }
+
+        .shimmer::after {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent);
+          animation: shimmerAnim 1.6s infinite;
+        }
+
+        @keyframes shimmerAnim {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(100%); }
+        }
+
+        .blog-error-box {
+          grid-column: 1 / -1;
+          padding: 2rem;
+          text-align: center;
+          color: #94A3B8;
+          background: rgba(15, 23, 42, 0.5);
+          border-radius: 12px;
+          border: 1px dashed rgba(255, 255, 255, 0.15);
         }
 
         @media (max-width: 1024px) {

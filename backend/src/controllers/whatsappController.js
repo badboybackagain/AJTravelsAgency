@@ -10,6 +10,7 @@ const {
   sanitizePhoneNumber,
   isValidPhoneNumber,
   getWhatsAppSettings,
+  invalidateWhatsAppSettingsCache,
   verifyGatewayConnection,
   sendTestMessage,
 } = require('../services/whatsappService');
@@ -121,6 +122,7 @@ const updateSettings = async (req, res, next) => {
       });
     }
 
+    invalidateWhatsAppSettingsCache();
     res.json({
       success: true,
       message: 'WhatsApp settings saved successfully.',
@@ -230,6 +232,7 @@ const toggleStatus = async (req, res, next) => {
       });
     }
 
+    invalidateWhatsAppSettingsCache();
     res.json({
       success: true,
       message: `WhatsApp integration ${updated.isEnabled ? 'enabled' : 'disabled'}.`,

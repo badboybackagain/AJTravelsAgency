@@ -18,20 +18,45 @@ import {
   MessageSquare,
   Search,
   HelpCircle,
+  FileText,
 } from 'lucide-react';
-import { adminFareConfigApi, bookingApi, routeApi, vehicleApi, enquiryApi } from '../../services/api';
-import { AdminFares } from './AdminFares';
-import { AdminLocalVehicles } from './AdminLocalVehicles';
-import { AdminBookings } from './AdminBookings';
-import { AdminEnquiries } from './AdminEnquiries';
-import { AdminFareForm, prefetchFareFormData } from './AdminFareForm';
-import { AdminWhatsAppSettings } from './AdminWhatsAppSettings';
-import { AdminSeo } from './AdminSeo';
+import { adminDashboardApi, adminFareConfigApi, bookingApi, routeApi, vehicleApi, enquiryApi, adminBlogApi } from '../../services/api';
 import './admin.css';
 
+const AdminFares = React.lazy(() => import('./AdminFares').then(m => ({ default: m.AdminFares })));
+const AdminVehicles = React.lazy(() => import('./AdminVehicles').then(m => ({ default: m.AdminVehicles })));
+const AdminLocalVehicles = React.lazy(() => import('./AdminLocalVehicles').then(m => ({ default: m.AdminLocalVehicles })));
+const AdminBookings = React.lazy(() => import('./AdminBookings').then(m => ({ default: m.AdminBookings })));
+const AdminEnquiries = React.lazy(() => import('./AdminEnquiries').then(m => ({ default: m.AdminEnquiries })));
+const AdminFareForm = React.lazy(() => import('./AdminFareForm').then(m => ({ default: m.AdminFareForm })));
+const AdminWhatsAppSettings = React.lazy(() => import('./AdminWhatsAppSettings').then(m => ({ default: m.AdminWhatsAppSettings })));
+const AdminSeo = React.lazy(() => import('./AdminSeo').then(m => ({ default: m.AdminSeo })));
+const AdminBlogs = React.lazy(() => import('./AdminBlogs').then(m => ({ default: m.AdminBlogs })));
+
+const AdminTabLoader = () => (
+  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '300px', gap: '0.75rem', color: '#64748B' }}>
+    <Loader2 className="animate-spin" size={24} style={{ color: '#0284C7' }} />
+    <span style={{ fontSize: '0.88rem', fontWeight: 600 }}>Loading section...</span>
+  </div>
+);
+
 export const AdminDashboard = ({ onLogout }) => {
-  const [activeTab, setActiveTab] = useState('fares'); // 'dashboard' | 'fares' | 'bookings' | 'enquiries'
-  const [visitedTabs, setVisitedTabs] = useState(() => new Set(['fares']));
+  const getInitialTab = () => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const tabParam = params.get('tab');
+      const validTabs = ['dashboard', 'fares', 'vehicles', 'local', 'bookings', 'enquiries', 'blogs', 'whatsapp', 'seo'];
+      if (tabParam && validTabs.includes(tabParam)) {
+        return tabParam;
+      }
+    } catch {
+      // fallback
+    }
+    return 'dashboard';
+  };
+
+  const [activeTab, setActiveTab] = useState(getInitialTab);
+  const [visitedTabs, setVisitedTabs] = useState(() => new Set([getInitialTab()]));
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [stats, setStats] = useState({
     activeFares: 0,
@@ -40,6 +65,7 @@ export const AdminDashboard = ({ onLogout }) => {
     bookingsCount: 0,
     enquiriesCount: 0,
     newEnquiriesCount: 0,
+    blogsCount: 0,
   });
   const [recentFares, setRecentFares] = useState([]);
   const [loadingDashboard, setLoadingDashboard] = useState(false);
@@ -49,9 +75,11 @@ export const AdminDashboard = ({ onLogout }) => {
     const tabTitles = {
       dashboard: 'Admin Dashboard | AJ Travels',
       fares: 'Intercity Fares | AJ Travels Admin',
+      vehicles: 'Fleet Vehicles | AJ Travels Admin',
       local: 'Local Packages | AJ Travels Admin',
       bookings: 'Bookings | AJ Travels Admin',
       enquiries: 'Enquiries | AJ Travels Admin',
+      blogs: 'Blog & Travel Guides | AJ Travels Admin',
       whatsapp: 'WhatsApp Settings | AJ Travels Admin',
       seo: 'SEO Management | AJ Travels Admin',
     };
@@ -65,6 +93,18 @@ export const AdminDashboard = ({ onLogout }) => {
       next.add(tab);
       return next;
     });
+
+    try {
+      const url = new URL(window.location.href);
+      if (tab === 'dashboard') {
+        url.searchParams.delete('tab');
+      } else {
+        url.searchParams.set('tab', tab);
+      }
+      window.history.replaceState({}, '', url.pathname + url.search);
+    } catch {
+      // ignore
+    }
   };
 
   const adminEmail = localStorage.getItem('adminEmail') || 'admin@ajtravelspune.com';
@@ -72,12 +112,21 @@ export const AdminDashboard = ({ onLogout }) => {
   const loadDashboardData = async () => {
     setLoadingDashboard(true);
     try {
-      const [faresRes, vehiclesRes, routesRes, bookingsRes, enquiriesRes] = await Promise.all([
+      // 1. Try aggregated dashboard stats endpoint first (1 single fast query)
+      const fastStats = await adminDashboardApi.getStats().catch(() => null);
+      if (fastStats?.data?.success && fastStats.data.data?.stats) {
+        setStats(fastStats.data.data.stats);
+        setRecentFares(fastStats.data.data.recentFares || []);
+        return;
+      }
+
+      const [faresRes, vehiclesRes, routesRes, bookingsRes, enquiriesRes, blogsRes] = await Promise.all([
         adminFareConfigApi.getAll().catch(() => ({ data: { data: [] } })),
         vehicleApi.adminGetAll().catch(() => ({ data: { data: [] } })),
         routeApi.adminGetAll().catch(() => ({ data: { data: [] } })),
         bookingApi.adminGetAll().catch(() => ({ data: { data: [] } })),
         enquiryApi.adminGetAll().catch(() => ({ data: { data: [] } })),
+        adminBlogApi.getAll().catch(() => ({ data: { data: [], stats: { publishedCount: 0 } } })),
       ]);
 
       const allFares = faresRes.data?.data || [];
@@ -86,6 +135,7 @@ export const AdminDashboard = ({ onLogout }) => {
       const allBookings = bookingsRes.data?.data || [];
       const allEnquiries = enquiriesRes.data?.data || [];
       const newEnquiries = allEnquiries.filter((e) => e.status === 'NEW').length;
+      const publishedBlogs = blogsRes.data?.stats?.publishedCount ?? (blogsRes.data?.data || []).filter(b => b.isPublished).length;
 
       setStats({
         activeFares: allFares.filter((f) => f.isActive).length,
@@ -94,6 +144,7 @@ export const AdminDashboard = ({ onLogout }) => {
         bookingsCount: allBookings.length,
         enquiriesCount: allEnquiries.length,
         newEnquiriesCount: newEnquiries,
+        blogsCount: publishedBlogs,
       });
 
       setRecentFares(allFares.slice(0, 5));
@@ -106,7 +157,7 @@ export const AdminDashboard = ({ onLogout }) => {
 
   useEffect(() => {
     loadDashboardData();
-    prefetchFareFormData();
+    import('./AdminFareForm').then(m => m.prefetchFareFormData && m.prefetchFareFormData());
   }, []);
 
   const handleLogout = () => {
@@ -122,35 +173,43 @@ export const AdminDashboard = ({ onLogout }) => {
   return (
     <div className="admin-layout">
       
-      {/* Mobile Backdrop Overlay */}
+      {/* Mobile Menu Backdrop */}
       {isMobileMenuOpen && (
-        <div
+        <div 
           className="admin-mobile-backdrop"
           onClick={() => setIsMobileMenuOpen(false)}
         />
       )}
 
-      {/* ── Left Sidebar (Responsive Off-Canvas on Mobile) ── */}
-      <aside className={`admin-sidebar ${isMobileMenuOpen ? 'open' : ''}`}>
+      {/* ── Left Sidebar ── */}
+      <aside className={`admin-sidebar ${isMobileMenuOpen ? 'mobile-open' : ''}`}>
         
-        {/* Brand Header */}
+        {/* Brand Logo & Title */}
         <div className="admin-brand">
-          <div className="admin-brand-identity">
-            <img
-              src="/assets/aj-travels-logo.png"
-              alt="AJ Travels"
-              className="admin-brand-logo-img"
-            />
-            <div className="admin-brand-sub">Control Panel</div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+              <div className="admin-logo-badge">
+                <span style={{ fontWeight: 900, color: '#FFFFFF', fontSize: '1.05rem', letterSpacing: '-0.03em' }}>AJ</span>
+              </div>
+              <div>
+                <h1 style={{ fontSize: '0.92rem', fontWeight: 800, color: '#FFFFFF', margin: 0, letterSpacing: '-0.01em', lineHeight: 1.2 }}>
+                  AJ TRAVELS
+                </h1>
+                <div style={{ fontSize: '0.65rem', fontWeight: 600, color: '#38BDF8', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                  CONTROL PANEL
+                </div>
+              </div>
+            </div>
+
+            {/* Mobile Close Button */}
+            <button
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="admin-mobile-close-btn"
+              title="Close Navigation"
+            >
+              <X size={18} />
+            </button>
           </div>
-          {/* Close button inside mobile drawer */}
-          <button
-            onClick={() => setIsMobileMenuOpen(false)}
-            className="admin-sidebar-close-btn"
-            title="Close menu"
-          >
-            <X size={18} />
-          </button>
         </div>
 
         {/* Navigation Tabs */}
@@ -177,6 +236,22 @@ export const AdminDashboard = ({ onLogout }) => {
             <span>Intercity Fares</span>
             {stats.activeFares > 0 && (
               <span className="admin-nav-badge">{stats.activeFares}</span>
+            )}
+          </button>
+
+          <button
+            onClick={() => {
+              handleTabChange('vehicles');
+              setIsMobileMenuOpen(false);
+            }}
+            className={`admin-nav-item ${activeTab === 'vehicles' ? 'active' : ''}`}
+          >
+            <Car size={18} />
+            <span>Fleet Vehicles</span>
+            {stats.vehiclesCount > 0 && (
+              <span className="admin-nav-badge" style={{ backgroundColor: '#ECFDF5', color: '#047857' }}>
+                {stats.vehiclesCount}
+              </span>
             )}
           </button>
 
@@ -225,6 +300,22 @@ export const AdminDashboard = ({ onLogout }) => {
                 {stats.enquiriesCount}
               </span>
             ) : null}
+          </button>
+
+          <button
+            onClick={() => {
+              handleTabChange('blogs');
+              setIsMobileMenuOpen(false);
+            }}
+            className={`admin-nav-item ${activeTab === 'blogs' ? 'active' : ''}`}
+          >
+            <FileText size={18} />
+            <span>Blog Management</span>
+            {stats.blogsCount > 0 && (
+              <span className="admin-nav-badge" style={{ backgroundColor: '#EDE9FE', color: '#6D28D9' }}>
+                {stats.blogsCount}
+              </span>
+            )}
           </button>
 
           <button
@@ -299,12 +390,16 @@ export const AdminDashboard = ({ onLogout }) => {
               <span className="admin-breadcrumbs-current">
                 {activeTab === 'fares'
                   ? 'Fare Management'
+                  : activeTab === 'vehicles'
+                  ? 'Fleet Vehicle Management'
                   : activeTab === 'local'
                   ? 'Local Hourly Packages'
                   : activeTab === 'bookings'
                   ? 'Customer Bookings'
                   : activeTab === 'enquiries'
                   ? 'Customer Enquiries'
+                  : activeTab === 'blogs'
+                  ? 'Blog Management'
                   : activeTab === 'whatsapp'
                   ? 'WhatsApp Integration'
                   : activeTab === 'seo'
@@ -360,7 +455,7 @@ export const AdminDashboard = ({ onLogout }) => {
                 </button>
               </div>
 
-              {/* 4 Metric Cards */}
+              {/* 6 Metric Cards */}
               <div className="admin-stats-grid">
                 
                 <div className="admin-stat-card">
@@ -373,7 +468,12 @@ export const AdminDashboard = ({ onLogout }) => {
                   </div>
                 </div>
 
-                <div className="admin-stat-card">
+                <div
+                  className="admin-stat-card"
+                  onClick={() => handleTabChange('vehicles')}
+                  style={{ cursor: 'pointer' }}
+                  title="Click to view Fleet Vehicles"
+                >
                   <div className="admin-stat-icon green">
                     <Car size={24} />
                   </div>
@@ -420,11 +520,26 @@ export const AdminDashboard = ({ onLogout }) => {
                   </div>
                 </div>
 
+                <div
+                  className="admin-stat-card"
+                  onClick={() => handleTabChange('blogs')}
+                  style={{ cursor: 'pointer' }}
+                  title="Click to view Blog Management"
+                >
+                  <div className="admin-stat-icon" style={{ backgroundColor: '#EDE9FE', color: '#6D28D9' }}>
+                    <FileText size={24} />
+                  </div>
+                  <div>
+                    <div className="admin-stat-label">Blog Articles</div>
+                    <div className="admin-stat-val">{stats.blogsCount}</div>
+                  </div>
+                </div>
+
               </div>
 
               {/* Recent Fares Table */}
               <div className="admin-card">
-                <div style={{ display: 'flex', alignItems: 'center', justifyBetween: 'space-between', marginBottom: '1.25rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
                   <h3 style={{ fontSize: '1rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
                     Recent Fare Configurations
                   </h3>
@@ -452,45 +567,41 @@ export const AdminDashboard = ({ onLogout }) => {
                         <tr>
                           <th>Route</th>
                           <th>Vehicle</th>
+                          <th>Trip Type</th>
                           <th>Base Fare</th>
-                          <th>Tolls</th>
-                          <th>
-                            Total Estimated
-                            <span style={{ fontSize: '0.68rem', fontWeight: 500, color: '#64748B', display: 'block' }}>
-                              (incl. 1 hr waiting)
-                            </span>
-                          </th>
+                          <th>Customer Quote</th>
                           <th>Status</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {recentFares.map((f) => (
-                          <tr key={f.id}>
-                            <td style={{ fontWeight: 700, color: '#0F172A' }}>
-                              {f.route?.routeName}
-                            </td>
+                        {recentFares.map((fare) => (
+                          <tr key={fare.id}>
                             <td>
-                              <span style={{ fontWeight: 600 }}>{f.vehicle?.name}</span>
-                              <span style={{ fontSize: '0.72rem', color: '#64748B', display: 'block' }}>
-                                {f.vehicle?.category}
-                              </span>
-                            </td>
-                            <td style={{ fontWeight: 700 }}>₹{f.baseFare?.toLocaleString()}</td>
-                            <td>₹{f.totalToll?.toLocaleString()}</td>
-                            <td>
-                              <span
-                                className="admin-total-badge"
-                                title={`Base (₹${f.baseFare}) + Toll (₹${f.totalToll}) + Parking (₹${f.parking?.amount || 0}) + 1 hr Waiting (₹${f.waiting?.perHourCharge || 0})`}
-                              >
-                                ₹{f.estimatedTotal?.toLocaleString()}
-                              </span>
-                              <span style={{ fontSize: '0.68rem', color: '#64748B', display: 'block', marginTop: '0.15rem' }}>
-                                Cust. quote: ₹{(f.baseFare + f.totalToll + (f.parking?.enabled ? f.parking.amount : 0))?.toLocaleString()}
+                              <span style={{ fontWeight: 700, color: '#0F172A' }}>
+                                {fare.route?.origin?.name} → {fare.route?.destination?.name}
                               </span>
                             </td>
                             <td>
-                              <span className={`admin-status-pill ${f.isActive ? 'available' : 'unavailable'}`}>
-                                {f.isActive ? 'Active' : 'Disabled'}
+                              <span style={{ fontWeight: 600 }}>{fare.vehicle?.name}</span>
+                            </td>
+                            <td>
+                              <span className="admin-badge badge-blue">
+                                {fare.tripType === 'ONE_WAY' ? 'One Way' : 'Round Trip'}
+                              </span>
+                            </td>
+                            <td>
+                              <span style={{ fontWeight: 700, color: '#0F172A' }}>
+                                ₹{fare.baseFare?.toLocaleString('en-IN')}
+                              </span>
+                            </td>
+                            <td>
+                              <span style={{ fontWeight: 800, color: '#0284C7' }}>
+                                ₹{fare.calculatedTotal?.toLocaleString('en-IN')}
+                              </span>
+                            </td>
+                            <td>
+                              <span className={`admin-badge ${fare.isActive ? 'badge-green' : 'badge-gray'}`}>
+                                {fare.isActive ? 'Active' : 'Disabled'}
                               </span>
                             </td>
                           </tr>
@@ -504,49 +615,67 @@ export const AdminDashboard = ({ onLogout }) => {
             </div>
           )}
 
-          {/* TAB 2: UNIFIED FARE MANAGEMENT */}
-          <div style={{ display: activeTab === 'fares' ? 'block' : 'none' }}>
-            {(visitedTabs.has('fares') || activeTab === 'fares') && <AdminFares />}
-          </div>
+          <React.Suspense fallback={<AdminTabLoader />}>
+            {/* TAB 2: INTERCITY FARES */}
+            <div style={{ display: activeTab === 'fares' ? 'block' : 'none' }}>
+              {(visitedTabs.has('fares') || activeTab === 'fares') && <AdminFares />}
+            </div>
 
-          {/* TAB 3: LOCAL HOURLY PACKAGES */}
-          <div style={{ display: activeTab === 'local' ? 'block' : 'none' }}>
-            {(visitedTabs.has('local') || activeTab === 'local') && <AdminLocalVehicles />}
-          </div>
+            {/* TAB: FLEET VEHICLES */}
+            <div style={{ display: activeTab === 'vehicles' ? 'block' : 'none' }}>
+              {(visitedTabs.has('vehicles') || activeTab === 'vehicles') && (
+                <AdminVehicles onVehicleUpdated={loadDashboardData} />
+              )}
+            </div>
 
-          {/* TAB 4: BOOKINGS */}
-          <div style={{ display: activeTab === 'bookings' ? 'block' : 'none' }}>
-            {(visitedTabs.has('bookings') || activeTab === 'bookings') && <AdminBookings />}
-          </div>
+            {/* TAB 3: LOCAL HOURLY PACKAGES */}
+            <div style={{ display: activeTab === 'local' ? 'block' : 'none' }}>
+              {(visitedTabs.has('local') || activeTab === 'local') && <AdminLocalVehicles />}
+            </div>
 
-          {/* TAB: ENQUIRIES */}
-          <div style={{ display: activeTab === 'enquiries' ? 'block' : 'none' }}>
-            {(visitedTabs.has('enquiries') || activeTab === 'enquiries') && <AdminEnquiries />}
-          </div>
+            {/* TAB 4: BOOKINGS */}
+            <div style={{ display: activeTab === 'bookings' ? 'block' : 'none' }}>
+              {(visitedTabs.has('bookings') || activeTab === 'bookings') && <AdminBookings />}
+            </div>
 
-          {/* TAB 5: WHATSAPP INTEGRATION */}
-          <div style={{ display: activeTab === 'whatsapp' ? 'block' : 'none' }}>
-            {(visitedTabs.has('whatsapp') || activeTab === 'whatsapp') && <AdminWhatsAppSettings />}
-          </div>
+            {/* TAB: ENQUIRIES */}
+            <div style={{ display: activeTab === 'enquiries' ? 'block' : 'none' }}>
+              {(visitedTabs.has('enquiries') || activeTab === 'enquiries') && <AdminEnquiries />}
+            </div>
 
-          {/* TAB 6: SEO MANAGEMENT */}
-          <div style={{ display: activeTab === 'seo' ? 'block' : 'none' }}>
-            {(visitedTabs.has('seo') || activeTab === 'seo') && <AdminSeo />}
-          </div>
+            {/* TAB: BLOG MANAGEMENT */}
+            <div style={{ display: activeTab === 'blogs' ? 'block' : 'none' }}>
+              {(visitedTabs.has('blogs') || activeTab === 'blogs') && (
+                <AdminBlogs onBlogUpdated={loadDashboardData} />
+              )}
+            </div>
+
+            {/* TAB 5: WHATSAPP INTEGRATION */}
+            <div style={{ display: activeTab === 'whatsapp' ? 'block' : 'none' }}>
+              {(visitedTabs.has('whatsapp') || activeTab === 'whatsapp') && <AdminWhatsAppSettings />}
+            </div>
+
+            {/* TAB 6: SEO MANAGEMENT */}
+            <div style={{ display: activeTab === 'seo' ? 'block' : 'none' }}>
+              {(visitedTabs.has('seo') || activeTab === 'seo') && <AdminSeo />}
+            </div>
+          </React.Suspense>
 
         </main>
 
       </div>
 
       {/* Quick Add Fare Modal */}
-      <AdminFareForm
-        isOpen={isQuickCreateOpen}
+      <React.Suspense fallback={null}>
+        <AdminFareForm
+          isOpen={isQuickCreateOpen}
         onClose={() => setIsQuickCreateOpen(false)}
         onSuccess={() => {
           loadDashboardData();
           setActiveTab('fares');
         }}
       />
+      </React.Suspense>
 
     </div>
   );

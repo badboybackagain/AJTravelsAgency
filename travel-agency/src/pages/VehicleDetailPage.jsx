@@ -7,7 +7,7 @@ import { MobileStickyBar } from '../components/MobileStickyBar';
 import { usePageSeo } from '../hooks/usePageSeo';
 import { getVehicleBySlug, vehiclesData } from '../data/vehiclesData';
 import { vehicleApi } from '../services/api';
-import { resolveMediaUrl, findMatchingDbVehicle } from '../utils/mediaUtils';
+import { resolveMediaUrl, findMatchingDbVehicle, getCanonicalTemplateForDbVehicle } from '../utils/mediaUtils';
 import { 
   Users, 
   Briefcase, 
@@ -17,7 +17,9 @@ import {
   ArrowRight, 
   ShieldCheck, 
   Sparkles, 
-  Info
+  Info,
+  AlertCircle,
+  RotateCcw
 } from 'lucide-react';
 
 export function VehicleDetailPage() {
@@ -25,28 +27,91 @@ export function VehicleDetailPage() {
   const navigate = useNavigate();
   const [isEnquiryOpen, setIsEnquiryOpen] = useState(false);
   const [dbVehicles, setDbVehicles] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  const vehicle = getVehicleBySlug(slug);
-
-  useEffect(() => {
-    let isMounted = true;
-    vehicleApi.getAll()
+  const fetchFleet = (forceRefresh = false) => {
+    setLoading(true);
+    setError('');
+    vehicleApi.getAll({ forceRefresh })
       .then(res => {
-        if (isMounted && res.data?.data) {
+        if (res.data?.data) {
           setDbVehicles(res.data.data);
         }
+        setLoading(false);
       })
       .catch(err => {
-        console.warn('VehicleDetailPage: Failed to load dynamic fleet images:', err?.message);
+        console.warn('VehicleDetailPage: Failed to load dynamic fleet:', err?.message);
+        setError('Unable to load vehicle details at this time.');
+        setLoading(false);
       });
-    return () => { isMounted = false; };
+  };
+
+  useEffect(() => {
+    fetchFleet();
   }, []);
 
-  const dbMatch = vehicle ? findMatchingDbVehicle(vehicle, dbVehicles) : null;
-  const activeImage = dbMatch?.image ? resolveMediaUrl(dbMatch.image, vehicle.image) : vehicle?.image;
-  const activeStartingFare = dbMatch?.startingBaseFare
-    ? `₹${dbMatch.startingBaseFare.toLocaleString()}`
-    : vehicle?.fareStarting;
+  const staticVehicle = getVehicleBySlug(slug);
+
+  // Authoritative match:
+  // 1. Direct DB ID match (e.g. /vehicles/cmvywfi8300014eem9lsd00zh)
+  let dbMatch = dbVehicles.find(db => db.id === slug);
+
+  // 2. Exact slugified name match (e.g. /vehicles/test matches name "test", /vehicles/sedan matches name "Sedan")
+  if (!dbMatch) {
+    dbMatch = dbVehicles.find(db =>
+      db.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') === slug
+    );
+  }
+
+  // 3. If canonical static profile exists (e.g. /vehicles/ertiga-suv, /vehicles/tempo-traveller), match by canonical mapping
+  if (!dbMatch && staticVehicle) {
+    dbMatch = findMatchingDbVehicle(staticVehicle, dbVehicles);
+  }
+
+  // Canonical template fallback if this vehicle represents a core fleet profile
+  const canonicalTemplate = staticVehicle || (dbMatch ? getCanonicalTemplateForDbVehicle(dbMatch, vehiclesData) : null);
+
+  const categoryFallback = (
+    (dbMatch?.category || staticVehicle?.category) === 'SUV' ? '/assets/suv.webp' :
+    (dbMatch?.category || staticVehicle?.category) === 'LUXURY' ? '/assets/luxury.jpg' :
+    (dbMatch?.category || staticVehicle?.category) === 'MINIBUS' ? '/assets/minibus.jpg' :
+    (dbMatch?.category || staticVehicle?.category) === 'HATCHBACK' ? '/assets/hatchback.jpg' :
+    '/assets/sedan.webp'
+  );
+
+  // Unified vehicle object: live DB fields take absolute precedence over static copy
+  const vehicle = dbMatch ? {
+    id: dbMatch.id,
+    slug: canonicalTemplate?.slug || dbMatch.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || dbMatch.id,
+    name: dbMatch.name, // DATABASE IS SOURCE OF TRUTH
+    category: dbMatch.category, // DATABASE IS SOURCE OF TRUTH
+    models: dbMatch.description || canonicalTemplate?.models || `${dbMatch.name} Fleet`,
+    tag: canonicalTemplate?.tag || (dbMatch.category === 'LUXURY' ? 'SUPREME COMFORT & LUXURY' : 'POPULAR FLEET CHOICE'),
+    metaTitle: canonicalTemplate?.metaTitle || `${dbMatch.name} on Rent in Pune with Driver - AJ Travels`,
+    metaDesc: canonicalTemplate?.metaDesc || `Hire ${dbMatch.name} on rent in Pune with chauffeur. Transparent rates for Pune to Mumbai, airport pickup/drop, and outstation trips.`,
+    image: resolveMediaUrl(dbMatch.image, canonicalTemplate?.image || categoryFallback),
+    passengers: `${dbMatch.seatingCapacity} Passengers`, // DATABASE IS SOURCE OF TRUTH
+    luggage: canonicalTemplate?.luggage || (dbMatch.seatingCapacity <= 4 ? '2-3 Medium Bags' : dbMatch.seatingCapacity <= 7 ? '4-5 Large Bags' : '10+ Big Bags'),
+    fareStarting: dbMatch.startingBaseFare ? `₹${dbMatch.startingBaseFare.toLocaleString()}` : (canonicalTemplate?.fareStarting || 'On Request'),
+    overview: dbMatch.description || canonicalTemplate?.overview || `Our ${dbMatch.name} fleet features well-maintained commercial vehicles with experienced highway chauffeurs.`,
+    features: canonicalTemplate?.features || [
+      'Dual Air-Conditioning with rapid cooling',
+      'Plush fabric or leatherette seating with ample legroom',
+      'Commercial licensed highway chauffeur',
+      'All-inclusive toll package available'
+    ],
+    idealFor: canonicalTemplate?.idealFor || `${dbMatch.name} rental in Pune for family tours, corporate transfers, and airport drops.`,
+    specs: canonicalTemplate?.specs || {
+      engine: 'Highway Commercial Engine',
+      seatingCapacity: `${dbMatch.seatingCapacity} + 1 Driver`,
+      bootCapacity: 'Generous Luggage Space',
+      ac: 'Yes, High-Performance Climate Control'
+    }
+  } : null;
+
+  const activeImage = vehicle?.image || canonicalTemplate?.image || categoryFallback;
+  const activeStartingFare = vehicle?.fareStarting || 'On Request';
 
   usePageSeo(
     vehicle ? `vehicle_${vehicle.slug}` : 'vehicle_not_found',
@@ -55,13 +120,110 @@ export function VehicleDetailPage() {
     vehicle ? `https://ajtravelspune.com/vehicles/${vehicle.slug}` : undefined
   );
 
+  if (loading) {
+    return (
+      <div className="veh-detail-wrapper" aria-busy="true" aria-label="Loading vehicle profile">
+        <Header onOpenEnquiry={() => setIsEnquiryOpen(true)} isDark={false} />
+
+        <section className="veh-breadcrumbs-strip">
+          <div className="container">
+            <div className="breadcrumbs-nav">
+              <Link to="/">Home</Link>
+              <span className="bc-sep">/</span>
+              <Link to="/vehicles">Fleet</Link>
+              <span className="bc-sep">/</span>
+              <span className="detail-skeleton-box" style={{ width: '110px', height: '14px', display: 'inline-block' }}></span>
+            </div>
+          </div>
+        </section>
+
+        <section className="veh-hero-section">
+          <div className="container">
+            <div className="veh-hero-grid">
+              <div className="veh-hero-image-box detail-skeleton-box detail-skeleton-hero-img"></div>
+              <div className="veh-hero-details">
+                <div className="detail-skeleton-box" style={{ width: '130px', height: '14px', marginBottom: '0.65rem' }}></div>
+                <div className="detail-skeleton-box" style={{ width: '80%', height: '34px', marginBottom: '0.65rem' }}></div>
+                <div className="detail-skeleton-box" style={{ width: '60%', height: '16px', marginBottom: '1.5rem' }}></div>
+                <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem' }}>
+                  <div className="detail-skeleton-box" style={{ width: '140px', height: '54px', borderRadius: '12px' }}></div>
+                  <div className="detail-skeleton-box" style={{ width: '140px', height: '54px', borderRadius: '12px' }}></div>
+                </div>
+                <div className="detail-skeleton-box" style={{ width: '100%', height: '70px', borderRadius: '14px' }}></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="veh-content-section">
+          <div className="container">
+            <div className="veh-content-grid">
+              <div className="veh-main-col">
+                <div className="detail-skeleton-box" style={{ width: '220px', height: '24px', marginBottom: '1rem' }}></div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '2rem' }}>
+                  {[1, 2, 3, 4].map(n => (
+                    <div key={n} className="detail-skeleton-box" style={{ height: '42px', borderRadius: '10px' }}></div>
+                  ))}
+                </div>
+                <div className="detail-skeleton-box" style={{ width: '220px', height: '24px', marginBottom: '1rem' }}></div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', marginBottom: '2rem' }}>
+                  {[1, 2, 3, 4].map(n => (
+                    <div key={n} className="detail-skeleton-box" style={{ height: '80px', borderRadius: '12px' }}></div>
+                  ))}
+                </div>
+              </div>
+              <div className="veh-sidebar-col">
+                <div className="detail-skeleton-box" style={{ width: '100%', height: '240px', borderRadius: '20px', marginBottom: '2rem' }}></div>
+                <div className="detail-skeleton-box" style={{ width: '100%', height: '220px', borderRadius: '20px' }}></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <Footer />
+      </div>
+    );
+  }
+
+  if (error && dbVehicles.length === 0) {
+    return (
+      <div className="veh-detail-wrapper">
+        <Header onOpenEnquiry={() => setIsEnquiryOpen(true)} isDark={false} />
+        <div className="container" style={{ padding: '6rem 1rem', textAlign: 'center' }}>
+          <AlertCircle size={44} color="#DC2626" style={{ margin: '0 auto 0.75rem' }} />
+          <h2 style={{ color: '#991B1B', fontWeight: 800, fontSize: '1.5rem', marginBottom: '0.5rem' }}>
+            Vehicle Details Temporarily Unavailable
+          </h2>
+          <p style={{ color: '#64748B', maxWidth: '440px', margin: '0 auto 1.5rem', lineHeight: 1.5 }}>
+            We encountered a connection issue while fetching our fleet database. Please retry to load this vehicle.
+          </p>
+          <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+            <button
+              type="button"
+              onClick={() => fetchFleet(true)}
+              className="fleet-retry-btn"
+            >
+              <RotateCcw size={16} />
+              <span>Retry Loading</span>
+            </button>
+            <Link to="/vehicles" className="btn-back-link" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '0.75rem 1.25rem', background: '#EFF6FF', color: '#1D4ED8', borderRadius: '8px', textDecoration: 'none', fontWeight: 600 }}>
+              <ArrowLeft size={16} />
+              <span>Return to Fleet Catalogue</span>
+            </Link>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
   if (!vehicle) {
     return (
       <div className="veh-detail-wrapper">
         <Header onOpenEnquiry={() => setIsEnquiryOpen(true)} isDark={false} />
         <div className="container" style={{ padding: '6rem 1rem', textAlign: 'center' }}>
-          <h2>Vehicle Not Found</h2>
-          <p style={{ color: '#64748B', margin: '1rem 0 2rem' }}>The requested vehicle profile could not be located.</p>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0F172A', marginBottom: '0.5rem' }}>Vehicle Profile Not Found</h2>
+          <p style={{ color: '#64748B', margin: '0.5rem 0 2rem' }}>The requested fleet vehicle could not be located in our active fleet catalogue.</p>
           <Link to="/vehicles" className="btn-back-link">
             <ArrowLeft size={16} />
             <span>Return to Fleet Catalogue</span>
@@ -76,6 +238,7 @@ export function VehicleDetailPage() {
     const params = new URLSearchParams({
       tripType: 'ONE_WAY',
       category: vehicle.category,
+      vehicleId: vehicle.id || '',
       vehicleName: vehicle.name
     });
     navigate(`/fare?${params.toString()}`);
@@ -108,7 +271,10 @@ export function VehicleDetailPage() {
                 alt={vehicle.name}
                 className="veh-hero-photo"
                 onError={(e) => {
-                  e.target.src = vehicle.image || '/assets/sedan.webp';
+                  if (!e.target.dataset.fallbackTried) {
+                    e.target.dataset.fallbackTried = 'true';
+                    e.target.src = canonicalTemplate?.image || categoryFallback;
+                  }
                 }}
               />
               <span className="veh-floating-tag">{vehicle.tag}</span>
@@ -234,19 +400,20 @@ export function VehicleDetailPage() {
               <div className="other-vehicles-box">
                 <h4>Other Vehicle Options</h4>
                 <div className="other-veh-list">
-                  {vehiclesData
-                    .filter(v => v.slug !== vehicle.slug)
-                    .map(v => {
-                      const relDbMatch = findMatchingDbVehicle(v, dbVehicles);
-                      const relFare = relDbMatch?.startingBaseFare
-                        ? `₹${relDbMatch.startingBaseFare.toLocaleString()}`
-                        : v.fareStarting;
+                  {dbVehicles
+                    .filter(db => db.id !== vehicle.id)
+                    .map(db => {
+                      const canonical = getCanonicalTemplateForDbVehicle(db, vehiclesData);
+                      const otherSlug = canonical?.slug || db.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || db.id;
+                      const otherFare = db.startingBaseFare
+                        ? `₹${db.startingBaseFare.toLocaleString()}`
+                        : (canonical?.fareStarting || 'On Request');
 
                       return (
-                        <Link key={v.slug} to={`/vehicles/${v.slug}`} className="other-veh-row">
+                        <Link key={db.id} to={`/vehicles/${otherSlug}`} className="other-veh-row">
                           <div>
-                            <strong>{v.name}</strong>
-                            <span>{v.passengers} • From {relFare}*</span>
+                            <strong>{db.name}</strong>
+                            <span>{db.seatingCapacity} Passengers • From {otherFare}*</span>
                           </div>
                           <ArrowRight size={14} />
                         </Link>
@@ -269,6 +436,45 @@ export function VehicleDetailPage() {
           background: #FFFFFF;
           color: #0F172A;
           font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        
+        /* Detail Page Skeleton & Shimmer */
+        .detail-skeleton-box {
+          background: linear-gradient(90deg, #F1F5F9 25%, #E2E8F0 50%, #F1F5F9 75%);
+          background-size: 200% 100%;
+          animation: detailShimmer 1.5s infinite;
+          border-radius: 6px;
+        }
+
+        @keyframes detailShimmer {
+          0% { background-position: 200% 0; }
+          100% { background-position: -200% 0; }
+        }
+
+        .detail-skeleton-hero-img {
+          width: 100%;
+          height: 340px;
+          border-radius: 20px;
+        }
+
+        .fleet-retry-btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.5rem;
+          background: #2563EB;
+          color: #FFFFFF;
+          border: none;
+          padding: 0.75rem 1.5rem;
+          border-radius: 8px;
+          font-weight: 700;
+          font-size: 0.9rem;
+          cursor: pointer;
+          transition: background 0.2s;
+        }
+
+        .fleet-retry-btn:hover {
+          background: #1D4ED8;
         }
 
         .veh-breadcrumbs-strip {

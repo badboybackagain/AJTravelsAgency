@@ -166,6 +166,7 @@ const createBooking = async (req, res, next) => {
       returnDate,
       returnTime,
       passengers: numPassengers,
+      actualKm: req.body.actualKm !== undefined ? req.body.actualKm : req.body.actualDistance,
     });
 
     if (!fareQuote.success) {

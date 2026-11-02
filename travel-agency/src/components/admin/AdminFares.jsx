@@ -3,7 +3,6 @@ import {
   Plus,
   Search,
   Edit2,
-  Copy,
   Trash2,
   CheckCircle,
   XCircle,
@@ -65,18 +64,6 @@ export const AdminFares = () => {
     setIsFormOpen(true);
   };
 
-  const handleDuplicate = async (fareId) => {
-    setActionLoadingId(fareId);
-    try {
-      await adminFareConfigApi.duplicate(fareId);
-      showToast('Fare duplicated successfully!');
-      fetchFares();
-    } catch (err) {
-      alert(err.response?.data?.message || 'Failed to duplicate fare');
-    } finally {
-      setActionLoadingId(null);
-    }
-  };
 
   const handleToggleStatus = async (fare) => {
     setActionLoadingId(fare.id);
@@ -302,7 +289,6 @@ export const AdminFares = () => {
                       (incl. 1 hr waiting)
                     </span>
                   </th>
-                  <th style={{ minWidth: '140px' }}>Availability</th>
                   <th style={{ minWidth: '130px', textAlign: 'right' }}>Actions</th>
                 </tr>
               </thead>
@@ -394,19 +380,19 @@ export const AdminFares = () => {
                       {/* Parking / Stay */}
                       <td style={{ whiteSpace: 'nowrap' }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
-                          {f.parking?.enabled ? (
+                          {f.parking?.enabled && f.parking.amount > 0 ? (
                             <span style={{ color: '#0284C7', fontWeight: 700, fontSize: '0.75rem' }}>
                               Parking: ₹{f.parking.amount}
                             </span>
                           ) : (
-                            <span style={{ color: '#94A3B8', fontSize: '0.72rem' }}>Parking: Incl.</span>
+                            <span style={{ color: '#94A3B8', fontSize: '0.72rem' }}>Parking: Not Applicable</span>
                           )}
-                          {f.waiting?.enabled ? (
+                          {f.waiting?.enabled && f.waiting.perHourCharge > 0 ? (
                             <span style={{ color: '#D97706', fontWeight: 600, fontSize: '0.74rem' }}>
                               Stay: ₹{f.waiting.perHourCharge}/hr
                             </span>
                           ) : (
-                            <span style={{ color: '#94A3B8', fontSize: '0.72rem' }}>Stay: Incl.</span>
+                            <span style={{ color: '#94A3B8', fontSize: '0.72rem' }}>Stay: Not Applicable</span>
                           )}
                         </div>
                       </td>
@@ -424,25 +410,6 @@ export const AdminFares = () => {
                         </span>
                       </td>
 
-                      {/* Availability */}
-                      <td style={{ whiteSpace: 'nowrap' }}>
-                        <span className={`admin-status-pill ${
-                          !f.isActive
-                            ? 'unavailable'
-                            : isAvail
-                            ? 'available'
-                            : isLimited
-                            ? 'limited'
-                            : 'unavailable'
-                        }`}>
-                          <span style={{ fontSize: '0.6rem' }}>{!f.isActive ? '○' : '●'}</span>
-                          <span>
-                            {!f.isActive
-                              ? 'Inactive'
-                              : `${isLimited ? 'Limited' : 'Available'} (${f.availability?.availableQuantity ?? 1})`}
-                          </span>
-                        </span>
-                      </td>
 
                       {/* Actions */}
                       <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
@@ -456,14 +423,6 @@ export const AdminFares = () => {
                             <Edit2 size={13} />
                           </button>
 
-                          <button
-                            onClick={() => handleDuplicate(f.id)}
-                            disabled={isActionLoading}
-                            className="admin-action-btn copy"
-                            title="Duplicate Fare Configuration"
-                          >
-                            <Copy size={13} />
-                          </button>
 
                           <button
                             onClick={() => handleToggleStatus(f)}

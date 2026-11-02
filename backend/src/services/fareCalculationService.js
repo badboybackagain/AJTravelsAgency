@@ -236,7 +236,7 @@ async function calculateVehicleFare(route, vehicle, options = {}, preloadedFares
 
   // 3. Calculate parking
   let totalParking = 0;
-  if (fareConfig.fareParking && fareConfig.fareParking.enabled) {
+  if (fareConfig.fareParking && fareConfig.fareParking.enabled && parkingRequired) {
     totalParking = toNumber(fareConfig.fareParking.amount);
   }
 
@@ -246,7 +246,29 @@ async function calculateVehicleFare(route, vehicle, options = {}, preloadedFares
     totalStay = toNumber(fareConfig.fareWaiting.perHourCharge);
   }
 
-  const total = toNumber(baseFare + totalToll + totalParking + totalStay);
+  // 5. Calculate Extra Kilometres (if actual distance is provided)
+  const perKmRate = toNumber(fareConfig.perKmFare);
+  // Default included distance for standard expressway corridors: 150 km for ONE_WAY, 300 km for ROUND_TRIP
+  const standardIncludedKm = tripType === 'ROUND_TRIP' ? 300 : 150;
+  const includedKm = fareConfig.includedKm !== undefined && fareConfig.includedKm > 0
+    ? toNumber(fareConfig.includedKm)
+    : standardIncludedKm;
+
+  let extraKm = 0;
+  let extraKmCharge = 0;
+  const effectiveActualKm = options.actualKm !== undefined && options.actualKm !== null ? options.actualKm : options.distanceKm;
+
+  if (effectiveActualKm !== undefined && effectiveActualKm !== null && !isNaN(Number(effectiveActualKm))) {
+    const parsedActualKm = toNumber(effectiveActualKm);
+    if (parsedActualKm > 0) {
+      if (parsedActualKm > includedKm && perKmRate > 0) {
+        extraKm = toNumber(parsedActualKm - includedKm);
+        extraKmCharge = toNumber(extraKm * perKmRate);
+      }
+    }
+  }
+
+  const total = toNumber(baseFare + totalToll + totalParking + totalStay + extraKmCharge);
 
   return {
     configured: true,
@@ -255,6 +277,11 @@ async function calculateVehicleFare(route, vehicle, options = {}, preloadedFares
     tollBreakdown,
     parking: totalParking,
     stay: totalStay,
+    includedKm,
+    actualKm: effectiveActualKm !== undefined && effectiveActualKm !== null ? toNumber(effectiveActualKm) : includedKm,
+    extraKm,
+    extraKmRate: perKmRate,
+    extraKmCharge,
     total,
     fareOnRequest: false,
   };
@@ -478,6 +505,7 @@ async function calculateFareQuote(params) {
           parkingRequired,
           stayRequired,
           dropLocationId,
+          actualKm: params.actualKm !== undefined ? params.actualKm : params.actualDistance,
         },
         allFaresForRoute
       );
@@ -498,6 +526,11 @@ async function calculateFareQuote(params) {
           tollBreakdown: fareBreakdown.tollBreakdown || [],
           parking: fareBreakdown.parking,
           stay: fareBreakdown.stay,
+          includedKm: fareBreakdown.includedKm,
+          actualKm: fareBreakdown.actualKm,
+          extraKm: fareBreakdown.extraKm,
+          extraKmRate: fareBreakdown.extraKmRate,
+          extraKmCharge: fareBreakdown.extraKmCharge,
           total: fareBreakdown.total,
           fareOnRequest: fareBreakdown.fareOnRequest,
           configured: fareBreakdown.configured,

@@ -1,11 +1,11 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
 import { EnquiryModal } from '../components/EnquiryModal';
 import { MobileStickyBar } from '../components/MobileStickyBar';
 import { usePageSeo } from '../hooks/usePageSeo';
-import { blogPosts } from '../data/blogData';
+import { blogApi, normalizeBlogPost } from '../services/api';
 import { 
   BookOpen, 
   Clock, 
@@ -13,7 +13,8 @@ import {
   User, 
   ArrowRight, 
   Sparkles,
-  Tag
+  AlertCircle,
+  RefreshCw,
 } from 'lucide-react';
 
 export function BlogPage() {
@@ -26,23 +27,55 @@ export function BlogPage() {
 
   const [isEnquiryOpen, setIsEnquiryOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('ALL');
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const categories = [
-    { id: 'ALL', label: 'All Articles' },
-    { id: 'Pune-Mumbai Routes', label: 'Pune-Mumbai Corridors' },
-    { id: 'Fleet & Vehicles', label: 'Fleet & Vehicle Guides' },
-    { id: 'Travel Guides', label: 'Travel & Weekend Guides' },
-    { id: 'Airport Transfers', label: 'Airport Advice' },
-    { id: 'Outstation Corridors', label: 'Outstation Trips' }
-  ];
+  const loadPosts = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await blogApi.getAll();
+      const raw = res.data?.data || [];
+      const normalized = raw.map(normalizeBlogPost);
+      setPosts(normalized);
+    } catch (err) {
+      console.error('Error loading published blogs:', err);
+      setError(err.response?.data?.message || 'Unable to connect to the blog service. Please check your internet connection.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
+    loadPosts();
+  }, []);
+
+  // Compute categories dynamically from loaded published articles
+  const categories = useMemo(() => {
+    const set = new Set();
+    posts.forEach((p) => {
+      if (p.category) set.add(p.category);
+    });
+    const dynamicList = [{ id: 'ALL', label: 'All Articles' }];
+    Array.from(set).forEach((cat) => {
+      dynamicList.push({ id: cat, label: cat });
+    });
+    return dynamicList;
+  }, [posts]);
+
+  // Filter articles based on selected category
   const filteredPosts = useMemo(() => {
-    return blogPosts.filter(post => {
+    return posts.filter((post) => {
       return selectedCategory === 'ALL' || post.category === selectedCategory;
     });
-  }, [selectedCategory]);
+  }, [posts, selectedCategory]);
 
-  const featuredPost = blogPosts[0];
+  // Primary featured post: check for isFeatured flag, otherwise default to first post
+  const featuredPost = useMemo(() => {
+    if (posts.length === 0) return null;
+    return posts.find((p) => p.isFeatured) || posts[0];
+  }, [posts]);
 
   return (
     <div className="blog-page-wrapper">
@@ -54,16 +87,16 @@ export function BlogPage() {
           <div className="breadcrumbs-nav">
             <Link to="/">Home</Link>
             <span className="bc-sep">/</span>
-            <span className="bc-current">Blog & Travel Guides</span>
+            <span className="bc-current">Blog &amp; Travel Guides</span>
           </div>
 
           <div className="internal-hero-content">
             <div className="hero-badge-pill">
               <Sparkles size={14} />
-              <span>INSIGHTS, ADVICE & ITINERARIES</span>
+              <span>INSIGHTS, ADVICE &amp; ITINERARIES</span>
             </div>
             <h1 className="internal-hero-title">
-              AJ Travels <span className="text-gradient">Travel Insights & Guides</span>
+              AJ Travels <span className="text-gradient">Travel Insights &amp; Guides</span>
             </h1>
             <p className="internal-hero-subtitle">
               Objective travel intelligence, Pune–Mumbai Expressway advice, weekend getaway recommendations, and vehicle rental tips curated by our highway travel specialists.
@@ -72,13 +105,13 @@ export function BlogPage() {
         </div>
       </section>
 
-      {/* Filter Category Strip — Clean Horizontal Bar without Search Bloat */}
+      {/* Filter Category Strip */}
       <section className="blog-controls-strip">
         <div className="container">
           <div className="controls-row">
             {/* Category Pills */}
             <div className="category-pills-list">
-              {categories.map(cat => (
+              {categories.map((cat) => (
                 <button
                   key={cat.id}
                   type="button"
@@ -96,98 +129,177 @@ export function BlogPage() {
       {/* Main Blog Grid Section */}
       <section className="blog-main-section">
         <div className="container">
-          {/* Featured Article Card (shown when looking at All) */}
-          {selectedCategory === 'ALL' && featuredPost && (
-            <div className="featured-article-card">
-              <div className="featured-img-side">
-                <img 
-                  src={featuredPost.featuredImage} 
-                  alt={featuredPost.title} 
-                  className="featured-cover-img"
-                />
-                <span className="featured-floating-tag">FEATURED GUIDE</span>
-              </div>
-              <div className="featured-body-side">
-                <div className="post-meta-row">
-                  <span className="post-category-badge">{featuredPost.category}</span>
-                  <span className="post-meta-divider">•</span>
-                  <span className="meta-item"><Clock size={13} /> {featuredPost.readTime}</span>
-                  <span className="post-meta-divider">•</span>
-                  <span className="meta-item"><Calendar size={13} /> {featuredPost.publishedDate}</span>
-                </div>
-
-                <h2 className="featured-title">
-                  <Link to={`/blog/${featuredPost.slug}`}>{featuredPost.title}</Link>
-                </h2>
-
-                <p className="featured-excerpt">{featuredPost.summary}</p>
-
-                <div className="featured-bottom-row">
-                  <div className="post-author-chip">
-                    <User size={14} />
-                    <span>{featuredPost.author}</span>
+          
+          {/* ============================================================ */}
+          {/* 1. LOADING SKELETON STATE (Zero Static Flash) */}
+          {/* ============================================================ */}
+          {loading && (
+            <div aria-busy="true" aria-label="Loading blog articles">
+              {/* Featured Article Skeleton */}
+              <div className="featured-article-card skeleton-featured">
+                <div className="featured-img-side skeleton-box" style={{ minHeight: '320px', borderRadius: '0' }} />
+                <div className="featured-body-side">
+                  <div style={{ display: 'flex', gap: '0.6rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
+                    <div className="skeleton-box" style={{ width: '110px', height: '22px', borderRadius: '9999px' }} />
+                    <div className="skeleton-box" style={{ width: '80px', height: '22px', borderRadius: '6px' }} />
+                    <div className="skeleton-box" style={{ width: '90px', height: '22px', borderRadius: '6px' }} />
                   </div>
-                  <Link to={`/blog/${featuredPost.slug}`} className="btn-read-featured">
-                    <span>Read Full Guide</span>
-                    <ArrowRight size={16} />
-                  </Link>
+                  <div className="skeleton-box" style={{ width: '85%', height: '32px', marginBottom: '0.75rem' }} />
+                  <div className="skeleton-box" style={{ width: '65%', height: '32px', marginBottom: '1.25rem' }} />
+                  <div className="skeleton-box" style={{ width: '100%', height: '18px', marginBottom: '0.5rem' }} />
+                  <div className="skeleton-box" style={{ width: '92%', height: '18px', marginBottom: '1.75rem' }} />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div className="skeleton-box" style={{ width: '130px', height: '24px', borderRadius: '6px' }} />
+                    <div className="skeleton-box" style={{ width: '140px', height: '40px', borderRadius: '10px' }} />
+                  </div>
                 </div>
+              </div>
+
+              {/* 6 Grid Card Skeletons */}
+              <div className="articles-grid">
+                {[1, 2, 3, 4, 5, 6].map((n) => (
+                  <div key={n} className="article-card skeleton-card">
+                    <div className="skeleton-box" style={{ width: '100%', height: '200px', borderRadius: '0' }} />
+                    <div className="article-card-body">
+                      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                        <div className="skeleton-box" style={{ width: '70px', height: '16px', borderRadius: '4px' }} />
+                        <div className="skeleton-box" style={{ width: '85px', height: '16px', borderRadius: '4px' }} />
+                      </div>
+                      <div className="skeleton-box" style={{ width: '90%', height: '22px', marginBottom: '0.5rem' }} />
+                      <div className="skeleton-box" style={{ width: '70%', height: '22px', marginBottom: '0.85rem' }} />
+                      <div className="skeleton-box" style={{ width: '100%', height: '14px', marginBottom: '0.4rem' }} />
+                      <div className="skeleton-box" style={{ width: '85%', height: '14px', marginBottom: '1.25rem' }} />
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div className="skeleton-box" style={{ width: '100px', height: '16px', borderRadius: '4px' }} />
+                        <div className="skeleton-box" style={{ width: '60px', height: '16px', borderRadius: '4px' }} />
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           )}
 
-          {/* Grid of Articles */}
-          <div className="articles-grid">
-            {filteredPosts.map(post => (
-              <article key={post.slug} className="article-card">
-                <Link to={`/blog/${post.slug}`} className="article-img-link">
-                  <img 
-                    src={post.featuredImage} 
-                    alt={post.title} 
-                    className="article-img"
-                    loading="lazy"
-                  />
-                  <span className="article-cat-badge">{post.category}</span>
-                </Link>
-
-                <div className="article-card-body">
-                  <div className="card-meta-line">
-                    <span className="meta-sub-item"><Clock size={12} /> {post.readTime}</span>
-                    <span className="meta-sub-item"><Calendar size={12} /> {post.publishedDate}</span>
-                  </div>
-
-                  <h3 className="article-card-title">
-                    <Link to={`/blog/${post.slug}`}>{post.title}</Link>
-                  </h3>
-
-                  <p className="article-card-summary">{post.summary}</p>
-
-                  <div className="article-card-footer">
-                    <span className="author-small"><User size={12} /> {post.author}</span>
-                    <Link to={`/blog/${post.slug}`} className="read-more-link">
-                      <span>Read</span>
-                      <ArrowRight size={13} />
-                    </Link>
-                  </div>
-                </div>
-              </article>
-            ))}
-          </div>
-
-          {filteredPosts.length === 0 && (
-            <div className="no-posts-box">
-              <BookOpen size={36} color="#94A3B8" />
-              <h3>No articles found</h3>
-              <p>Choose another category to view available guides.</p>
-              <button 
-                type="button" 
-                onClick={() => setSelectedCategory('ALL')}
-                className="btn-reset-filters"
-              >
-                View All Guides
+          {/* ============================================================ */}
+          {/* 2. ERROR STATE (With Retry Button) */}
+          {/* ============================================================ */}
+          {!loading && error && (
+            <div className="blog-error-box">
+              <AlertCircle size={44} color="#EF4444" style={{ margin: '0 auto 1rem' }} />
+              <h3>Unable to load travel guides</h3>
+              <p style={{ color: '#64748B', maxWidth: '480px', margin: '0.5rem auto 1.5rem', fontSize: '0.92rem' }}>
+                {error}
+              </p>
+              <button type="button" onClick={loadPosts} className="btn-retry-blog">
+                <RefreshCw size={15} />
+                <span>Retry Loading Articles</span>
               </button>
             </div>
           )}
+
+          {/* ============================================================ */}
+          {/* 3. LOADED ARTICLES STATE */}
+          {/* ============================================================ */}
+          {!loading && !error && (
+            <>
+              {/* Featured Article Card (shown when looking at All) */}
+              {selectedCategory === 'ALL' && featuredPost && (
+                <div className="featured-article-card">
+                  <div className="featured-img-side">
+                    <img 
+                      src={featuredPost.featuredImage} 
+                      alt={featuredPost.imageAlt || featuredPost.title} 
+                      className="featured-cover-img"
+                    />
+                    <span className="featured-floating-tag">FEATURED GUIDE</span>
+                  </div>
+                  <div className="featured-body-side">
+                    <div className="post-meta-row">
+                      <span className="post-category-badge">{featuredPost.category}</span>
+                      <span className="post-meta-divider">•</span>
+                      <span className="meta-item"><Clock size={13} /> {featuredPost.readTime}</span>
+                      <span className="post-meta-divider">•</span>
+                      <span className="meta-item"><Calendar size={13} /> {featuredPost.publishedDate}</span>
+                    </div>
+
+                    <h2 className="featured-title">
+                      <Link to={`/blog/${featuredPost.slug}`}>{featuredPost.title}</Link>
+                    </h2>
+
+                    <p className="featured-excerpt">{featuredPost.summary}</p>
+
+                    <div className="featured-bottom-row">
+                      <div className="post-author-chip">
+                        <User size={14} />
+                        <span>{featuredPost.author}</span>
+                      </div>
+                      <Link to={`/blog/${featuredPost.slug}`} className="btn-read-featured">
+                        <span>Read Full Guide</span>
+                        <ArrowRight size={16} />
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Grid of Articles */}
+              <div className="articles-grid">
+                {filteredPosts.map((post) => (
+                  <article key={post.slug} className="article-card">
+                    <Link to={`/blog/${post.slug}`} className="article-img-link">
+                      <img 
+                        src={post.featuredImage} 
+                        alt={post.imageAlt || post.title} 
+                        className="article-img"
+                        loading="lazy"
+                        onError={(e) => {
+                          e.currentTarget.src = '/assets/pune-to-mumbai-premium-travel-banner.webp';
+                        }}
+                      />
+                      <span className="article-cat-badge">{post.category}</span>
+                    </Link>
+
+                    <div className="article-card-body">
+                      <div className="card-meta-line">
+                        <span className="meta-sub-item"><Clock size={12} /> {post.readTime}</span>
+                        <span className="meta-sub-item"><Calendar size={12} /> {post.publishedDate}</span>
+                      </div>
+
+                      <h3 className="article-card-title">
+                        <Link to={`/blog/${post.slug}`}>{post.title}</Link>
+                      </h3>
+
+                      <p className="article-card-summary">{post.summary}</p>
+
+                      <div className="article-card-footer">
+                        <span className="author-small"><User size={12} /> {post.author}</span>
+                        <Link to={`/blog/${post.slug}`} className="read-more-link">
+                          <span>Read</span>
+                          <ArrowRight size={13} />
+                        </Link>
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+
+              {filteredPosts.length === 0 && (
+                <div className="no-posts-box">
+                  <BookOpen size={36} color="#94A3B8" />
+                  <h3>No articles found</h3>
+                  <p>Choose another category to view available guides.</p>
+                  <button 
+                    type="button" 
+                    onClick={() => setSelectedCategory('ALL')}
+                    className="btn-reset-filters"
+                  >
+                    View All Guides
+                  </button>
+                </div>
+              )}
+            </>
+          )}
+
         </div>
       </section>
 
@@ -378,30 +490,34 @@ export function BlogPage() {
           background: #EFF6FF;
           color: #1D4ED8;
           font-weight: 700;
-          font-size: 0.72rem;
-          padding: 0.2rem 0.65rem;
+          font-size: 0.75rem;
+          padding: 0.25rem 0.65rem;
           border-radius: 6px;
+          letter-spacing: 0.03em;
         }
 
-        .post-meta-divider { color: #CBD5E1; }
+        .post-meta-divider {
+          color: #CBD5E1;
+        }
 
         .meta-item {
           display: inline-flex;
           align-items: center;
-          gap: 0.3rem;
+          gap: 0.35rem;
         }
 
         .featured-title {
-          font-size: 1.65rem;
+          font-size: 1.6rem;
           font-weight: 800;
-          line-height: 1.3;
+          line-height: 1.35;
           margin-bottom: 0.85rem;
+          color: #0F172A;
         }
 
         .featured-title a {
-          color: #0F172A;
+          color: inherit;
           text-decoration: none;
-          transition: color 0.2s ease;
+          transition: color 0.2s;
         }
 
         .featured-title a:hover {
@@ -412,15 +528,15 @@ export function BlogPage() {
           font-size: 0.95rem;
           line-height: 1.65;
           color: #475569;
-          margin-bottom: 1.75rem;
+          margin-bottom: 1.5rem;
         }
 
         .featured-bottom-row {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          border-top: 1px solid #F1F5F9;
           padding-top: 1.25rem;
+          border-top: 1px solid #F1F5F9;
         }
 
         .post-author-chip {
@@ -429,62 +545,67 @@ export function BlogPage() {
           gap: 0.4rem;
           font-size: 0.82rem;
           font-weight: 600;
-          color: #475569;
+          color: #334155;
         }
 
         .btn-read-featured {
           display: inline-flex;
           align-items: center;
-          gap: 0.45rem;
-          background: #1D4ED8;
+          gap: 0.5rem;
+          background: #2563EB;
           color: #FFFFFF;
-          font-weight: 700;
-          font-size: 0.85rem;
           padding: 0.65rem 1.25rem;
-          border-radius: 8px;
+          border-radius: 10px;
+          font-size: 0.88rem;
+          font-weight: 700;
           text-decoration: none;
           transition: all 0.2s ease;
+          box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
         }
 
         .btn-read-featured:hover {
-          background: #1E40AF;
+          background: #1D4ED8;
+          transform: translateY(-1px);
+          box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
         }
 
-        /* Articles Grid */
+        /* 3-Column Articles Grid */
         .articles-grid {
           display: grid;
           grid-template-columns: repeat(3, 1fr);
-          gap: 2rem;
+          gap: 1.5rem;
         }
 
         .article-card {
           background: #FFFFFF;
-          border-radius: 18px;
+          border-radius: 16px;
           border: 1px solid #E2E8F0;
           overflow: hidden;
           display: flex;
           flex-direction: column;
           transition: all 0.25s ease;
+          box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
         }
 
         .article-card:hover {
           transform: translateY(-4px);
           box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
-          border-color: #93C5FD;
+          border-color: #BFDBFE;
         }
 
         .article-img-link {
           position: relative;
           display: block;
-          height: 190px;
+          height: 200px;
           overflow: hidden;
+          background: #0F172A;
         }
 
         .article-img {
           width: 100%;
           height: 100%;
           object-fit: cover;
-          transition: transform 0.35s ease;
+          transition: transform 0.4s ease;
         }
 
         .article-card:hover .article-img {
@@ -493,19 +614,20 @@ export function BlogPage() {
 
         .article-cat-badge {
           position: absolute;
-          top: 0.85rem;
+          bottom: 0.85rem;
           left: 0.85rem;
           background: rgba(15, 23, 42, 0.85);
-          backdrop-filter: blur(6px);
+          backdrop-filter: blur(4px);
           color: #FFFFFF;
           font-size: 0.68rem;
           font-weight: 700;
-          padding: 0.25rem 0.6rem;
-          border-radius: 6px;
+          letter-spacing: 0.05em;
+          padding: 0.25rem 0.65rem;
+          border-radius: 4px;
         }
 
         .article-card-body {
-          padding: 1.5rem;
+          padding: 1.35rem;
           display: flex;
           flex-direction: column;
           flex: 1;
@@ -513,9 +635,10 @@ export function BlogPage() {
 
         .card-meta-line {
           display: flex;
-          gap: 0.85rem;
+          align-items: center;
+          gap: 0.75rem;
           font-size: 0.75rem;
-          color: #94A3B8;
+          color: #64748B;
           margin-bottom: 0.65rem;
         }
 
@@ -526,16 +649,17 @@ export function BlogPage() {
         }
 
         .article-card-title {
-          font-size: 1.15rem;
+          font-size: 1.1rem;
           font-weight: 700;
-          line-height: 1.35;
-          margin-bottom: 0.75rem;
+          line-height: 1.4;
+          margin-bottom: 0.6rem;
+          color: #0F172A;
         }
 
         .article-card-title a {
-          color: #0F172A;
+          color: inherit;
           text-decoration: none;
-          transition: color 0.2s ease;
+          transition: color 0.2s;
         }
 
         .article-card-title a:hover {
@@ -543,10 +667,14 @@ export function BlogPage() {
         }
 
         .article-card-summary {
-          font-size: 0.88rem;
+          font-size: 0.86rem;
           line-height: 1.6;
-          color: #64748B;
+          color: #475569;
           margin-bottom: 1.25rem;
+          display: -webkit-box;
+          -webkit-line-clamp: 3;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
           flex: 1;
         }
 
@@ -554,16 +682,17 @@ export function BlogPage() {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          border-top: 1px solid #F1F5F9;
           padding-top: 0.85rem;
+          border-top: 1px solid #F1F5F9;
         }
 
         .author-small {
-          font-size: 0.75rem;
-          color: #64748B;
           display: inline-flex;
           align-items: center;
           gap: 0.3rem;
+          font-size: 0.75rem;
+          font-weight: 600;
+          color: #475569;
         }
 
         .read-more-link {
@@ -577,57 +706,123 @@ export function BlogPage() {
         }
 
         .read-more-link:hover {
+          color: #1D4ED8;
           text-decoration: underline;
+        }
+
+        /* Skeleton Pulse Styles */
+        @keyframes blogPulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.45; }
+        }
+
+        .skeleton-box {
+          background: #E2E8F0;
+          border-radius: 6px;
+          animation: blogPulse 1.6s ease-in-out infinite;
+        }
+
+        .skeleton-featured {
+          border-color: #E2E8F0;
+          box-shadow: none;
+        }
+
+        .skeleton-card {
+          border-color: #E2E8F0;
+          box-shadow: none;
+        }
+
+        /* Error and Empty States */
+        .blog-error-box {
+          text-align: center;
+          padding: 4.5rem 1.5rem;
+          background: #FFFFFF;
+          border-radius: 16px;
+          border: 1px solid #FCA5A5;
+          box-shadow: 0 4px 12px rgba(239, 68, 68, 0.05);
+        }
+
+        .blog-error-box h3 {
+          font-size: 1.35rem;
+          font-weight: 800;
+          color: #991B1B;
+          margin: 0;
+        }
+
+        .btn-retry-blog {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.5rem;
+          background: #2563EB;
+          color: #FFFFFF;
+          padding: 0.65rem 1.35rem;
+          border-radius: 10px;
+          font-size: 0.88rem;
+          font-weight: 700;
+          border: none;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .btn-retry-blog:hover {
+          background: #1D4ED8;
+          transform: translateY(-1px);
         }
 
         .no-posts-box {
           text-align: center;
           padding: 4rem 1rem;
+          background: #FFFFFF;
+          border-radius: 16px;
+          border: 1px dashed #CBD5E1;
         }
 
         .no-posts-box h3 {
-          font-size: 1.35rem;
+          font-size: 1.25rem;
+          font-weight: 700;
           color: #0F172A;
-          margin: 1rem 0 0.5rem;
+          margin: 0.85rem 0 0.35rem;
         }
 
         .no-posts-box p {
           color: #64748B;
-          margin-bottom: 1.5rem;
+          font-size: 0.9rem;
+          margin-bottom: 1.25rem;
         }
 
         .btn-reset-filters {
           background: #2563EB;
           color: #FFFFFF;
           border: none;
-          padding: 0.6rem 1.25rem;
+          padding: 0.55rem 1.15rem;
           border-radius: 8px;
-          font-weight: 600;
+          font-size: 0.82rem;
+          font-weight: 700;
           cursor: pointer;
         }
 
-        @media (max-width: 991px) {
+        /* Responsive */
+        @media (max-width: 1024px) {
+          .articles-grid {
+            grid-template-columns: repeat(2, 1fr);
+          }
           .featured-article-card {
             grid-template-columns: 1fr;
           }
-          .articles-grid {
-            grid-template-columns: repeat(2, 1fr);
+          .featured-img-side {
+            min-height: 240px;
+          }
+          .featured-body-side {
+            padding: 1.75rem;
           }
         }
 
         @media (max-width: 640px) {
-          .internal-hero-title {
-            font-size: 1.85rem;
-          }
           .articles-grid {
             grid-template-columns: 1fr;
           }
-          .controls-row {
-            flex-direction: column;
-            align-items: stretch;
-          }
-          .search-box-wrapper {
-            min-width: 100%;
+          .internal-hero-title {
+            font-size: 1.75rem;
           }
         }
       `}</style>

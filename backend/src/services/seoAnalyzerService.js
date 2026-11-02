@@ -264,7 +264,14 @@ function extractVisibleText(html) {
 // Single Page Analysis Function
 // ---------------------------------------------------------------------------
 async function analyzePage(pageKey, options = {}) {
-  const allCatalog = typeof getAllPublicPagesCatalog === 'function' ? getAllPublicPagesCatalog() : [];
+  let dbBlogs = [];
+  let dbPages = [];
+  try {
+    const prisma = require('../utils/prisma');
+    dbPages = await prisma.seoMeta.findMany({ orderBy: { pageKey: 'asc' } });
+    dbBlogs = await prisma.blogPost.findMany({ where: { isPublished: true }, orderBy: { createdAt: 'desc' } });
+  } catch (_e) {}
+  const allCatalog = typeof getAllPublicPagesCatalog === 'function' ? getAllPublicPagesCatalog(dbPages, dbBlogs) : [];
   const publicPageDef = PUBLIC_PAGES.find(p => p.pageKey === pageKey)
     || allCatalog.find(p => p.pageKey === pageKey);
   const routeDef = ROUTE_INVENTORY.find(r => r.managedPageKey === pageKey || r.path === (publicPageDef ? publicPageDef.pageUrl : null))
@@ -1308,7 +1315,14 @@ async function analyzePage(pageKey, options = {}) {
 // ---------------------------------------------------------------------------
 async function analyzeAllPages(options = {}) {
   const results = [];
-  const allCatalog = typeof getAllPublicPagesCatalog === 'function' ? getAllPublicPagesCatalog() : [];
+  let dbBlogs = [];
+  let dbPages = [];
+  try {
+    const prisma = require('../utils/prisma');
+    dbPages = await prisma.seoMeta.findMany({ orderBy: { pageKey: 'asc' } });
+    dbBlogs = await prisma.blogPost.findMany({ where: { isPublished: true }, orderBy: { createdAt: 'desc' } });
+  } catch (_e) {}
+  const allCatalog = typeof getAllPublicPagesCatalog === 'function' ? getAllPublicPagesCatalog(dbPages, dbBlogs) : [];
   const pagesToAudit = (options.coreOnly || (process.env.NODE_ENV === 'test' && !options.allCatalog))
     ? PUBLIC_PAGES
     : (allCatalog.length > 0 ? allCatalog : PUBLIC_PAGES);
@@ -1461,10 +1475,24 @@ function getIntegrationsStatus() {
   return googleSearchConsoleService.getStatus();
 }
 
+function clearAnalysisCache(pageKey = null) {
+  if (pageKey) {
+    delete analysisCache.pages[pageKey];
+    analysisCache.overview = null;
+  } else {
+    analysisCache = {
+      lastRunTimestamp: null,
+      pages: {},
+      overview: null,
+    };
+  }
+}
+
 module.exports = {
   analyzePage,
   analyzeAllPages,
   getCachedOverview,
   getPageAnalysis,
   getIntegrationsStatus,
+  clearAnalysisCache,
 };

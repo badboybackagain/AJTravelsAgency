@@ -109,7 +109,21 @@ _Your WhatsApp notifications channel is operational and verified._`;
 /**
  * Retrieve current WhatsApp settings (or initialize default)
  */
+// In-memory cache for WhatsApp settings
+let cachedWhatsAppSettings = null;
+let cachedWhatsAppSettingsTime = 0;
+const WHATSAPP_SETTINGS_CACHE_TTL = 60000; // 60 seconds
+
+function invalidateWhatsAppSettingsCache() {
+  cachedWhatsAppSettings = null;
+  cachedWhatsAppSettingsTime = 0;
+}
+
 async function getWhatsAppSettings() {
+  const now = Date.now();
+  if (cachedWhatsAppSettings && (now - cachedWhatsAppSettingsTime < WHATSAPP_SETTINGS_CACHE_TTL)) {
+    return cachedWhatsAppSettings;
+  }
   let settings = await prisma.integrationSetting.findUnique({
     where: { service: 'WHATSAPP' },
   });
@@ -131,6 +145,8 @@ async function getWhatsAppSettings() {
     });
   }
 
+  cachedWhatsAppSettings = settings;
+  cachedWhatsAppSettingsTime = Date.now();
   return settings;
 }
 
@@ -555,6 +571,7 @@ module.exports = {
   sanitizePhoneNumber,
   isValidPhoneNumber,
   getWhatsAppSettings,
+  invalidateWhatsAppSettingsCache,
   verifyGatewayConnection,
   sendEnquiryNotification,
   sendBookingNotification,

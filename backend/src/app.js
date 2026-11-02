@@ -30,6 +30,8 @@ const quoteRoutes = require('./routes/quoteRoutes');
 const otpRoutes = require('./routes/otpRoutes');
 const seoRoutes = require('./routes/seoRoutes');
 const mediaRoutes = require('./routes/mediaRoutes');
+const blogRoutes = require('./routes/blogRoutes');
+const adminBlogRoutes = require('./routes/adminBlogRoutes');
 const { getSitemap, getRobots, getPublicPages } = require('./controllers/seoController');
 const seoHydrate = require('./middleware/seoHydrate');
 
@@ -38,7 +40,7 @@ const app = express();
 // ============================================================
 // STATIC FILES (Uploads)
 // ============================================================
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
 
 
 // ============================================================
@@ -63,10 +65,21 @@ app.use(cors({
   credentials: true,
 }));
 
+// Static Files (Uploads) with permissive CORS for vehicle images and media
+app.use('/uploads', express.static(path.join(__dirname, '../uploads'), {
+  maxAge: '7d',
+  setHeaders: (res) => {
+    res.set('Access-Control-Allow-Origin', '*');
+    res.set('Cross-Origin-Resource-Policy', 'cross-origin');
+    res.setHeader('Cache-Control', 'public, max-age=604800');
+  }
+}));
+
 // Global rate limiter — prevent DDoS
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 500,
+  max: process.env.NODE_ENV === 'production' ? 500 : 50000,
+  skip: (req) => process.env.NODE_ENV !== 'production' && (req.ip === '127.0.0.1' || req.ip === '::1' || req.ip === '::ffff:127.0.0.1'),
   message: { success: false, message: 'Too many requests. Please slow down.' },
   standardHeaders: true,
   legacyHeaders: false,
@@ -136,6 +149,8 @@ app.use('/api/otp', otpRoutes);
 app.use('/api/admin/seo', seoRoutes);
 app.use('/api/media', mediaRoutes);
 app.use('/api/admin/media', mediaRoutes);
+app.use('/api/blogs', blogRoutes);
+app.use('/api/admin/blogs', adminBlogRoutes);
 app.use('/api', miscRoutes);
 
 // ============================================================
@@ -154,7 +169,15 @@ app.get('/api/seo/public', getPublicPages);
 // 1. Serve compiled JS/CSS/images from dist/assets
 //    index:false prevents static from serving index.html for GET /,
 //    which would bypass seoHydrate.  The hydrate middleware handles / explicitly.
-app.use(express.static(path.join(__dirname, '../../travel-agency/dist'), { index: false }));
+app.use(express.static(path.join(__dirname, '../../travel-agency/dist'), {
+  index: false,
+  maxAge: '1d',
+  setHeaders: (res, filePath) => {
+    if (filePath && (filePath.includes('assets') || filePath.includes('/assets/'))) {
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    }
+  }
+}));
 
 // Load and prepare dist/index.html for the 404 SPA fallback.
 // Ensures unknown routes returning HTTP 404 do not inherit the homepage canonical,

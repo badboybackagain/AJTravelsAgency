@@ -278,7 +278,7 @@ function RootSlugResolver() {
 
   // 4. Curated Blog Articles & Travel Guides
   const post = getPostBySlug(cleanSlug);
-  if (post) return <BlogPostPage />;
+  if (post) return <BlogPostPage isRootFallback={true} />;
 
   // 5. Migrated Travel Guides & Blog Articles
   if (livePage) return <LiveMigratedPage />;
@@ -352,8 +352,8 @@ function App() {
             }
           />
           <Route path="/admin/dashboard" element={<AdminRouteWrapper />} />
-          <Route path="/admin/fares"    element={<Navigate to="/admin/dashboard" replace />} />
-          <Route path="/admin/bookings" element={<Navigate to="/admin/dashboard" replace />} />
+          <Route path="/admin/fares"    element={<Navigate to="/admin/dashboard?tab=fares" replace />} />
+          <Route path="/admin/bookings" element={<Navigate to="/admin/dashboard?tab=bookings" replace />} />
           <Route path="/admin"          element={<Navigate to="/admin/dashboard" replace />} />
 
           {/*

@@ -59,16 +59,23 @@ export const findMatchingDbVehicle = (frontendVehicle, dbVehicles = []) => {
   if (exactNameMatch) return exactNameMatch;
 
   // 3. Name Contains Match (either direction) with specific category guards
-  if (fName.includes('luxury') && (fName.includes('tempo') || fCat.includes('TEMPO') || fId === 'minibus')) {
+  if (fName.includes('executive') && (fName.includes('tempo') || fCat.includes('TEMPO') || fId.includes('tempo') || normalizedFCat === 'MINIBUS')) {
+    const execTempo = dbVehicles.find(
+      (db) => db.name?.toLowerCase().includes('executive') && (db.name?.toLowerCase().includes('tempo') || db.category === 'MINIBUS' || db.slug === 'executive-tempo-traveller')
+    );
+    if (execTempo) return execTempo;
+  }
+
+  if (fName.includes('luxury') && (fName.includes('tempo') || fCat.includes('TEMPO') || fId === 'minibus' || normalizedFCat === 'MINIBUS')) {
     const luxuryTempo = dbVehicles.find(
-      (db) => db.name?.toLowerCase().includes('luxury') && db.name?.toLowerCase().includes('tempo')
+      (db) => (db.name?.toLowerCase().includes('luxury') || db.slug === 'tempo-traveller') && (db.name?.toLowerCase().includes('tempo') || db.category === 'MINIBUS')
     );
     if (luxuryTempo) return luxuryTempo;
   }
 
   if (fName.includes('tempo') || fSlug.includes('tempo') || fId === 'minibus' || normalizedFCat === 'MINIBUS') {
     const tempoMatch = dbVehicles.find(
-      (db) => db.name?.toLowerCase().includes('tempo') || db.category === 'MINIBUS'
+      (db) => db.name?.toLowerCase().includes('tempo') || db.category === 'MINIBUS' || db.category === 'TEMPO_TRAVELLER'
     );
     if (tempoMatch) return tempoMatch;
   }
@@ -123,3 +130,50 @@ export const findMatchingDbVehicle = (frontendVehicle, dbVehicles = []) => {
   return null;
 };
 
+/**
+ * Resolves the canonical template (from vehiclesData) for a given DB vehicle.
+ * Returns null if the DB vehicle is a custom/newly added fleet vehicle (e.g. "test", "Toyota Rumion").
+ * This ensures newly added custom vehicles never hijack the slug or starting fare of the core 6 vehicles.
+ */
+export const getCanonicalTemplateForDbVehicle = (db, templates = []) => {
+  if (!db || !Array.isArray(templates) || templates.length === 0) return null;
+  const name = (db.name || '').toLowerCase().trim();
+  const id = (db.id || '').toLowerCase().trim();
+
+  // 1. Direct ID match (e.g. 'sedan', 'suv', 'premium', 'minibus', 'hatchback', 'executive-tempo')
+  const idMatch = templates.find((t) => t.id?.toLowerCase() === id || t.slug?.toLowerCase() === id);
+  if (idMatch) return idMatch;
+
+  // 2. Executive Tempo Traveller (14-seater)
+  if (name.includes('tempo') && (name.includes('executive') || db.seatingCapacity === 14)) {
+    return templates.find((t) => t.slug === 'executive-tempo-traveller') || null;
+  }
+
+  // 3. Luxury Tempo Traveller (12-seater)
+  if (name.includes('tempo') && (name.includes('luxury') || db.seatingCapacity === 12 || name.includes('coach'))) {
+    return templates.find((t) => t.slug === 'tempo-traveller') || null;
+  }
+
+  // 4. Innova Crysta / Luxury
+  if (name.includes('innova') || name.includes('crysta')) {
+    return templates.find((t) => t.slug === 'innova-crysta') || null;
+  }
+
+  // 5. Spacious SUV (Ertiga / Carens)
+  if (name.includes('ertiga') || name.includes('carens') || (name.includes('suv') && !name.includes('sedan'))) {
+    return templates.find((t) => t.slug === 'ertiga-suv') || null;
+  }
+
+  // 6. Compact Hatchback
+  if (name.includes('hatchback') || name.includes('wagonr') || name.includes('celerio') || name.includes('tiago')) {
+    return templates.find((t) => t.slug === 'compact-hatchback') || null;
+  }
+
+  // 7. Executive Sedan (Dzire / Etios)
+  if (name.includes('sedan') || name.includes('dzire') || name.includes('etios') || name.includes('amaze')) {
+    return templates.find((t) => t.slug === 'sedan') || null;
+  }
+
+  // Custom vehicle with no canonical template match
+  return null;
+};

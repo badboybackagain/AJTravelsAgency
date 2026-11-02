@@ -1,10 +1,25 @@
 // Vehicle Controller — Public + Admin CRUD
 const prisma = require('../utils/prisma');
 const { AppError } = require('../middleware/errorHandler');
+const { invalidateFareCache } = require('../services/fareCalculationService');
 
 /**
  * GET /api/vehicles — All active vehicles
  */
+// In-memory caching for vehicles
+let vehiclesCache = null;
+let vehiclesCacheTime = 0;
+let adminVehiclesCache = null;
+let adminVehiclesCacheTime = 0;
+const VEHICLES_CACHE_TTL = 60000; // 60 seconds
+
+const invalidateVehicleCache = () => {
+  vehiclesCache = null;
+  vehiclesCacheTime = 0;
+  adminVehiclesCache = null;
+  adminVehiclesCacheTime = 0;
+};
+
 const getAllVehicles = async (req, res, next) => {
   try {
     const vehicles = await prisma.vehicle.findMany({
@@ -41,6 +56,8 @@ const getAllVehicles = async (req, res, next) => {
       };
     });
 
+    vehiclesCache = data;
+    vehiclesCacheTime = Date.now();
     res.json({ success: true, data });
   } catch (err) {
     next(err);
@@ -103,6 +120,8 @@ const adminGetVehicles = async (req, res, next) => {
     const vehicles = await prisma.vehicle.findMany({
       orderBy: [{ displayOrder: 'asc' }, { name: 'asc' }]
     });
+    adminVehiclesCache = vehicles;
+    adminVehiclesCacheTime = Date.now();
     res.json({ success: true, data: vehicles });
   } catch (err) {
     next(err);
@@ -130,6 +149,8 @@ const createVehicle = async (req, res, next) => {
       }
     });
 
+    invalidateFareCache();
+    invalidateVehicleCache();
     res.status(201).json({ success: true, data: vehicle });
   } catch (err) {
     next(err);
@@ -160,6 +181,8 @@ const updateVehicle = async (req, res, next) => {
       }
     });
 
+    invalidateFareCache();
+    invalidateVehicleCache();
     res.json({ success: true, data: updated });
   } catch (err) {
     next(err);
@@ -172,7 +195,12 @@ const updateVehicle = async (req, res, next) => {
 const deleteVehicle = async (req, res, next) => {
   try {
     const { id } = req.params;
+    const existing = await prisma.vehicle.findUnique({ where: { id } });
+    if (!existing) return next(new AppError('Vehicle not found.', 404));
+
     await prisma.vehicle.update({ where: { id }, data: { isActive: false } });
+    invalidateFareCache();
+    invalidateVehicleCache();
     res.json({ success: true, message: 'Vehicle deactivated.' });
   } catch (err) {
     next(err);
@@ -180,6 +208,7 @@ const deleteVehicle = async (req, res, next) => {
 };
 
 module.exports = {
+  invalidateVehicleCache,
   getAllVehicles,
   getVehicle,
   adminGetVehicles,

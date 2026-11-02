@@ -7,7 +7,7 @@ import { MobileStickyBar } from '../components/MobileStickyBar';
 import { usePageSeo } from '../hooks/usePageSeo';
 import { vehiclesData } from '../data/vehiclesData';
 import { vehicleApi } from '../services/api';
-import { resolveMediaUrl, findMatchingDbVehicle } from '../utils/mediaUtils';
+import { resolveMediaUrl, findMatchingDbVehicle, getCanonicalTemplateForDbVehicle } from '../utils/mediaUtils';
 import { 
   Car, 
   Users, 
@@ -16,7 +16,9 @@ import {
   ArrowRight, 
   Sparkles,
   ShieldCheck,
-  Zap
+  Zap,
+  AlertCircle,
+  RotateCcw
 } from 'lucide-react';
 
 export function VehiclesPage() {
@@ -30,29 +32,84 @@ export function VehiclesPage() {
   const navigate = useNavigate();
   const [isEnquiryOpen, setIsEnquiryOpen] = useState(false);
   const [dbVehicles, setDbVehicles] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  useEffect(() => {
-    let isMounted = true;
-    vehicleApi.getAll()
+  const fetchFleet = (forceRefresh = false) => {
+    setLoading(true);
+    setError('');
+    vehicleApi.getAll({ forceRefresh })
       .then(res => {
-        if (isMounted && res.data?.data) {
+        if (res.data?.data) {
           setDbVehicles(res.data.data);
         }
+        setLoading(false);
       })
       .catch(err => {
-        console.warn('VehiclesPage: Failed to load dynamic fleet images:', err?.message);
+        console.warn('VehiclesPage: Failed to load dynamic fleet:', err?.message);
+        setError('Unable to load fleet vehicles at this time.');
+        setLoading(false);
       });
-    return () => { isMounted = false; };
+  };
+
+  useEffect(() => {
+    fetchFleet();
   }, []);
 
   const handleBookVehicle = (v) => {
     const params = new URLSearchParams({
       tripType: 'ONE_WAY',
       category: v.category,
+      vehicleId: v.id || '',
       vehicleName: v.name
     });
     navigate(`/fare?${params.toString()}`);
   };
+
+  // Authoritative fleet list: live active DB vehicles only (no stale fallback)
+  const displayedVehicles = dbVehicles.map(db => {
+    const canonical = getCanonicalTemplateForDbVehicle(db, vehiclesData);
+    const slug = canonical?.slug || db.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || db.id;
+
+    const categoryFallback = (
+      db.category === 'SUV' ? '/assets/suv.webp' :
+      db.category === 'LUXURY' ? '/assets/luxury.jpg' :
+      db.category === 'MINIBUS' ? '/assets/minibus.jpg' :
+      db.category === 'HATCHBACK' ? '/assets/hatchback.jpg' :
+      '/assets/sedan.webp'
+    );
+
+    const cardImage = resolveMediaUrl(db.image, canonical?.image || categoryFallback);
+
+    // Price logic:
+    // 1. If active route fares exist in DB for this vehicle, display lowest base fare
+    // 2. If canonical template has known teaser fare, use it
+    // 3. For any custom vehicle with no DB fares yet, display "On Request"
+    const displayStartingFare = db.startingBaseFare
+      ? `₹${db.startingBaseFare.toLocaleString()}`
+      : (canonical?.fareStarting || 'On Request');
+
+    return {
+      id: db.id,
+      slug,
+      name: db.name, // DB source of truth
+      category: db.category, // DB source of truth
+      seatingCapacity: db.seatingCapacity, // DB source of truth
+      passengers: `${db.seatingCapacity} Passengers`,
+      image: cardImage,
+      tag: canonical?.tag || (db.category === 'LUXURY' ? 'SUPREME COMFORT' : 'FLEET ADDITION'),
+      models: db.description || canonical?.models || `${db.name} Fleet`,
+      luggage: canonical?.luggage || (db.seatingCapacity <= 4 ? '2-3 Medium Bags' : db.seatingCapacity <= 7 ? '4-5 Large Bags' : '10+ Big Bags'),
+      overview: db.description || canonical?.overview || `Commercial AC ${db.name} with certified highway chauffeur.`,
+      features: canonical?.features || [
+        'Dual Air-Conditioning with rapid cooling',
+        'Plush ergonomic seating with ample legroom',
+        'Experienced, background-verified highway chauffeur',
+        'All-inclusive toll package available'
+      ],
+      displayStartingFare,
+    };
+  });
 
   return (
     <div className="vehicles-page-wrapper">
@@ -85,84 +142,126 @@ export function VehiclesPage() {
       {/* Fleet Catalogue Grid */}
       <section className="vehicles-main-section">
         <div className="container">
-          <div className="fleet-cards-grid">
-            {vehiclesData.map(v => {
-              const dbMatch = findMatchingDbVehicle(v, dbVehicles);
-              const cardImage = dbMatch?.image ? resolveMediaUrl(dbMatch.image, v.image) : v.image;
-              const displayStartingFare = dbMatch?.startingBaseFare
-                ? `₹${dbMatch.startingBaseFare.toLocaleString()}`
-                : v.fareStarting;
-
-              return (
-              <div key={v.slug} className="fleet-card">
-                <div className="fleet-img-wrapper">
-                  <img
-                    src={cardImage}
-                    alt={v.name}
-                    className="fleet-car-img"
-                    loading="lazy"
-                    onError={(e) => {
-                      e.target.src = v.image || '/assets/sedan.webp';
-                    }}
-                  />
-                  <span className="fleet-tag-chip">{v.tag}</span>
-                </div>
-
-                <div className="fleet-card-body">
-                  <div className="fleet-cat-eyebrow">{v.category}</div>
-                  <h2 className="fleet-car-title">
-                    <Link to={`/vehicles/${v.slug}`}>{v.name}</Link>
-                  </h2>
-                  <p className="fleet-models-txt">{v.models}</p>
-
-                  <div className="fleet-capacities-row">
-                    <div className="cap-pill">
-                      <Users size={14} color="#2563EB" />
-                      <span>{v.passengers}</span>
+          {/* Fleet Catalogue Grid / Skeletons / Error States */}
+          {loading ? (
+            <div className="fleet-cards-grid" aria-busy="true" aria-label="Loading fleet catalogue">
+              {[1, 2, 3, 4, 5, 6].map(n => (
+                <div key={n} className="fleet-card fleet-card-skeleton">
+                  <div className="fleet-img-wrapper fleet-skeleton-box fleet-skeleton-img"></div>
+                  <div className="fleet-card-body">
+                    <div className="fleet-skeleton-box fleet-skeleton-cat"></div>
+                    <div className="fleet-skeleton-box fleet-skeleton-title"></div>
+                    <div className="fleet-skeleton-box fleet-skeleton-subtitle"></div>
+                    <div className="fleet-capacities-row" style={{ marginTop: '0.85rem' }}>
+                      <div className="fleet-skeleton-box fleet-skeleton-pill"></div>
+                      <div className="fleet-skeleton-box fleet-skeleton-pill"></div>
                     </div>
-                    <div className="cap-pill">
-                      <Briefcase size={14} color="#2563EB" />
-                      <span>{v.luggage}</span>
+                    <div className="fleet-skeleton-box fleet-skeleton-text" style={{ marginTop: '1.1rem', width: '92%' }}></div>
+                    <div className="fleet-skeleton-box fleet-skeleton-text" style={{ marginTop: '0.4rem', width: '75%' }}></div>
+                    <div className="fleet-features-preview" style={{ marginTop: '1.1rem' }}>
+                      <div className="fleet-skeleton-box fleet-skeleton-feat"></div>
+                      <div className="fleet-skeleton-box fleet-skeleton-feat"></div>
+                    </div>
+                    <div className="fleet-footer-row" style={{ marginTop: '1.5rem', paddingTop: '1rem' }}>
+                      <div className="fleet-skeleton-box fleet-skeleton-price"></div>
+                      <div className="fleet-skeleton-box fleet-skeleton-btn"></div>
                     </div>
                   </div>
+                </div>
+              ))}
+            </div>
+          ) : error && dbVehicles.length === 0 ? (
+            <div className="fleet-error-container">
+              <AlertCircle size={40} color="#DC2626" style={{ margin: '0 auto 0.75rem' }} />
+              <h3 style={{ color: '#991B1B', fontWeight: 800, fontSize: '1.25rem', marginBottom: '0.35rem' }}>
+                Fleet Catalogue Temporarily Unavailable
+              </h3>
+              <p style={{ color: '#64748B', fontSize: '0.92rem', maxWidth: '440px', margin: '0 auto 1.25rem', lineHeight: 1.5 }}>
+                We were unable to load live vehicle details. Please retry to refresh the fleet data.
+              </p>
+              <button
+                type="button"
+                onClick={() => fetchFleet(true)}
+                className="fleet-retry-btn"
+              >
+                <RotateCcw size={16} />
+                <span>Retry Fleet Catalogue</span>
+              </button>
+            </div>
+          ) : (
+            <div className="fleet-cards-grid">
+              {displayedVehicles.map(v => {
+                return (
+                <div key={v.id || v.slug} className="fleet-card">
+                  <div className="fleet-img-wrapper">
+                    <img
+                      src={v.image}
+                      alt={v.name}
+                      className="fleet-car-img"
+                      loading="lazy"
+                      onError={(e) => {
+                        e.target.src = '/assets/sedan.webp';
+                      }}
+                    />
+                    <span className="fleet-tag-chip">{v.tag}</span>
+                  </div>
 
-                  <p className="fleet-overview-blurb">{v.overview}</p>
+                  <div className="fleet-card-body">
+                    <div className="fleet-cat-eyebrow">{v.category}</div>
+                    <h2 className="fleet-car-title">
+                      <Link to={`/vehicles/${v.slug}`}>{v.name}</Link>
+                    </h2>
+                    <p className="fleet-models-txt">{v.models}</p>
 
-                  <div className="fleet-features-preview">
-                    {v.features.slice(0, 3).map((f, i) => (
-                      <div key={i} className="feat-line">
-                        <CheckCircle2 size={14} color="#10B981" />
-                        <span>{f}</span>
+                    <div className="fleet-capacities-row">
+                      <div className="cap-pill">
+                        <Users size={14} color="#2563EB" />
+                        <span>{v.passengers}</span>
                       </div>
-                    ))}
-                  </div>
-
-                  <div className="fleet-footer-row">
-                    <div className="fleet-price-box">
-                      <span className="rate-lbl">STARTING FROM</span>
-                      <strong className="rate-val">{displayStartingFare}*</strong>
+                      <div className="cap-pill">
+                        <Briefcase size={14} color="#2563EB" />
+                        <span>{v.luggage}</span>
+                      </div>
                     </div>
 
-                    <div className="fleet-btns-group">
-                      <button 
-                        type="button" 
-                        onClick={() => handleBookVehicle(v)}
-                        className="btn-book-fleet"
-                      >
-                        <Car size={15} />
-                        <span>Book Now</span>
-                      </button>
-                      <Link to={`/vehicles/${v.slug}`} className="btn-details-fleet">
-                        <span>Details</span>
-                        <ArrowRight size={13} />
-                      </Link>
+                    <p className="fleet-overview-blurb">{v.overview}</p>
+
+                    <div className="fleet-features-preview">
+                      {(v.features || []).slice(0, 3).map((f, i) => (
+                        <div key={i} className="feat-line">
+                          <CheckCircle2 size={14} color="#10B981" />
+                          <span>{f}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="fleet-footer-row">
+                      <div className="fleet-price-box">
+                        <span className="rate-lbl">STARTING FROM</span>
+                        <strong className="rate-val">{v.displayStartingFare}*</strong>
+                      </div>
+
+                      <div className="fleet-btns-group">
+                        <button 
+                          type="button" 
+                          onClick={() => handleBookVehicle(v)}
+                          className="btn-book-fleet"
+                        >
+                          <Car size={15} />
+                          <span>Book Now</span>
+                        </button>
+                        <Link to={`/vehicles/${v.slug}`} className="btn-details-fleet">
+                          <span>Details</span>
+                          <ArrowRight size={13} />
+                        </Link>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          )}
 
           {/* Fleet Standards Guarantee Box */}
           <div className="fleet-standards-box">
@@ -249,6 +348,100 @@ export function VehiclesPage() {
         .vehicles-main-section {
           padding: 2rem 0 4rem;
           background: #F8FAFC;
+        }
+
+        
+        /* Fleet Loading Skeletons & Shimmer Animation */
+        .fleet-skeleton-box {
+          background: linear-gradient(90deg, #F1F5F9 25%, #E2E8F0 50%, #F1F5F9 75%);
+          background-size: 200% 100%;
+          animation: fleetShimmer 1.5s infinite;
+          border-radius: 6px;
+        }
+
+        @keyframes fleetShimmer {
+          0% { background-position: 200% 0; }
+          100% { background-position: -200% 0; }
+        }
+
+        .fleet-skeleton-img {
+          width: 100%;
+          height: 240px;
+          border-radius: 0;
+        }
+
+        .fleet-skeleton-cat {
+          width: 80px;
+          height: 12px;
+          margin-bottom: 0.5rem;
+        }
+
+        .fleet-skeleton-title {
+          width: 70%;
+          height: 26px;
+          margin-bottom: 0.5rem;
+        }
+
+        .fleet-skeleton-subtitle {
+          width: 45%;
+          height: 14px;
+        }
+
+        .fleet-skeleton-pill {
+          width: 90px;
+          height: 28px;
+          border-radius: 20px;
+        }
+
+        .fleet-skeleton-text {
+          height: 13px;
+        }
+
+        .fleet-skeleton-feat {
+          width: 85%;
+          height: 16px;
+          margin-bottom: 0.4rem;
+        }
+
+        .fleet-skeleton-price {
+          width: 100px;
+          height: 36px;
+          border-radius: 8px;
+        }
+
+        .fleet-skeleton-btn {
+          width: 120px;
+          height: 40px;
+          border-radius: 10px;
+        }
+
+        .fleet-error-container {
+          text-align: center;
+          padding: 4rem 1.5rem;
+          background: #FEF2F2;
+          border: 1px solid #FECACA;
+          border-radius: 20px;
+          max-width: 600px;
+          margin: 2rem auto;
+        }
+
+        .fleet-retry-btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.5rem;
+          background: #2563EB;
+          color: #FFFFFF;
+          border: none;
+          padding: 0.75rem 1.5rem;
+          border-radius: 8px;
+          font-weight: 700;
+          font-size: 0.9rem;
+          cursor: pointer;
+          transition: background 0.2s;
+        }
+
+        .fleet-retry-btn:hover {
+          background: #1D4ED8;
         }
 
         .fleet-cards-grid {

@@ -6,6 +6,7 @@ const { adminGetParking, createParking, updateParking, deleteParking } = require
 const { adminGetWaiting, createWaiting, updateWaiting, deleteWaiting } = require('../controllers/waitingController');
 const { getAuditLog } = require('../controllers/auditController');
 const { getGrandDeals } = require('../controllers/grandDealsController');
+const { getDashboardStats } = require('../controllers/adminFareConfigController');
 const auth = require('../middleware/auth');
 const adminOnly = require('../middleware/adminOnly');
 
@@ -37,6 +38,9 @@ router.get('/admin/waiting', auth, adminOnly, adminGetWaiting);
 router.post('/admin/waiting', auth, adminOnly, createWaiting);
 router.put('/admin/waiting/:id', auth, adminOnly, updateWaiting);
 router.delete('/admin/waiting/:id', auth, adminOnly, deleteWaiting);
+
+// ADMIN — DASHBOARD STATS
+router.get('/admin/dashboard-stats', auth, adminOnly, getDashboardStats);
 
 // ADMIN — AUDIT LOG
 router.get('/admin/audit', auth, adminOnly, getAuditLog);

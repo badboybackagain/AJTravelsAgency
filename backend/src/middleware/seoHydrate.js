@@ -31,6 +31,11 @@ const path = require('path');
 
 const prisma = require('../utils/prisma');
 const { SITE_DOMAIN } = require('../config/seoConfig');
+let STATIC_CODE_PAGES = [];
+try {
+  STATIC_CODE_PAGES = require('../controllers/seoController').STATIC_CODE_PAGES || [];
+} catch (_e) {}
+
 
 // Absolute path to the built SPA HTML template
 const DIST_HTML = path.join(__dirname, '../../..', 'travel-agency', 'dist', 'index.html');
@@ -312,13 +317,26 @@ function seoHydrate() {
       return res.redirect(301, `/booking${qs}`);
     }
 
-    const isAdminRoute  = ADMIN_ROUTES.has(req.path);
-    const publicPageKey = PUBLIC_ROUTE_MAP[req.path];
-    const cleanSlug     = req.path.replace(/^\/|\/$/g, '');
-    const migratedMeta  = (!publicPageKey && cleanSlug) ? migratedPagesMap[cleanSlug] : null;
+    const normPath = req.path.replace(/\/$/, '') || '/';
+    const cleanSlug = req.path.replace(/^\/|\/$/g, '');
+
+    const isAdminRoute  = ADMIN_ROUTES.has(normPath) || ADMIN_ROUTES.has(req.path);
+    const publicPageKey = PUBLIC_ROUTE_MAP[normPath] || PUBLIC_ROUTE_MAP[req.path];
+    const staticPage    = (!isAdminRoute && !publicPageKey) ? STATIC_CODE_PAGES.find(p => p.pageUrl === normPath || p.pageUrl === req.path) : null;
+    const migratedMeta  = (!publicPageKey && !staticPage && cleanSlug) ? migratedPagesMap[cleanSlug] : null;
+
+    let dbBlog = null;
+    if (!isAdminRoute && !publicPageKey && !staticPage && !migratedMeta && cleanSlug) {
+      try {
+        dbBlog = await prisma.blogPost.findUnique({
+          where: { slug: cleanSlug },
+          select: { title: true, summary: true, metaTitle: true, metaDesc: true, canonicalUrl: true, isPublished: true },
+        });
+      } catch (_e) {}
+    }
 
     // Unknown routes fall through to the 404 handler
-    if (!isAdminRoute && !publicPageKey && !migratedMeta) return next();
+    if (!isAdminRoute && !publicPageKey && !staticPage && !migratedMeta && !(dbBlog && dbBlog.isPublished)) return next();
 
     // Re-read template if dist has been rebuilt since last load
     const html0 = loadTemplate();
@@ -350,6 +368,64 @@ function seoHydrate() {
     // meta description, and canonical URL. Ensures direct navigation and
     // browser page refreshes return HTTP 200 without a 404.
     // -----------------------------------------------------------------------
+    if (staticPage) {
+      const pageTitle = staticPage.seoTitle || `${staticPage.pageLabel} | AJ Travels`;
+      const pageDesc = staticPage.metaDescription || '';
+      const canon = staticPage.canonicalUrl || (SITE_DOMAIN ? `${SITE_DOMAIN}${staticPage.pageUrl}` : null);
+
+      if (pageTitle) html = replaceTitle(html, pageTitle);
+      if (pageDesc) html = replaceMetaByName(html, 'description', pageDesc);
+      html = replaceMetaByName(html, 'robots', staticPage.isIndexable ? 'index, follow' : 'noindex, nofollow');
+      if (pageTitle) {
+        html = replaceMetaByProperty(html, 'og:title', pageTitle);
+        html = replaceMetaByProperty(html, 'twitter:title', pageTitle);
+      }
+      if (pageDesc) {
+        html = replaceMetaByProperty(html, 'og:description', pageDesc);
+        html = replaceMetaByProperty(html, 'twitter:description', pageDesc);
+      }
+      if (canon) {
+        html = replaceCanonical(html, canon);
+        html = replaceMetaByProperty(html, 'og:url', canon);
+        html = replaceMetaByProperty(html, 'twitter:url', canon);
+      }
+      html = removeFaqFromJsonLd(html);
+      res.set({
+        'Content-Type':  'text/html; charset=utf-8',
+        'Cache-Control': 'no-store',
+      });
+      return res.status(200).send(html);
+    }
+
+    if (dbBlog && dbBlog.isPublished) {
+      const pageTitle = dbBlog.metaTitle || `${dbBlog.title} | AJ Travels`;
+      const pageDesc = dbBlog.metaDesc || dbBlog.summary || '';
+      const canon = dbBlog.canonicalUrl || (SITE_DOMAIN ? `${SITE_DOMAIN}/${cleanSlug}/` : null);
+
+      if (pageTitle) html = replaceTitle(html, pageTitle);
+      if (pageDesc) html = replaceMetaByName(html, 'description', pageDesc);
+      html = replaceMetaByName(html, 'robots', 'index, follow');
+      if (pageTitle) {
+        html = replaceMetaByProperty(html, 'og:title', pageTitle);
+        html = replaceMetaByProperty(html, 'twitter:title', pageTitle);
+      }
+      if (pageDesc) {
+        html = replaceMetaByProperty(html, 'og:description', pageDesc);
+        html = replaceMetaByProperty(html, 'twitter:description', pageDesc);
+      }
+      if (canon) {
+        html = replaceCanonical(html, canon);
+        html = replaceMetaByProperty(html, 'og:url', canon);
+        html = replaceMetaByProperty(html, 'twitter:url', canon);
+      }
+      html = removeFaqFromJsonLd(html);
+      res.set({
+        'Content-Type':  'text/html; charset=utf-8',
+        'Cache-Control': 'no-store',
+      });
+      return res.status(200).send(html);
+    }
+
     if (migratedMeta) {
       if (migratedMeta.title) {
         html = replaceTitle(html, migratedMeta.title);
