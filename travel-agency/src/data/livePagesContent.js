@@ -4304,16 +4304,24 @@ export const livePagesContent = {
     ],
     "relatedLinks": [
       {
-        "title": "Pune to Mumbai Cab Service",
-        "url": "/pune-to-mumbai-one-way-cab/"
+        "title": "Mumbai to Pune Taxi Service",
+        "url": "/mumbai-to-pune-taxi"
+      },
+      {
+        "title": "Luxury Force Tempo Traveller Fleet",
+        "url": "/vehicles/tempo-traveller"
+      },
+      {
+        "title": "7-Seater Cab Mumbai to Pune",
+        "url": "/7-seater-cabs-on-rent-from-mumbai-to-pune/"
       },
       {
         "title": "Tempo Traveller on Rent in Pune",
         "url": "/tempo-traveller-on-rent-in-pune/"
       },
       {
-        "title": "7-Seater Cab Mumbai to Pune",
-        "url": "/7-seater-cabs-on-rent-from-mumbai-to-pune/"
+        "title": "Fare Calculator & Tolls",
+        "url": "/fare"
       }
     ],
     "bookingDefaults": {
@@ -4349,7 +4357,7 @@ export const livePagesContent = {
         "type": "points",
         "title": "7-Seater SUV Amenities:",
         "items": [
-          "Flexible 3-Row Seating: Accommodates up to 6–7 passengers comfortably with foldable third-row options.",
+          "Flexible 3-Row Seating: Accommodates up to 6 to 7 passengers comfortably with foldable third-row options.",
           "Roof-Mounted Dual AC: Dedicated cooling vents for 2nd and 3rd row passengers.",
           "Generous Boot Space: Ample room for airport luggage, strollers, and shopping bags.",
           "Expressway Cruise Stability: Smooth, stable ride on the Bhor Ghat curves and Pune-Mumbai Expressway.",
@@ -4378,16 +4386,24 @@ export const livePagesContent = {
     ],
     "relatedLinks": [
       {
-        "title": "Pune to Mumbai Cab Service",
-        "url": "/pune-to-mumbai-one-way-cab/"
+        "title": "Pune to Mumbai Taxi Service",
+        "url": "/pune-to-mumbai-taxi"
+      },
+      {
+        "title": "Ertiga & SUV Fleet (6-7 Seater)",
+        "url": "/vehicles/ertiga-suv"
+      },
+      {
+        "title": "9-Seater Cab Pune to Mumbai",
+        "url": "/9-seater-cabs-on-rent-from-pune-to-mumbai/"
       },
       {
         "title": "Innova Crysta on Rent in Pune",
         "url": "/innova-car-on-rent-in-pune/"
       },
       {
-        "title": "9-Seater Cab Pune to Mumbai",
-        "url": "/9-seater-cabs-on-rent-from-pune-to-mumbai/"
+        "title": "Fare Calculator & Tolls",
+        "url": "/fare"
       }
     ],
     "bookingDefaults": {
@@ -4452,16 +4468,24 @@ export const livePagesContent = {
     ],
     "relatedLinks": [
       {
-        "title": "Mumbai to Pune Cab Service",
-        "url": "/mumbai-to-pune-cab/"
+        "title": "Mumbai to Pune Taxi Service",
+        "url": "/mumbai-to-pune-taxi"
       },
       {
-        "title": "7-Seater Cab Pune to Mumbai",
-        "url": "/7-seater-cabs-on-rent-from-pune-to-mumbai/"
+        "title": "Ertiga & SUV Fleet (6-7 Seater)",
+        "url": "/vehicles/ertiga-suv"
       },
       {
         "title": "9-Seater Cab Mumbai to Pune",
         "url": "/9-seater-cabs-on-rent-from-mumbai-to-pune/"
+      },
+      {
+        "title": "7-Seater Cab Pune to Mumbai (Return)",
+        "url": "/7-seater-cabs-on-rent-from-pune-to-mumbai/"
+      },
+      {
+        "title": "Fare Calculator & Tolls",
+        "url": "/fare"
       }
     ],
     "bookingDefaults": {
@@ -4517,7 +4541,7 @@ export const livePagesContent = {
     "faqs": [
       {
         "q": "What is the luggage capacity in a 9-seater Tempo Traveller?",
-        "a": "A 9-seater Tempo Traveller features a large dedicated rear luggage deck capable of holding 8–10 large suitcases easily."
+        "a": "A 9-seater Tempo Traveller features a large dedicated rear luggage deck capable of holding 8 to 10 large suitcases easily."
       },
       {
         "q": "Can the 9-seater cab pick up passengers from multiple locations in Pune?",
@@ -4526,16 +4550,24 @@ export const livePagesContent = {
     ],
     "relatedLinks": [
       {
-        "title": "Pune to Mumbai Cab Service",
-        "url": "/pune-to-mumbai-one-way-cab/"
+        "title": "Pune to Mumbai Taxi Service",
+        "url": "/pune-to-mumbai-taxi"
+      },
+      {
+        "title": "Luxury Force Tempo Traveller Fleet",
+        "url": "/vehicles/tempo-traveller"
+      },
+      {
+        "title": "7-Seater Cab Pune to Mumbai",
+        "url": "/7-seater-cabs-on-rent-from-pune-to-mumbai/"
       },
       {
         "title": "Tempo Traveller on Rent in Pune",
         "url": "/tempo-traveller-on-rent-in-pune/"
       },
       {
-        "title": "7-Seater Cab Pune to Mumbai",
-        "url": "/7-seater-cabs-on-rent-from-pune-to-mumbai/"
+        "title": "Fare Calculator & Tolls",
+        "url": "/fare"
       }
     ],
     "bookingDefaults": {

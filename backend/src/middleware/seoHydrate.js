@@ -46,6 +46,27 @@ const PUBLIC_ROUTE_MAP = {
   '/booking': 'booking',
 };
 
+// Resilient fallback metadata used when DB connection pool is exhausted or offline
+const PUBLIC_PAGES_FALLBACK = {
+  home: {
+    seoTitle: 'AJ Travels — Trusted Vehicle Rental Service in Pune | Car Rental & Cabs',
+    metaDescription: 'AJ Travels is a trusted vehicle rental service in Pune offering chauffeur-driven car rentals, intercity cabs, airport transfers, and Tempo Travellers across Maharashtra.',
+    isIndexable: true,
+  },
+  fare: {
+    seoTitle: 'Pune Mumbai Cab Fare Calculator | AJ Tours & Travels',
+    metaDescription: 'Check Pune to Mumbai and Mumbai to Pune cab fares instantly. Transparent pricing with tolls included. One-way and round-trip options available.',
+    isIndexable: true,
+  },
+  booking: {
+    seoTitle: 'Book Pune to Mumbai Cab Online | AJ Tours & Travels',
+    metaDescription: 'Book your Pune to Mumbai or Mumbai to Pune cab online in minutes. Fixed fare, no hidden charges. Pay to driver. WhatsApp OTP verified booking.',
+    isIndexable: true,
+  },
+};
+
+const metaCache = new Map();
+
 // Admin routes: served as HTTP 200 SPA shell with noindex so:
 //   a) direct browser navigation (e.g. sharing a link) works, and
 //   b) search engines are told not to index these private pages.
@@ -107,9 +128,10 @@ function escapeHtml(str) {
 // ---------------------------------------------------------------------------
 // Targeted replace helpers — each owns exactly one tag type.
 // Two-pass (attribute-order-agnostic) regex pairs.
-// ---------------------------------------------------------------------------
 function replaceTitle(html, newTitle) {
-  return html.replace(/<title>[^<]*<\/title>/, `<title>${escapeHtml(newTitle)}</title>`);
+  let updated = html.replace(/<title>[^<]*<\/title>/, `<title>${escapeHtml(newTitle)}</title>`);
+  updated = replaceMetaByName(updated, 'title', newTitle);
+  return updated;
 }
 
 function replaceMetaByName(html, nameAttr, newContent) {
@@ -171,6 +193,70 @@ function stripMetaByProperty(html, propertyAttr) {
 
 function stripJsonLd(html) {
   return html.replace(/<script\s+type=["']application\/ld\+json["']>[\s\S]*?<\/script>\s*/gi, '');
+}
+
+const HOMEPAGE_FAQS = [
+  {
+    q: "What car rental and cab services does AJ Travels provide in Pune?",
+    a: "AJ Travels provides chauffeur-driven car rental in Pune, intercity outstation cabs, one-way and round-trip routes (including Pune to Mumbai, Mahabaleshwar, Shirdi, and Nashik), dedicated airport transfers for Pune Airport (PNQ) and Mumbai Airport (BOM), local hourly rentals with driver (4hr, 8hr, 12hr packages), and luxury Tempo Traveller rentals for group travel."
+  },
+  {
+    q: "Are expressway tolls and taxes included in the cab fare?",
+    a: "Yes. All outstation quotes provided by AJ Travels feature 100% transparent pricing where expressway toll plaza charges, state entry taxes, and driver allowances are clearly accounted for. You pay only the agreed quote with zero surprise surcharges."
+  },
+  {
+    q: "How can I book a car on rent in Pune with driver?",
+    a: "You can calculate fares and book instantly online through our Fare Calculator, or reach our 24/7 travel desk on WhatsApp or call at +91 91561 83915. Share your pickup address, destination, date, and preferred vehicle to receive confirmed pricing."
+  },
+  {
+    q: "Which destinations do you serve from Pune?",
+    a: "We operate intercity cabs and tour packages from Pune to all major Maharashtra destinations including Mumbai (all localities, BKC, South Mumbai), Chhatrapati Shivaji Maharaj International Airport (BOM), Mahabaleshwar, Panchgani, Lonavala, Khandala, Shirdi, Shani Shingnapur, Nashik, Trimbakeshwar, Alibaug, Lavasa, and Goa."
+  },
+  {
+    q: "Do you offer flight-tracked airport pickups and drop-offs?",
+    a: "Yes. We operate 24/7 airport taxi transfers to and from Pune Airport (PNQ) and Mumbai International Airport (BOM T1 & T2). Our operations desk tracks inbound flight statuses to ensure your chauffeur is waiting punctually at the arrival terminal even if your flight is delayed."
+  },
+  {
+    q: "Can I hire a 13-seater, 17-seater, or 20-seater Tempo Traveller on rent in Pune?",
+    a: "Yes. We provide 13-seater, 17-seater, and 20-seater luxury Force Tempo Travellers on rent in Pune and PCMC. Equipped with pushback reclining seats, ducted AC, and generous luggage space, they are ideal for weddings, family vacations, corporate offsites, and pilgrimage tours."
+  },
+  {
+    q: "Do you provide car rental with driver for local Pune city travel?",
+    a: "Yes. We offer local hourly rental packages in Pune including 4 Hours / 40 KM, 8 Hours / 80 KM, and 12 Hours / 120 KM. Perfect for city business meetings, medical visits, shopping tours, and local sightseeing across Pune and PCMC."
+  },
+  {
+    q: "How experienced and verified are your chauffeurs?",
+    a: "All AJ Travels chauffeurs are police-verified, background-checked highway specialists. They possess extensive driving experience across Maharashtra highways, mountain ghats, and monsoon conditions, and are trained to provide polite, professional customer service."
+  }
+];
+
+function injectFaqToJsonLd(html) {
+  const match = html.match(/<script\s+type=["']application\/ld\+json["']>([\s\S]*?)<\/script>/i);
+  if (!match) return html;
+  try {
+    const json = JSON.parse(match[1]);
+    if (json && Array.isArray(json['@graph'])) {
+      const alreadyHas = json['@graph'].some(node => node['@type'] === 'FAQPage');
+      if (!alreadyHas) {
+        json['@graph'].push({
+          '@type': 'FAQPage',
+          '@id': 'https://ajtravelspune.com/#faq',
+          'mainEntity': HOMEPAGE_FAQS.map(faq => ({
+            '@type': 'Question',
+            'name': faq.q,
+            'acceptedAnswer': {
+              '@type': 'Answer',
+              'text': faq.a
+            }
+          }))
+        });
+        return html.replace(match[0], `<script type="application/ld+json">\n${JSON.stringify(json, null, 2)}\n    </script>`);
+      }
+    }
+  } catch (e) {
+    // leave as-is on parse error
+  }
+  return html;
 }
 
 function removeFaqFromJsonLd(html) {
@@ -304,59 +390,72 @@ function seoHydrate() {
     // PUBLIC ROUTES: look up DB metadata and inject into HTML.
     // -----------------------------------------------------------------------
     const pageKey = publicPageKey;
-    let canonicalUrl = null;
+    const fallbackMeta = PUBLIC_PAGES_FALLBACK[pageKey];
+    let meta = null;
 
-    try {
-      const meta = await prisma.seoMeta.findUnique({ where: { pageKey } });
-
-      // Derive a page-specific canonical even when the DB field is null.
-      canonicalUrl = deriveCanonical(meta, req.path);
-
-      if (meta) {
-        // ---- Title ----
-        if (meta.seoTitle) {
-          html = replaceTitle(html, meta.seoTitle);
+    const cachedEntry = metaCache.get(pageKey);
+    if (cachedEntry && (Date.now() - cachedEntry.time < 60000)) {
+      meta = cachedEntry.meta;
+    } else {
+      try {
+        meta = await prisma.seoMeta.findUnique({ where: { pageKey } });
+        if (meta) {
+          metaCache.set(pageKey, { meta, time: Date.now() });
         }
+      } catch (err) {
+        // DB connection pool timeout or offline DB — gracefully fall back to default metadata
+        meta = fallbackMeta;
+      }
+    }
+    if (!meta) {
+      meta = fallbackMeta;
+    }
 
-        // ---- Meta description ----
-        if (meta.metaDescription) {
-          html = replaceMetaByName(html, 'description', meta.metaDescription);
-        }
+    // Derive a page-specific canonical even when the DB field is null.
+    const canonicalUrl = deriveCanonical(meta, req.path);
 
-        // ---- Robots directive ----
-        const robotsDirective = meta.isIndexable !== false ? 'index, follow' : 'noindex, nofollow';
-        html = replaceMetaByName(html, 'robots', robotsDirective);
-
-        // ---- Open Graph title + description ----
-        const ogTitle = meta.ogTitle || meta.seoTitle;
-        if (ogTitle) html = replaceMetaByProperty(html, 'og:title', ogTitle);
-
-        const ogDesc = meta.ogDescription || meta.metaDescription;
-        if (ogDesc) html = replaceMetaByProperty(html, 'og:description', ogDesc);
-
-        // ---- Twitter / X card ----
-        const twTitle = meta.ogTitle || meta.seoTitle;
-        if (twTitle) html = replaceMetaByProperty(html, 'twitter:title', twTitle);
-
-        const twDesc = meta.ogDescription || meta.metaDescription;
-        if (twDesc) html = replaceMetaByProperty(html, 'twitter:description', twDesc);
+    if (meta) {
+      // ---- Title ----
+      if (meta.seoTitle) {
+        html = replaceTitle(html, meta.seoTitle);
       }
 
-      // ---- Canonical + social URLs (always page-specific when domain known) ----
-      if (canonicalUrl) {
-        html = replaceCanonical(html, canonicalUrl);
-        html = replaceMetaByProperty(html, 'og:url', canonicalUrl);
-        html = replaceMetaByProperty(html, 'twitter:url', canonicalUrl);
+      // ---- Meta description ----
+      if (meta.metaDescription) {
+        html = replaceMetaByName(html, 'description', meta.metaDescription);
       }
 
-      // ---- Structured Data validation: FAQPage only on homepage where FAQs are visible ----
-      if (pageKey !== 'home') {
-        html = removeFaqFromJsonLd(html);
-      }
+      // ---- Robots directive ----
+      const robotsDirective = meta.isIndexable !== false ? 'index, follow' : 'noindex, nofollow';
+      html = replaceMetaByName(html, 'robots', robotsDirective);
 
-    } catch (err) {
-      // DB error — serve unmodified template; do not expose error details
-      console.error('[seoHydrate] DB error for', pageKey, ':', err.message);
+      // ---- Open Graph title + description ----
+      const ogTitle = meta.ogTitle || meta.seoTitle;
+      if (ogTitle) html = replaceMetaByProperty(html, 'og:title', ogTitle);
+
+      const ogDesc = meta.ogDescription || meta.metaDescription;
+      if (ogDesc) html = replaceMetaByProperty(html, 'og:description', ogDesc);
+
+      // ---- Twitter / X card ----
+      const twTitle = meta.ogTitle || meta.seoTitle;
+      if (twTitle) html = replaceMetaByProperty(html, 'twitter:title', twTitle);
+
+      const twDesc = meta.ogDescription || meta.metaDescription;
+      if (twDesc) html = replaceMetaByProperty(html, 'twitter:description', twDesc);
+    }
+
+    // ---- Canonical + social URLs (always page-specific when domain known) ----
+    if (canonicalUrl) {
+      html = replaceCanonical(html, canonicalUrl);
+      html = replaceMetaByProperty(html, 'og:url', canonicalUrl);
+      html = replaceMetaByProperty(html, 'twitter:url', canonicalUrl);
+    }
+
+    // ---- Structured Data validation: FAQPage only on homepage where FAQs are visible ----
+    if (pageKey === 'home') {
+      html = injectFaqToJsonLd(html);
+    } else {
+      html = removeFaqFromJsonLd(html);
     }
 
     // no-store: prevents CDN / proxy / browser from caching page-specific HTML

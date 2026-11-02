@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Search,
   Globe,
@@ -31,6 +31,9 @@ import {
   LogOut,
   Key,
   HelpCircle,
+  ExternalLink,
+  X,
+  Wrench,
 } from 'lucide-react';
 import { seoApi, gscApi } from '../../services/api';
 import { API_BASE_URL } from '../../services/api';
@@ -488,6 +491,355 @@ function SocialCardPreview({ title, description, url, image, domain }) {
 // ---------------------------------------------------------------------------
 // Page Metadata Editor (Existing Working Editor preserved)
 // ---------------------------------------------------------------------------
+
+// ===========================================================================
+// Page-level SEO Evaluation & Quick Fix Engine (Zero-Fabrication, Evidence-Based)
+// ===========================================================================
+
+export function evaluatePageSeo(page, auditFinding = null) {
+  let score = 100;
+  const issues = [];
+  const passed = [];
+
+  const title = (page.seoTitle || '').trim();
+  const desc = (page.metaDescription || '').trim();
+  const canonical = (page.canonicalUrl || '').trim();
+
+  // 1. SEO Title checks (30 pts max)
+  if (!title) {
+    score -= 30;
+    issues.push({
+      id: 'missing_title',
+      severity: 'ERROR',
+      label: 'Missing SEO title',
+      desc: 'No <title> tag is configured for this page.',
+      rec: 'Add a distinct, compelling SEO title between 30 and 60 characters.'
+    });
+  } else if (title.length < 30) {
+    score -= 10;
+    issues.push({
+      id: 'short_title',
+      severity: 'WARN',
+      label: `SEO title too short (${title.length}c)`,
+      desc: `Title is ${title.length} characters (recommended 30–65).`,
+      rec: 'Expand the title to include primary destination, vehicle, and brand terms.'
+    });
+  } else if (title.length > 65) {
+    score -= 10;
+    issues.push({
+      id: 'long_title',
+      severity: 'WARN',
+      label: `SEO title length (${title.length}c)`,
+      desc: `Title is ${title.length} characters and may be truncated on search engine result pages.`,
+      rec: 'Shorten the title to 60–65 characters or fewer for optimal SERP display.'
+    });
+  } else {
+    passed.push('SEO title length optimal');
+  }
+
+  // 2. Meta Description checks (30 pts max)
+  if (!desc) {
+    score -= 30;
+    issues.push({
+      id: 'missing_desc',
+      severity: 'ERROR',
+      label: 'Missing meta description',
+      desc: 'No meta description is configured for this page snippet.',
+      rec: 'Write a persuasive summary between 70 and 160 characters describing the service.'
+    });
+  } else if (desc.length < 70) {
+    score -= 10;
+    issues.push({
+      id: 'short_desc',
+      severity: 'WARN',
+      label: `Meta description short (${desc.length}c)`,
+      desc: `Meta description is ${desc.length} characters (recommended 70–160).`,
+      rec: 'Add verified details about vehicle amenities, pickup zones, or all-inclusive tolls.'
+    });
+  } else if (desc.length > 160) {
+    score -= 10;
+    issues.push({
+      id: 'long_desc',
+      severity: 'WARN',
+      label: `Meta description length (${desc.length}c)`,
+      desc: `Meta description is ${desc.length} characters and may be cut off in search snippets.`,
+      rec: 'Trim the description to under 160 characters to ensure full readability.'
+    });
+  } else {
+    passed.push('Meta description length optimal');
+  }
+
+  // 3. Canonical URL check (20 pts max)
+  if (!canonical) {
+    score -= 20;
+    issues.push({
+      id: 'missing_canonical',
+      severity: 'WARN',
+      label: 'Missing canonical URL',
+      desc: 'Canonical tag is not specified for this public route.',
+      rec: 'Ensure a valid self-referencing canonical URL is defined.'
+    });
+  } else {
+    passed.push('Canonical URL present and configured');
+  }
+
+  // 4. Indexing directive check (20 pts max)
+  if (page.isIndexable === false) {
+    score -= 20;
+    issues.push({
+      id: 'noindex_directive',
+      severity: 'INFO',
+      label: 'Directive: noindex',
+      desc: 'Page is excluded from search engine indexation by directive.',
+      rec: 'Remove noindex directive if this page should be discoverable on Google.'
+    });
+  } else {
+    passed.push('Directive: index, follow');
+  }
+
+  // Incorporate deeper audit findings if available
+  if (auditFinding && typeof auditFinding.score === 'number' && auditFinding.score < score) {
+    score = auditFinding.score;
+  }
+
+  const finalScore = Math.max(0, Math.min(100, score));
+  let status = 'Good';
+  let statusColor = { bg: '#DCFCE7', text: '#15803D', border: '#BBF7D0' };
+
+  if (finalScore < 50) {
+    status = 'Poor';
+    statusColor = { bg: '#FEE2E2', text: '#B91C1C', border: '#FECACA' };
+  } else if (finalScore < 80 || issues.length > 0) {
+    status = 'Needs attention';
+    statusColor = { bg: '#FEF3C7', text: '#B45309', border: '#FDE68A' };
+  }
+
+  const primaryIssue = issues[0] || (finalScore >= 80 ? { label: 'Optimal checklist standing', desc: 'All evaluated metadata rules passed.' } : null);
+
+  return {
+    score: finalScore,
+    status,
+    statusColor,
+    issues,
+    primaryIssue: primaryIssue?.label || 'Healthy',
+    primaryIssueDetail: primaryIssue,
+    passed,
+    hasActionableIssues: issues.length > 0,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Quick SEO Fix Modal (Direct In-Dashboard Fix Panel)
+// ---------------------------------------------------------------------------
+function QuickFixModal({ page, onClose, onSaved }) {
+  if (!page) return null;
+
+  const evaluation = evaluatePageSeo(page);
+
+  const [title, setTitle] = useState(page.seoTitle || '');
+  const [desc, setDesc]   = useState(page.metaDescription || '');
+  const [saving, setSaving] = useState(false);
+  const [savedSuccess, setSavedSuccess] = useState(false);
+  const [errorMsg, setErrorMsg] = useState(null);
+
+  // Recalculate preview score in real time as user edits
+  const previewEval = evaluatePageSeo({
+    ...page,
+    seoTitle: title,
+    metaDescription: desc,
+  });
+
+  const handleSave = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    setErrorMsg(null);
+    try {
+      const res = await seoApi.updatePage(page.pageKey, {
+        seoTitle: title,
+        metaDescription: desc,
+        canonicalUrl: page.canonicalUrl,
+        isIndexable: page.isIndexable,
+      });
+
+      const updated = {
+        ...page,
+        seoTitle: title,
+        metaDescription: desc,
+        ...(res.data?.data || {}),
+      };
+
+      setSavedSuccess(true);
+      setTimeout(() => {
+        if (onSaved) onSaved(updated);
+        onClose();
+      }, 700);
+    } catch (err) {
+      setErrorMsg(err.response?.data?.message || err.message || 'Failed to save changes.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.6)',
+      backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+      zIndex: 9999, padding: '1rem',
+    }}>
+      <div style={{
+        background: '#FFFFFF', borderRadius: '16px', width: '100%', maxWidth: '640px',
+        maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+        border: '1px solid #E2E8F0', padding: '1.75rem', display: 'flex', flexDirection: 'column', gap: '1.25rem'
+      }}>
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', borderBottom: '1px solid #F1F5F9', paddingBottom: '1rem' }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+              <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#0284C7', background: '#EFF6FF', padding: '0.15rem 0.5rem', borderRadius: '4px' }}>
+                QUICK SEO FIX
+              </span>
+              <span style={{
+                fontSize: '0.7rem', fontWeight: 800, padding: '0.15rem 0.5rem', borderRadius: '100px',
+                background: previewEval.statusColor.bg, color: previewEval.statusColor.text, border: `1px solid ${previewEval.statusColor.border}`
+              }}>
+                Score: {previewEval.score}/100 ({previewEval.status})
+              </span>
+            </div>
+            <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 800, color: '#0F172A' }}>
+              {page.pageLabel}
+            </h3>
+            <code style={{ fontSize: '0.75rem', color: '#64748B', background: '#F8FAFC', padding: '0.1rem 0.4rem', borderRadius: '4px' }}>
+              {page.pageUrl}
+            </code>
+          </div>
+          <button
+            onClick={onClose}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94A3B8', padding: '0.25rem' }}
+            title="Cancel and close"
+          >
+            <X size={20} />
+          </button>
+        </div>
+
+        {/* Issue & Recommended Correction Callout */}
+        {evaluation.issues.length > 0 ? (
+          <div style={{
+            background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: '10px',
+            padding: '1rem 1.15rem', display: 'flex', flexDirection: 'column', gap: '0.45rem'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#B45309', fontWeight: 700, fontSize: '0.82rem' }}>
+              <AlertTriangle size={15} />
+              <span>Identified Issue: {evaluation.primaryIssueDetail?.label}</span>
+            </div>
+            <p style={{ margin: 0, fontSize: '0.78rem', color: '#78350F', lineHeight: 1.5 }}>
+              {evaluation.primaryIssueDetail?.desc}
+            </p>
+            <div style={{ marginTop: '0.25rem', fontSize: '0.76rem', color: '#15803D', fontWeight: 600, background: '#F0FDF4', padding: '0.45rem 0.65rem', borderRadius: '6px', border: '1px solid #BBF7D0' }}>
+              💡 <strong>Recommended Correction:</strong> {evaluation.primaryIssueDetail?.rec}
+            </div>
+          </div>
+        ) : (
+          <div style={{
+            background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: '10px',
+            padding: '0.85rem 1.15rem', display: 'flex', alignItems: 'center', gap: '0.5rem',
+            color: '#15803D', fontSize: '0.8rem', fontWeight: 700
+          }}>
+            <CheckCircle2 size={16} /> All evaluated metadata checks are in optimal standing (Score: {evaluation.score}/100).
+          </div>
+        )}
+
+        {/* Edit Form with Real Backend Persistence */}
+        <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <div style={{ background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: '8px', padding: '0.65rem 0.85rem', fontSize: '0.74rem', color: '#166534' }}>
+            ✓ <strong>Persistent Edit:</strong> Edits to title and meta description save directly to the SEO database and hydrate live server responses immediately.
+          </div>
+
+          {/* Title Field */}
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.35rem' }}>
+              <label style={{ fontSize: '0.78rem', fontWeight: 700, color: '#334155' }}>SEO Title Tag</label>
+              <span style={{ fontSize: '0.72rem', fontWeight: 700, color: title.length >= 30 && title.length <= 65 ? '#16A34A' : '#D97706' }}>
+                {title.length} / 65 chars ({title.length >= 30 && title.length <= 65 ? 'Optimal' : (title.length < 30 ? 'Short' : 'Long')})
+              </span>
+            </div>
+            <input
+              type="text"
+              value={title}
+              onChange={e => setTitle(e.target.value)}
+              placeholder="Enter compelling SEO title..."
+              style={{
+                width: '100%', padding: '0.6rem 0.75rem', borderRadius: '8px',
+                border: '1px solid #CBD5E1', fontSize: '0.82rem', color: '#0F172A',
+                outline: 'none', boxSizing: 'border-box',
+              }}
+            />
+          </div>
+
+          {/* Meta Description Field */}
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.35rem' }}>
+              <label style={{ fontSize: '0.78rem', fontWeight: 700, color: '#334155' }}>Meta Description</label>
+              <span style={{ fontSize: '0.72rem', fontWeight: 700, color: desc.length >= 70 && desc.length <= 160 ? '#16A34A' : '#D97706' }}>
+                {desc.length} / 160 chars ({desc.length >= 70 && desc.length <= 160 ? 'Optimal' : (desc.length < 70 ? 'Short' : 'Long')})
+              </span>
+            </div>
+            <textarea
+              rows={3}
+              value={desc}
+              onChange={e => setDesc(e.target.value)}
+              placeholder="Enter accurate meta description..."
+              style={{
+                width: '100%', padding: '0.6rem 0.75rem', borderRadius: '8px',
+                border: '1px solid #CBD5E1', fontSize: '0.82rem', color: '#0F172A',
+                outline: 'none', resize: 'vertical', boxSizing: 'border-box',
+              }}
+            />
+          </div>
+
+          {errorMsg && (
+            <div style={{ background: '#FEE2E2', color: '#B91C1C', padding: '0.6rem 0.75rem', borderRadius: '6px', fontSize: '0.75rem' }}>
+              {errorMsg}
+            </div>
+          )}
+
+          {savedSuccess && (
+            <div style={{ background: '#DCFCE7', color: '#15803D', padding: '0.6rem 0.75rem', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 700 }}>
+              ✓ SEO metadata successfully saved and score recalculated!
+            </div>
+          )}
+
+          {/* Actions */}
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.65rem', borderTop: '1px solid #F1F5F9', paddingTop: '1rem' }}>
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={saving}
+              style={{
+                padding: '0.5rem 1rem', borderRadius: '8px', border: '1px solid #CBD5E1',
+                background: '#FFFFFF', color: '#475569', fontSize: '0.8rem', fontWeight: 700,
+                cursor: 'pointer',
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={saving}
+              className="admin-btn-primary"
+              style={{
+                padding: '0.5rem 1.25rem', borderRadius: '8px', fontSize: '0.8rem',
+                display: 'inline-flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer',
+              }}
+            >
+              {saving ? 'Saving...' : 'Save & Recalculate'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 function PageEditor({ page, onBack, onSaved, domain = 'https://ajtravelspune.com' }) {
   const [form, setForm] = useState({
     seoTitle:        page.seoTitle        || '',
@@ -598,7 +950,7 @@ function PageEditor({ page, onBack, onSaved, domain = 'https://ajtravelspune.com
             className="admin-input"
             value={form.seoTitle}
             onChange={e => handleChange('seoTitle', e.target.value)}
-            placeholder="e.g. Pune to Mumbai Cab | AJ Tours & Travels"
+            placeholder="e.g. AJ Travels — Trusted Vehicle Rental Service in Pune"
             style={{ width: '100%', boxSizing: 'border-box' }}
           />
         </div>
@@ -710,6 +1062,167 @@ function PageEditor({ page, onBack, onSaved, domain = 'https://ajtravelspune.com
           </button>
         </div>
       </form>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Static Page Metadata Viewer Modal (Safe Read-Only View for Code/Content Pages)
+// ---------------------------------------------------------------------------
+function StaticPageMetaModal({ page, onClose, domain = 'https://ajtravelspune.com' }) {
+  if (!page) return null;
+
+  const titleLen = page.seoTitle ? page.seoTitle.length : 0;
+  const descLen = page.metaDescription ? page.metaDescription.length : 0;
+  const canonical = page.canonicalUrl || `${domain}${page.pageUrl}`;
+
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 9999,
+      background: 'rgba(15, 23, 42, 0.65)', backdropFilter: 'blur(4px)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem',
+    }}>
+      <div style={{
+        background: '#FFFFFF', borderRadius: '14px', width: '100%', maxWidth: '680px',
+        maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+        border: '1px solid #E2E8F0', padding: '1.75rem', display: 'flex', flexDirection: 'column', gap: '1.25rem',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem', borderBottom: '1px solid #F1F5F9', paddingBottom: '1rem' }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+              <span style={{
+                fontSize: '0.68rem', fontWeight: 800, padding: '0.2rem 0.55rem', borderRadius: '4px',
+                background: page.metadataSource === 'STATIC_CODE' ? '#EFF6FF' : '#F1F5F9',
+                color: page.metadataSource === 'STATIC_CODE' ? '#0284C7' : '#475569',
+              }}>
+                {page.metadataSource === 'STATIC_CODE' ? 'STATIC CODE DEFINITION' : 'GENERATED CONTENT STORE'}
+              </span>
+              <span style={{ fontSize: '0.72rem', color: '#16A34A', fontWeight: 700, background: '#DCFCE7', padding: '0.15rem 0.5rem', borderRadius: '100px' }}>
+                Indexable
+              </span>
+            </div>
+            <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 800, color: '#0F172A' }}>
+              {page.pageLabel}
+            </h3>
+            <code style={{ fontSize: '0.75rem', color: '#64748B' }}>
+              {page.pageUrl}
+            </code>
+          </div>
+          <button
+            onClick={onClose}
+            style={{ background: '#F1F5F9', border: 'none', borderRadius: '8px', padding: '0.4rem', cursor: 'pointer', color: '#64748B' }}
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        {/* Read-Only Explanation Callout */}
+        <div style={{
+          background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '8px', padding: '0.85rem 1rem',
+          display: 'flex', alignItems: 'flex-start', gap: '0.65rem', fontSize: '0.78rem', color: '#475569',
+        }}>
+          <Info size={18} color="#0284C7" style={{ flexShrink: 0, marginTop: '0.1rem' }} />
+          <div>
+            <strong style={{ color: '#0F172A' }}>Safe Read-Only View: </strong>
+            This page is configured in application source code. Dynamic database editing requires adding a model key to the database schema and executing a migration.
+          </div>
+        </div>
+
+        {/* Details Grid */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.74rem', marginBottom: '0.25rem' }}>
+              <span style={{ fontWeight: 700, color: '#475569' }}>SEO Title Tag</span>
+              <span style={{ color: titleLen <= 65 ? '#16A34A' : '#DC2626', fontWeight: 700 }}>{titleLen} / 65 chars</span>
+            </div>
+            <div style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '6px', padding: '0.65rem 0.85rem', fontSize: '0.82rem', fontWeight: 600, color: '#0F172A' }}>
+              {page.seoTitle || '—'}
+            </div>
+          </div>
+
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.74rem', marginBottom: '0.25rem' }}>
+              <span style={{ fontWeight: 700, color: '#475569' }}>Meta Description</span>
+              <span style={{ color: descLen <= 160 ? '#16A34A' : '#DC2626', fontWeight: 700 }}>{descLen} / 160 chars</span>
+            </div>
+            <div style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '6px', padding: '0.65rem 0.85rem', fontSize: '0.8rem', color: '#334155', lineHeight: 1.5 }}>
+              {page.metaDescription || '—'}
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.85rem' }}>
+            <div>
+              <span style={{ fontSize: '0.74rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '0.25rem' }}>Canonical URL</span>
+              <div style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '6px', padding: '0.55rem 0.75rem', fontSize: '0.75rem', color: '#0284C7', wordBreak: 'break-all' }}>
+                {canonical}
+              </div>
+            </div>
+            <div>
+              <span style={{ fontSize: '0.74rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '0.25rem' }}>Robots Indexing Directive</span>
+              <div style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '6px', padding: '0.55rem 0.75rem', fontSize: '0.75rem', color: '#166534', fontWeight: 700 }}>
+                {page.indexingDirective || 'index, follow'}
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.85rem' }}>
+            <div>
+              <span style={{ fontSize: '0.74rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '0.25rem' }}>Sitemap Status</span>
+              <div style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '6px', padding: '0.55rem 0.75rem', fontSize: '0.75rem', color: '#334155' }}>
+                {page.sitemapInclusion || 'Included'}
+              </div>
+            </div>
+            <div>
+              <span style={{ fontSize: '0.74rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '0.25rem' }}>Metadata Completeness</span>
+              <div style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '6px', padding: '0.55rem 0.75rem', fontSize: '0.75rem', color: '#16A34A', fontWeight: 700 }}>
+                {page.metadataCompleteness || 'Complete'}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div style={{ borderTop: '1px solid #F1F5F9', paddingTop: '1rem', display: 'flex', justifyContent: 'flex-end', gap: '0.65rem' }}>
+          {/* Local preview — always opens on current origin, never on production */}
+          <button
+            onClick={() => window.open(window.location.origin + (page.pageUrl || '/'), '_blank')}
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: '0.35rem',
+              padding: '0.5rem 0.85rem', borderRadius: '6px', border: '1px solid #BFDBFE',
+              background: '#EFF6FF', color: '#0284C7', fontSize: '0.78rem', fontWeight: 700,
+              cursor: 'pointer',
+            }}
+            title={`Open local preview: ${window.location.origin}${page.pageUrl || '/'}`}
+          >
+            Preview Local
+          </button>
+          {/* Production URL — explicit warning before opening */}
+          <button
+            onClick={() => {
+              const prodUrl = canonical;
+              if (window.confirm(`Open production URL in a new tab?\n\n${prodUrl}\n\nNote: The production domain may redirect to an unrelated site if DNS is misconfigured.`)) {
+                window.open(prodUrl, '_blank', 'noopener,noreferrer');
+              }
+            }}
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: '0.35rem',
+              padding: '0.5rem 0.85rem', borderRadius: '6px', border: '1px solid #CBD5E1',
+              background: '#FFFFFF', color: '#334155', fontSize: '0.78rem', fontWeight: 700,
+              cursor: 'pointer',
+            }}
+            title={`Open production URL (requires confirmation): ${canonical}`}
+          >
+            <ExternalLink size={13} /> Production URL
+          </button>
+          <button
+            onClick={onClose}
+            className="admin-btn-primary"
+            style={{ fontSize: '0.78rem', padding: '0.5rem 1rem' }}
+          >
+            Close
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -2004,7 +2517,7 @@ function SeoDonutChart({ passed = 0, warnings = 0, errors = 0, score = 0 }) {
           display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
           pointerEvents: 'none',
         }}>
-          <span style={{ fontSize: '1.35rem', fontWeight: 900, color: '#0F172A', lineHeight: 1 }}>{score}</span>
+          <span style={{ fontSize: '1.35rem', fontWeight: 900, color: '#0F172A', lineHeight: 1 }}>{score !== null && score !== undefined && score !== '' ? score : '—'}</span>
           <span style={{ fontSize: '0.62rem', fontWeight: 700, color: '#64748B', textTransform: 'uppercase', marginTop: '2px' }}>/ 100</span>
         </div>
       </div>
@@ -2132,6 +2645,8 @@ function SeoOverviewView({
   const passedChecks = overview?.totalPassed ?? 0;
   const warningChecks = overview?.totalWarnings ?? 0;
   const errorChecks = overview?.totalErrors ?? 0;
+  const totalEvaluated = (passedChecks + warningChecks + errorChecks);
+  const hasRunAudit = Boolean(overview?.lastRunTimestamp && (totalEvaluated > 0 || (overview?.analyzedPagesCount || 0) > 0));
 
   // Identify pages with issues for the quick findings section
   const pagesWithIssues = overview?.pages?.filter(p => (p.counts?.errors || 0) > 0 || (p.counts?.warnings || 0) > 0) || [];
@@ -2282,8 +2797,13 @@ function SeoOverviewView({
                 Health checks breakdown (DOM, meta, canonicals &amp; headers)
               </p>
             </div>
-            <span style={{ fontSize: '0.72rem', fontWeight: 700, color: avgScore >= 80 ? '#15803D' : '#B45309', background: avgScore >= 80 ? '#DCFCE7' : '#FEF3C7', padding: '0.2rem 0.6rem', borderRadius: '100px' }}>
-              Score: {avgScore}/100
+            <span style={{
+              fontSize: '0.72rem', fontWeight: 700,
+              color: !hasRunAudit ? '#64748B' : (avgScore >= 80 ? '#15803D' : '#B45309'),
+              background: !hasRunAudit ? '#F1F5F9' : (avgScore >= 80 ? '#DCFCE7' : '#FEF3C7'),
+              padding: '0.2rem 0.6rem', borderRadius: '100px',
+            }}>
+              {!hasRunAudit ? 'Status: Not Evaluated' : `Score: ${avgScore}/100`}
             </span>
           </div>
 
@@ -2291,11 +2811,11 @@ function SeoOverviewView({
             passed={passedChecks}
             warnings={warningChecks}
             errors={errorChecks}
-            score={avgScore}
+            score={hasRunAudit ? avgScore : null}
           />
 
           <div style={{ marginTop: 'auto', paddingTop: '1.2rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid #F1F5F9', fontSize: '0.72rem', color: '#64748B' }}>
-            <span>Pass Rate: <strong style={{ color: '#16A34A' }}>{passedChecks + warningChecks + errorChecks > 0 ? Math.round((passedChecks / (passedChecks + warningChecks + errorChecks)) * 100) : 0}%</strong></span>
+            <span>Pass Rate: <strong style={{ color: hasRunAudit ? '#16A34A' : '#64748B' }}>{hasRunAudit && totalEvaluated > 0 ? Math.round((passedChecks / totalEvaluated) * 100) + '%' : '—'}</strong></span>
             <button
               onClick={() => onNavigateTab('pages')}
               style={{ background: 'transparent', border: 'none', color: '#0284C7', fontWeight: 700, fontSize: '0.72rem', cursor: 'pointer', padding: 0 }}
@@ -2317,12 +2837,29 @@ function SeoOverviewView({
               Real-time audit findings across monitored public routes
             </p>
           </div>
-          <span style={{ fontSize: '0.72rem', fontWeight: 700, color: pagesWithIssues.length === 0 ? '#15803D' : '#B45309', background: pagesWithIssues.length === 0 ? '#DCFCE7' : '#FEF3C7', padding: '0.25rem 0.65rem', borderRadius: '100px' }}>
-            {pagesWithIssues.length === 0 ? 'All Checks Passed' : `${pagesWithIssues.length} Page(s) Require Review`}
+          <span style={{
+            fontSize: '0.72rem', fontWeight: 700,
+            color: !hasRunAudit ? '#0284C7' : (pagesWithIssues.length === 0 ? '#15803D' : '#B45309'),
+            background: !hasRunAudit ? '#EFF6FF' : (pagesWithIssues.length === 0 ? '#DCFCE7' : '#FEF3C7'),
+            padding: '0.25rem 0.65rem', borderRadius: '100px',
+          }}>
+            {!hasRunAudit ? 'Pending Evaluation' : (pagesWithIssues.length === 0 ? 'All Checks Passed' : `${pagesWithIssues.length} Page(s) Require Review`)}
           </span>
         </div>
 
-        {pagesWithIssues.length === 0 ? (
+        {!hasRunAudit ? (
+          <div style={{ padding: '1.5rem', background: '#F8FAFC', borderRadius: '8px', border: '1px solid #E2E8F0', display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+            <Info size={24} color="#0284C7" style={{ flexShrink: 0 }} />
+            <div>
+              <div style={{ fontSize: '0.85rem', fontWeight: 800, color: '#0F172A' }}>
+                Evaluation Pending — Real-Time Audit Required
+              </div>
+              <div style={{ fontSize: '0.75rem', color: '#64748B', marginTop: '0.2rem' }}>
+                The SEO analyzer has not evaluated live DOM, canonical tags, or structured schema for this session. Click <strong>"Run Full SEO Audit"</strong> in the top header to run real-time checks across monitored public pages.
+              </div>
+            </div>
+          </div>
+        ) : pagesWithIssues.length === 0 ? (
           <div style={{ padding: '1.5rem', background: '#F0FDF4', borderRadius: '8px', border: '1px solid #BBF7D0', display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
             <CheckCircle2 size={24} color="#16A34A" style={{ flexShrink: 0 }} />
             <div>
@@ -2330,7 +2867,7 @@ function SeoOverviewView({
                 All Monitored Routes In Healthy Standing
               </div>
               <div style={{ fontSize: '0.75rem', color: '#15803D', marginTop: '0.2rem' }}>
-                Every public page has valid meta titles, descriptions, canonical URLs, and responsive viewport tags. No crawl blockers detected.
+                Every evaluated public page has valid meta titles, descriptions, canonical URLs, and responsive viewport tags. No crawl blockers detected ({totalEvaluated} assertions passed).
               </div>
             </div>
           </div>
@@ -2548,17 +3085,23 @@ export const AdminSeo = () => {
   const [routeInventory, setRouteInventory] = useState([]);
   const [plannedRoutes,  setPlannedRoutes]  = useState([]);
   const [overview,       setOverview]       = useState(null);
-  const [selectedPage,   setSelectedPage]   = useState(null); // pageKey for inspector
-  const [pageAnalysis,   setPageAnalysis]   = useState(null);
-  const [editingPage,    setEditingPage]    = useState(null); // page object for editor
-  const [integrations,   setIntegrations]   = useState(null);
-  const [loading,        setLoading]        = useState(true);
-  const [analyzing,      setAnalyzing]      = useState(false);
-  const [error,          setError]          = useState(null);
-  const [sandboxPageKey, setSandboxPageKey] = useState('home');
-  const [sandboxTitle,   setSandboxTitle]   = useState('');
-  const [sandboxDesc,    setSandboxDesc]    = useState('');
-  const [gscBanner,      setGscBanner]      = useState(null);
+  const [selectedPage,       setSelectedPage]       = useState(null); // pageKey for inspector
+  const [pageAnalysis,       setPageAnalysis]       = useState(null);
+  const [editingPage,        setEditingPage]        = useState(null); // page object for editor
+  const [allPublicPages,     setAllPublicPages]     = useState([]);
+  const [pageCategoryFilter, setPageCategoryFilter] = useState('ALL');
+  const [pageSearchQuery,    setPageSearchQuery]    = useState('');
+  const [viewingStaticPage,  setViewingStaticPage]  = useState(null);
+  const [quickFixPage,       setQuickFixPage]       = useState(null);
+  const [seoScoreFilter,     setSeoScoreFilter]     = useState('ALL'); // 'ALL' | 'NEEDS_ATTENTION' | 'GOOD'
+  const [integrations,       setIntegrations]       = useState(null);
+  const [loading,            setLoading]            = useState(true);
+  const [analyzing,          setAnalyzing]          = useState(false);
+  const [error,              setError]              = useState(null);
+  const [sandboxPageKey,     setSandboxPageKey]     = useState('home');
+  const [sandboxTitle,       setSandboxTitle]       = useState('');
+  const [sandboxDesc,        setSandboxDesc]        = useState('');
+  const [gscBanner,          setGscBanner]          = useState(null);
 
   const domain = overview?.siteDomain || 'https://ajtravelspune.com';
 
@@ -2596,6 +3139,7 @@ export const AdminSeo = () => {
       ]);
 
       setPages(pagesRes.data.data.pages || []);
+      setAllPublicPages(pagesRes.data.data.allPublicPages || pagesRes.data.data.pages || []);
       setRouteInventory(pagesRes.data.data.routeInventory || []);
       setPlannedRoutes(pagesRes.data.data.plannedRoutes || []);
       setOverview(overviewRes.data.data || null);
@@ -2670,6 +3214,38 @@ export const AdminSeo = () => {
     if (p) setEditingPage(p);
   };
 
+  // Real, evidence-based page-level SEO score evaluation for all catalog entries
+  const totalEvaluated = (overview?.totalPassed || 0) + (overview?.totalWarnings || 0) + (overview?.totalErrors || 0);
+  const hasRunAudit = Boolean(overview?.lastRunTimestamp && (totalEvaluated > 0 || (overview?.analyzedPagesCount || 0) > 0));
+  const catalogList = allPublicPages.length > 0 ? allPublicPages : pages;
+
+  const evaluatedCatalog = useMemo(() => {
+    return catalogList.map(p => {
+      const auditPage = overview?.pages?.find(item => item.pageKey === p.pageKey);
+      const evalResult = evaluatePageSeo(p, auditPage);
+      return {
+        ...p,
+        evalResult,
+        score: evalResult.score,
+        status: evalResult.status,
+        statusColor: evalResult.statusColor,
+        primaryIssue: evalResult.primaryIssue,
+        hasActionableIssues: evalResult.hasActionableIssues,
+      };
+    });
+  }, [catalogList, overview]);
+
+  const avgCatalogScore = evaluatedCatalog.length > 0
+    ? Math.round(evaluatedCatalog.reduce((sum, p) => sum + p.score, 0) / evaluatedCatalog.length)
+    : 0;
+
+  const goodPagesCount = evaluatedCatalog.filter(p => p.status === 'Good').length;
+  const needsAttentionCount = evaluatedCatalog.filter(p => p.status === 'Needs attention' || p.status === 'Poor').length;
+  const poorPagesCount = evaluatedCatalog.filter(p => p.status === 'Poor').length;
+
+  const avgScore = hasRunAudit ? (overview?.averageHealthScore ?? avgCatalogScore) : avgCatalogScore;
+  const avgScoreColor = getScoreColor(avgScore);
+
   if (error) {
     return (
       <div style={{ padding: '2rem' }}>
@@ -2712,8 +3288,32 @@ export const AdminSeo = () => {
     );
   }
 
-  const avgScore = overview?.averageHealthScore ?? 0;
-  const avgScoreColor = getScoreColor(avgScore);
+  const filteredCatalog = evaluatedCatalog.filter(p => {
+    // 1. Status Filter (All Pages / Needs Attention / Good)
+    if (seoScoreFilter === 'NEEDS_ATTENTION') return p.status === 'Needs attention' || p.status === 'Poor';
+    if (seoScoreFilter === 'GOOD') return p.status === 'Good';
+    return true;
+  }).filter(p => {
+    // 2. Source Category Filter
+    if (pageCategoryFilter === 'DB') return p.isDbEditable;
+    if (pageCategoryFilter === 'STATIC') return p.metadataSource === 'STATIC_CODE';
+    if (pageCategoryFilter === 'CONTENT') return p.metadataSource === 'GENERATED_CONTENT_STORE';
+    return true;
+  }).filter(p => {
+    // 3. Search query
+    if (!pageSearchQuery) return true;
+    const q = pageSearchQuery.toLowerCase();
+    return (p.pageLabel || '').toLowerCase().includes(q)
+      || (p.pageUrl || '').toLowerCase().includes(q)
+      || (p.seoTitle || '').toLowerCase().includes(q)
+      || (p.primaryIssue || '').toLowerCase().includes(q);
+  }).sort((a, b) => {
+    // When viewing Needs Attention or by default, prioritize pages with actionable issues or lower scores
+    if (seoScoreFilter === 'NEEDS_ATTENTION') {
+      return a.score - b.score;
+    }
+    return 0;
+  });
 
   return (
     <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '1rem 0 3rem' }}>
@@ -2751,7 +3351,10 @@ export const AdminSeo = () => {
           <div>
             <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#64748B' }}>Site SEO Score</div>
             <div style={{ fontSize: '1.45rem', fontWeight: 900, color: avgScoreColor.text }}>
-              {avgScore} <span style={{ fontSize: '0.8rem', color: '#94A3B8' }}>/ 100</span>
+              {avgScore !== null ? avgScore : '—'} <span style={{ fontSize: '0.8rem', color: '#94A3B8' }}>/ 100</span>
+            </div>
+            <div style={{ fontSize: '0.65rem', fontWeight: 700, color: avgScoreColor.text, marginTop: '0.1rem' }}>
+              {avgScoreColor.label}
             </div>
           </div>
         </div>
@@ -2763,31 +3366,41 @@ export const AdminSeo = () => {
           <div>
             <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#64748B' }}>Public Pages</div>
             <div style={{ fontSize: '1.45rem', fontWeight: 900, color: '#0F172A' }}>
-              {pages.length} <span style={{ fontSize: '0.75rem', color: '#16A34A', fontWeight: 700 }}>(100% Indexable)</span>
+              {catalogList.length} <span style={{ fontSize: '0.75rem', color: '#16A34A', fontWeight: 700 }}>(100% Indexable)</span>
+            </div>
+            <div style={{ fontSize: '0.65rem', fontWeight: 700, color: '#0284C7', marginTop: '0.1rem' }}>
+              {pages.length} DB Overridden • {catalogList.length - pages.length} Static/Generated
             </div>
           </div>
         </div>
 
         <div className="admin-card" style={{ padding: '1.1rem 1.25rem', display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
-          <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: '#DCFCE7', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#16A34A' }}>
+          <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: hasRunAudit ? '#DCFCE7' : '#F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'center', color: hasRunAudit ? '#16A34A' : '#64748B' }}>
             <CheckCircle2 size={22} />
           </div>
           <div>
             <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#64748B' }}>Passed Checks</div>
-            <div style={{ fontSize: '1.45rem', fontWeight: 900, color: '#16A34A' }}>
-              {overview?.totalPassed ?? '—'}
+            <div style={{ fontSize: '1.45rem', fontWeight: 900, color: hasRunAudit ? '#16A34A' : '#64748B' }}>
+              {hasRunAudit ? (overview?.totalPassed ?? '—') : '—'}
+            </div>
+            <div style={{ fontSize: '0.65rem', fontWeight: 700, color: '#64748B', marginTop: '0.1rem' }}>
+              {hasRunAudit ? `${totalEvaluated} Total Evaluated` : 'Run audit to evaluate'}
             </div>
           </div>
         </div>
 
         <div className="admin-card" style={{ padding: '1.1rem 1.25rem', display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
-          <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: (overview?.totalErrors ?? 0) > 0 ? '#FEE2E2' : '#F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'center', color: (overview?.totalErrors ?? 0) > 0 ? '#DC2626' : '#64748B' }}>
+          <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: hasRunAudit ? ((overview?.totalErrors ?? 0) > 0 ? '#FEE2E2' : '#FEF3C7') : '#F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'center', color: hasRunAudit ? ((overview?.totalErrors ?? 0) > 0 ? '#DC2626' : '#D97706') : '#64748B' }}>
             <AlertTriangle size={22} />
           </div>
           <div>
             <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#64748B' }}>Audit Issues</div>
-            <div style={{ fontSize: '1.45rem', fontWeight: 900, color: (overview?.totalErrors ?? 0) > 0 ? '#DC2626' : '#10B981' }}>
-              {overview?.totalErrors ?? 0} <span style={{ fontSize: '0.75rem', color: '#D97706', fontWeight: 700 }}>({overview?.totalWarnings ?? 0} Warn)</span>
+            <div style={{ fontSize: '1.45rem', fontWeight: 900, color: hasRunAudit ? ((overview?.totalErrors ?? 0) > 0 ? '#DC2626' : '#10B981') : '#64748B' }}>
+              {hasRunAudit ? (overview?.totalErrors ?? 0) : '—'}{' '}
+              {hasRunAudit ? <span style={{ fontSize: '0.75rem', color: '#D97706', fontWeight: 700 }}>({overview?.totalWarnings ?? 0} Warn)</span> : null}
+            </div>
+            <div style={{ fontSize: '0.65rem', fontWeight: 700, color: '#64748B', marginTop: '0.1rem' }}>
+              {hasRunAudit ? `${(overview?.totalErrors || 0) + (overview?.totalWarnings || 0)} Total Action Items` : 'Run audit to detect'}
             </div>
           </div>
         </div>
@@ -2852,7 +3465,7 @@ export const AdminSeo = () => {
       <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '1.25rem', borderBottom: '1px solid #E2E8F0', paddingBottom: '0.5rem', flexWrap: 'wrap' }}>
         {[
           { id: 'overview', label: 'Overview Dashboard', icon: BarChart3 },
-          { id: 'pages', label: `Page Metadata (${pages.length})`, icon: Globe },
+          { id: 'pages', label: `Page Metadata (${catalogList.length})`, icon: Globe },
           { id: 'previews', label: 'SERP & Social Simulator', icon: Share2 },
           { id: 'inventory', label: `Route Directory (${routeInventory.length + plannedRoutes.length})`, icon: Layers },
           { id: 'integrations', label: 'Search Console', icon: Shield },
@@ -2895,7 +3508,7 @@ export const AdminSeo = () => {
       {/* TAB 1: Page Metadata & Search Settings (Unified) */}
       {(tab === 'pages' || tab === 'analyzer') && (
         <div className="admin-card" style={{ padding: 0, overflow: 'hidden' }}>
-          <div style={{ padding: '1.1rem 1.5rem', borderBottom: '1px solid #F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
+          <div style={{ padding: '1.1rem 1.5rem', borderBottom: '1px solid #F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <Search size={16} color="#0284C7" />
               <div>
@@ -2903,78 +3516,181 @@ export const AdminSeo = () => {
                 <span style={{ fontSize: '0.74rem', color: '#64748B' }}>Live metadata synced with server-side hydration &amp; sitemap</span>
               </div>
             </div>
-            <span style={{ fontSize: '0.74rem', color: '#0284C7', fontWeight: 700, background: '#EFF6FF', padding: '0.25rem 0.65rem', borderRadius: '100px' }}>
-              {pages.length} Public Pages
-            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+              <span style={{ fontSize: '0.74rem', color: '#0284C7', fontWeight: 700, background: '#EFF6FF', padding: '0.25rem 0.65rem', borderRadius: '100px' }}>
+                {filteredCatalog.length} of {catalogList.length} Public Pages
+              </span>
+            </div>
           </div>
+
+          {/* Filter Bar & Search Input */}
+          <div style={{ padding: '0.85rem 1.5rem', background: '#F8FAFC', borderBottom: '1px solid #E2E8F0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem' }}>
+            <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
+              {[
+                { id: 'ALL', label: `All Pages (${catalogList.length})` },
+                { id: 'DB', label: `Database Overrides (${pages.length})` },
+                { id: 'STATIC', label: `Static Code (${catalogList.filter(p => p.metadataSource === 'STATIC_CODE').length})` },
+                { id: 'CONTENT', label: `Content Store (${catalogList.filter(p => p.metadataSource === 'GENERATED_CONTENT_STORE').length})` },
+              ].map(cat => (
+                <button
+                  key={cat.id}
+                  onClick={() => setPageCategoryFilter(cat.id)}
+                  style={{
+                    padding: '0.3rem 0.65rem', borderRadius: '6px', fontSize: '0.74rem', fontWeight: 700,
+                    border: '1px solid', cursor: 'pointer',
+                    background: pageCategoryFilter === cat.id ? '#0284C7' : '#FFFFFF',
+                    borderColor: pageCategoryFilter === cat.id ? '#0284C7' : '#CBD5E1',
+                    color: pageCategoryFilter === cat.id ? '#FFFFFF' : '#475569',
+                  }}
+                >
+                  {cat.label}
+                </button>
+              ))}
+            </div>
+
+            <div style={{ position: 'relative', minWidth: '240px', flex: '1 1 240px', maxWidth: '360px' }}>
+              <Search size={14} color="#94A3B8" style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)' }} />
+              <input
+                type="text"
+                value={pageSearchQuery}
+                onChange={e => setPageSearchQuery(e.target.value)}
+                placeholder="Search route name, URL path..."
+                style={{
+                  width: '100%', boxSizing: 'border-box', padding: '0.4rem 0.6rem 0.4rem 2rem',
+                  fontSize: '0.78rem', border: '1px solid #CBD5E1', borderRadius: '6px',
+                  background: '#FFFFFF', color: '#0F172A',
+                }}
+              />
+            </div>
+          </div>
+
           <div className="admin-table-container">
             <table className="admin-table">
               <thead>
                 <tr>
-                  <th>Page</th>
+                  <th>Page &amp; Source</th>
                   <th>URL Path</th>
-                  <th>Health Score</th>
+                  <th>SEO Score</th>
+                  <th>Identified Issue</th>
                   <th>SEO Title</th>
                   <th>Meta Desc</th>
-                  <th>Indexing</th>
                   <th style={{ textAlign: 'right' }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {pages.map(p => {
+                {filteredCatalog.map(p => {
                   const auditPage = overview?.pages?.find(item => item.pageKey === p.pageKey);
-                  const score = auditPage?.score ?? 95;
-                  const scoreColor = getScoreColor(score);
+                  const score = auditPage?.score;
+                  const scoreColor = score ? getScoreColor(score) : null;
 
                   return (
                     <tr key={p.pageKey}>
-                      <td style={{ fontWeight: 800, color: '#0F172A' }}>{p.pageLabel}</td>
                       <td>
-                        <code style={{ background: '#F1F5F9', padding: '0.15rem 0.4rem', borderRadius: '4px', fontSize: '0.72rem', color: '#475569' }}>
-                          {p.pageUrl}
-                        </code>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                          <span style={{ fontWeight: 800, color: '#0F172A' }}>{p.pageLabel}</span>
+                          <span style={{
+                            display: 'inline-flex', alignItems: 'center', width: 'fit-content',
+                            fontSize: '0.64rem', fontWeight: 800, padding: '0.1rem 0.45rem', borderRadius: '4px',
+                            background: p.metadataSource === 'DATABASE_OVERRIDE' ? '#FAF5FF' : (p.metadataSource === 'STATIC_CODE' ? '#EFF6FF' : '#F1F5F9'),
+                            color: p.metadataSource === 'DATABASE_OVERRIDE' ? '#7E22CE' : (p.metadataSource === 'STATIC_CODE' ? '#0284C7' : '#475569'),
+                            border: `1px solid ${p.metadataSource === 'DATABASE_OVERRIDE' ? '#E9D5FF' : (p.metadataSource === 'STATIC_CODE' ? '#BFDBFE' : '#E2E8F0')}`,
+                          }}>
+                            {p.metadataSource === 'DATABASE_OVERRIDE' ? 'DB Override' : (p.metadataSource === 'STATIC_CODE' ? 'Static Code' : 'Content Store')}
+                          </span>
+                        </div>
                       </td>
                       <td>
-                        <span style={{
-                          display: 'inline-flex', alignItems: 'center', gap: '0.3rem',
-                          fontSize: '0.7rem', fontWeight: 800, padding: '0.15rem 0.5rem',
-                          borderRadius: '100px', background: scoreColor.bg, color: scoreColor.text,
-                          border: `1px solid ${scoreColor.border}`,
-                        }}>
-                          {score >= 80 ? <CheckCircle2 size={11} /> : <AlertTriangle size={11} />}
-                          {score} / 100
-                        </span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                          <code style={{ background: '#F1F5F9', padding: '0.15rem 0.4rem', borderRadius: '4px', fontSize: '0.72rem', color: '#475569' }}>
+                            {p.pageUrl}
+                          </code>
+                          {/* Local preview icon — opens page on current dev origin */}
+                          <button
+                            onClick={() => window.open(window.location.origin + (p.pageUrl || '/'), '_blank')}
+                            title={`Preview local: ${window.location.origin}${p.pageUrl || '/'}`}
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0 2px', color: '#0284C7', display: 'inline-flex', alignItems: 'center' }}
+                          >
+                            <ExternalLink size={12} />
+                          </button>
+                        </div>
                       </td>
-                      <td>{p.seoTitle ? <StatusPill ok={true} label="Configured" /> : <StatusPill ok={false} label="Missing" />}</td>
-                      <td>{p.metaDescription ? <StatusPill ok={true} label="Configured" /> : <StatusPill ok={false} label="Missing" />}</td>
-                      <td>{p.isIndexable ? <StatusPill ok={true} label="Index, Follow" /> : <StatusPill ok={false} label="Noindex" />}</td>
+                      <td>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                          <div style={{
+                            width: '32px', height: '32px', borderRadius: '50%',
+                            background: p.statusColor?.bg || '#F0FDF4', color: p.statusColor?.text || '#166534',
+                            border: `1.5px solid ${p.statusColor?.border || '#BBF7D0'}`,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            fontSize: '0.75rem', fontWeight: 900, flexShrink: 0,
+                          }}>
+                            {p.score}
+                          </div>
+                          <span style={{ fontSize: '0.72rem', fontWeight: 700, color: p.statusColor?.text || '#166534' }}>
+                            {p.status}
+                          </span>
+                        </div>
+                      </td>
+                      <td>
+                        <div style={{ maxWidth: '240px' }}>
+                          <span style={{
+                            fontSize: '0.72rem', fontWeight: 600,
+                            color: p.hasActionableIssues ? '#B45309' : '#15803D',
+                            background: p.hasActionableIssues ? '#FFFBEB' : '#F0FDF4',
+                            border: `1px solid ${p.hasActionableIssues ? '#FDE68A' : '#BBF7D0'}`,
+                            borderRadius: '4px', padding: '0.15rem 0.45rem', display: 'inline-block',
+                          }}>
+                            {p.primaryIssue}
+                          </span>
+                        </div>
+                      </td>
+                      <td>
+                        {p.seoTitle ? (
+                          <span title={`${p.seoTitle.length} chars: "${p.seoTitle}"`}>
+                            <StatusPill ok={true} label={`Configured (${p.seoTitle.length}c)`} />
+                          </span>
+                        ) : (
+                          <StatusPill ok={false} label="Missing" />
+                        )}
+                      </td>
+                      <td>
+                        {p.metaDescription ? (
+                          <span title={`${p.metaDescription.length} chars: "${p.metaDescription}"`}>
+                            <StatusPill ok={true} label={`Configured (${p.metaDescription.length}c)`} />
+                          </span>
+                        ) : (
+                          <StatusPill ok={false} label="Missing" />
+                        )}
+                      </td>
                       <td style={{ textAlign: 'right' }}>
                         <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+                          {/* Direct Quick Fix Action */}
                           <button
-                            onClick={() => handleInspectPage(p.pageKey)}
-                            title="Inspect page audit checks"
+                            onClick={() => setQuickFixPage(p)}
+                            title="Direct Fix metadata"
                             style={{
                               display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
-                              background: '#EFF6FF', color: '#0284C7',
-                              border: '1px solid #BFDBFE', borderRadius: '6px',
+                              background: p.hasActionableIssues ? '#EFF6FF' : '#F8FAFC',
+                              color: p.hasActionableIssues ? '#0284C7' : '#475569',
+                              border: `1.5px solid ${p.hasActionableIssues ? '#BFDBFE' : '#CBD5E1'}`,
+                              borderRadius: '6px', padding: '0.35rem 0.65rem',
+                              fontSize: '0.72rem', fontWeight: 800, cursor: 'pointer',
+                            }}
+                          >
+                            <Wrench size={11} /> Fix
+                          </button>
+
+                          <button
+                            onClick={() => handleInspectPage(p.pageKey)}
+                            title="Inspect page deep audit checks"
+                            style={{
+                              display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
+                              background: '#F8FAFC', color: '#64748B',
+                              border: '1px solid #E2E8F0', borderRadius: '6px',
                               padding: '0.35rem 0.65rem', fontSize: '0.72rem', fontWeight: 700,
                               cursor: 'pointer',
                             }}
                           >
                             <Eye size={12} /> Inspect
-                          </button>
-                          <button
-                            onClick={() => handleEditSeo(p.pageKey)}
-                            title="Edit page title, description & OpenGraph"
-                            style={{
-                              display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
-                              background: '#F8FAFC', color: '#334155',
-                              border: '1px solid #CBD5E1', borderRadius: '6px',
-                              padding: '0.35rem 0.65rem', fontSize: '0.72rem', fontWeight: 700,
-                              cursor: 'pointer',
-                            }}
-                          >
-                            <Edit3 size={12} /> Edit Metadata
                           </button>
                         </div>
                       </td>
@@ -3338,6 +4054,28 @@ export const AdminSeo = () => {
               setEditingPage(p);
               setTab('pages');
             }
+          }}
+        />
+      )}
+
+      {/* Modal for viewing static metadata */}
+      {viewingStaticPage && (
+        <StaticPageMetaModal
+          page={viewingStaticPage}
+          domain={domain}
+          onClose={() => setViewingStaticPage(null)}
+        />
+      )}
+
+      {/* Quick SEO Fix Modal (Direct In-Dashboard Fix Panel) */}
+      {quickFixPage && (
+        <QuickFixModal
+          page={quickFixPage}
+          onClose={() => setQuickFixPage(null)}
+          onSaved={(updated) => {
+            setPages(prev => prev.map(p => p.pageKey === updated.pageKey ? { ...p, ...updated } : p));
+            setAllPublicPages(prev => prev.map(p => p.pageKey === updated.pageKey ? { ...p, ...updated } : p));
+            setQuickFixPage(null);
           }}
         />
       )}

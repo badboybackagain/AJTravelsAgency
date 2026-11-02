@@ -45,6 +45,19 @@ export const AdminDashboard = ({ onLogout }) => {
   const [loadingDashboard, setLoadingDashboard] = useState(false);
   const [isQuickCreateOpen, setIsQuickCreateOpen] = useState(false);
 
+  useEffect(() => {
+    const tabTitles = {
+      dashboard: 'Admin Dashboard | AJ Travels',
+      fares: 'Intercity Fares | AJ Travels Admin',
+      local: 'Local Packages | AJ Travels Admin',
+      bookings: 'Bookings | AJ Travels Admin',
+      enquiries: 'Enquiries | AJ Travels Admin',
+      whatsapp: 'WhatsApp Settings | AJ Travels Admin',
+      seo: 'SEO Management | AJ Travels Admin',
+    };
+    document.title = tabTitles[activeTab] || 'AJ Travels — Admin Control Panel';
+  }, [activeTab]);
+
   const handleTabChange = (tab) => {
     setActiveTab(tab);
     setVisitedTabs((prev) => {
@@ -54,7 +67,7 @@ export const AdminDashboard = ({ onLogout }) => {
     });
   };
 
-  const adminEmail = localStorage.getItem('adminEmail') || 'admin@punemumbaitravels.in';
+  const adminEmail = localStorage.getItem('adminEmail') || 'admin@ajtravelspune.com';
 
   const loadDashboardData = async () => {
     setLoadingDashboard(true);
@@ -329,7 +342,7 @@ export const AdminDashboard = ({ onLogout }) => {
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.4rem' }}>
                     <Sparkles size={18} color="#BAE6FD" />
                     <h2 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#FFFFFF', margin: 0 }}>
-                      Pune ↔ Mumbai Travels Fare Control
+                      AJ Travels — Fares & Vehicle Rental Control
                     </h2>
                   </div>
                   <p style={{ fontSize: '0.82rem', color: '#E0F2FE', margin: 0 }}>

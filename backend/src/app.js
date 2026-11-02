@@ -156,11 +156,54 @@ app.get('/api/seo/public', getPublicPages);
 //    which would bypass seoHydrate.  The hydrate middleware handles / explicitly.
 app.use(express.static(path.join(__dirname, '../../travel-agency/dist'), { index: false }));
 
-// Load dist/index.html once for the 404 SPA fallback.
-// seoHydrate reads its own copy; this is only used for unknown-path responses.
+// Load and prepare dist/index.html for the 404 SPA fallback.
+// Ensures unknown routes returning HTTP 404 do not inherit the homepage canonical,
+// social URLs, or index directives, while still serving the SPA for client-side routing.
 const DIST_HTML_PATH = path.join(__dirname, '../../travel-agency/dist/index.html');
-let htmlTemplate = null;
-try { htmlTemplate = fs.readFileSync(DIST_HTML_PATH, 'utf8'); } catch (_e) { /* build not ready */ }
+let html404Cache  = null;
+let html404Mtime  = 0;
+
+function get404Html() {
+  try {
+    const stat = fs.statSync(DIST_HTML_PATH);
+    if (stat.mtimeMs !== html404Mtime || !html404Cache) {
+      let html = fs.readFileSync(DIST_HTML_PATH, 'utf8');
+
+      // 1. Set clear 404 page title (avoids homepage title)
+      html = html.replace(/<title>[^<]*<\/title>/i, '<title>Page Not Found | AJ Travels</title>');
+      html = html.replace(
+        /(<meta\s[^>]*name=["']title["'][^>]*content=)["'][^"']*["']/i,
+        '$1"Page Not Found | AJ Travels"'
+      );
+
+      // 2. Set robots directive to noindex, follow without duplicating tags
+      const robotsRe = /(<meta\s[^>]*name=["']robots["'][^>]*content=)["'][^"']*["']/i;
+      const robotsRe2 = /(<meta\s[^>]*content=)["'][^"']*["']([^>]*name=["']robots["'])/i;
+      if (robotsRe.test(html)) {
+        html = html.replace(robotsRe, '$1"noindex, follow"');
+      } else if (robotsRe2.test(html)) {
+        html = html.replace(robotsRe2, '$1"noindex, follow"$2');
+      } else {
+        html = html.replace('</head>', '  <meta name="robots" content="noindex, follow" />\n  </head>');
+      }
+
+      // 3. Remove homepage canonical link tag completely
+      html = html
+        .replace(/<link\s+[^>]*rel=["']canonical["'][^>]*\/?>\s*/gi, '')
+        .replace(/<link\s+[^>]*href=[^>]*rel=["']canonical["'][^>]*\/?>\s*/gi, '');
+
+      // 4. Remove social og:url and twitter:url pointing to homepage
+      html = html.replace(/<meta\s+[^>]*property=["']og:url["'][^>]*\/?>\s*/gi, '');
+      html = html.replace(/<meta\s+[^>]*property=["']twitter:url["'][^>]*\/?>\s*/gi, '');
+
+      html404Cache = html;
+      html404Mtime = stat.mtimeMs;
+    }
+    return html404Cache;
+  } catch (_e) {
+    return null;
+  }
+}
 
 // 2. For the 3 known public SPA routes, inject DB-sourced SEO metadata
 //    into dist/index.html and return the hydrated HTML.
@@ -181,10 +224,13 @@ app.use((req, res) => {
   // Non-API browser paths (e.g. /pune-to-mumbai-taxi, /about) → serve SPA
   // with HTTP 404 so crawlers correctly see "not found" while React Router
   // renders the NotFoundPage component client-side.
-  if (req.method === 'GET' && htmlTemplate) {
-    return res.status(404)
-      .set({ 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' })
-      .send(htmlTemplate);
+  if (req.method === 'GET') {
+    const html404 = get404Html();
+    if (html404) {
+      return res.status(404)
+        .set({ 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' })
+        .send(html404);
+    }
   }
 
   // Anything else (POST/PUT/DELETE to unknown paths)

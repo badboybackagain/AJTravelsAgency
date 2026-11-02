@@ -262,6 +262,11 @@ export const BookingPage = () => {
       return;
     }
 
+    if (!selectedVehicle?.vehicleId && !vehicleId) {
+      setSubmitError('Please select a vehicle and route via the Fare Calculator first before confirming your booking.');
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -458,6 +463,47 @@ export const BookingPage = () => {
                 <div className="booking-notice-badge" style={{ backgroundColor: '#ECFDF5', border: '1px solid #A7F3D0', color: '#065F46', padding: '0.5rem 0.85rem', borderRadius: '9px', fontSize: '0.78rem', fontWeight: 700, marginBottom: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
                   <CheckCircle2 size={15} color="#10B981" />
                   <span>{otpNotice}</span>
+                </div>
+              )}
+
+              {!selectedVehicle && !recalculatingQuote && (
+                <div style={{
+                  backgroundColor: '#EFF6FF',
+                  border: '1.5px solid #BFDBFE',
+                  borderRadius: '10px',
+                  padding: '0.85rem 1rem',
+                  marginBottom: '1.1rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: '0.75rem',
+                  flexWrap: 'wrap'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <Car size={18} color="#2563EB" style={{ flexShrink: 0 }} />
+                    <span style={{ fontSize: '0.78rem', fontWeight: 600, color: '#1E40AF' }}>
+                      Select your pickup & cab model in our Fare Calculator for automatic rate calculation.
+                    </span>
+                  </div>
+                  <Link
+                    to="/fare"
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.35rem',
+                      padding: '0.4rem 0.85rem',
+                      background: '#2563EB',
+                      color: '#FFFFFF',
+                      fontSize: '0.74rem',
+                      fontWeight: 800,
+                      borderRadius: '6px',
+                      textDecoration: 'none',
+                      whiteSpace: 'nowrap'
+                    }}
+                  >
+                    <span>Choose Cab & Fare</span>
+                    <ArrowRight size={13} />
+                  </Link>
                 </div>
               )}
 
@@ -800,13 +846,19 @@ export const BookingPage = () => {
                 {/* Submit Action */}
                 <button
                   type="submit"
-                  disabled={recalculatingQuote || isSubmitting}
+                  disabled={recalculatingQuote || isSubmitting || (!selectedVehicle && !vehicleId)}
                   className="booking-confirm-btn"
+                  style={(!selectedVehicle && !vehicleId) ? { opacity: 0.7, cursor: 'not-allowed' } : {}}
                 >
                   {isSubmitting ? (
                     <>
                       <Loader2 size={16} className="animate-spin" />
                       <span>CONFIRMING YOUR BOOKING...</span>
+                    </>
+                  ) : !selectedVehicle && !vehicleId ? (
+                    <>
+                      <AlertCircle size={16} />
+                      <span>SELECT CAB IN FARE CALCULATOR TO BOOK</span>
                     </>
                   ) : (
                     <>
@@ -831,7 +883,7 @@ export const BookingPage = () => {
               </div>
 
               {/* Vehicle Mini Card */}
-              {selectedVehicle && (
+              {selectedVehicle ? (
                 <div className="booking-vehicle-compact-card">
                   <img
                     src={
@@ -854,6 +906,42 @@ export const BookingPage = () => {
                       <span>•</span>
                       <span style={{ color: '#059669', fontWeight: 600 }}>{fuelType}</span>
                     </div>
+                  </div>
+                </div>
+              ) : (
+                <div style={{
+                  padding: '0.85rem 1rem',
+                  backgroundColor: '#FFFBEB',
+                  border: '1.5px solid #FCD34D',
+                  borderRadius: '10px',
+                  marginBottom: '1rem',
+                  display: 'flex',
+                  gap: '0.65rem',
+                  alignItems: 'flex-start'
+                }}>
+                  <AlertCircle size={18} color="#D97706" style={{ flexShrink: 0, marginTop: '2px' }} />
+                  <div>
+                    <div style={{ fontWeight: 800, fontSize: '0.82rem', color: '#92400E', marginBottom: '0.2rem' }}>
+                      No Cab Category Selected
+                    </div>
+                    <p style={{ fontSize: '0.74rem', color: '#B45309', margin: '0 0 0.5rem 0', lineHeight: 1.4 }}>
+                      Choose your corridor route and cab model in our Fare Calculator to lock in your guaranteed all-inclusive price.
+                    </p>
+                    <Link
+                      to="/fare"
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.3rem',
+                        fontSize: '0.74rem',
+                        fontWeight: 800,
+                        color: '#1D4ED8',
+                        textDecoration: 'none'
+                      }}
+                    >
+                      <span>Open Fare Calculator</span>
+                      <ArrowRight size={13} />
+                    </Link>
                   </div>
                 </div>
               )}

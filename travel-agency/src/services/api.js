@@ -249,11 +249,11 @@ export const quoteApi = {
 };
 
 export const seoApi = {
-  getPages: () => api.get('/admin/seo/pages'),
+  getPages: () => api.get('/admin/seo/pages', { timeout: 60000 }),
   getPage: (pageKey) => api.get(`/admin/seo/pages/${pageKey}`),
   updatePage: (pageKey, data) => api.put(`/admin/seo/pages/${pageKey}`, data),
   getPublicPages: () => api.get('/seo/public'),
-  getAnalyzerOverview: () => api.get('/admin/seo/analyzer/overview'),
+  getAnalyzerOverview: () => api.get('/admin/seo/analyzer/overview', { timeout: 60000 }),
   analyzeAll: () => api.post('/admin/seo/analyzer/analyze-all'),
   analyzePage: (pageKey) => api.post('/admin/seo/analyzer/analyze-page', { pageKey }),
   getPageAnalysis: (pageKey) => api.get(`/admin/seo/analyzer/page/${pageKey}`),

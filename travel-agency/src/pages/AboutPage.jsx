@@ -137,6 +137,7 @@ export function AboutPage() {
                   src="/assets/pune-to-mumbai-premium-travel-banner.webp" 
                   alt="AJ Travels Executive Fleet" 
                   className="story-banner-img"
+                  loading="lazy"
                 />
                 <div className="story-image-overlay-box">
                   <div className="overlay-badge">

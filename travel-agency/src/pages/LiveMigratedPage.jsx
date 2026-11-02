@@ -283,6 +283,7 @@ function LiveMigratedContent({ currentSlug }) {
                   src={page.heroImg} 
                   alt={page.category === 'Bus & Coach Rentals' ? `${page.h1} - 20 to 50 Seater Luxury AC Coach Interior` : page.h1} 
                   className="article-featured-photo"
+                  loading="lazy"
                   style={{
                     objectPosition: page.category === 'Bus & Coach Rentals' ? 'center 25%' : 'center center'
                   }}

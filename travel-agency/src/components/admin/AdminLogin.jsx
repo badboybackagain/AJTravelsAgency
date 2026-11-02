@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { authApi } from '../../services/api';
 import { Lock, Mail, ShieldAlert, ArrowRight } from 'lucide-react';
 
@@ -7,6 +7,10 @@ export const AdminLogin = ({ onLoginSuccess }) => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    document.title = 'AJ Travels — Admin Login';
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -42,8 +46,8 @@ export const AdminLogin = ({ onLoginSuccess }) => {
             <ShieldAlert size={18} color="#0284C7" />
             <span>ADMINISTRATOR ACCESS</span>
           </div>
-          <h2>AJ Travel Agency</h2>
-          <p>Executive Control Panel & Fleet Management</p>
+          <h2>AJ Travels</h2>
+          <p>Trusted Vehicle Rental Service in Pune • Admin Portal</p>
         </div>
 
         {error && (

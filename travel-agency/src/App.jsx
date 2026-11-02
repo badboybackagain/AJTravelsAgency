@@ -40,6 +40,8 @@ const VehicleDetailPage = lazy(() => import('./pages/VehicleDetailPage').then(m 
 const LiveMigratedPage = lazy(() => import('./pages/LiveMigratedPage').then(m => ({ default: m.LiveMigratedPage })));
 const CustomerQuotePage = lazy(() => import('./pages/CustomerQuotePage').then(m => ({ default: m.CustomerQuotePage })));
 const SitemapPage    = lazy(() => import('./pages/SitemapPage').then(m => ({ default: m.SitemapPage })));
+const PrivacyPolicyPage = lazy(() => import('./pages/PrivacyPolicyPage').then(m => ({ default: m.PrivacyPolicyPage })));
+const TermsPage      = lazy(() => import('./pages/TermsPage').then(m => ({ default: m.TermsPage })));
 
 // Minimal loading placeholder — fully transparent to avoid flash
 const PageLoader = () => (
@@ -321,6 +323,16 @@ function App() {
           {/* Blog & Travel Guides Architecture */}
           <Route path="/blog" element={<BlogPage />} />
           <Route path="/blog/:slug" element={<BlogPostPage />} />
+
+          {/* Legal Compliance & Passenger Policy Pages */}
+          <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+          <Route path="/privacy" element={<PrivacyPolicyPage />} />
+          <Route path="/terms" element={<TermsPage />} />
+          <Route path="/terms-and-conditions" element={<TermsPage />} />
+
+          {/* High-Intent Pune <-> Mumbai Taxi Landing Pages */}
+          <Route path="/pune-to-mumbai-taxi" element={<ServiceDetailPage />} />
+          <Route path="/mumbai-to-pune-taxi" element={<ServiceDetailPage />} />
 
           {/* Specialized Services & Corridors Architecture */}
           <Route path="/services" element={<ServicesPage />} />

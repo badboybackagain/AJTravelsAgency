@@ -59,24 +59,31 @@ export const EnquiryModal = ({ isOpen, onClose, initialData = null }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (isSubmitting) return;
+
+    const cleanPhone = (formData.phone || '').replace(/\D/g, '');
+    if (cleanPhone.length !== 10) {
+      setErrorMsg('Please enter a valid 10-digit mobile number.');
+      return;
+    }
+
     setIsSubmitting(true);
     setErrorMsg('');
     try {
       await enquiryApi.create({
-        name: formData.name,
-        phone: formData.phone,
-        pickup: formData.pickup,
-        destination: formData.destination,
-        travelDate: formData.date,
+        name: formData.name.trim(),
+        phone: cleanPhone,
+        pickup: formData.pickup.trim(),
+        destination: formData.destination.trim(),
+        travelDate: formData.date || undefined,
         vehicle: formData.vehicle,
-        message: formData.message,
+        message: formData.message?.trim() || undefined,
       });
       setSubmitted(true);
     } catch (err) {
       console.error('Enquiry submission error:', err);
       setErrorMsg(
         err.response?.data?.message ||
-          'Failed to submit enquiry. Please try again or reach out directly on WhatsApp.'
+        'Failed to submit enquiry. Please try again or reach out directly on WhatsApp.'
       );
     } finally {
       setIsSubmitting(false);
@@ -232,6 +239,7 @@ export const EnquiryModal = ({ isOpen, onClose, initialData = null }) => {
                       type="tel"
                       name="phone"
                       required
+                      maxLength="10"
                       placeholder="10-digit mobile number"
                       value={formData.phone}
                       onChange={handleChange}

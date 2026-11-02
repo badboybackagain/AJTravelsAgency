@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, useLocation, Link, useNavigate } from 'react-router-dom';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
 import { EnquiryModal } from '../components/EnquiryModal';
@@ -23,11 +23,14 @@ import {
 
 export function ServiceDetailPage() {
   const { slug } = useParams();
+  const location = useLocation();
   const navigate = useNavigate();
   const [isEnquiryOpen, setIsEnquiryOpen] = useState(false);
   const [dbVehicles, setDbVehicles] = useState([]);
 
-  const service = getServiceBySlug(slug);
+  const cleanPathSlug = location.pathname.replace(/^\/|\/$/g, '').replace(/^services\//, '');
+  const activeSlug = slug || cleanPathSlug;
+  const service = getServiceBySlug(activeSlug);
 
   useEffect(() => {
     let isMounted = true;
@@ -51,14 +54,18 @@ export function ServiceDetailPage() {
   const crystaMatch = dbVehicles.find((v) => v.category === 'LUXURY' || v.category === 'INNOVA_CRYSTA');
 
   const sedanFare = sedanMatch?.startingBaseFare ? `₹${sedanMatch.startingBaseFare.toLocaleString()}` : '₹2,300';
-  const suvFare = suvMatch?.startingBaseFare ? `₹${suvMatch.startingBaseFare.toLocaleString()}` : '₹2,800';
-  const crystaFare = crystaMatch?.startingBaseFare ? `₹${crystaMatch.startingBaseFare.toLocaleString()}` : '₹4,200';
+  const suvFare = suvMatch?.startingBaseFare ? `₹${suvMatch.startingBaseFare.toLocaleString()}` : '₹3,199';
+  const crystaFare = crystaMatch?.startingBaseFare ? `₹${crystaMatch.startingBaseFare.toLocaleString()}` : '₹4,899';
+
+  const canonicalUrl = service
+    ? (service.slug.endsWith('-taxi') ? `https://ajtravelspune.com/${service.slug}/` : `https://ajtravelspune.com/services/${service.slug}`)
+    : undefined;
 
   usePageSeo(
     service ? `service_${service.slug}` : 'service_not_found',
     service ? service.metaTitle : 'Corridor Service Not Found | AJ Travels',
     service ? service.metaDesc : 'Chauffeured intercity corridor travel service from AJ Travels.',
-    service ? `https://ajtravelspune.com/services/${service.slug}` : undefined
+    canonicalUrl
   );
 
   if (!service) {
@@ -209,6 +216,20 @@ export function ServiceDetailPage() {
                     </ul>
                   </div>
                 )}
+
+                {/* Contextual Link between Taxi & Cab Service Pages */}
+                {service.contextualLink && (
+                  <div className="svc-context-link-box">
+                    <Navigation size={18} color="#2563EB" style={{ flexShrink: 0, marginTop: '2px' }} />
+                    <div>
+                      <span className="svc-context-desc">{service.contextualLink.text}</span>
+                      <Link to={service.contextualLink.url} className="svc-context-anchor">
+                        <span>{service.contextualLink.linkText}</span>
+                        <ArrowRight size={14} />
+                      </Link>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* FAQs */}
@@ -283,7 +304,7 @@ export function ServiceDetailPage() {
                   {servicesData
                     .filter(s => s.slug !== service.slug)
                     .map(s => (
-                      <Link key={s.slug} to={`/services/${s.slug}`} className="other-corridor-item">
+                      <Link key={s.slug} to={s.slug.endsWith('-taxi') ? `/${s.slug}` : `/services/${s.slug}`} className="other-corridor-item">
                         <span>{s.title}</span>
                         <ArrowRight size={14} />
                       </Link>
@@ -565,6 +586,41 @@ export function ServiceDetailPage() {
           color: #334155;
           font-size: 0.88rem;
           line-height: 1.6;
+        }
+
+        .svc-context-link-box {
+          margin-top: 1.5rem;
+          background: #EFF6FF;
+          border: 1px solid #BFDBFE;
+          border-radius: 12px;
+          padding: 1rem 1.25rem;
+          display: flex;
+          align-items: flex-start;
+          gap: 0.85rem;
+        }
+
+        .svc-context-desc {
+          display: block;
+          font-size: 0.86rem;
+          color: #1E3A8A;
+          margin-bottom: 0.35rem;
+          font-weight: 500;
+          line-height: 1.5;
+        }
+
+        .svc-context-anchor {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.35rem;
+          color: #2563EB;
+          font-weight: 700;
+          font-size: 0.88rem;
+          text-decoration: none;
+        }
+
+        .svc-context-anchor:hover {
+          color: #1D4ED8;
+          text-decoration: underline;
         }
 
         .faq-card-head {

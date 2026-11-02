@@ -49,8 +49,8 @@ const PUBLIC_PAGES = [
     pageKey:         'home',
     pageLabel:       'Home Page',
     pageUrl:         '/',
-    seoTitle:        'AJ Tours - Pune to Mumbai Cab | Best Intercity Cab Service',
-    metaDescription: 'Book reliable Pune to Mumbai cab service at affordable rates. AJ Tours & Travels offers sedan, SUV & luxury cabs with verified drivers and WhatsApp support.',
+    seoTitle:        'AJ Travels — Trusted Vehicle Rental Service in Pune | Car Rental & Cabs',
+    metaDescription: 'AJ Travels is a trusted vehicle rental service in Pune offering chauffeur-driven car rentals, intercity cabs, airport transfers, and Tempo Travellers across Maharashtra.',
     isIndexable:     true,
   },
   {
@@ -198,12 +198,295 @@ const PLANNED_ROUTES = [
   { path: '/terms', label: 'Terms & Conditions', priority: 'Medium', description: 'Booking conditions, cancellation/refund policies, toll and tax disclaimers.' },
 ];
 
+const STATIC_CODE_PAGES = [
+  {
+    pageKey: 'pune-to-mumbai-taxi',
+    pageLabel: 'Pune to Mumbai Taxi',
+    pageUrl: '/pune-to-mumbai-taxi',
+    canonicalUrl: `${SITE_DOMAIN}/pune-to-mumbai-taxi/`,
+    seoTitle: 'Pune to Mumbai Taxi Service | Best Intercity Cab Rates - AJ Travels',
+    metaDescription: 'Hire direct doorstep taxi service from Pune to Mumbai. Verified professional chauffeurs, Expressway tolls covered, clean AC sedans, SUVs & Innova Crysta.',
+    isIndexable: true,
+    indexingDirective: 'index, follow',
+    sitemapInclusion: 'Included (Priority 0.8)',
+    metadataCompleteness: 'Complete (Title, Desc, Canonical, OG)',
+    metadataSource: 'STATIC_CODE',
+    isDbEditable: false,
+  },
+  {
+    pageKey: 'mumbai-to-pune-taxi',
+    pageLabel: 'Mumbai to Pune Taxi',
+    pageUrl: '/mumbai-to-pune-taxi',
+    canonicalUrl: `${SITE_DOMAIN}/mumbai-to-pune-taxi/`,
+    seoTitle: 'Mumbai to Pune Taxi Service | Airport & City Drop Cabs - AJ Travels',
+    metaDescription: 'Direct taxi service from Mumbai to Pune. Airport pickup from BOM T1 & T2, BKC, and Western Suburbs. Fixed transparent rates with all tolls included.',
+    isIndexable: true,
+    indexingDirective: 'index, follow',
+    sitemapInclusion: 'Included (Priority 0.8)',
+    metadataCompleteness: 'Complete (Title, Desc, Canonical, OG)',
+    metadataSource: 'STATIC_CODE',
+    isDbEditable: false,
+  },
+  {
+    pageKey: 'privacy-policy',
+    pageLabel: 'Privacy Policy',
+    pageUrl: '/privacy-policy',
+    canonicalUrl: `${SITE_DOMAIN}/privacy-policy/`,
+    seoTitle: 'Privacy Policy | AJ Travels Pune Vehicle Rental Agency',
+    metaDescription: 'Read the privacy policy of AJ Travels Pune. Information on passenger privacy, OTP phone verification security, and customer data protection standards.',
+    isIndexable: true,
+    indexingDirective: 'index, follow',
+    sitemapInclusion: 'Included (Priority 0.5)',
+    metadataCompleteness: 'Complete (Title, Desc, Canonical, OG)',
+    metadataSource: 'STATIC_CODE',
+    isDbEditable: false,
+  },
+  {
+    pageKey: 'terms',
+    pageLabel: 'Terms & Conditions',
+    pageUrl: '/terms',
+    canonicalUrl: `${SITE_DOMAIN}/terms/`,
+    seoTitle: 'Terms & Conditions | Booking Policies - AJ Travels',
+    metaDescription: 'Terms of service and booking conditions for AJ Travels Pune. Details on transparent all-inclusive toll pricing, cancellation terms, and chauffeur standards.',
+    isIndexable: true,
+    indexingDirective: 'index, follow',
+    sitemapInclusion: 'Included (Priority 0.5)',
+    metadataCompleteness: 'Complete (Title, Desc, Canonical, OG)',
+    metadataSource: 'STATIC_CODE',
+    isDbEditable: false,
+  },
+  {
+    pageKey: 'about',
+    pageLabel: 'About Us',
+    pageUrl: '/about',
+    canonicalUrl: `${SITE_DOMAIN}/about-us/`,
+    seoTitle: 'About AJ Tours & Travels | Pune Mumbai Cab Specialists',
+    metaDescription: 'Learn about AJ Tours & Travels, Pune premier intercity travel agency. Verified chauffeurs, sanitized fleet, transparent pricing.',
+    isIndexable: true,
+    indexingDirective: 'index, follow',
+    sitemapInclusion: 'Included (Priority 0.7)',
+    metadataCompleteness: 'Complete (Title, Desc, Canonical, OG)',
+    metadataSource: 'STATIC_CODE',
+    isDbEditable: false,
+  },
+  {
+    pageKey: 'contact',
+    pageLabel: 'Contact Us',
+    pageUrl: '/contact',
+    canonicalUrl: `${SITE_DOMAIN}/contact-us/`,
+    seoTitle: 'Contact AJ Tours & Travels | 24/7 Pune Mumbai Cab Booking',
+    metaDescription: 'Get in touch with AJ Tours & Travels for Pune to Mumbai cab bookings, corporate travel, or custom itineraries. Call +91-7447443536.',
+    isIndexable: true,
+    indexingDirective: 'index, follow',
+    sitemapInclusion: 'Included (Priority 0.7)',
+    metadataCompleteness: 'Complete (Title, Desc, Canonical, OG)',
+    metadataSource: 'STATIC_CODE',
+    isDbEditable: false,
+  },
+  {
+    pageKey: 'services',
+    pageLabel: 'Services Directory',
+    pageUrl: '/services',
+    canonicalUrl: `${SITE_DOMAIN}/services/`,
+    seoTitle: 'Car Rental & Cab Services in Pune & Mumbai | AJ Travels',
+    metaDescription: 'Explore comprehensive cab services: Pune to Mumbai express cabs, airport pickup, outstation trips, corporate car rentals & tempo traveller hire.',
+    isIndexable: true,
+    indexingDirective: 'index, follow',
+    sitemapInclusion: 'Included (Priority 0.7)',
+    metadataCompleteness: 'Complete (Title, Desc, Canonical, OG)',
+    metadataSource: 'STATIC_CODE',
+    isDbEditable: false,
+  },
+  {
+    pageKey: 'vehicles',
+    pageLabel: 'Fleet & Vehicles',
+    pageUrl: '/vehicles',
+    canonicalUrl: `${SITE_DOMAIN}/vehicles/`,
+    seoTitle: 'Vehicle Fleet & Taxi Options | Sedans, SUVs, Innova Crysta | AJ Travels',
+    metaDescription: 'Browse our sanitized, air-conditioned vehicle fleet: Swift Dzire Sedans, Ertiga SUVs, Innova Crysta luxury cabs, and 13-17 seater Tempo Travellers.',
+    isIndexable: true,
+    indexingDirective: 'index, follow',
+    sitemapInclusion: 'Included (Priority 0.7)',
+    metadataCompleteness: 'Complete (Title, Desc, Canonical, OG)',
+    metadataSource: 'STATIC_CODE',
+    isDbEditable: false,
+  },
+  {
+    pageKey: 'blog',
+    pageLabel: 'Travel Blog & Guides',
+    pageUrl: '/blog',
+    canonicalUrl: `${SITE_DOMAIN}/blog/`,
+    seoTitle: 'Maharashtra Travel Blog & Expressway Route Guides | AJ Travels',
+    metaDescription: 'Expert travel guides, expressway route advice, weekend getaways, and Maharashtra tourism tips from local chauffeurs and travel planners.',
+    isIndexable: true,
+    indexingDirective: 'index, follow',
+    sitemapInclusion: 'Included (Priority 0.7)',
+    metadataCompleteness: 'Complete (Title, Desc, Canonical, OG)',
+    metadataSource: 'STATIC_CODE',
+    isDbEditable: false,
+  },
+  {
+    pageKey: 'sitemap-page',
+    pageLabel: 'HTML Sitemap',
+    pageUrl: '/sitemap',
+    canonicalUrl: `${SITE_DOMAIN}/sitemap`,
+    seoTitle: 'Website Sitemap | Index of Pages & Corridors | AJ Travels',
+    metaDescription: 'Complete HTML sitemap of AJ Travels Pune: intercity corridors, airport transfers, vehicle rentals, and destination guides.',
+    isIndexable: true,
+    indexingDirective: 'index, follow',
+    sitemapInclusion: 'Included (Priority 0.5)',
+    metadataCompleteness: 'Complete (Title, Desc, Canonical)',
+    metadataSource: 'STATIC_CODE',
+    isDbEditable: false,
+  },
+  {
+    pageKey: 'vehicles-sedan',
+    pageLabel: 'Fleet: Executive Sedan',
+    pageUrl: '/vehicles/sedan',
+    canonicalUrl: `${SITE_DOMAIN}/vehicles/sedan`,
+    seoTitle: 'Sedan Cab Rental Pune to Mumbai | Swift Dzire & Etios - AJ Travels',
+    metaDescription: 'Book reliable 4-passenger AC sedan cabs for Pune to Mumbai and Mumbai to Pune. Fuel efficient, comfortable, with verified drivers.',
+    isIndexable: true,
+    indexingDirective: 'index, follow',
+    sitemapInclusion: 'Included (Priority 0.7)',
+    metadataCompleteness: 'Complete (Title, Desc, Canonical, OG)',
+    metadataSource: 'STATIC_CODE',
+    isDbEditable: false,
+  },
+  {
+    pageKey: 'vehicles-suv',
+    pageLabel: 'Fleet: Ertiga SUV',
+    pageUrl: '/vehicles/ertiga-suv',
+    canonicalUrl: `${SITE_DOMAIN}/vehicles/ertiga-suv`,
+    seoTitle: 'Ertiga SUV Cab Rental Pune to Mumbai | 6 Seater - AJ Travels',
+    metaDescription: 'Spacious 6-passenger Ertiga SUV for family travel between Pune and Mumbai. Generous luggage space and smooth highway ride.',
+    isIndexable: true,
+    indexingDirective: 'index, follow',
+    sitemapInclusion: 'Included (Priority 0.7)',
+    metadataCompleteness: 'Complete (Title, Desc, Canonical, OG)',
+    metadataSource: 'STATIC_CODE',
+    isDbEditable: false,
+  },
+  {
+    pageKey: 'vehicles-innova-crysta',
+    pageLabel: 'Fleet: Innova Crysta',
+    pageUrl: '/vehicles/innova-crysta',
+    canonicalUrl: `${SITE_DOMAIN}/vehicles/innova-crysta`,
+    seoTitle: 'Innova Crysta Rental Pune to Mumbai | Luxury Travel - AJ Travels',
+    metaDescription: 'Premium Toyota Innova Crysta cab rental for executive and VIP intercity travel with reclining captain seats and superior suspension.',
+    isIndexable: true,
+    indexingDirective: 'index, follow',
+    sitemapInclusion: 'Included (Priority 0.7)',
+    metadataCompleteness: 'Complete (Title, Desc, Canonical, OG)',
+    metadataSource: 'STATIC_CODE',
+    isDbEditable: false,
+  },
+  {
+    pageKey: 'vehicles-tempo-traveller',
+    pageLabel: 'Fleet: Tempo Traveller',
+    pageUrl: '/vehicles/tempo-traveller',
+    canonicalUrl: `${SITE_DOMAIN}/vehicles/tempo-traveller`,
+    seoTitle: 'Tempo Traveller on Rent in Pune | 13-17 Seater - AJ Travels',
+    metaDescription: 'Hire 13 to 17-seater Tempo Travellers in Pune for group tours, corporate outings, and family weddings with pushback seats.',
+    isIndexable: true,
+    indexingDirective: 'index, follow',
+    sitemapInclusion: 'Included (Priority 0.7)',
+    metadataCompleteness: 'Complete (Title, Desc, Canonical, OG)',
+    metadataSource: 'STATIC_CODE',
+    isDbEditable: false,
+  },
+];
+
+function getAllPublicPagesCatalog(dbPages = []) {
+  const dbMap = new Map();
+  for (const p of dbPages) {
+    dbMap.set(p.pageKey, p);
+  }
+
+  const coreList = PUBLIC_PAGES.map(p => {
+    const override = dbMap.get(p.pageKey);
+    return {
+      pageKey: p.pageKey,
+      pageLabel: p.pageLabel,
+      pageUrl: p.pageUrl,
+      canonicalUrl: override?.canonicalUrl || (p.pageUrl === '/' ? `${SITE_DOMAIN}/` : `${SITE_DOMAIN}${p.pageUrl}`),
+      seoTitle: override?.seoTitle || p.seoTitle,
+      metaDescription: override?.metaDescription || p.metaDescription,
+      isIndexable: override ? (override.isIndexable ?? true) : true,
+      indexingDirective: 'index, follow',
+      sitemapInclusion: p.pageUrl === '/' ? 'Included (Priority 1.0)' : 'Included (Priority 0.8)',
+      metadataCompleteness: 'Complete (Title, Desc, Canonical, OG)',
+      metadataSource: 'DATABASE_OVERRIDE',
+      isDbEditable: true,
+    };
+  });
+
+  const seenCanonicals = new Set();
+  coreList.forEach(p => seenCanonicals.add(p.canonicalUrl));
+
+  const staticList = STATIC_CODE_PAGES.map(p => {
+    const override = dbMap.get(p.pageKey);
+    const item = {
+      ...p,
+      seoTitle: override?.seoTitle || p.seoTitle,
+      metaDescription: override?.metaDescription || p.metaDescription,
+      canonicalUrl: override?.canonicalUrl || p.canonicalUrl,
+      isIndexable: override ? (override.isIndexable ?? true) : p.isIndexable,
+      isDbEditable: true,
+    };
+    seenCanonicals.add(item.canonicalUrl);
+    return item;
+  });
+
+  const contentStoreList = [];
+  for (const [slug, entry] of Object.entries(migratedPagesMap)) {
+    if (!entry || !entry.canonical) continue;
+    if (seenCanonicals.has(entry.canonical)) continue;
+    seenCanonicals.add(entry.canonical);
+
+    let cleanLabel = entry.title ? entry.title.split('|')[0].split('-')[0].trim() : slug;
+    if (cleanLabel.length > 50) cleanLabel = cleanLabel.slice(0, 50) + '...';
+
+    const override = dbMap.get(slug);
+
+    contentStoreList.push({
+      pageKey: slug,
+      pageLabel: cleanLabel,
+      pageUrl: `/${slug}/`,
+      canonicalUrl: override?.canonicalUrl || entry.canonical,
+      seoTitle: override?.seoTitle || entry.title || `${cleanLabel} | AJ Travels`,
+      metaDescription: override?.metaDescription || entry.description || 'Reliable chauffeured intercity and rental service across Maharashtra.',
+      isIndexable: override ? (override.isIndexable ?? true) : true,
+      indexingDirective: 'index, follow',
+      sitemapInclusion: 'Included (Priority 0.7)',
+      metadataCompleteness: 'Complete (Title, Desc, Canonical)',
+      metadataSource: override ? 'DATABASE_OVERRIDE' : 'GENERATED_CONTENT_STORE',
+      isDbEditable: true,
+    });
+  }
+
+  return [...coreList, ...staticList, ...contentStoreList];
+}
+
 // ---------------------------------------------------------------------------
 // Ensure all known pages exist in DB (idempotent seed on first access)
 // ---------------------------------------------------------------------------
+let isSeeded = false;
+let pagesCache = null;
+let pagesCacheTime = 0;
+const PAGES_CACHE_TTL = 60000; // 60s TTL
+
 async function seedPages() {
+  if (isSeeded) return;
   try {
-    for (const page of PUBLIC_PAGES) {
+    const existing = await prisma.seoMeta.findMany({ select: { pageKey: true } });
+    const existingKeys = new Set(existing.map(p => p.pageKey));
+    const missingPages = PUBLIC_PAGES.filter(p => !existingKeys.has(p.pageKey));
+    if (missingPages.length === 0) {
+      isSeeded = true;
+      return;
+    }
+    for (const page of missingPages) {
       await prisma.seoMeta.upsert({
         where: { pageKey: page.pageKey },
         update: {}, // Never overwrite admin-saved data on subsequent seeds
@@ -217,6 +500,7 @@ async function seedPages() {
         },
       });
     }
+    isSeeded = true;
   } catch (err) {
     console.warn('[SEO] seedPages non-fatal warning:', err.message);
   }
@@ -227,6 +511,13 @@ async function seedPages() {
 // ---------------------------------------------------------------------------
 const getPages = async (req, res) => {
   try {
+    if (pagesCache && (Date.now() - pagesCacheTime < PAGES_CACHE_TTL)) {
+      return res.json({
+        success: true,
+        data: pagesCache,
+      });
+    }
+
     await seedPages();
     let pages = [];
     try {
@@ -250,23 +541,29 @@ const getPages = async (req, res) => {
     const missingTitle = pages.filter(p => !p.seoTitle).length;
     const missingDesc  = pages.filter(p => !p.metaDescription).length;
 
+    const payloadData = {
+      siteDomain: SITE_DOMAIN,
+      pages,
+      stats: {
+        total:        pages.length,
+        indexable:    pages.filter(p => p.isIndexable).length,
+        noindex:      pages.filter(p => !p.isIndexable).length,
+        missingTitle,
+        missingDesc,
+        routesCount:  ROUTE_INVENTORY.length,
+        plannedCount: PLANNED_ROUTES.length,
+      },
+      routeInventory: ROUTE_INVENTORY,
+      plannedRoutes:  PLANNED_ROUTES,
+      allPublicPages: getAllPublicPagesCatalog(pages),
+    };
+
+    pagesCache = payloadData;
+    pagesCacheTime = Date.now();
+
     res.json({
       success: true,
-      data: {
-        siteDomain: SITE_DOMAIN,
-        pages,
-        stats: {
-          total:        pages.length,
-          indexable:    pages.filter(p => p.isIndexable).length,
-          noindex:      pages.filter(p => !p.isIndexable).length,
-          missingTitle,
-          missingDesc,
-          routesCount:  ROUTE_INVENTORY.length,
-          plannedCount: PLANNED_ROUTES.length,
-        },
-        routeInventory: ROUTE_INVENTORY,
-        plannedRoutes:  PLANNED_ROUTES,
-      },
+      data: payloadData,
     });
   } catch (err) {
     console.error('[SEO] getPages error:', err);
@@ -305,9 +602,14 @@ const updatePage = async (req, res) => {
     if (seoTitle && seoTitle.length > 60)       warnings.push('SEO title exceeds recommended 60 characters.');
     if (metaDescription && metaDescription.length > 160) warnings.push('Meta description exceeds recommended 160 characters.');
 
-    const page = await prisma.seoMeta.update({
+    const allCatalog = getAllPublicPagesCatalog();
+    const existingEntry = allCatalog.find(p => p.pageKey === pageKey);
+    const pageLabel = existingEntry?.pageLabel || pageKey;
+    const pageUrl = existingEntry?.pageUrl || `/${pageKey}/`;
+
+    const page = await prisma.seoMeta.upsert({
       where: { pageKey },
-      data: {
+      update: {
         seoTitle:        seoTitle        ?? undefined,
         metaDescription: metaDescription ?? undefined,
         canonicalUrl:    canonicalUrl    ?? undefined,
@@ -317,13 +619,40 @@ const updatePage = async (req, res) => {
         ogImage:         ogImage         ?? undefined,
         slug:            slug            ?? undefined,
       },
+      create: {
+        pageKey,
+        pageLabel,
+        pageUrl,
+        seoTitle:        seoTitle        || null,
+        metaDescription: metaDescription || null,
+        canonicalUrl:    canonicalUrl    || null,
+        isIndexable:     typeof isIndexable === 'boolean' ? isIndexable : true,
+        ogTitle:         ogTitle         || null,
+        ogDescription:   ogDescription   || null,
+        ogImage:         ogImage         || null,
+        slug:            slug            || null,
+      },
     });
+
+    // Also persist to migratedPagesSeo.json if this is a migrated landing page
+    if (migratedPagesMap && migratedPagesMap[pageKey]) {
+      if (seoTitle) migratedPagesMap[pageKey].title = seoTitle;
+      if (metaDescription) migratedPagesMap[pageKey].description = metaDescription;
+      try {
+        const fs = require('fs');
+        const path = require('path');
+        const dataPath = path.join(__dirname, '../data/migratedPagesSeo.json');
+        fs.writeFileSync(dataPath, JSON.stringify(migratedPagesMap, null, 2), 'utf-8');
+      } catch (fErr) {
+        console.warn('[SEO] Failed to update migratedPagesSeo.json file:', fErr.message);
+      }
+    }
+
+    // Invalidate in-memory pages cache on update
+    pagesCache = null;
 
     res.json({ success: true, data: page, warnings });
   } catch (err) {
-    if (err.code === 'P2025') {
-      return res.status(404).json({ success: false, message: 'Page not found.' });
-    }
     console.error('[SEO] updatePage error:', err);
     res.status(500).json({ success: false, message: 'Failed to update SEO page.' });
   }
@@ -507,7 +836,9 @@ module.exports = {
   getSitemap,
   getRobots,
   getPublicPages,
+  getAllPublicPagesCatalog,
   PUBLIC_PAGES,
+  STATIC_CODE_PAGES,
   ROUTE_INVENTORY,
   PLANNED_ROUTES,
 };

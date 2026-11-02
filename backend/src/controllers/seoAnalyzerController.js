@@ -5,7 +5,7 @@
 // ============================================================
 
 const seoAnalyzerService = require('../services/seoAnalyzerService');
-const { PUBLIC_PAGES, ROUTE_INVENTORY } = require('./seoController');
+const { PUBLIC_PAGES, ROUTE_INVENTORY, getAllPublicPagesCatalog } = require('./seoController');
 
 /**
  * GET /api/admin/seo/analyzer/overview
@@ -61,17 +61,19 @@ const analyzeSinglePage = async (req, res) => {
   try {
     const { pageKey, path } = req.body;
 
+    const allCatalog = typeof getAllPublicPagesCatalog === 'function' ? getAllPublicPagesCatalog() : PUBLIC_PAGES;
+
     let targetKey = pageKey;
     if (!targetKey && path) {
-      const matched = PUBLIC_PAGES.find(p => p.pageUrl === path);
+      const matched = allCatalog.find(p => p.pageUrl === path);
       if (matched) targetKey = matched.pageKey;
     }
 
-    if (!targetKey || !PUBLIC_PAGES.some(p => p.pageKey === targetKey)) {
+    if (!targetKey || !allCatalog.some(p => p.pageKey === targetKey)) {
       return res.status(400).json({
         success: false,
         message: 'Invalid pageKey. Analysis is strictly restricted to eligible public pages.',
-        allowedPages: PUBLIC_PAGES.map(p => ({ pageKey: p.pageKey, path: p.pageUrl })),
+        allowedPages: allCatalog.map(p => ({ pageKey: p.pageKey, path: p.pageUrl })),
       });
     }
 
@@ -97,8 +99,9 @@ const analyzeSinglePage = async (req, res) => {
 const getPageAnalysis = async (req, res) => {
   try {
     const { pageKey } = req.params;
+    const allCatalog = typeof getAllPublicPagesCatalog === 'function' ? getAllPublicPagesCatalog() : PUBLIC_PAGES;
 
-    if (!PUBLIC_PAGES.some(p => p.pageKey === pageKey)) {
+    if (!allCatalog.some(p => p.pageKey === pageKey)) {
       return res.status(404).json({
         success: false,
         message: `Page "${pageKey}" not found or is not an eligible public page.`,

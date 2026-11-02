@@ -65,7 +65,7 @@ export function BlogPostPage() {
         'name': 'AJ Travels',
         'logo': {
           '@type': 'ImageObject',
-          'url': 'https://ajtravelspune.com/assets/hero-luxury-cars.jpg'
+          'url': 'https://ajtravelspune.com/assets/aj-travels-logo.png'
         }
       },
       'datePublished': '2026-03-15',
@@ -193,6 +193,7 @@ export function BlogPostPage() {
                   src={post.featuredImage} 
                   alt={post.title} 
                   className="article-featured-photo"
+                  loading="lazy"
                 />
               </div>
 

@@ -123,6 +123,10 @@ export const Footer = () => {
             <Link to="/contact">Contact</Link>
             <span className="dot-sep">•</span>
             <Link to="/sitemap">Sitemap</Link>
+            <span className="dot-sep">•</span>
+            <Link to="/privacy-policy">Privacy Policy</Link>
+            <span className="dot-sep">•</span>
+            <Link to="/terms">Terms &amp; Conditions</Link>
           </div>
         </div>
       </div>

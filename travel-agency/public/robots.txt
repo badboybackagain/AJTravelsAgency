@@ -1,4 +1,8 @@
 User-agent: *
 Allow: /
+Disallow: /admin/
+Disallow: /api/
+Disallow: /auth/
 
 Sitemap: https://ajtravelspune.com/sitemap.xml
+
