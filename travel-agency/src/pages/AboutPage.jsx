@@ -6,15 +6,15 @@ import { EnquiryModal } from '../components/EnquiryModal';
 import { MobileStickyBar } from '../components/MobileStickyBar';
 import { usePageSeo } from '../hooks/usePageSeo';
 import { businessConfig } from '../config/business.config';
-import { 
-  ShieldCheck, 
-  Award, 
-  Users, 
-  Clock, 
-  MapPin, 
-  CheckCircle2, 
-  Car, 
-  Phone, 
+import {
+  ShieldCheck,
+  Award,
+  Users,
+  Clock,
+  MapPin,
+  CheckCircle2,
+  Car,
+  Phone,
   ArrowRight,
   Sparkles,
   HeartHandshake
@@ -133,9 +133,9 @@ export function AboutPage() {
 
             <div className="story-image-col">
               <div className="story-image-card">
-                <img 
-                  src="/assets/pune-to-mumbai-premium-travel-banner.webp" 
-                  alt="AJ Travels Executive Fleet" 
+                <img
+                  src="/assets/hero-luxury-cars.jpg"
+                  alt="AJ Travels Executive Fleet"
                   className="story-banner-img"
                   loading="lazy"
                 />

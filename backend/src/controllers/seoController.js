@@ -762,6 +762,135 @@ const updatePage = async (req, res) => {
   }
 };
 
+const calculateOptimalMetadata = (pageKey, pageUrl, pageLabel, rawTitle, rawDesc) => {
+  let optTitle;
+  if (pageUrl === '/' || pageKey === 'home') {
+    optTitle = 'AJ Travels — Car Rental & Cab Service in Pune';
+  } else {
+    let base = rawTitle || pageLabel || pageKey;
+    base = base.replace(/\s*\|\s*(Best Intercity Cab Rates|Airport & City Drop Cabs|Best Cab Service & Fares|Luxury AC Mini Bus|Affordable Rates|B2B Fleet Solutions|Taxi Fares|Tempo Traveller Hire|SUV & Crysta Hire|BOM Airport & City Taxi|Tempo Traveller|Sedan Car Rental|6-Seater SUV|Luxury SUV Cab|13, 17, 20 Seater Luxury AC|Executive Fleet|BOM & PNQ Transfers)[\s\S]*/i, '');
+    base = base.replace(/\s*-\s*AJ Travels[\s\S]*/i, '');
+    base = base.replace(/\s*\|\s*AJ Travels[\s\S]*/i, '');
+    base = base.replace(/\s*\|\s*AJ Travels Pune[\s\S]*/i, '');
+    base = base.replace(/[\s,:|-]+$/, '').trim();
+
+    if (base.length + 13 < 40) {
+      if (base.length + 18 >= 40 && base.length + 18 <= 60) {
+        optTitle = `${base} | AJ Travels Pune`;
+      } else {
+        const withCab = `${base} — Cab Service | AJ Travels`;
+        if (withCab.length >= 40 && withCab.length <= 60) {
+          optTitle = withCab;
+        } else {
+          optTitle = `${base} — Car Rental & Cabs | AJ Travels`;
+        }
+      }
+    } else {
+      const maxBaseLen = 45;
+      if (base.length > maxBaseLen) {
+        const trimmed = base.substring(0, maxBaseLen);
+        const lastSpace = trimmed.lastIndexOf(' ');
+        base = lastSpace > 22 ? trimmed.substring(0, lastSpace) : trimmed;
+      }
+      base = base.replace(/[\s,:|-]+$/, '').trim();
+      optTitle = `${base} | AJ Travels`;
+    }
+  }
+
+  let optDesc = rawDesc || '';
+  if (pageUrl === '/' || pageKey === 'home') {
+    optDesc = 'AJ Travels offers reliable car rentals, Pune to Mumbai cabs, and airport transfers with verified chauffeurs. Zero advance deposit required.';
+  } else {
+    if (optDesc.includes('all-inclusive pricing with expressway tolls covered, and 24/7 doorstep pickup.')) {
+      optDesc = optDesc.replace('all-inclusive pricing with expressway tolls covered, and 24/7 doorstep pickup.', 'transparent fares, verified drivers, and 24/7 doorstep pickup.');
+    }
+    if (optDesc.includes('with AJ Travels Pune.')) {
+      optDesc = optDesc.replace('with AJ Travels Pune.', 'with AJ Travels.');
+    }
+    if (optDesc.length > 160) {
+      let trimmed = optDesc.substring(0, 155);
+      const lastPeriod = trimmed.lastIndexOf('.');
+      if (lastPeriod > 100) {
+        optDesc = trimmed.substring(0, lastPeriod + 1);
+      } else {
+        const lastSpace = trimmed.lastIndexOf(' ');
+        optDesc = (lastSpace > 100 ? trimmed.substring(0, lastSpace) : trimmed) + '...';
+      }
+    }
+    if (!optDesc || optDesc.length < 90) {
+      optDesc = `Book ${pageLabel || 'car rental'} with AJ Travels Pune. Clean AC cabs, verified professional drivers, and 24/7 doorstep pickup across Maharashtra.`;
+    }
+  }
+
+  return { optTitle, optDesc };
+};
+
+const batchAutoFixPages = async (req, res) => {
+  try {
+    const allCatalog = getAllPublicPagesCatalog(cachedDbPages, cachedDbBlogs);
+    let updatedCount = 0;
+    const dataPath = path.join(__dirname, '../data/migratedPagesSeo.json');
+
+    for (const page of allCatalog) {
+      const { pageKey, pageUrl, pageLabel, seoTitle, metaDescription } = page;
+      const tLen = seoTitle ? seoTitle.length : 0;
+      const dLen = metaDescription ? metaDescription.length : 0;
+
+      const needsTitleFix = tLen < 40 || tLen > 65;
+      const needsDescFix = dLen < 90 || dLen > 160;
+
+      if (needsTitleFix || needsDescFix) {
+        const { optTitle, optDesc } = calculateOptimalMetadata(pageKey, pageUrl, pageLabel, seoTitle, metaDescription);
+
+        await prisma.seoMeta.upsert({
+          where: { pageKey },
+          update: {
+            seoTitle: optTitle,
+            metaDescription: optDesc,
+          },
+          create: {
+            pageKey,
+            pageLabel: pageLabel || pageKey,
+            pageUrl: pageUrl || `/${pageKey}/`,
+            seoTitle: optTitle,
+            metaDescription: optDesc,
+            isIndexable: true,
+          },
+        });
+
+        if (migratedPagesMap && migratedPagesMap[pageKey]) {
+          migratedPagesMap[pageKey].title = optTitle;
+          migratedPagesMap[pageKey].description = optDesc;
+        }
+
+        updatedCount++;
+      }
+    }
+
+    try {
+      fs.writeFileSync(dataPath, JSON.stringify(migratedPagesMap, null, 2), 'utf-8');
+    } catch (_fErr) {}
+
+    pagesCache = null;
+    try {
+      cachedDbPages = await prisma.seoMeta.findMany({ orderBy: { pageKey: 'asc' } });
+    } catch (_e) {}
+
+    try {
+      const seoAnalyzerService = require('../services/seoAnalyzerService');
+      if (typeof seoAnalyzerService.clearAnalysisCache === 'function') {
+        seoAnalyzerService.clearAnalysisCache();
+      }
+    } catch (_e) {}
+
+    res.json({ success: true, updatedCount });
+  } catch (err) {
+    console.error('[SEO] batchAutoFixPages error:', err);
+    res.status(500).json({ success: false, message: 'Failed to batch auto-fix pages.' });
+  }
+};
+
+
 
 // ---------------------------------------------------------------------------
 // GET /sitemap.xml  — generate XML sitemap (public, no auth)
@@ -937,6 +1066,8 @@ module.exports = {
   getPages,
   getPage,
   updatePage,
+  batchAutoFixPages,
+  calculateOptimalMetadata,
   getSitemap,
   getRobots,
   getPublicPages,

@@ -187,20 +187,14 @@ export const AdminDashboard = ({ onLogout }) => {
         {/* Brand Logo & Title */}
         <div className="admin-brand">
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-              <div className="admin-logo-badge">
-                <span style={{ fontWeight: 900, color: '#FFFFFF', fontSize: '1.05rem', letterSpacing: '-0.03em' }}>AJ</span>
-              </div>
-              <div>
-                <h1 style={{ fontSize: '0.92rem', fontWeight: 800, color: '#FFFFFF', margin: 0, letterSpacing: '-0.01em', lineHeight: 1.2 }}>
-                  AJ TRAVELS
-                </h1>
-                <div style={{ fontSize: '0.65rem', fontWeight: 600, color: '#38BDF8', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-                  CONTROL PANEL
-                </div>
-              </div>
+            <div className="admin-brand-identity">
+              <img
+                src="/assets/aj-travels-logo.png"
+                alt="AJ Travels"
+                className="admin-brand-logo-img"
+              />
+              <div className="admin-brand-sub">CONTROL PANEL</div>
             </div>
-
             {/* Mobile Close Button */}
             <button
               onClick={() => setIsMobileMenuOpen(false)}

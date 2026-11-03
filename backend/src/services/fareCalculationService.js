@@ -242,8 +242,14 @@ async function calculateVehicleFare(route, vehicle, options = {}, preloadedFares
 
   // 4. Calculate waiting / stay
   let totalStay = 0;
-  if (fareConfig.fareWaiting && fareConfig.fareWaiting.enabled && stayRequired) {
-    totalStay = toNumber(fareConfig.fareWaiting.perHourCharge);
+  let extraHourRate = 0;
+  let freeWaitingMinutes = 30;
+  if (fareConfig.fareWaiting && fareConfig.fareWaiting.enabled) {
+    extraHourRate = toNumber(fareConfig.fareWaiting.perHourCharge);
+    freeWaitingMinutes = fareConfig.fareWaiting.freeMinutes !== undefined ? parseInt(fareConfig.fareWaiting.freeMinutes, 10) : 30;
+    if (stayRequired) {
+      totalStay = extraHourRate;
+    }
   }
 
   // 5. Calculate Extra Kilometres (if actual distance is provided)
@@ -282,6 +288,8 @@ async function calculateVehicleFare(route, vehicle, options = {}, preloadedFares
     extraKm,
     extraKmRate: perKmRate,
     extraKmCharge,
+    extraHourRate,
+    freeWaitingMinutes,
     total,
     fareOnRequest: false,
   };
@@ -371,7 +379,11 @@ async function calculateFareQuote(params) {
           tollBreakdown: [],
           parking,
           stay: 0,
+          includedKm: 80,
+          extraKmRate: 14,
+          extraHourRate: toNumber(v.extraHourCharge),
           extraHourCharge: toNumber(v.extraHourCharge),
+          durationHours: v.durationHours,
           total,
           fareOnRequest: false,
           configured: true,
@@ -531,6 +543,8 @@ async function calculateFareQuote(params) {
           extraKm: fareBreakdown.extraKm,
           extraKmRate: fareBreakdown.extraKmRate,
           extraKmCharge: fareBreakdown.extraKmCharge,
+          extraHourRate: fareBreakdown.extraHourRate,
+          freeWaitingMinutes: fareBreakdown.freeWaitingMinutes,
           total: fareBreakdown.total,
           fareOnRequest: fareBreakdown.fareOnRequest,
           configured: fareBreakdown.configured,

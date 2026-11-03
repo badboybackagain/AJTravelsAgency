@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Calendar,
   Clock,
@@ -24,9 +24,10 @@ import {
   ExternalLink,
   ShieldCheck,
   Sparkles,
-  Copy
+  Copy,
+  PhoneCall
 } from 'lucide-react';
-import { enquiryApi, quoteApi, fareApi } from '../../services/api';
+import { enquiryApi, quoteApi, fareApi, adminFareConfigApi } from '../../services/api';
 import './admin.css';
 
 const STATUS_CONFIG = {
@@ -73,7 +74,69 @@ export const AdminEnquiries = () => {
   const [submittingQuote, setSubmittingQuote] = useState(false);
   const [copiedQuoteId, setCopiedQuoteId] = useState(null);
   const [convertingBookingId, setConvertingBookingId] = useState(null);
+
+  // Simple, professional, stable Enquiry ID formatter (e.g. ENQ-1005, ENQ-1004...)
+  const getEnquiryDisplayId = useCallback((enq) => {
+    if (!enq) return 'N/A';
+    if (enq.enquiryNumber) return enq.enquiryNumber;
+    if (enq.reference) return enq.reference;
+
+    // Stable deterministic fallback based on chronological order in enquiries list
+    if (enquiries && enquiries.length > 0) {
+      const sorted = [...enquiries].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+      const idx = sorted.findIndex((item) => item.id === enq.id);
+      if (idx !== -1) {
+        return `ENQ-${1001 + idx}`;
+      }
+    }
+    return `ENQ-${enq.id ? enq.id.slice(-4).toUpperCase() : '1001'}`;
+  }, [enquiries]);
   const [autoPricingStatus, setAutoPricingStatus] = useState(null);
+  const [configuredFares, setConfiguredFares] = useState([]);
+
+  useEffect(() => {
+    adminFareConfigApi.getAll()
+      .then((res) => setConfiguredFares(res.data?.data || []))
+      .catch((err) => console.warn('Could not load configured fares for auto-pricing:', err.message));
+  }, []);
+
+  const findMatchingFare = useCallback((pickup, drop, vehicleCat, tripType) => {
+    if (!configuredFares || configuredFares.length === 0) return null;
+    const pLower = (pickup || '').toLowerCase();
+    const dLower = (drop || '').toLowerCase();
+
+    // Direct match
+    const match = configuredFares.find((f) => {
+      const orig = (f.pickupCity || f.route?.pickupLocation?.name || '').toLowerCase();
+      const dest = (f.dropCity || f.route?.dropLocation?.name || '').toLowerCase();
+      const cat = (f.vehicleCategory || f.vehicle?.category || '').toUpperCase();
+      const tType = (f.tripType || '').toUpperCase();
+
+      const origMatch = orig && (pLower.includes(orig) || orig.includes(pLower));
+      const destMatch = dest && (dLower.includes(dest) || dest.includes(dLower));
+      const catMatch = !vehicleCat || cat === vehicleCat.toUpperCase();
+      const typeMatch = !tripType || tType === tripType.toUpperCase();
+      return origMatch && destMatch && catMatch && typeMatch;
+    });
+    if (match) return match;
+
+    // Corridor match (e.g. Pune <-> Mumbai)
+    const isPune = pLower.includes('pune') || dLower.includes('pune');
+    const isMumbai = pLower.includes('mumbai') || dLower.includes('mumbai');
+    if (isPune && isMumbai) {
+      return configuredFares.find((f) => {
+        const orig = (f.pickupCity || f.route?.pickupLocation?.name || '').toLowerCase();
+        const dest = (f.dropCity || f.route?.dropLocation?.name || '').toLowerCase();
+        const cat = (f.vehicleCategory || f.vehicle?.category || '').toUpperCase();
+        const tType = (f.tripType || '').toUpperCase();
+        const isCorridor = (orig.includes('pune') && dest.includes('mumbai')) || (orig.includes('mumbai') && dest.includes('pune'));
+        const catMatch = !vehicleCat || cat === vehicleCat.toUpperCase();
+        const typeMatch = !tripType || tType === tripType.toUpperCase();
+        return isCorridor && catMatch && typeMatch;
+      });
+    }
+    return null;
+  }, [configuredFares]);
 
   const [quoteForm, setQuoteForm] = useState({
     vehicleCategory: 'SEDAN',
@@ -83,6 +146,9 @@ export const AdminEnquiries = () => {
     tollCharges: '',
     driverAllowance: '',
     parkingCharges: '',
+    extraKmRate: '',
+    extraHourRate: '',
+    includedKm: '',
     validHours: 48,
     inclusions: 'Vehicle rental, fuel, experienced chauffeur, and highway tolls.',
     exclusions: 'Airport/station parking charges, extra hour/km over limit.',
@@ -126,6 +192,25 @@ export const AdminEnquiries = () => {
       defaultVehicleName = 'Force Urbania / Tempo Traveller (13/17 Seater)';
     }
 
+    const pLower = (enq?.pickup || '').toLowerCase();
+    const dLower = (enq?.destination || '').toLowerCase();
+    const isPuneMumbai = (pLower.includes('pune') && dLower.includes('mumbai')) || (pLower.includes('mumbai') && dLower.includes('pune'));
+    const matchedInitFare = findMatchingFare(enq?.pickup, enq?.destination, defaultCategory, 'ONE_WAY');
+
+    let initExtraKm = '';
+    let initExtraHr = '';
+    let initIncludedKm = '';
+
+    if (matchedInitFare) {
+      initExtraKm = matchedInitFare.perKmFare !== undefined && matchedInitFare.perKmFare !== null ? matchedInitFare.perKmFare.toString() : '14';
+      initExtraHr = (matchedInitFare.fareWaiting?.perHourCharge || 150).toString();
+      initIncludedKm = '150';
+    } else if (isPuneMumbai) {
+      initExtraKm = '14';
+      initExtraHr = '150';
+      initIncludedKm = '150';
+    }
+
     setQuoteForm({
       vehicleCategory: defaultCategory,
       vehicleName: defaultVehicleName,
@@ -134,6 +219,9 @@ export const AdminEnquiries = () => {
       tollCharges: '',
       driverAllowance: '',
       parkingCharges: '',
+      extraKmRate: initExtraKm,
+      extraHourRate: initExtraHr,
+      includedKm: initIncludedKm,
       validHours: 48,
       inclusions: 'Vehicle rental, fuel, experienced chauffeur, and highway tolls.',
       exclusions: 'Airport/station parking charges, extra hour/km over limit.',
@@ -144,7 +232,42 @@ export const AdminEnquiries = () => {
   };
 
   const handleQuoteFormChange = (field, val) => {
-    setQuoteForm((prev) => ({ ...prev, [field]: val }));
+    setQuoteForm((prev) => {
+      const next = { ...prev, [field]: val };
+      if (field === 'parkingCharges') {
+        const parkingNum = parseFloat(val) || 0;
+        if (parkingNum > 0) {
+          // If parking is charged, it's an inclusion! Remove from exclusions
+          next.exclusions = (next.exclusions || '')
+            .replace(/airport\/station\s*parking\s*(charges)?/gi, '')
+            .replace(/parking\s*charges/gi, '')
+            .replace(/,\s*,/g, ',')
+            .replace(/^\s*,\s*|\s*,\s*$/g, '')
+            .trim();
+          if (!next.exclusions) {
+            next.exclusions = 'Extra kilometre/hour charges over package limit, night travel allowance (if applicable).';
+          }
+          if (!/parking/i.test(next.inclusions || '')) {
+            next.inclusions = (next.inclusions || '').replace(/\.\s*$/, '') + ', and airport/station parking.';
+          }
+        } else {
+          // No parking charged in breakdown -> parking is excluded
+          if (!/parking/i.test(next.exclusions || '')) {
+            next.exclusions = 'Airport/station parking charges, ' + (next.exclusions || '').replace(/^,\s*/, '');
+          }
+          next.inclusions = (next.inclusions || '')
+            .replace(/,\s*and\s*airport\/station\s*parking\b/gi, '')
+            .replace(/airport\/station\s*parking/gi, '')
+            .replace(/,\s*,/g, ',')
+            .replace(/^\s*,\s*|\s*,\s*$/g, '')
+            .trim();
+          if (next.inclusions && !next.inclusions.endsWith('.')) {
+            next.inclusions += '.';
+          }
+        }
+      }
+      return next;
+    });
   };
 
   // Auto route check helper
@@ -159,16 +282,47 @@ export const AdminEnquiries = () => {
       const isPune = pickupQuery.includes('pune') || dropQuery.includes('pune');
       const isMumbai = pickupQuery.includes('mumbai') || dropQuery.includes('mumbai');
 
-      if (isPune && isMumbai) {
-        // Standard configured corridor
-        let suggestedBase = 2600;
-        let suggestedToll = 430;
+      const matched = findMatchingFare(
+        selectedEnquiry.pickup,
+        selectedEnquiry.destination,
+        quoteForm.vehicleCategory,
+        quoteForm.tripType
+      );
+
+      if (matched) {
+        const base = matched.baseFare || 2600;
+        const toll = matched.tollCharges || 430;
+        const perKm = matched.perKmFare !== undefined && matched.perKmFare !== null ? matched.perKmFare : (quoteForm.tripType === 'ROUND_TRIP' ? 13 : 14);
+        const waiting = matched.fareWaiting?.perHourCharge || 150;
+        const included = quoteForm.tripType === 'ROUND_TRIP' ? 300 : 150;
+
+        setQuoteForm((prev) => ({
+          ...prev,
+          baseFare: base.toString(),
+          tollCharges: toll.toString(),
+          driverAllowance: '0',
+          parkingCharges: '0',
+          extraKmRate: perKm.toString(),
+          extraHourRate: waiting.toString(),
+          includedKm: included.toString(),
+        }));
+
+        setAutoPricingStatus({
+          type: 'success',
+          text: `Configured fare matched: ${matched.route?.pickupLocation?.name || 'Pune'} ↔ ${matched.route?.dropLocation?.name || 'Mumbai'}. Loaded base (₹${base}), toll (₹${toll}), extra km (₹${perKm}/km), and extra hour (₹${waiting}/hr).`,
+        });
+      } else if (isPune && isMumbai) {
+        // Standard configured corridor fallback
+        let suggestedBase = quoteForm.tripType === 'ROUND_TRIP' ? 4199 : 2600;
+        let suggestedToll = quoteForm.tripType === 'ROUND_TRIP' ? 640 : 430;
+        const extraKm = quoteForm.tripType === 'ROUND_TRIP' ? 13 : 14;
+        const extraHr = 150;
+        const inclKm = quoteForm.tripType === 'ROUND_TRIP' ? 300 : 150;
+
         if (quoteForm.vehicleCategory === 'INNOVA_CRYSTA') {
-          suggestedBase = 4200;
-          suggestedToll = 430;
+          suggestedBase = quoteForm.tripType === 'ROUND_TRIP' ? 8999 : 4899;
         } else if (quoteForm.vehicleCategory === 'SUV') {
-          suggestedBase = 3200;
-          suggestedToll = 430;
+          suggestedBase = quoteForm.tripType === 'ROUND_TRIP' ? 5999 : 3199;
         }
 
         setQuoteForm((prev) => ({
@@ -177,16 +331,25 @@ export const AdminEnquiries = () => {
           tollCharges: suggestedToll.toString(),
           driverAllowance: '0',
           parkingCharges: '0',
+          extraKmRate: extraKm.toString(),
+          extraHourRate: extraHr.toString(),
+          includedKm: inclKm.toString(),
         }));
 
         setAutoPricingStatus({
           type: 'success',
-          text: `Configured corridor matched: Pune ↔ Mumbai corridor. Loaded verified base rate & expressway toll.`,
+          text: `Configured corridor matched: Pune ↔ Mumbai corridor. Loaded verified base rate, expressway toll, and conditional rates (₹${extraKm}/km, ₹${extraHr}/hr).`,
         });
       } else {
+        setQuoteForm((prev) => ({
+          ...prev,
+          extraKmRate: '',
+          extraHourRate: '',
+          includedKm: '',
+        }));
         setAutoPricingStatus({
           type: 'info',
-          text: `Custom Route detected: "${selectedEnquiry.pickup}" to "${selectedEnquiry.destination}". Please enter verified manual quote breakdown.`,
+          text: `Custom Route detected: "${selectedEnquiry.pickup}" to "${selectedEnquiry.destination}". Additional rates not configured; enter manual breakdown if applicable.`,
         });
       }
     } catch (e) {
@@ -226,6 +389,9 @@ export const AdminEnquiries = () => {
         tollCharges: parseFloat(quoteForm.tollCharges) || 0,
         driverAllowance: parseFloat(quoteForm.driverAllowance) || 0,
         parkingCharges: parseFloat(quoteForm.parkingCharges) || 0,
+        extraKmRate: quoteForm.extraKmRate ? parseFloat(quoteForm.extraKmRate) : undefined,
+        extraHourRate: quoteForm.extraHourRate ? parseFloat(quoteForm.extraHourRate) : undefined,
+        includedKm: quoteForm.includedKm ? parseFloat(quoteForm.includedKm) : undefined,
         validHours: quoteForm.validHours,
         inclusions: quoteForm.inclusions,
         exclusions: quoteForm.exclusions,
@@ -361,7 +527,7 @@ export const AdminEnquiries = () => {
       }
       setFeedbackMsg({
         type: 'success',
-        text: `Enquiry #${enquiryId.slice(-6).toUpperCase()} marked as ${STATUS_CONFIG[newStatus]?.label || newStatus}.`
+        text: `Enquiry ${getEnquiryDisplayId(selectedEnquiry || { id: enquiryId })} marked as ${STATUS_CONFIG[newStatus]?.label || newStatus}.`
       });
       setTimeout(() => setFeedbackMsg(null), 4000);
     } catch (err) {
@@ -383,7 +549,10 @@ export const AdminEnquiries = () => {
     }
     if (!searchQuery.trim()) return true;
     const q = searchQuery.toLowerCase();
+    const displayId = getEnquiryDisplayId(item).toLowerCase();
     return (
+      displayId.includes(q) ||
+      displayId.replace('enq-', '').includes(q) ||
       item.name?.toLowerCase().includes(q) ||
       item.phone?.toLowerCase().includes(q) ||
       item.pickup?.toLowerCase().includes(q) ||
@@ -575,22 +744,34 @@ export const AdminEnquiries = () => {
                   });
 
                   const cleanPhone = enq.phone ? enq.phone.replace(/[^0-9]/g, '') : '';
-                  const shortId = enq.id ? enq.id.slice(-6).toUpperCase() : 'N/A';
+                  const displayId = getEnquiryDisplayId(enq);
                   const isUpdatingThis = updatingId === enq.id;
                   const cfg = STATUS_CONFIG[enq.status] || STATUS_CONFIG.NEW;
 
                   const waText = encodeURIComponent(
-                    `Hello ${enq.name || 'Sir/Madam'}, thank you for contacting AJ Travels Pune regarding your travel enquiry #${shortId} from ${enq.pickup || 'Pune'} to ${enq.destination || 'Mumbai'}. We are pleased to provide you with the best available fare quote.`
+                    `Hello ${enq.name || 'Sir/Madam'}, thank you for contacting AJ Travels Pune regarding your travel enquiry ${displayId} from ${enq.pickup || 'Pune'} to ${enq.destination || 'Mumbai'}. We are pleased to provide you with the best available fare quote.`
                   );
 
                   return (
                     <tr key={enq.id}>
                       {/* Enquiry ID & Received Timestamp */}
                       <td>
-                        <div style={{ fontFamily: 'monospace', fontWeight: 800, color: '#0F172A', fontSize: '0.85rem' }}>
-                          #{shortId}
+                        <div style={{ display: 'inline-flex', alignItems: 'center' }}>
+                          <span style={{
+                            fontWeight: 800,
+                            color: '#0284C7',
+                            fontSize: '0.82rem',
+                            backgroundColor: '#EFF6FF',
+                            border: '1px solid #BFDBFE',
+                            padding: '0.2rem 0.55rem',
+                            borderRadius: '6px',
+                            letterSpacing: '0.04em',
+                            fontFamily: "'Inter', sans-serif"
+                          }}>
+                            {displayId}
+                          </span>
                         </div>
-                        <div style={{ fontSize: '0.7rem', color: '#94A3B8', marginTop: '0.15rem' }}>
+                        <div style={{ fontSize: '0.7rem', color: '#94A3B8', marginTop: '0.25rem' }}>
                           {createdDate}
                         </div>
                       </td>
@@ -605,6 +786,27 @@ export const AdminEnquiries = () => {
                           <Phone size={13} color="#16A34A" />
                           <span>{enq.phone || 'N/A'}</span>
                         </div>
+                        {enq.message && enq.message.includes('[WEB DIRECT REQUEST — UNVERIFIED PHONE]') && (
+                          <div style={{ marginTop: '0.3rem' }}>
+                            <span style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '0.25rem',
+                              backgroundColor: '#FEF3C7',
+                              color: '#B45309',
+                              border: '1px solid #F59E0B',
+                              borderRadius: '4px',
+                              padding: '0.12rem 0.45rem',
+                              fontSize: '0.64rem',
+                              fontWeight: 800,
+                              letterSpacing: '0.02em',
+                              whiteSpace: 'nowrap'
+                            }}>
+                              <PhoneCall size={10} />
+                              <span>UNVERIFIED PHONE — CALLBACK REQUIRED</span>
+                            </span>
+                          </div>
+                        )}
                       </td>
 
                       {/* Route */}
@@ -804,16 +1006,60 @@ export const AdminEnquiries = () => {
 
             {/* Modal Header */}
             <div style={{ marginBottom: '1.25rem', paddingRight: '2.5rem' }}>
-              <div style={{ fontSize: '0.72rem', fontWeight: 800, color: '#0284C7', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                Trip Enquiry Details
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.35rem' }}>
+                <span style={{
+                  fontWeight: 800,
+                  color: '#0284C7',
+                  fontSize: '0.85rem',
+                  backgroundColor: '#EFF6FF',
+                  border: '1px solid #BFDBFE',
+                  padding: '0.2rem 0.55rem',
+                  borderRadius: '6px',
+                  letterSpacing: '0.04em',
+                  fontFamily: "'Inter', sans-serif"
+                }}>
+                  {getEnquiryDisplayId(selectedEnquiry)}
+                </span>
+                {selectedEnquiry.createdAt && (
+                  <span style={{ fontSize: '0.72rem', color: '#94A3B8', fontWeight: 600 }}>
+                    Received: {new Date(selectedEnquiry.createdAt).toLocaleDateString('en-IN', {
+                      day: 'numeric',
+                      month: 'short',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </span>
+                )}
               </div>
               <h2 style={{ fontSize: '1.3rem', fontWeight: 800, color: '#0F172A', margin: '0.2rem 0 0 0' }}>
-                #{selectedEnquiry.id ? selectedEnquiry.id.slice(-6).toUpperCase() : 'N/A'}
+                {selectedEnquiry.name || 'Trip Enquiry'}
               </h2>
-              <div style={{ fontSize: '0.72rem', color: '#94A3B8', marginTop: '0.2rem', fontFamily: 'monospace' }}>
-                Full ID: {selectedEnquiry.id}
-              </div>
             </div>
+
+            {/* Unverified Callback Alert Banner */}
+            {selectedEnquiry.message && selectedEnquiry.message.includes('[WEB DIRECT REQUEST — UNVERIFIED PHONE]') && (
+              <div style={{
+                background: '#FEF3C7',
+                border: '1.5px solid #F59E0B',
+                borderRadius: '10px',
+                padding: '0.75rem 1rem',
+                marginBottom: '1.2rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.6rem'
+              }}>
+                <PhoneCall size={18} color="#B45309" style={{ flexShrink: 0 }} />
+                <div>
+                  <strong style={{ fontSize: '0.82rem', color: '#92400E', display: 'block' }}>
+                    UNVERIFIED PHONE — CALLBACK REQUIRED
+                  </strong>
+                  <span style={{ fontSize: '0.73rem', color: '#B45309', display: 'block', marginTop: '0.1rem', lineHeight: 1.35 }}>
+                    Customer submitted this trip request via the Web Direct Callback option without WhatsApp OTP verification. Dispatcher must call the customer to confirm availability, vehicle class, and pickup address before booking.
+                  </span>
+                </div>
+              </div>
+            )}
 
             {/* Journey Card */}
             <div style={{
@@ -887,7 +1133,7 @@ export const AdminEnquiries = () => {
                 <span style={{ fontSize: '0.7rem', color: '#B45309', fontWeight: 800, textTransform: 'uppercase', display: 'block', marginBottom: '0.25rem' }}>
                   Customer Message / Special Requirements
                 </span>
-                <p style={{ margin: 0, fontSize: '0.82rem', color: '#78350F', lineHeight: 1.45 }}>
+                <p style={{ margin: 0, fontSize: '0.82rem', color: '#78350F', lineHeight: 1.5, whiteSpace: 'pre-line' }}>
                   {selectedEnquiry.message}
                 </p>
               </div>
@@ -1104,12 +1350,32 @@ export const AdminEnquiries = () => {
                         </div>
 
                         {/* Fare Breakdown Snippet */}
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.78rem', color: '#475569', marginBottom: '0.65rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.78rem', color: '#475569', marginBottom: '0.45rem' }}>
                           <span>Base: ₹{q.baseFare} + Tolls: ₹{q.tollCharges} + Driver: ₹{q.driverAllowance}</span>
                           <strong style={{ fontSize: '0.95rem', color: '#0F172A' }}>
                             Total: ₹{parseFloat(q.totalFare).toFixed(2)}
                           </strong>
                         </div>
+
+                        {/* Additional Charges Indicator */}
+                        {q.additionalCharges?.isConfigured && (
+                          <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            fontSize: '0.72rem',
+                            color: '#0369A1',
+                            background: '#F0F9FF',
+                            border: '1px solid #BAE6FD',
+                            padding: '0.3rem 0.55rem',
+                            borderRadius: '6px',
+                            marginBottom: '0.65rem'
+                          }}>
+                            <span>Extra Km: <strong>₹{q.additionalCharges.extraKmRate}/km</strong></span>
+                            <span>Extra Hour: <strong>₹{q.additionalCharges.extraHourRate}/hr</strong></span>
+                            <span>Included: <strong>{q.additionalCharges.includedKm} km</strong></span>
+                          </div>
+                        )}
 
                         {/* Customer Quote Link */}
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem', borderTop: '1px dashed #CBD5E1', paddingTop: '0.5rem' }}>
@@ -1192,7 +1458,7 @@ export const AdminEnquiries = () => {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
               <a
                 href={`https://wa.me/91${selectedEnquiry.phone?.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(
-                  `Hello ${selectedEnquiry.name || 'Sir/Madam'}, thank you for contacting AJ Travels Pune regarding your travel enquiry #${selectedEnquiry.id.slice(-6).toUpperCase()} from ${selectedEnquiry.pickup} to ${selectedEnquiry.destination}. We are pleased to provide you with the best available fare quote.`
+                  `Hello ${selectedEnquiry.name || 'Sir/Madam'}, thank you for contacting AJ Travels Pune regarding your travel enquiry ${getEnquiryDisplayId(selectedEnquiry)} from ${selectedEnquiry.pickup} to ${selectedEnquiry.destination}. We are pleased to provide you with the best available fare quote.`
                 )}`}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -1293,9 +1559,24 @@ export const AdminEnquiries = () => {
 
             {/* Header */}
             <div style={{ marginBottom: '1.25rem', paddingRight: '2rem' }}>
-              <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#0284C7', textTransform: 'uppercase' }}>
-                Quotation Builder
-              </span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                <span style={{
+                  fontWeight: 800,
+                  color: '#0284C7',
+                  fontSize: '0.82rem',
+                  backgroundColor: '#EFF6FF',
+                  border: '1px solid #BFDBFE',
+                  padding: '0.15rem 0.5rem',
+                  borderRadius: '6px',
+                  letterSpacing: '0.04em',
+                  fontFamily: "'Inter', sans-serif"
+                }}>
+                  {getEnquiryDisplayId(selectedEnquiry)}
+                </span>
+                <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#0284C7', textTransform: 'uppercase' }}>
+                  Quotation Builder
+                </span>
+              </div>
               <h2 style={{ fontSize: '1.3rem', fontWeight: 800, color: '#0F172A', margin: '0.2rem 0 0 0' }}>
                 Prepare Fare Quote for {selectedEnquiry.name}
               </h2>
@@ -1554,6 +1835,145 @@ export const AdminEnquiries = () => {
                   <span style={{ fontSize: '1.25rem', fontWeight: 900, color: '#16A34A' }}>
                     ₹{calculatePreviewTotal()}
                   </span>
+                </div>
+              </div>
+
+              {/* Additional Charges (Conditional - If Applicable) */}
+              <div style={{
+                background: '#F8FAFC',
+                borderRadius: '10px',
+                padding: '0.85rem',
+                border: '1px solid #E2E8F0',
+                marginBottom: '1rem'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.55rem' }}>
+                  <div style={{ fontSize: '0.72rem', fontWeight: 800, color: '#0F172A', textTransform: 'uppercase' }}>
+                    Additional Charges (If Applicable — Conditional)
+                  </div>
+                  <span style={{ fontSize: '0.68rem', color: '#64748B', fontWeight: 600 }}>
+                    Excluded from Total Quoted Fare
+                  </span>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.65rem' }}>
+                  <div>
+                    <label style={{ fontSize: '0.7rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '0.2rem' }}>
+                      Extra Km Rate (₹/km)
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      placeholder="e.g. 14"
+                      value={quoteForm.extraKmRate}
+                      onChange={(e) => handleQuoteFormChange('extraKmRate', e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '0.45rem',
+                        borderRadius: '6px',
+                        border: '1px solid #CBD5E1',
+                        fontSize: '0.82rem',
+                        boxSizing: 'border-box'
+                      }}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: '0.7rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '0.2rem' }}>
+                      Extra Hour Rate (₹/hr)
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      placeholder="e.g. 150"
+                      value={quoteForm.extraHourRate}
+                      onChange={(e) => handleQuoteFormChange('extraHourRate', e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '0.45rem',
+                        borderRadius: '6px',
+                        border: '1px solid #CBD5E1',
+                        fontSize: '0.82rem',
+                        boxSizing: 'border-box'
+                      }}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: '0.7rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '0.2rem' }}>
+                      Included Package (km)
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      placeholder="e.g. 150"
+                      value={quoteForm.includedKm}
+                      onChange={(e) => handleQuoteFormChange('includedKm', e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '0.45rem',
+                        borderRadius: '6px',
+                        border: '1px solid #CBD5E1',
+                        fontSize: '0.82rem',
+                        boxSizing: 'border-box'
+                      }}
+                    />
+                  </div>
+                </div>
+
+                <div style={{ fontSize: '0.7rem', color: '#64748B', marginTop: '0.5rem', lineHeight: 1.4, fontStyle: 'italic' }}>
+                  {quoteForm.extraKmRate || quoteForm.extraHourRate ? (
+                    <span>Configured: ₹{quoteForm.extraKmRate || '0'}/km beyond {quoteForm.includedKm || 'package'} km, ₹{quoteForm.extraHourRate || '0'}/hr waiting. These apply conditionally only if package limits are exceeded.</span>
+                  ) : (
+                    <span>Not configured for this corridor. Customer quotation will advise contacting dispatch for corridor rates.</span>
+                  )}
+                </div>
+              </div>
+
+              {/* Inclusions and Exclusions Editable Fields */}
+              <div style={{ marginBottom: '1rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                  <div>
+                    <label style={{ fontSize: '0.72rem', fontWeight: 700, color: '#166534', display: 'block', marginBottom: '0.25rem' }}>
+                      Inclusions (Included in Quoted Price)
+                    </label>
+                    <textarea
+                      rows={2}
+                      value={quoteForm.inclusions}
+                      onChange={(e) => handleQuoteFormChange('inclusions', e.target.value)}
+                      placeholder="e.g. Fuel, Tolls, Driver Allowance..."
+                      style={{
+                        width: '100%',
+                        padding: '0.45rem',
+                        borderRadius: '6px',
+                        border: '1px solid #BBF7D0',
+                        backgroundColor: '#F0FDF4',
+                        fontSize: '0.76rem',
+                        boxSizing: 'border-box',
+                        resize: 'vertical'
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.72rem', fontWeight: 700, color: '#991B1B', display: 'block', marginBottom: '0.25rem' }}>
+                      Exclusions (Payable Directly by Customer)
+                    </label>
+                    <textarea
+                      rows={2}
+                      value={quoteForm.exclusions}
+                      onChange={(e) => handleQuoteFormChange('exclusions', e.target.value)}
+                      placeholder="e.g. Extra km/hr over limit..."
+                      style={{
+                        width: '100%',
+                        padding: '0.45rem',
+                        borderRadius: '6px',
+                        border: '1px solid #FECACA',
+                        backgroundColor: '#FEF2F2',
+                        fontSize: '0.76rem',
+                        boxSizing: 'border-box',
+                        resize: 'vertical'
+                      }}
+                    />
+                  </div>
                 </div>
               </div>
 

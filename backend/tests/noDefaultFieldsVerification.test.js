@@ -86,55 +86,84 @@ async function runTests() {
 
   const testVeh = await prisma.vehicle.findFirst({ where: { isActive: true } });
 
-  const createFareRes = await fetch(`${API_BASE}/fares/admin/configs`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${adminToken}`,
-    },
-    body: JSON.stringify({
-      pickupLocationName: customPickup,
-      dropLocationName: customDrop,
-      vehicle: {
-        id: testVeh.id,
-        name: testVeh.name,
-        category: testVeh.category,
-        seatingCapacity: testVeh.seatingCapacity,
-      },
-      fare: {
-        tripType: 'ONE_WAY',
-        baseFare: 2999,
-        perKmFare: 16,
-        isActive: false, // inactive test fare
-      },
-      tolls: [],
-      parking: { enabled: false, amount: 0 },
-      waiting: { enabled: false, perHourCharge: 0 },
-    }),
-  });
+  let createdFareId = null;
+  let dbFareInfo = null;
 
-  assert(createFareRes.status === 201, `POST /api/fares/admin/configs with custom locations created successfully (Status: ${createFareRes.status})`);
-  const createFareData = await createFareRes.json();
-  const createdFareId = createFareData?.data?.id;
-
-  if (createdFareId) {
-    // Verify locations and route were created in DB
-    const dbFare = await prisma.fare.findUnique({
-      where: { id: createdFareId },
-      include: { route: { include: { pickupLocation: true, dropLocation: true } } },
+  try {
+    const createFareRes = await fetch(`${API_BASE}/fares/admin/configs`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${adminToken}`,
+      },
+      body: JSON.stringify({
+        pickupLocationName: customPickup,
+        dropLocationName: customDrop,
+        vehicle: {
+          id: testVeh.id,
+          name: testVeh.name,
+          category: testVeh.category,
+          seatingCapacity: testVeh.seatingCapacity,
+        },
+        fare: {
+          tripType: 'ONE_WAY',
+          baseFare: 2999,
+          perKmFare: 16,
+          isActive: false, // inactive test fare
+        },
+        tolls: [],
+        parking: { enabled: false, amount: 0 },
+        waiting: { enabled: false, perHourCharge: 0 },
+      }),
     });
 
-    assert(dbFare !== null, 'Fare was persisted in database');
-    assert(dbFare.route.pickupLocation.name === customPickup, `Custom pickup location "${customPickup}" resolved`);
-    assert(dbFare.route.dropLocation.name === customDrop, `Custom drop location "${customDrop}" resolved`);
-    assert(dbFare.baseFare === 2999, 'Base fare matches custom entered value: ₹2999');
+    assert(createFareRes.status === 201, `POST /api/fares/admin/configs with custom locations created successfully (Status: ${createFareRes.status})`);
+    const createFareData = await createFareRes.json();
+    createdFareId = createFareData?.data?.id;
 
-    // Clean up test fare and route
-    await prisma.fare.delete({ where: { id: createdFareId } });
-    await prisma.route.delete({ where: { id: dbFare.routeId } });
-    await prisma.location.delete({ where: { id: dbFare.route.pickupLocationId } });
-    await prisma.location.delete({ where: { id: dbFare.route.dropLocationId } });
-    console.log('  Cleaned up temporary test custom route and fare records.');
+    if (createdFareId) {
+      // Verify locations and route were created in DB
+      dbFareInfo = await prisma.fare.findUnique({
+        where: { id: createdFareId },
+        include: { route: { include: { pickupLocation: true, dropLocation: true } } },
+      });
+
+      assert(dbFareInfo !== null, 'Fare was persisted in database');
+      assert(dbFareInfo.route.pickupLocation.name === customPickup, `Custom pickup location "${customPickup}" resolved`);
+      assert(dbFareInfo.route.dropLocation.name === customDrop, `Custom drop location "${customDrop}" resolved`);
+      assert(dbFareInfo.baseFare === 2999, 'Base fare matches custom entered value: ₹2999');
+    }
+  } finally {
+    // Bulletproof cleanup: delete created test fare, route, and locations
+    try {
+      if (createdFareId) {
+        await prisma.fare.delete({ where: { id: createdFareId } }).catch(() => {});
+      }
+      if (dbFareInfo?.routeId) {
+        await prisma.route.delete({ where: { id: dbFareInfo.routeId } }).catch(() => {});
+      }
+      if (dbFareInfo?.route?.pickupLocationId) {
+        await prisma.location.delete({ where: { id: dbFareInfo.route.pickupLocationId } }).catch(() => {});
+      }
+      if (dbFareInfo?.route?.dropLocationId) {
+        await prisma.location.delete({ where: { id: dbFareInfo.route.dropLocationId } }).catch(() => {});
+      }
+      // Fallback cleanup by location names in case dbFareInfo was not fetched
+      const orphanedLocs = await prisma.location.findMany({
+        where: { name: { in: [customPickup, customDrop] } },
+        select: { id: true }
+      });
+      if (orphanedLocs.length > 0) {
+        const locIds = orphanedLocs.map(l => l.id);
+        await prisma.route.deleteMany({
+          where: { OR: [{ pickupLocationId: { in: locIds } }, { dropLocationId: { in: locIds } }] }
+        }).catch(() => {});
+        await prisma.location.deleteMany({ where: { id: { in: locIds } } }).catch(() => {});
+      }
+      console.log('  Cleaned up temporary test custom route and fare records in finally block.');
+    } catch (cleanupErr) {
+      console.warn('  Test cleanup warning:', cleanupErr.message);
+    }
   }
 
   console.log('\n=======================================================================');

@@ -29,8 +29,10 @@ import {
   X,
   Phone,
   ShieldAlert,
+  MessageSquare,
+  Info,
 } from 'lucide-react';
-import { bookingApi, fareApi, locationApi, otpApi, API_BASE_URL } from '../services/api';
+import { bookingApi, fareApi, locationApi, otpApi, enquiryApi, API_BASE_URL } from '../services/api';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
 import { usePageSeo } from '../hooks/usePageSeo';
@@ -90,6 +92,7 @@ export const BookingPage = () => {
   // WhatsApp OTP Verification Inline States
   const [isPhoneVerified, setIsPhoneVerified] = useState(false);
   const [verificationToken, setVerificationToken] = useState('');
+  const [verifiedPhoneNumber, setVerifiedPhoneNumber] = useState('');
   const [otpSent, setOtpSent] = useState(false);
   const [inputOtp, setInputOtp] = useState('');
   const [otpNotice, setOtpNotice] = useState('');
@@ -97,6 +100,12 @@ export const BookingPage = () => {
   const [isSendingOtp, setIsSendingOtp] = useState(false);
   const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
   const [cooldown, setCooldown] = useState(0);
+
+  // Fallback Callback & Enquiry States
+  const [isFallbackMode, setIsFallbackMode] = useState(false);
+  const [isSubmittingCallback, setIsSubmittingCallback] = useState(false);
+  const [callbackError, setCallbackError] = useState('');
+  const [callbackSuccess, setCallbackSuccess] = useState(null);
 
   // Submission State
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -218,9 +227,11 @@ export const BookingPage = () => {
       if (res.data?.success) {
         setVerificationToken(res.data.verificationToken);
         setIsPhoneVerified(true);
+        setVerifiedPhoneNumber(cleanPhone);
         setOtpSent(false);
         setOtpError('');
         setSubmitError('');
+        setCallbackError('');
         setOtpNotice(`✓ Mobile number +91 ${cleanPhone} verified via WhatsApp! Address fields unlocked.`);
       }
     } catch (err) {
@@ -314,13 +325,162 @@ export const BookingPage = () => {
     }
   };
 
+  // Phone change handler: resets verification if phone number digits change
+  const handlePhoneChange = (e) => {
+    const rawVal = e.target.value;
+    const digits = rawVal.replace(/\D/g, '').slice(0, 10);
+    setCustomerPhone(digits);
+
+    if (isPhoneVerified && digits !== verifiedPhoneNumber) {
+      setIsPhoneVerified(false);
+      setVerificationToken('');
+      setVerifiedPhoneNumber('');
+      setOtpSent(false);
+      setOtpNotice('');
+      setOtpError('');
+    }
+  };
+
+  // Resolved journey values for fallback enquiry and WhatsApp message
+  const pickupRouteName =
+    searchParams.get('pickupName') ||
+    pickupAddress ||
+    quoteData?.route?.pickup?.name ||
+    'Pune';
+  const dropRouteName =
+    tripType === 'LOCAL'
+      ? `${city} Local (${duration}h Package)`
+      : searchParams.get('dropName') ||
+        dropAddress ||
+        quoteData?.route?.drop?.name ||
+        'Mumbai';
+  const selectedVehName =
+    selectedVehicle?.name ||
+    searchParams.get('vehicleName') ||
+    'Executive Cab';
+  const tripTypeLabel =
+    tripType === 'ROUND_TRIP'
+      ? 'Round Trip'
+      : tripType === 'LOCAL'
+      ? `Local Rental (${duration}h Package)`
+      : 'One Way';
+
+  const fareTotal = selectedVehicle?.fare?.total || 0;
+  const fareSummaryText =
+    fareTotal > 0
+      ? `₹${fareTotal.toLocaleString()} (All inclusive)`
+      : 'Please confirm the latest fare.';
+
+  // Direct WhatsApp Chat Message Generator (Official: +91 7447443536)
+  let whatsappMsg = `Hello AJ Travels Pune, I would like to enquire about a cab reservation:\n`;
+  whatsappMsg += `• Name: ${customerName.trim() || 'Guest'}\n`;
+  if (customerPhone.trim()) {
+    whatsappMsg += `• Mobile: +91 ${customerPhone.replace(/\D/g, '')}\n`;
+  }
+  whatsappMsg += `• Trip Type: ${tripTypeLabel}\n`;
+  whatsappMsg += `• Route: ${pickupRouteName} to ${dropRouteName}\n`;
+  if (pickupAddress.trim()) {
+    whatsappMsg += `• Pickup Address: ${pickupAddress.trim()}\n`;
+  }
+  if (tripType !== 'LOCAL' && dropAddress.trim()) {
+    whatsappMsg += `• Drop Address: ${dropAddress.trim()}\n`;
+  }
+  whatsappMsg += `• Travel Date & Time: ${departureDate} at ${departureTime}\n`;
+  if (tripType === 'ROUND_TRIP' && returnDate) {
+    whatsappMsg += `• Return Date & Time: ${returnDate} at ${returnTime || 'Flexible'}\n`;
+  }
+  whatsappMsg += `• Passengers: ${passengers} Person(s)\n`;
+  whatsappMsg += `• Selected Vehicle: ${selectedVehName}\n`;
+  whatsappMsg += `• Estimated Fare: ${fareSummaryText}\n\n`;
+  whatsappMsg += `Please check vehicle availability and confirm my booking details.`;
+
+  const whatsappDirectUrl = `https://wa.me/917447443536?text=${encodeURIComponent(whatsappMsg)}`;
+
+  // Fallback Callback Enquiry Submission Handler (POST /api/enquiries)
+  const handleRequestCallback = async () => {
+    setCallbackError('');
+    setSubmitError('');
+
+    if (!customerName.trim()) {
+      setCallbackError('Please enter your full name first.');
+      return;
+    }
+
+    const cleanPhone = customerPhone.replace(/\D/g, '');
+    if (cleanPhone.length !== 10) {
+      setCallbackError('Please enter a valid 10-digit mobile number.');
+      return;
+    }
+
+    if (!pickupAddress.trim()) {
+      setIsFallbackMode(true);
+      setCallbackError('Address fields unlocked below. Please enter your pickup address and click Request a Callback.');
+      return;
+    }
+
+    if (tripType !== 'LOCAL' && !dropAddress.trim()) {
+      setIsFallbackMode(true);
+      setCallbackError('Address fields unlocked below. Please enter your destination address and click Request a Callback.');
+      return;
+    }
+
+    setIsSubmittingCallback(true);
+    try {
+      const payload = {
+        name: customerName.trim(),
+        phone: cleanPhone,
+        pickup: pickupRouteName,
+        destination: dropRouteName,
+        pickupAddress: pickupAddress.trim(),
+        dropAddress: tripType === 'LOCAL' ? `${city} Local City Travel` : dropAddress.trim(),
+        travelDate: departureDate || date,
+        departureTime: departureTime || time,
+        vehicle: selectedVehName,
+        vehicleId: selectedVehicle?.vehicleId || vehicleId || undefined,
+        pickupLocationId: pickupId || undefined,
+        dropLocationId: dropId || undefined,
+        tripType,
+        city: tripType === 'LOCAL' ? city : undefined,
+        duration: tripType === 'LOCAL' ? parseInt(duration, 10) : undefined,
+        passengers: parseInt(passengers, 10) || 1,
+        notes: notes.trim() || undefined,
+        source: 'WEB_FALLBACK',
+      };
+
+      const res = await enquiryApi.create(payload);
+      if (res.data?.success) {
+        setCallbackSuccess({
+          reference: res.data.data?.reference || `ENQ-${res.data.data?.id?.slice(-6).toUpperCase()}`,
+          id: res.data.data?.id,
+          name: customerName.trim(),
+          phone: cleanPhone,
+          pickup: payload.pickup,
+          destination: payload.destination,
+          pickupAddress: pickupAddress.trim(),
+          dropAddress: payload.dropAddress,
+          vehicle: payload.vehicle,
+          travelDate: payload.travelDate,
+          departureTime: payload.departureTime,
+          tripType,
+        });
+      } else {
+        setCallbackError(res.data?.message || 'Failed to submit callback request. Please try again or chat with us on WhatsApp.');
+      }
+    } catch (err) {
+      console.error('Callback enquiry error:', err);
+      setCallbackError(err.response?.data?.message || 'Unable to submit enquiry at this moment. Please call or WhatsApp us directly.');
+    } finally {
+      setIsSubmittingCallback(false);
+    }
+  };
+
+  const isAddressUnlocked = isPhoneVerified || isFallbackMode;
+
   // Fuel Type resolver
   let fuelType = 'CNG / Petrol';
   if (selectedVehicle?.description?.toLowerCase().includes('diesel')) {
     fuelType = 'Diesel (AC)';
   }
-
-  const fareTotal = selectedVehicle?.fare?.total || 0;
 
   return (
     <div className="fare-page-wrapper">
@@ -443,6 +603,94 @@ export const BookingPage = () => {
               </Link>
             </div>
           </div>
+        ) : callbackSuccess ? (
+          /* Fallback Callback Enquiry Confirmation Modal */
+          <div className="booking-confirmed-card" style={{ border: '2px solid #F59E0B' }}>
+            <div className="confirmed-icon-circle" style={{ backgroundColor: '#FEF3C7', color: '#D97706' }}>
+              <PhoneCall size={32} strokeWidth={2.5} />
+            </div>
+
+            <h2 style={{ fontSize: '1.45rem', fontWeight: 800, color: '#0F172A', marginBottom: '0.25rem' }}>
+              Trip Request Received!
+            </h2>
+            <p style={{ color: '#64748B', fontSize: '0.86rem', marginBottom: '1.1rem' }}>
+              Enquiry Reference:{' '}
+              <strong style={{ color: '#D97706' }}>#{callbackSuccess.reference}</strong>. Your trip request has been received. Our team will contact you to confirm availability and the final booking details.
+            </p>
+
+            <div style={{ backgroundColor: '#FFFBEB', border: '1px solid #FCD34D', borderRadius: '10px', padding: '0.75rem 1rem', marginBottom: '1.25rem', textAlign: 'left', fontSize: '0.8rem', color: '#92400E', lineHeight: 1.45 }}>
+              <strong>Direct Request Notice:</strong> This trip request is saved as an enquiry with status <strong>NEW</strong>. Chauffeur allocation will be confirmed over phone call on <strong>+91 {callbackSuccess.phone}</strong>. No payment is required right now.
+            </div>
+
+            <div className="confirmed-summary-table">
+              <div className="confirmed-grid-2">
+                <div>
+                  <span className="confirmed-label">Customer Name:</span>
+                  <strong>{callbackSuccess.name}</strong>
+                </div>
+                <div>
+                  <span className="confirmed-label">Contact Mobile:</span>
+                  <strong style={{ color: '#D97706' }}>+91 {callbackSuccess.phone} (Callback Pending)</strong>
+                </div>
+                <div>
+                  <span className="confirmed-label">Travel Route:</span>
+                  <strong>
+                    {tripType === 'LOCAL'
+                      ? `${city} (${duration}h Package)`
+                      : `${callbackSuccess.pickup} ➔ ${callbackSuccess.destination}`}
+                  </strong>
+                </div>
+                <div>
+                  <span className="confirmed-label">Pickup Address:</span>
+                  <strong>{callbackSuccess.pickupAddress}</strong>
+                </div>
+                {tripType !== 'LOCAL' && (
+                  <div>
+                    <span className="confirmed-label">Drop Address:</span>
+                    <strong>{callbackSuccess.dropAddress}</strong>
+                  </div>
+                )}
+                <div>
+                  <span className="confirmed-label">Vehicle Requested:</span>
+                  <strong>{callbackSuccess.vehicle}</strong>
+                </div>
+                <div>
+                  <span className="confirmed-label">Travel Schedule:</span>
+                  <strong>{callbackSuccess.travelDate} at {callbackSuccess.departureTime}</strong>
+                </div>
+                <div>
+                  <span className="confirmed-label">Quoted Fare:</span>
+                  <strong style={{ color: '#0284C7' }}>{fareSummaryText}</strong>
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', marginTop: '1.25rem', flexWrap: 'wrap' }}>
+              <Link to="/" className="btn-blue" style={{ padding: '0.7rem 1.4rem' }}>
+                Back to Home Page
+              </Link>
+              <a
+                href={whatsappDirectUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                  padding: '0.7rem 1.4rem',
+                  background: '#15803D',
+                  color: '#FFFFFF',
+                  fontWeight: 800,
+                  borderRadius: '8px',
+                  textDecoration: 'none',
+                  fontSize: '0.84rem'
+                }}
+              >
+                <Phone size={14} />
+                <span>Chat on WhatsApp</span>
+              </a>
+            </div>
+          </div>
         ) : (
           <div className="booking-compact-grid">
             {/* Left Column: Form */}
@@ -510,7 +758,7 @@ export const BookingPage = () => {
               )}
 
               <form onSubmit={handleCreateBooking} className="booking-compact-form">
-                {/* Row 1: Name & Mobile */}
+                {/* ── Section 1: Passenger Contact Details ── */}
                 <div className="booking-input-row-2">
                   {/* Full Name */}
                   <div className="booking-input-group">
@@ -528,16 +776,44 @@ export const BookingPage = () => {
                     </div>
                   </div>
 
-                  {/* Mobile Number with OTP Verification */}
+                  {/* Mobile Number with inline OTP trigger */}
                   <div className="booking-input-group">
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <label className="booking-form-label">Mobile Number *</label>
-                      {isPhoneVerified && (
-                        <span style={{ fontSize: '0.66rem', color: '#16A34A', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-                          <CheckCircle2 size={11} color="#16A34A" />
-                          <span>✓ Verified</span>
+                      {isPhoneVerified ? (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                          <span style={{ fontSize: '0.66rem', color: '#16A34A', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                            <CheckCircle2 size={11} color="#16A34A" />
+                            <span>✓ Verified</span>
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setIsPhoneVerified(false);
+                              setVerificationToken('');
+                              setVerifiedPhoneNumber('');
+                              setOtpSent(false);
+                              setOtpNotice('');
+                            }}
+                            style={{
+                              background: 'none',
+                              border: 'none',
+                              color: '#0284C7',
+                              fontSize: '0.66rem',
+                              fontWeight: 700,
+                              cursor: 'pointer',
+                              padding: 0,
+                              textDecoration: 'underline'
+                            }}
+                          >
+                            Change
+                          </button>
+                        </div>
+                      ) : isFallbackMode ? (
+                        <span style={{ fontSize: '0.66rem', color: '#D97706', fontWeight: 700 }}>
+                          Callback Mode Active
                         </span>
-                      )}
+                      ) : null}
                     </div>
 
                     <div className="booking-field-wrapper" style={{ gap: '0.35rem' }}>
@@ -545,15 +821,7 @@ export const BookingPage = () => {
                       <input
                         type="tel"
                         value={customerPhone}
-                        disabled={isPhoneVerified}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          setCustomerPhone(val);
-                          setIsPhoneVerified(false);
-                          setVerificationToken('');
-                          setOtpSent(false);
-                          setOtpError('');
-                        }}
+                        onChange={handlePhoneChange}
                         placeholder="10-digit number"
                         maxLength="10"
                         className="booking-form-control with-prefix"
@@ -579,156 +847,34 @@ export const BookingPage = () => {
                         </button>
                       )}
                     </div>
+                  </div>
+                </div>
 
-                    {/* Inline OTP Verification Flow */}
-                    {otpSent && !isPhoneVerified && (
+                {/* Inline OTP Verification Flow (Shown when OTP is dispatched) */}
+                {otpSent && !isPhoneVerified && (
+                  <div
+                    id="inline-otp-section"
+                    style={{
+                      padding: '0.85rem 1rem',
+                      background: '#F0FDF4',
+                      border: '1.5px solid #86EFAC',
+                      borderRadius: '10px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '0.55rem',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                      <CheckCircle2 size={15} color="#16A34A" style={{ flexShrink: 0 }} />
+                      <span style={{ fontSize: '0.76rem', fontWeight: 700, color: '#15803D' }}>
+                        OTP sent to WhatsApp (+91 {customerPhone}). Please enter it below:
+                      </span>
+                    </div>
+
+                    {otpError && (
                       <div
-                        id="inline-otp-section"
+                        id="inline-otp-error"
                         style={{
-                          marginTop: '0.65rem',
-                          padding: '0.75rem 0.85rem',
-                          background: '#F0FDF4',
-                          border: '1.5px solid #86EFAC',
-                          borderRadius: '10px',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          gap: '0.5rem',
-                        }}
-                      >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                          <CheckCircle2 size={14} color="#16A34A" style={{ flexShrink: 0 }} />
-                          <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#15803D' }}>
-                            OTP sent to your WhatsApp number. Please enter it below.
-                          </span>
-                        </div>
-
-                        {otpError && (
-                          <div
-                            id="inline-otp-error"
-                            style={{
-                              color: '#BE123C',
-                              backgroundColor: '#FFE4E6',
-                              border: '1px solid #FECDD3',
-                              padding: '0.4rem 0.6rem',
-                              borderRadius: '6px',
-                              fontSize: '0.72rem',
-                              fontWeight: 600,
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '0.3rem',
-                            }}
-                          >
-                            <AlertCircle size={13} color="#BE123C" style={{ flexShrink: 0 }} />
-                            <span>{otpError}</span>
-                          </div>
-                        )}
-
-                        <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
-                          <input
-                            type="text"
-                            id="inline-otp-input"
-                            value={inputOtp}
-                            onChange={(e) => {
-                              setInputOtp(e.target.value.replace(/\D/g, ''));
-                              if (otpError) setOtpError('');
-                            }}
-                            placeholder="Enter OTP"
-                            maxLength="8"
-                            autoFocus
-                            style={{
-                              flex: '1',
-                              minWidth: '0',
-                              height: '34px',
-                              padding: '0 0.6rem',
-                              fontSize: '0.95rem',
-                              letterSpacing: '0.12em',
-                              fontWeight: 700,
-                              fontFamily: 'monospace',
-                              textAlign: 'center',
-                              borderRadius: '6px',
-                              border: '1.5px solid #22C55E',
-                              outline: 'none',
-                              background: '#FFFFFF',
-                              color: '#0F172A',
-                            }}
-                          />
-
-                          <button
-                            type="button"
-                            id="btn-verify-otp-inline"
-                            onClick={handleVerifyOtp}
-                            disabled={isVerifyingOtp || !inputOtp.trim()}
-                            style={{
-                              height: '34px',
-                              padding: '0 0.85rem',
-                              background: '#16A34A',
-                              color: '#FFFFFF',
-                              border: 'none',
-                              borderRadius: '6px',
-                              fontSize: '0.74rem',
-                              fontWeight: 800,
-                              cursor: isVerifyingOtp || !inputOtp.trim() ? 'not-allowed' : 'pointer',
-                              opacity: isVerifyingOtp || !inputOtp.trim() ? 0.6 : 1,
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '0.3rem',
-                              whiteSpace: 'nowrap',
-                              transition: 'all 0.2s ease',
-                            }}
-                          >
-                            {isVerifyingOtp ? (
-                              <>
-                                <Loader2 size={12} className="animate-spin" />
-                                <span>Verifying...</span>
-                              </>
-                            ) : (
-                              <>
-                                <CheckCircle2 size={13} />
-                                <span>Verify OTP</span>
-                              </>
-                            )}
-                          </button>
-
-                          <button
-                            type="button"
-                            id="btn-resend-otp-inline"
-                            onClick={handleSendOtp}
-                            disabled={isSendingOtp || cooldown > 0}
-                            style={{
-                              height: '34px',
-                              padding: '0 0.65rem',
-                              background: '#FFFFFF',
-                              color: cooldown > 0 ? '#94A3B8' : '#0284C7',
-                              border: '1px solid #CBD5E1',
-                              borderRadius: '6px',
-                              fontSize: '0.72rem',
-                              fontWeight: 700,
-                              cursor: isSendingOtp || cooldown > 0 ? 'not-allowed' : 'pointer',
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '0.25rem',
-                              whiteSpace: 'nowrap',
-                              transition: 'all 0.2s ease',
-                            }}
-                          >
-                            {isSendingOtp ? (
-                              <Loader2 size={11} className="animate-spin" />
-                            ) : cooldown > 0 ? (
-                              <span>Resend in {cooldown}s</span>
-                            ) : (
-                              <span>Resend OTP</span>
-                            )}
-                          </button>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Inline error if OTP send failed before otpSent became true */}
-                    {otpError && !otpSent && !isPhoneVerified && (
-                      <div
-                        id="inline-otp-send-error"
-                        style={{
-                          marginTop: '0.45rem',
                           color: '#BE123C',
                           backgroundColor: '#FFE4E6',
                           border: '1px solid #FECDD3',
@@ -745,20 +891,147 @@ export const BookingPage = () => {
                         <span>{otpError}</span>
                       </div>
                     )}
-                  </div>
-                </div>
 
-                {/* Row 2: Pickup Address (Unlocked upon phone verification) */}
+                    <div style={{ display: 'flex', gap: '0.45rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                      <input
+                        type="text"
+                        id="inline-otp-input"
+                        value={inputOtp}
+                        onChange={(e) => {
+                          setInputOtp(e.target.value.replace(/\D/g, ''));
+                          if (otpError) setOtpError('');
+                        }}
+                        placeholder="Enter OTP"
+                        maxLength="8"
+                        autoFocus
+                        style={{
+                          flex: '1',
+                          minWidth: '120px',
+                          height: '35px',
+                          padding: '0 0.65rem',
+                          fontSize: '0.95rem',
+                          letterSpacing: '0.12em',
+                          fontWeight: 700,
+                          fontFamily: 'monospace',
+                          textAlign: 'center',
+                          borderRadius: '6px',
+                          border: '1.5px solid #22C55E',
+                          outline: 'none',
+                          background: '#FFFFFF',
+                          color: '#0F172A',
+                        }}
+                      />
+
+                      <button
+                        type="button"
+                        id="btn-verify-otp-inline"
+                        onClick={handleVerifyOtp}
+                        disabled={isVerifyingOtp || !inputOtp.trim()}
+                        style={{
+                          height: '35px',
+                          padding: '0 0.95rem',
+                          background: '#16A34A',
+                          color: '#FFFFFF',
+                          border: 'none',
+                          borderRadius: '6px',
+                          fontSize: '0.74rem',
+                          fontWeight: 800,
+                          cursor: isVerifyingOtp || !inputOtp.trim() ? 'not-allowed' : 'pointer',
+                          opacity: isVerifyingOtp || !inputOtp.trim() ? 0.6 : 1,
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '0.3rem',
+                          whiteSpace: 'nowrap',
+                          transition: 'all 0.2s ease',
+                        }}
+                      >
+                        {isVerifyingOtp ? (
+                          <>
+                            <Loader2 size={12} className="animate-spin" />
+                            <span>Verifying...</span>
+                          </>
+                        ) : (
+                          <>
+                            <CheckCircle2 size={13} />
+                            <span>Verify OTP</span>
+                          </>
+                        )}
+                      </button>
+
+                      <button
+                        type="button"
+                        id="btn-resend-otp-inline"
+                        onClick={handleSendOtp}
+                        disabled={isSendingOtp || cooldown > 0}
+                        style={{
+                          height: '35px',
+                          padding: '0 0.75rem',
+                          background: '#FFFFFF',
+                          color: cooldown > 0 ? '#94A3B8' : '#0284C7',
+                          border: '1px solid #CBD5E1',
+                          borderRadius: '6px',
+                          fontSize: '0.72rem',
+                          fontWeight: 700,
+                          cursor: isSendingOtp || cooldown > 0 ? 'not-allowed' : 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '0.25rem',
+                          whiteSpace: 'nowrap',
+                          transition: 'all 0.2s ease',
+                        }}
+                      >
+                        {isSendingOtp ? (
+                          <Loader2 size={11} className="animate-spin" />
+                        ) : cooldown > 0 ? (
+                          <span>Resend in {cooldown}s</span>
+                        ) : (
+                          <span>Resend OTP</span>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Inline error if OTP send failed */}
+                {otpError && !otpSent && !isPhoneVerified && (
+                  <div
+                    id="inline-otp-send-error"
+                    style={{
+                      color: '#BE123C',
+                      backgroundColor: '#FFE4E6',
+                      border: '1px solid #FECDD3',
+                      padding: '0.4rem 0.6rem',
+                      borderRadius: '6px',
+                      fontSize: '0.72rem',
+                      fontWeight: 600,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.3rem',
+                    }}
+                  >
+                    <AlertCircle size={13} color="#BE123C" style={{ flexShrink: 0 }} />
+                    <span>{otpError}</span>
+                  </div>
+                )}
+
+                {/* ── Section 2: Journey Pickup & Destination ── */}
+                {/* Pickup Address */}
                 <div className="booking-input-group">
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <label className="booking-form-label">
-                      <MapPin size={12} color="#0284C7" style={{ display: 'inline', marginRight: '3px' }} />
+                      <MapPin size={12} color="#2563EB" style={{ display: 'inline', marginRight: '3px' }} />
                       Exact Pickup Address / Building / Landmark *
                     </label>
-                    {!isPhoneVerified && (
+                    {!isPhoneVerified && !isFallbackMode && (
                       <span style={{ fontSize: '0.66rem', color: '#D97706', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
                         <Lock size={11} />
                         <span>Verify Phone First</span>
+                      </span>
+                    )}
+                    {!isPhoneVerified && isFallbackMode && (
+                      <span style={{ fontSize: '0.66rem', color: '#0284C7', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                        <Unlock size={11} />
+                        <span>Unlocked for Callback</span>
                       </span>
                     )}
                   </div>
@@ -767,16 +1040,16 @@ export const BookingPage = () => {
                     <input
                       type="text"
                       value={pickupAddress}
-                      disabled={!isPhoneVerified}
+                      disabled={!isAddressUnlocked}
                       onChange={(e) => setPickupAddress(e.target.value)}
-                      placeholder={isPhoneVerified ? 'e.g. Flat 302, Rohan Viti, Wakad / Baner / Pune Airport' : '🔒 Verify mobile number above to enter pickup address'}
+                      placeholder={isAddressUnlocked ? 'e.g. Flat 302, Rohan Viti, Wakad / Baner / Pune Airport' : '🔒 Verify mobile number above to enter exact pickup address'}
                       className="booking-form-control with-dot"
                       required
                     />
                   </div>
                 </div>
 
-                {/* Row 3: Drop Address (Intercity) */}
+                {/* Drop Address (Intercity or Local) */}
                 {tripType !== 'LOCAL' ? (
                   <div className="booking-input-group">
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -784,10 +1057,16 @@ export const BookingPage = () => {
                         <Navigation size={12} color="#10B981" style={{ display: 'inline', marginRight: '3px' }} />
                         Drop Location / Terminal / Hotel *
                       </label>
-                      {!isPhoneVerified && (
+                      {!isPhoneVerified && !isFallbackMode && (
                         <span style={{ fontSize: '0.66rem', color: '#D97706', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
                           <Lock size={11} />
                           <span>Verify Phone First</span>
+                        </span>
+                      )}
+                      {!isPhoneVerified && isFallbackMode && (
+                        <span style={{ fontSize: '0.66rem', color: '#0284C7', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                          <Unlock size={11} />
+                          <span>Unlocked for Callback</span>
                         </span>
                       )}
                     </div>
@@ -796,9 +1075,9 @@ export const BookingPage = () => {
                       <input
                         type="text"
                         value={dropAddress}
-                        disabled={!isPhoneVerified}
+                        disabled={!isAddressUnlocked}
                         onChange={(e) => setDropAddress(e.target.value)}
-                        placeholder={isPhoneVerified ? 'e.g. T2 Mumbai International Airport / BKC / Bandra' : '🔒 Verify mobile number above to enter drop address'}
+                        placeholder={isAddressUnlocked ? 'e.g. T2 Mumbai International Airport / BKC / Bandra' : '🔒 Verify mobile number above to enter exact drop location'}
                         className="booking-form-control with-dot"
                         required
                       />
@@ -810,47 +1089,89 @@ export const BookingPage = () => {
                     <input
                       type="text"
                       value={notes}
-                      disabled={!isPhoneVerified}
+                      disabled={!isAddressUnlocked}
                       onChange={(e) => setNotes(e.target.value)}
-                      placeholder={isPhoneVerified ? 'e.g. City sightseeing, business meetings around FC Road' : '🔒 Verify mobile number above to type notes'}
+                      placeholder={isAddressUnlocked ? 'e.g. City sightseeing, business meetings around FC Road' : '🔒 Verify mobile number above to type notes'}
                       className="booking-form-control"
                     />
                   </div>
                 )}
 
-                {/* Row 4: Email & Special Notes */}
-                <div className="booking-input-row-2">
-                  <div className="booking-input-group">
-                    <label className="booking-form-label">Email (Optional - For GST/Invoice)</label>
-                    <input
-                      type="email"
-                      value={customerEmail}
-                      onChange={(e) => setCustomerEmail(e.target.value)}
-                      placeholder="name@example.com"
-                      className="booking-form-control"
-                    />
-                  </div>
-
-                  {tripType !== 'LOCAL' && (
-                    <div className="booking-input-group">
-                      <label className="booking-form-label">Flight No. / Special Note (Optional)</label>
-                      <input
-                        type="text"
-                        value={notes}
-                        onChange={(e) => setNotes(e.target.value)}
-                        placeholder="e.g. Flight 6E 204 arriving 8:30 PM"
-                        className="booking-form-control"
-                      />
-                    </div>
-                  )}
+                {/* ── Section 3: Optional Invoice Details ── */}
+                <div className="booking-input-group">
+                  <label className="booking-form-label">Email (Optional - For GST / Booking Invoice)</label>
+                  <input
+                    type="email"
+                    value={customerEmail}
+                    onChange={(e) => setCustomerEmail(e.target.value)}
+                    placeholder="e.g. name@example.com"
+                    className="booking-form-control"
+                  />
                 </div>
 
-                {/* Submit Action */}
+                {/* ── Section 4: 24/7 WhatsApp Instant Assistance Strip ── */}
+                <div
+                  id="booking-otp-fallback-card"
+                  style={{
+                    padding: '0.75rem 1rem',
+                    background: '#F0FDF4',
+                    border: '1.5px solid #BBF7D0',
+                    borderRadius: '10px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '0.85rem',
+                    flexWrap: 'wrap',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', minWidth: '220px', flex: '1' }}>
+                    <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#DCFCE7', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <MessageSquare size={16} color="#15803D" />
+                    </div>
+                    <div>
+                      <div style={{ fontWeight: 800, fontSize: '0.8rem', color: '#14532D' }}>
+                        Need help? Chat directly on WhatsApp
+                      </div>
+                      <div style={{ fontSize: '0.72rem', color: '#166534', marginTop: '0.1rem' }}>
+                        Our 24/7 travel desk is available to confirm availability and answer any questions.
+                      </div>
+                    </div>
+                  </div>
+
+                  <a
+                    id="btn-chat-whatsapp-direct"
+                    href={whatsappDirectUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      height: '34px',
+                      padding: '0 1rem',
+                      background: '#15803D',
+                      color: '#FFFFFF',
+                      border: 'none',
+                      borderRadius: '6px',
+                      fontSize: '0.74rem',
+                      fontWeight: 800,
+                      textDecoration: 'none',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.35rem',
+                      transition: 'all 0.15s ease',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    <Phone size={13} />
+                    <span>CHAT ON WHATSAPP</span>
+                  </a>
+                </div>
+
+                {/* ── Section 5: Submit Action ── */}
                 <button
                   type="submit"
-                  disabled={recalculatingQuote || isSubmitting || (!selectedVehicle && !vehicleId)}
+                  disabled={recalculatingQuote || isSubmitting || (!selectedVehicle && !vehicleId) || !isPhoneVerified}
                   className="booking-confirm-btn"
-                  style={(!selectedVehicle && !vehicleId) ? { opacity: 0.7, cursor: 'not-allowed' } : {}}
+                  style={(!selectedVehicle && !vehicleId) || !isPhoneVerified ? { opacity: 0.7, cursor: 'not-allowed' } : {}}
                 >
                   {isSubmitting ? (
                     <>
@@ -861,6 +1182,11 @@ export const BookingPage = () => {
                     <>
                       <AlertCircle size={16} />
                       <span>SELECT CAB IN FARE CALCULATOR TO BOOK</span>
+                    </>
+                  ) : !isPhoneVerified ? (
+                    <>
+                      <Lock size={16} />
+                      <span>VERIFY PHONE NUMBER VIA OTP TO CONFIRM BOOKING</span>
                     </>
                   ) : (
                     <>
@@ -1013,6 +1339,46 @@ export const BookingPage = () => {
                   </span>
                 </div>
               </div>
+
+              {/* Additional Charges (If Applicable) */}
+              {(selectedVehicle?.fare?.extraKmRate > 0 || selectedVehicle?.fare?.extraHourRate > 0) && (
+                <div style={{
+                  marginTop: '0.85rem',
+                  padding: '0.75rem 0.85rem',
+                  background: '#F8FAFC',
+                  border: '1px solid #E2E8F0',
+                  borderRadius: '10px',
+                  fontSize: '0.75rem',
+                }}>
+                  <div style={{ fontWeight: 800, color: '#0F172A', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                    <Info size={13} color="#0284C7" />
+                    <span>Additional Charges (If Applicable)</span>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', color: '#475569' }}>
+                    {selectedVehicle?.fare?.extraKmRate > 0 && (
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span>Extra distance:</span>
+                        <strong style={{ color: '#0F172A' }}>₹{selectedVehicle.fare.extraKmRate} per km</strong>
+                      </div>
+                    )}
+                    {selectedVehicle?.fare?.extraHourRate > 0 && (
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span>Extra hour / waiting:</span>
+                        <strong style={{ color: '#0F172A' }}>₹{selectedVehicle.fare.extraHourRate} per hour</strong>
+                      </div>
+                    )}
+                    {selectedVehicle?.fare?.includedKm > 0 && (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', color: '#64748B' }}>
+                        <span>Included distance:</span>
+                        <span>{selectedVehicle.fare.includedKm} km</span>
+                      </div>
+                    )}
+                  </div>
+                  <div style={{ fontSize: '0.67rem', color: '#64748B', marginTop: '0.35rem', fontStyle: 'italic', lineHeight: 1.35 }}>
+                    * Conditional charges — apply only when journey exceeds included distance or duration. Not added to booking total.
+                  </div>
+                </div>
+              )}
 
               {/* Trust Badge */}
               <div className="booking-trust-note">

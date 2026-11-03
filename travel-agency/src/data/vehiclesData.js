@@ -130,7 +130,7 @@ export const vehiclesData = [
     image: '/assets/minibus.jpg',
     passengers: '14 Passengers',
     luggage: '8-10 Bags',
-    fareStarting: 'On Request',
+    fareStarting: '₹6,499',
     overview: 'The 14-Seater Executive Tempo Traveller combines mid-size group convenience with executive road manners. Perfect for corporate shuttles, team offsites, and medium family pilgrimages traveling across Maharashtra.',
     features: [
       'Comfortable 2x1 pushback seats with ample knee room',

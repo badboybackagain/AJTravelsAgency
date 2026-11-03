@@ -36,11 +36,21 @@ export function ContactPage() {
     pickupLocation: '',
     dropLocation: '',
     travelDate: '',
+    travelTime: '',
     notes: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submittedSuccess, setSubmittedSuccess] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+
+  const formatTime12h = (time24) => {
+    if (!time24) return '';
+    const [h, m] = time24.split(':');
+    let hour = parseInt(h, 10);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    hour = hour % 12 || 12;
+    return `${hour.toString().padStart(2, '0')}:${m} ${ampm}`;
+  };
 
   const handleChange = (e) => {
     setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
@@ -54,16 +64,24 @@ export function ContactPage() {
       setErrorMsg('Please enter your full name and contact phone number.');
       return;
     }
+    if (!formData.travelDate) {
+      setErrorMsg('Please select your preferred travel date.');
+      return;
+    }
     setIsSubmitting(true);
     setErrorMsg('');
     try {
+      const formattedTime = formData.travelTime ? formatTime12h(formData.travelTime) : '';
+      const fullDateStr = formData.travelDate + (formattedTime ? ` at ${formattedTime}` : '');
+
       await enquiryApi.createEnquiry({
         name: formData.name,
         phone: formData.phone,
         pickup: formData.pickupLocation || 'Pune',
         drop: formData.dropLocation || 'Mumbai',
-        date: formData.travelDate,
-        message: `Contact Page Inquiry: ${formData.tripType} | Notes: ${formData.notes || 'N/A'}`
+        date: fullDateStr,
+        travelDate: fullDateStr,
+        message: `Contact Page Inquiry: ${formData.tripType} | Date: ${formData.travelDate} | Time: ${formattedTime || 'Flexible'} | Notes: ${formData.notes || 'N/A'}`
       });
       setSubmittedSuccess(true);
       setFormData({
@@ -73,6 +91,7 @@ export function ContactPage() {
         pickupLocation: '',
         dropLocation: '',
         travelDate: '',
+        travelTime: '',
         notes: ''
       });
     } catch (err) {
@@ -299,16 +318,30 @@ export function ContactPage() {
                       </div>
                     </div>
 
-                    <div className="input-group">
-                      <label htmlFor="travelDate">Travel Date & Approximate Time</label>
-                      <input
-                        id="travelDate"
-                        type="text"
-                        name="travelDate"
-                        value={formData.travelDate}
-                        onChange={handleChange}
-                        placeholder="e.g. Tomorrow at 6:30 AM"
-                      />
+                    <div className="form-row-2col">
+                      <div className="input-group">
+                        <label htmlFor="travelDate">Travel Date *</label>
+                        <input
+                          id="travelDate"
+                          type="date"
+                          name="travelDate"
+                          min={new Date().toISOString().split('T')[0]}
+                          value={formData.travelDate}
+                          onChange={handleChange}
+                          required
+                        />
+                      </div>
+                      <div className="input-group">
+                        <label htmlFor="travelTime">Approximate Time *</label>
+                        <input
+                          id="travelTime"
+                          type="time"
+                          name="travelTime"
+                          value={formData.travelTime}
+                          onChange={handleChange}
+                          required
+                        />
+                      </div>
                     </div>
 
                     <div className="input-group">

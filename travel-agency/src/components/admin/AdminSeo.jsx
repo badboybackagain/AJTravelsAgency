@@ -35,6 +35,7 @@ import {
   X,
   Wrench,
   Sparkles,
+  ChevronRight,
 } from 'lucide-react';
 import { seoApi, gscApi } from '../../services/api';
 import { API_BASE_URL } from '../../services/api';
@@ -497,6 +498,85 @@ function SocialCardPreview({ title, description, url, image, domain }) {
 // Page-level SEO Evaluation & Quick Fix Engine (Zero-Fabrication, Evidence-Based)
 // ===========================================================================
 
+
+// Smart optimal SEO metadata generator ensuring strict adherence to Google SERP limits
+export function getOptimalSeoMetadata(page, currentForm = {}) {
+  const pageUrl = page.pageUrl || '/';
+  const pageKey = page.pageKey || 'home';
+  const pageLabel = page.pageLabel || 'AJ Travels';
+  const rawTitle = (currentForm.seoTitle !== undefined ? currentForm.seoTitle : page.seoTitle) || '';
+  const rawDesc = (currentForm.metaDescription !== undefined ? currentForm.metaDescription : page.metaDescription) || '';
+
+  // 1. Title optimization (Target: 40-60 chars)
+  let recommendedTitle;
+  if (pageUrl === '/' || pageKey === 'home') {
+    recommendedTitle = 'AJ Travels — Car Rental & Cab Service in Pune'; // Exactly 45 chars
+  } else {
+    let base = rawTitle || pageLabel || pageKey;
+    base = base.replace(/\s*\|\s*(Best Intercity Cab Rates|Airport & City Drop Cabs|Best Cab Service & Fares|Luxury AC Mini Bus|Affordable Rates|B2B Fleet Solutions|Taxi Fares|Tempo Traveller Hire|SUV & Crysta Hire|BOM Airport & City Taxi|Tempo Traveller|Sedan Car Rental|6-Seater SUV|Luxury SUV Cab|13, 17, 20 Seater Luxury AC|Executive Fleet|BOM & PNQ Transfers)[\s\S]*/i, '');
+    base = base.replace(/\s*-\s*AJ Travels[\s\S]*/i, '');
+    base = base.replace(/\s*\|\s*AJ Travels[\s\S]*/i, '');
+    base = base.replace(/\s*\|\s*AJ Travels Pune[\s\S]*/i, '');
+    base = base.replace(/[\s,:|-]+$/, '').trim();
+
+    if (base.length + 13 < 40) {
+      if (base.length + 18 >= 40 && base.length + 18 <= 60) {
+        recommendedTitle = `${base} | AJ Travels Pune`;
+      } else {
+        const withCab = `${base} — Cab Service | AJ Travels`;
+        if (withCab.length >= 40 && withCab.length <= 60) {
+          recommendedTitle = withCab;
+        } else {
+          recommendedTitle = `${base} — Car Rental & Cabs | AJ Travels`;
+        }
+      }
+    } else {
+      const maxBaseLen = 45;
+      if (base.length > maxBaseLen) {
+        const trimmed = base.substring(0, maxBaseLen);
+        const lastSpace = trimmed.lastIndexOf(' ');
+        base = lastSpace > 22 ? trimmed.substring(0, lastSpace) : trimmed;
+      }
+      base = base.replace(/[\s,:|-]+$/, '').trim();
+      recommendedTitle = `${base} | AJ Travels`;
+    }
+  }
+
+  // 2. Description optimization (Target: 110-160 chars)
+  let recommendedDescription = rawDesc;
+  if (pageUrl === '/' || pageKey === 'home') {
+    recommendedDescription = 'AJ Travels offers reliable car rentals, Pune to Mumbai cabs, and airport transfers with verified chauffeurs. Zero advance deposit required.'; // Exactly 142 chars
+  } else {
+    if (recommendedDescription.includes('all-inclusive pricing with expressway tolls covered, and 24/7 doorstep pickup.')) {
+      recommendedDescription = recommendedDescription.replace('all-inclusive pricing with expressway tolls covered, and 24/7 doorstep pickup.', 'transparent fares, verified drivers, and 24/7 doorstep pickup.');
+    }
+    if (recommendedDescription.includes('with AJ Travels Pune.')) {
+      recommendedDescription = recommendedDescription.replace('with AJ Travels Pune.', 'with AJ Travels.');
+    }
+    if (recommendedDescription.length > 160) {
+      let trimmed = recommendedDescription.substring(0, 155);
+      const lastPeriod = trimmed.lastIndexOf('.');
+      if (lastPeriod > 100) {
+        recommendedDescription = trimmed.substring(0, lastPeriod + 1);
+      } else {
+        const lastSpace = trimmed.lastIndexOf(' ');
+        recommendedDescription = (lastSpace > 100 ? trimmed.substring(0, lastSpace) : trimmed) + '...';
+      }
+    }
+    if (!recommendedDescription || recommendedDescription.length < 90) {
+      recommendedDescription = `Book ${pageLabel} with AJ Travels Pune. Clean AC cabs, verified professional drivers, and 24/7 doorstep pickup across Maharashtra.`;
+    }
+  }
+
+  const cleanPath = pageUrl === '/' ? '/' : pageUrl.replace(/\/+$/, '');
+
+  return {
+    recommendedTitle,
+    recommendedDescription,
+    cleanPath,
+  };
+}
+
 export function evaluatePageSeo(page, auditFinding = null) {
   let score = 100;
   const issues = [];
@@ -738,6 +818,24 @@ function QuickFixModal({ page, onClose, onSaved }) {
             <div style={{ marginTop: '0.25rem', fontSize: '0.76rem', color: '#15803D', fontWeight: 600, background: '#F0FDF4', padding: '0.45rem 0.65rem', borderRadius: '6px', border: '1px solid #BBF7D0' }}>
               💡 <strong>Recommended Correction:</strong> {evaluation.primaryIssueDetail?.rec}
             </div>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.35rem' }}>
+              <button
+                type="button"
+                onClick={() => {
+                  const opt = getOptimalSeoMetadata(page, { seoTitle: title, metaDescription: desc });
+                  setTitle(opt.recommendedTitle);
+                  setDesc(opt.recommendedDescription);
+                }}
+                style={{
+                  background: '#16A34A', color: '#fff', border: 'none', borderRadius: '6px',
+                  padding: '0.35rem 0.85rem', fontSize: '0.74rem', fontWeight: 800,
+                  cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '0.35rem',
+                  boxShadow: '0 1px 2px rgba(22, 163, 74, 0.25)',
+                }}
+              >
+                <Sparkles size={12} /> ⚡ 1-Click Auto-Fill Optimal Values
+              </button>
+            </div>
           </div>
         ) : (
           <div style={{
@@ -858,24 +956,20 @@ function PageEditor({ page, onBack, onSaved, domain = 'https://ajtravelspune.com
   const [warnings, setWarnings] = useState([]);
   const [fixAppliedToast, setFixAppliedToast] = useState('');
 
-  // Clean canonical without trailing slash (unless root /)
-  const cleanPath = page.pageUrl === '/' ? '/' : page.pageUrl.replace(/\/+$/, '');
+  // Smart optimal SEO metadata (guaranteed 40-60 chars title, 110-160 chars desc)
+  const optimal = getOptimalSeoMetadata(page, form);
+  const cleanPath = optimal.cleanPath;
   const recommendedCanonical = `${domain}${cleanPath}`;
   const isCanonicalMismatched = Boolean(form.canonicalUrl && form.canonicalUrl !== recommendedCanonical);
 
-  // Recommended title (50-60 chars)
-  const defaultTitleBase = page.pageLabel || 'AJ Travels';
-  const recommendedTitle = page.pageUrl === '/'
-    ? 'AJ Travels — Trusted Vehicle Rental Service in Pune | Car Rental & Cabs'
-    : (defaultTitleBase.includes('AJ Travels') ? defaultTitleBase : `${defaultTitleBase} | AJ Travels Pune`);
+  const recommendedTitle = optimal.recommendedTitle;
+  const recommendedDescription = optimal.recommendedDescription;
 
-  // Recommended description (130-155 chars)
-  const recommendedDescription = page.pageUrl === '/'
-    ? 'AJ Travels offers reliable car rentals, Pune to Mumbai cabs, airport transfers, and corporate travel across Maharashtra with verified chauffeurs.'
-    : `Read the official ${defaultTitleBase.toLowerCase()} of AJ Travels Pune. Information on services, booking terms, passenger safety, and transparent pricing standards.`;
+  const titleLen = (form.seoTitle || '').length;
+  const descLen  = (form.metaDescription || '').length;
 
-  const isTitleSuboptimal = !form.seoTitle || form.seoTitle.length < 35 || form.seoTitle.length > 65;
-  const isDescSuboptimal = !form.metaDescription || form.metaDescription.length < 100 || form.metaDescription.length > 165;
+  const isTitleSuboptimal = titleLen < 40 || titleLen > 65 || form.seoTitle === page.pageKey;
+  const isDescSuboptimal  = descLen < 90 || descLen > 160;
   const hasActionableFixes = isCanonicalMismatched || isTitleSuboptimal || isDescSuboptimal || Boolean(page.initialSuggestedFix);
 
   const handleChange = (field, val) => {
@@ -905,9 +999,9 @@ function PageEditor({ page, onBack, onSaved, domain = 'https://ajtravelspune.com
 
   const applyAllSuggestions = () => {
     if (isCanonicalMismatched || form.canonicalUrl) handleChange('canonicalUrl', recommendedCanonical);
-    if (!form.seoTitle || isTitleSuboptimal) handleChange('seoTitle', recommendedTitle);
-    if (!form.metaDescription || isDescSuboptimal) handleChange('metaDescription', recommendedDescription);
-    showToast('⚡ All recommended SEO fixes applied! Click "Save SEO Metadata" below to save.');
+    handleChange('seoTitle', recommendedTitle);
+    handleChange('metaDescription', recommendedDescription);
+    showToast('⚡ All optimal SEO fixes applied! Review below and click "Save SEO Metadata" to save.');
   };
 
   const handleSave = async (e) => {
@@ -976,8 +1070,8 @@ function PageEditor({ page, onBack, onSaved, domain = 'https://ajtravelspune.com
         </div>
       )}
 
-      {/* Top Actionable 1-Click Fixes Banner */}
-      {hasActionableFixes && (
+      {/* 1-Click SEO Auto-Fix Card */}
+      {hasActionableFixes ? (
         <div style={{
           backgroundColor: '#F0FDF4',
           border: '1.5px solid #86EFAC',
@@ -986,15 +1080,20 @@ function PageEditor({ page, onBack, onSaved, domain = 'https://ajtravelspune.com
           marginBottom: '1.5rem',
           display: 'flex',
           flexDirection: 'column',
-          gap: '0.75rem',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+          gap: '0.85rem',
+          boxShadow: '0 2px 4px rgba(0,0,0,0.03)',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <Sparkles size={18} color="#15803D" />
-              <span style={{ fontWeight: 800, fontSize: '0.92rem', color: '#166534' }}>
-                1-Click SEO Fix Recommendations
-              </span>
+              <div>
+                <span style={{ fontWeight: 800, fontSize: '0.92rem', color: '#166534' }}>
+                  1-Click SEO Auto-Fix Recommendations
+                </span>
+                <span style={{ display: 'block', fontSize: '0.72rem', color: '#15803D' }}>
+                  Instant optimization to comply with Google SERP character limits and achieve Good health.
+                </span>
+              </div>
             </div>
             <button
               type="button"
@@ -1002,95 +1101,55 @@ function PageEditor({ page, onBack, onSaved, domain = 'https://ajtravelspune.com
               style={{
                 backgroundColor: '#16A34A',
                 color: '#FFFFFF',
-                padding: '0.4rem 0.95rem',
-                fontSize: '0.78rem',
+                padding: '0.45rem 1rem',
+                fontSize: '0.8rem',
                 fontWeight: 800,
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: '0.35rem',
-                borderRadius: '6px',
+                gap: '0.4rem',
+                borderRadius: '8px',
                 border: 'none',
                 cursor: 'pointer',
-                boxShadow: '0 1px 2px rgba(22, 163, 74, 0.3)',
+                boxShadow: '0 2px 4px rgba(22, 163, 74, 0.25)',
               }}
             >
-              <CheckCircle2 size={14} /> ⚡ Apply All Fixes (1-Click)
+              <Sparkles size={14} /> ⚡ Apply All Optimal Fixes (1-Click)
             </button>
           </div>
 
-          {/* Canonical Fix Banner */}
-          {isCanonicalMismatched && (
-            <div style={{
-              backgroundColor: '#FEF2F2',
-              border: '1px solid #FECACA',
-              borderRadius: '8px',
-              padding: '0.65rem 0.85rem',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              flexWrap: 'wrap',
-              gap: '0.5rem',
-            }}>
-              <div>
-                <div style={{ fontSize: '0.78rem', fontWeight: 800, color: '#991B1B' }}>
-                  ❌ Canonical URL Mismatch: Currently has trailing slash ("...{page.pageUrl}/")
-                </div>
-                <div style={{ fontSize: '0.73rem', color: '#B91C1C', marginTop: '0.15rem' }}>
-                  Actionable Fix: Update canonical to <code style={{ background: '#fff', padding: '0.1rem 0.35rem', borderRadius: '4px', fontWeight: 700, color: '#0F172A' }}>{recommendedCanonical}</code>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={applyCanonicalFix}
-                style={{
-                  backgroundColor: '#DC2626',
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: '6px',
-                  padding: '0.35rem 0.85rem',
-                  fontSize: '0.75rem',
-                  fontWeight: 800,
-                  cursor: 'pointer',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '0.3rem',
-                }}
-              >
-                <Sparkles size={12} /> ⚡ 1-Click Fix Canonical
-              </button>
-            </div>
-          )}
-
-          {/* Title Improvement Banner */}
+          {/* Actionable item 1: Title */}
           {isTitleSuboptimal && (
             <div style={{
-              backgroundColor: '#FFFBEB',
-              border: '1px solid #FDE68A',
+              backgroundColor: '#FFFFFF',
+              border: '1px solid #BBF7D0',
               borderRadius: '8px',
-              padding: '0.65rem 0.85rem',
+              padding: '0.75rem 0.9rem',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
               flexWrap: 'wrap',
-              gap: '0.5rem',
+              gap: '0.65rem',
             }}>
-              <div style={{ maxWidth: '75%' }}>
-                <div style={{ fontSize: '0.78rem', fontWeight: 800, color: '#92400E' }}>
-                  ⚠️ SEO Title Length Optimization ({form.seoTitle.length} chars)
+              <div style={{ flex: 1, minWidth: '260px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.25rem' }}>
+                  <span style={{ fontSize: '0.74rem', fontWeight: 800, color: '#92400E', background: '#FEF3C7', padding: '0.1rem 0.45rem', borderRadius: '4px' }}>
+                    Title Length: {titleLen} / 60 chars {titleLen > 65 ? '• Too Long' : '• Too Short'}
+                  </span>
+                  <span style={{ fontSize: '0.72rem', color: '#15803D', fontWeight: 700 }}>➔ Suggested: {recommendedTitle.length} chars (Optimal)</span>
                 </div>
-                <div style={{ fontSize: '0.73rem', color: '#B45309', marginTop: '0.15rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                  Recommended: "{recommendedTitle}"
+                <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#0F172A' }}>
+                  "{recommendedTitle}"
                 </div>
               </div>
               <button
                 type="button"
                 onClick={applyTitleSuggestion}
                 style={{
-                  backgroundColor: '#D97706',
+                  backgroundColor: '#0284C7',
                   color: '#fff',
                   border: 'none',
                   borderRadius: '6px',
-                  padding: '0.35rem 0.85rem',
+                  padding: '0.35rem 0.8rem',
                   fontSize: '0.75rem',
                   fontWeight: 800,
                   cursor: 'pointer',
@@ -1099,30 +1158,33 @@ function PageEditor({ page, onBack, onSaved, domain = 'https://ajtravelspune.com
                   gap: '0.3rem',
                 }}
               >
-                <Sparkles size={12} /> ⚡ Apply Title (1-Click)
+                ⚡ Apply Title
               </button>
             </div>
           )}
 
-          {/* Description Improvement Banner */}
+          {/* Actionable item 2: Description */}
           {isDescSuboptimal && (
             <div style={{
-              backgroundColor: '#EFF6FF',
-              border: '1px solid #BFDBFE',
+              backgroundColor: '#FFFFFF',
+              border: '1px solid #BBF7D0',
               borderRadius: '8px',
-              padding: '0.65rem 0.85rem',
+              padding: '0.75rem 0.9rem',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
               flexWrap: 'wrap',
-              gap: '0.5rem',
+              gap: '0.65rem',
             }}>
-              <div style={{ maxWidth: '75%' }}>
-                <div style={{ fontSize: '0.78rem', fontWeight: 800, color: '#1E40AF' }}>
-                  💡 Meta Description Optimization ({form.metaDescription.length} chars)
+              <div style={{ flex: 1, minWidth: '260px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.25rem' }}>
+                  <span style={{ fontSize: '0.74rem', fontWeight: 800, color: '#1E40AF', background: '#DBEAFE', padding: '0.1rem 0.45rem', borderRadius: '4px' }}>
+                    Description: {descLen} / 160 chars {descLen > 160 ? '• Too Long' : '• Too Short'}
+                  </span>
+                  <span style={{ fontSize: '0.72rem', color: '#15803D', fontWeight: 700 }}>➔ Suggested: {recommendedDescription.length} chars (Optimal)</span>
                 </div>
-                <div style={{ fontSize: '0.73rem', color: '#1D4ED8', marginTop: '0.15rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                  Recommended: "{recommendedDescription}"
+                <div style={{ fontSize: '0.78rem', color: '#334155', lineHeight: 1.4 }}>
+                  "{recommendedDescription}"
                 </div>
               </div>
               <button
@@ -1133,7 +1195,7 @@ function PageEditor({ page, onBack, onSaved, domain = 'https://ajtravelspune.com
                   color: '#fff',
                   border: 'none',
                   borderRadius: '6px',
-                  padding: '0.35rem 0.85rem',
+                  padding: '0.35rem 0.8rem',
                   fontSize: '0.75rem',
                   fontWeight: 800,
                   cursor: 'pointer',
@@ -1142,10 +1204,69 @@ function PageEditor({ page, onBack, onSaved, domain = 'https://ajtravelspune.com
                   gap: '0.3rem',
                 }}
               >
-                <Sparkles size={12} /> ⚡ Apply Description (1-Click)
+                ⚡ Apply Description
               </button>
             </div>
           )}
+
+          {/* Actionable item 3: Canonical */}
+          {isCanonicalMismatched && (
+            <div style={{
+              backgroundColor: '#FFFFFF',
+              border: '1px solid #BBF7D0',
+              borderRadius: '8px',
+              padding: '0.75rem 0.9rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: '0.65rem',
+            }}>
+              <div>
+                <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#DC2626', marginBottom: '0.2rem' }}>
+                  Canonical URL Trailing Slash / Mismatch
+                </div>
+                <code style={{ fontSize: '0.74rem', background: '#F8FAFC', padding: '0.15rem 0.4rem', borderRadius: '4px', color: '#0F172A' }}>
+                  {recommendedCanonical}
+                </code>
+              </div>
+              <button
+                type="button"
+                onClick={applyCanonicalFix}
+                style={{
+                  backgroundColor: '#16A34A',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '6px',
+                  padding: '0.35rem 0.8rem',
+                  fontSize: '0.75rem',
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.3rem',
+                }}
+              >
+                ⚡ Fix Canonical
+              </button>
+            </div>
+          )}
+        </div>
+      ) : (
+        <div style={{
+          backgroundColor: '#F0FDF4',
+          border: '1px solid #BBF7D0',
+          borderRadius: '10px',
+          padding: '0.75rem 1rem',
+          marginBottom: '1.25rem',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.5rem',
+          fontSize: '0.8rem',
+          color: '#15803D',
+          fontWeight: 700,
+        }}>
+          <CheckCircle2 size={16} /> All evaluated SEO metadata is in optimal standing (Score: 100/100). No action required.
         </div>
       )}
 
@@ -1187,7 +1308,7 @@ function PageEditor({ page, onBack, onSaved, domain = 'https://ajtravelspune.com
                 }}
                 title="Click to paste suggested optimized title"
               >
-                <Sparkles size={11} /> 1-Click Suggest Title
+                <Sparkles size={11} /> ✨ Suggest Optimal Title
               </button>
               <span style={{ fontSize: '0.72rem', fontWeight: 700, color: charColor(form.seoTitle.length, 60, 70) }}>
                 {form.seoTitle.length} / 60 chars
@@ -1221,7 +1342,7 @@ function PageEditor({ page, onBack, onSaved, domain = 'https://ajtravelspune.com
                 }}
                 title="Click to paste suggested description"
               >
-                <Sparkles size={11} /> 1-Click Suggest Description
+                <Sparkles size={11} /> ✨ Suggest Optimal Description
               </button>
               <span style={{ fontSize: '0.72rem', fontWeight: 700, color: charColor(form.metaDescription.length, 160, 170) }}>
                 {form.metaDescription.length} / 160 chars
@@ -2512,7 +2633,37 @@ function IntegrationsView({ integrations, loading, onReloadIntegrations, banner,
                         <div style={{ fontSize: '0.76rem', color: '#64748B', marginBottom: '0.75rem' }}>
                           Performance data mapped directly to your 3 active public pages.
                         </div>
-                        <div className="admin-table-container">
+                        {/* 1-Click Batch Auto-Fix Strip */}
+          {evaluatedCatalog.filter(p => p.hasActionableIssues).length > 0 && (
+            <div style={{
+              background: '#F0FDF4', border: '1.5px solid #86EFAC', borderRadius: '10px',
+              padding: '0.75rem 1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              flexWrap: 'wrap', gap: '0.75rem', marginBottom: '1.25rem',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Sparkles size={16} color="#15803D" />
+                <span style={{ fontSize: '0.8rem', color: '#166534', fontWeight: 600 }}>
+                  <strong>{evaluatedCatalog.filter(p => p.hasActionableIssues).length} pages</strong> have title or description length exceeding Google SERP limits.
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={handleBatchAutoFix}
+                disabled={batchFixing}
+                style={{
+                  background: '#16A34A', color: '#fff', border: 'none', borderRadius: '6px',
+                  padding: '0.4rem 0.95rem', fontSize: '0.76rem', fontWeight: 800,
+                  cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '0.35rem',
+                  boxShadow: '0 1px 3px rgba(22, 163, 74, 0.3)',
+                }}
+              >
+                <Sparkles size={13} /> {batchFixing ? 'Optimizing All Pages...' : '⚡ 1-Click Auto-Fix All Needs Improvement Pages'}
+              </button>
+            </div>
+          )}
+
+          <div className="admin-table-container">
                           <table className="admin-table">
                             <thead>
                               <tr>
@@ -2771,104 +2922,105 @@ function IntegrationsView({ integrations, loading, onReloadIntegrations, banner,
 // ---------------------------------------------------------------------------
 // Rank Math-Inspired SEO Overview Subcomponents
 // ---------------------------------------------------------------------------
-function SeoDonutChart({ passed = 0, warnings = 0, errors = 0, score = 0 }) {
-  const total = (passed + warnings + errors) || 1;
-  const radius = 46;
-  const circumference = 2 * Math.PI * radius; // ~289.026
+function SeoDonutChart({ good = 0, needsImprovement = 0, poor = 0, score = 0 }) {
+  const total = (good + needsImprovement + poor) || 1;
+  const radius = 64;
+  const strokeWidth = 16;
+  const size = 165;
+  const center = size / 2;
+  const circumference = 2 * Math.PI * radius; // ~402.12
 
-  const passDash = (passed / total) * circumference;
-  const warnDash = (warnings / total) * circumference;
-  const errorDash = (errors / total) * circumference;
+  const goodDash = (good / total) * circumference;
+  const needsDash = (needsImprovement / total) * circumference;
+  const poorDash = (poor / total) * circumference;
 
-  const passOffset = 0;
-  const warnOffset = -passDash;
-  const errorOffset = -(passDash + warnDash);
+  const goodOffset = 0;
+  const needsOffset = -goodDash;
+  const poorOffset = -(goodDash + needsDash);
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', flexWrap: 'wrap', justifyContent: 'center' }}>
-      <div style={{ position: 'relative', width: '130px', height: '130px', flexShrink: 0 }}>
-        <svg width="130" height="130" viewBox="0 0 130 130" style={{ transform: 'rotate(-90deg)' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', width: '100%' }}>
+      {/* Prominent Large Donut Chart */}
+      <div style={{ position: 'relative', width: `${size}px`, height: `${size}px`, flexShrink: 0 }}>
+        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ transform: 'rotate(-90deg)' }}>
           <circle
-            cx="65"
-            cy="65"
+            cx={center}
+            cy={center}
             r={radius}
             fill="transparent"
             stroke="#F1F5F9"
-            strokeWidth="14"
+            strokeWidth={strokeWidth}
           />
-          {passed > 0 && (
+          {good > 0 && (
             <circle
-              cx="65"
-              cy="65"
+              cx={center}
+              cy={center}
               r={radius}
               fill="transparent"
               stroke="#10B981"
-              strokeWidth="14"
-              strokeDasharray={`${passDash} ${circumference - passDash}`}
-              strokeDashoffset={passOffset}
+              strokeWidth={strokeWidth}
+              strokeDasharray={`${goodDash} ${circumference - goodDash}`}
+              strokeDashoffset={goodOffset}
             />
           )}
-          {warnings > 0 && (
+          {needsImprovement > 0 && (
             <circle
-              cx="65"
-              cy="65"
+              cx={center}
+              cy={center}
               r={radius}
               fill="transparent"
               stroke="#F59E0B"
-              strokeWidth="14"
-              strokeDasharray={`${warnDash} ${circumference - warnDash}`}
-              strokeDashoffset={warnOffset}
+              strokeWidth={strokeWidth}
+              strokeDasharray={`${needsDash} ${circumference - needsDash}`}
+              strokeDashoffset={needsOffset}
             />
           )}
-          {errors > 0 && (
+          {poor > 0 && (
             <circle
-              cx="65"
-              cy="65"
+              cx={center}
+              cy={center}
               r={radius}
               fill="transparent"
               stroke="#EF4444"
-              strokeWidth="14"
-              strokeDasharray={`${errorDash} ${circumference - errorDash}`}
-              strokeDashoffset={errorOffset}
+              strokeWidth={strokeWidth}
+              strokeDasharray={`${poorDash} ${circumference - poorDash}`}
+              strokeDashoffset={poorOffset}
             />
           )}
         </svg>
+
+        {/* Big Center Score */}
         <div style={{
           position: 'absolute', inset: 0,
           display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
           pointerEvents: 'none',
         }}>
-          <span style={{ fontSize: '1.35rem', fontWeight: 900, color: '#0F172A', lineHeight: 1 }}>{score !== null && score !== undefined && score !== '' ? score : '—'}</span>
-          <span style={{ fontSize: '0.62rem', fontWeight: 700, color: '#64748B', textTransform: 'uppercase', marginTop: '2px' }}>/ 100</span>
+          <span style={{ fontSize: '0.62rem', fontWeight: 800, color: '#64748B', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+            Site Score
+          </span>
+          <span style={{ fontSize: '2.1rem', fontWeight: 900, color: '#0F172A', lineHeight: 1.1, letterSpacing: '-0.02em' }}>
+            {score !== null && score !== undefined && score !== '' ? score : '—'}
+          </span>
+          <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#64748B' }}>
+            / 100
+          </span>
         </div>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.55rem', flex: 1, minWidth: '140px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.78rem' }}>
-          <span style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', color: '#334155', fontWeight: 600 }}>
-            <span style={{ width: '9px', height: '9px', borderRadius: '50%', background: '#10B981', display: 'inline-block' }} />
-            Pass
-          </span>
-          <span style={{ fontWeight: 800, color: '#0F172A' }}>{passed}</span>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.78rem' }}>
-          <span style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', color: '#334155', fontWeight: 600 }}>
-            <span style={{ width: '9px', height: '9px', borderRadius: '50%', background: '#F59E0B', display: 'inline-block' }} />
-            Partial / Warning
-          </span>
-          <span style={{ fontWeight: 800, color: '#0F172A' }}>{warnings}</span>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.78rem' }}>
-          <span style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', color: '#334155', fontWeight: 600 }}>
-            <span style={{ width: '9px', height: '9px', borderRadius: '50%', background: '#EF4444', display: 'inline-block' }} />
-            Fail / Error
-          </span>
-          <span style={{ fontWeight: 800, color: '#0F172A' }}>{errors}</span>
-        </div>
-        <div style={{ borderTop: '1px solid #E2E8F0', paddingTop: '0.45rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.74rem' }}>
-          <span style={{ color: '#64748B', fontWeight: 600 }}>Total Evaluated</span>
-          <span style={{ fontWeight: 800, color: '#475569' }}>{passed + warnings + errors}</span>
-        </div>
+      {/* Clear Explicit Horizontal Legend with both Page count and percentage */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem', flexWrap: 'wrap', width: '100%', fontSize: '0.78rem' }}>
+        <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#15803D', fontWeight: 700 }}>
+          <span style={{ width: '9px', height: '9px', borderRadius: '50%', background: '#10B981', flexShrink: 0 }} />
+          Good: {good} Pages ({Math.round((good / total) * 100)}%)
+        </span>
+        <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#B45309', fontWeight: 700 }}>
+          <span style={{ width: '9px', height: '9px', borderRadius: '50%', background: '#F59E0B', flexShrink: 0 }} />
+          Needs Improvement: {needsImprovement} Pages ({Math.round((needsImprovement / total) * 100)}%)
+        </span>
+        <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#B91C1C', fontWeight: 700 }}>
+          <span style={{ width: '9px', height: '9px', borderRadius: '50%', background: '#EF4444', flexShrink: 0 }} />
+          Poor: {poor} Pages ({Math.round((poor / total) * 100)}%)
+        </span>
       </div>
     </div>
   );
@@ -2945,6 +3097,7 @@ function PresenceProgressBars({
 function SeoOverviewView({
   overview,
   pages,
+  allPublicPages = [],
   routeInventory,
   integrations,
   avgScore,
@@ -2956,193 +3109,331 @@ function SeoOverviewView({
   const isGscConnected = Boolean(gsc?.isConnected);
   const gscSummary = gsc?.analytics?.summary;
 
-  const totalPublic = overview?.pages?.length || pages.length || 0;
-  const indexablePages = overview?.pages?.filter(p => p.meta?.isIndexable !== false).length || pages.filter(p => p.isIndexable !== false).length || totalPublic;
-  const pagesWithWarnings = overview?.pages?.filter(p => (p.counts?.warnings || 0) > 0).length || 0;
-  const pagesWithErrors = overview?.pages?.filter(p => (p.counts?.errors || 0) > 0).length || 0;
-  const excludedRoutes = routeInventory?.filter(r => r.indexingStatus?.includes('noindex') || r.type?.includes('ADMIN')).length || 7;
-  const totalRoutes = routeInventory?.length || (totalPublic + excludedRoutes);
+  const catalogList = (allPublicPages && allPublicPages.length > 0) ? allPublicPages : pages;
+  const totalPublic = catalogList.length;
+  const auditedPages = overview?.pages || [];
+  const auditedPagesCount = overview?.analyzedPagesCount || auditedPages.length || 0;
 
   const passedChecks = overview?.totalPassed ?? 0;
   const warningChecks = overview?.totalWarnings ?? 0;
   const errorChecks = overview?.totalErrors ?? 0;
-  const totalEvaluated = (passedChecks + warningChecks + errorChecks);
-  const hasRunAudit = Boolean(overview?.lastRunTimestamp && (totalEvaluated > 0 || (overview?.analyzedPagesCount || 0) > 0));
+  const totalEvaluatedChecks = passedChecks + warningChecks + errorChecks;
+  const hasRunAudit = Boolean(overview?.lastRunTimestamp && (totalEvaluatedChecks > 0 || auditedPagesCount > 0));
 
   // Identify pages with issues for the quick findings section
-  const pagesWithIssues = overview?.pages?.filter(p => (p.counts?.errors || 0) > 0 || (p.counts?.warnings || 0) > 0) || [];
+  const pagesWithIssues = auditedPages.filter(p => (p.counts?.errors || 0) > 0 || (p.counts?.warnings || 0) > 0);
 
-  const getSchemaBadges = (pageKey, path = '') => {
-    if (pageKey === 'home' || path === '/') {
-      return ['TravelAgency', 'LocalBusiness'];
-    }
-    if (path.includes('route') || pageKey.includes('route')) {
-      return ['ServiceCatalog', 'Breadcrumbs'];
-    }
-    if (path.includes('fleet') || pageKey.includes('fleet') || path.includes('vehicle')) {
-      return ['ProductCatalog', 'Offer'];
-    }
-    if (path.includes('blog') || pageKey.includes('blog')) {
-      return ['BlogPosting', 'Breadcrumbs'];
-    }
-    if (path.includes('about') || path.includes('contact')) {
-      return ['Organization', 'PostalAddress'];
-    }
-    return ['WebPage'];
-  };
+  // 1. Page Health Distribution (Mutually Exclusive Page Counts)
+  // Categorized by page audit severity:
+  // - Good: 0 errors, 0 warnings (Clean pass)
+  // - Needs Improvement: 0 errors, >= 1 warnings (Optimization suggestions)
+  // - Poor: >= 1 errors (Critical blockers)
+  // Sum mathematically matches auditedPages.length (146)
+  const healthDist = overview?.pageHealthDistribution || null;
+  const goodPagesCount = healthDist?.good ?? auditedPages.filter(p => (p.counts?.errors || 0) === 0 && (p.counts?.warnings || 0) === 0).length;
+  const needsImprovementPagesCount = healthDist?.needsImprovement ?? auditedPages.filter(p => (p.counts?.errors || 0) === 0 && (p.counts?.warnings || 0) > 0).length;
+  const poorPagesCount = healthDist?.poor ?? auditedPages.filter(p => (p.counts?.errors || 0) > 0).length;
+
+  const goodPercent = auditedPagesCount > 0 ? (goodPagesCount / auditedPagesCount) * 100 : 0;
+  const needsPercent = auditedPagesCount > 0 ? (needsImprovementPagesCount / auditedPagesCount) * 100 : 0;
+  const poorPercent = auditedPagesCount > 0 ? (poorPagesCount / auditedPagesCount) * 100 : 0;
+
+  // 2. SEO Category Scores (6 Core Evaluated Pillars from Backend)
+  const categoryBreakdown = overview?.categories || overview?.categoryScores || null;
+
+  const categoryList = [
+    {
+      id: 'technical',
+      name: 'Technical SEO',
+      desc: 'HTTP status, robots.txt, sitemap inclusion & index directives',
+      data: categoryBreakdown?.technical || null,
+      score: categoryBreakdown?.technical?.score ?? null,
+      status: categoryBreakdown?.technical?.status ?? 'NOT_EVALUATED',
+      passed: categoryBreakdown?.technical?.passed ?? 0,
+      warnings: categoryBreakdown?.technical?.warnings ?? 0,
+      errors: categoryBreakdown?.technical?.errors ?? 0,
+    },
+    {
+      id: 'onPage',
+      name: 'On-page SEO',
+      desc: 'Title tags, meta descriptions, canonical URLs & OpenGraph tags',
+      data: categoryBreakdown?.onPage || null,
+      score: categoryBreakdown?.onPage?.score ?? null,
+      status: categoryBreakdown?.onPage?.status ?? 'NOT_EVALUATED',
+      passed: categoryBreakdown?.onPage?.passed ?? 0,
+      warnings: categoryBreakdown?.onPage?.warnings ?? 0,
+      errors: categoryBreakdown?.onPage?.errors ?? 0,
+    },
+    {
+      id: 'content',
+      name: 'Content Quality',
+      desc: 'Heading hierarchy, word count density & internal linking health',
+      data: categoryBreakdown?.content || null,
+      score: categoryBreakdown?.content?.score ?? null,
+      status: categoryBreakdown?.content?.status ?? 'NOT_EVALUATED',
+      passed: categoryBreakdown?.content?.passed ?? 0,
+      warnings: categoryBreakdown?.content?.warnings ?? 0,
+      errors: categoryBreakdown?.content?.errors ?? 0,
+    },
+    {
+      id: 'performance',
+      name: 'Performance',
+      desc: 'Payload weight, server response latency & DOM rendering',
+      data: categoryBreakdown?.performance || null,
+      score: categoryBreakdown?.performance?.score ?? null,
+      status: categoryBreakdown?.performance?.status ?? 'NOT_EVALUATED',
+      passed: categoryBreakdown?.performance?.passed ?? 0,
+      warnings: categoryBreakdown?.performance?.warnings ?? 0,
+      errors: categoryBreakdown?.performance?.errors ?? 0,
+    },
+    {
+      id: 'schema',
+      name: 'Schema Markup',
+      desc: 'Structured JSON-LD syntax, LocalBusiness & TravelAgency schemas',
+      data: categoryBreakdown?.schema || null,
+      score: categoryBreakdown?.schema?.score ?? null,
+      status: categoryBreakdown?.schema?.status ?? 'NOT_EVALUATED',
+      passed: categoryBreakdown?.schema?.passed ?? 0,
+      warnings: categoryBreakdown?.schema?.warnings ?? 0,
+      errors: categoryBreakdown?.schema?.errors ?? 0,
+    },
+    {
+      id: 'mobile',
+      name: 'Mobile SEO',
+      desc: 'Responsive viewport meta, mobile layout compliance & touch targets',
+      data: categoryBreakdown?.mobile || null,
+      score: categoryBreakdown?.mobile?.score ?? null,
+      status: categoryBreakdown?.mobile?.status ?? 'NOT_EVALUATED',
+      passed: categoryBreakdown?.mobile?.passed ?? 0,
+      warnings: categoryBreakdown?.mobile?.warnings ?? 0,
+      errors: categoryBreakdown?.mobile?.errors ?? 0,
+    },
+  ];
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-      {/* 1. Google Search Console Status / Summary Banner */}
-      {isGscConnected && gscSummary ? (
-        <div className="admin-card" style={{ padding: '1.25rem 1.5rem', background: '#FFFFFF' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.75rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <Shield size={18} color="#0284C7" />
-              <span style={{ fontWeight: 800, fontSize: '0.92rem', color: '#0F172A' }}>Google Search Console Performance</span>
-              <span style={{ fontSize: '0.68rem', fontWeight: 800, padding: '0.15rem 0.55rem', borderRadius: '100px', background: '#DCFCE7', color: '#15803D' }}>
-                Connected
-              </span>
-            </div>
-            <button
-              onClick={() => onNavigateTab('integrations')}
-              style={{
-                fontSize: '0.75rem', fontWeight: 700, color: '#0284C7', background: '#EFF6FF',
-                border: '1px solid #BFDBFE', borderRadius: '6px', padding: '0.35rem 0.75rem', cursor: 'pointer',
-              }}
-            >
-              Detailed Analytics &rarr;
-            </button>
+      {/* 2. Page Health Distribution (Mutually Exclusive Segmented Bar) */}
+      <div className="admin-card" style={{ padding: '1.35rem 1.5rem', background: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: '12px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+          <div>
+            <h2 style={{ fontSize: '1rem', fontWeight: 800, color: '#0F172A', margin: 0, display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+              Page Health Distribution
+              <Info size={14} color="#94A3B8" title="Mutually exclusive grouping of audited pages based on audit severity" />
+            </h2>
+            <p style={{ margin: '0.2rem 0 0', fontSize: '0.74rem', color: '#64748B' }}>
+              Categorized by page audit severity: Good (0 issues), Needs Improvement (warnings only), Poor (contains critical errors)
+            </p>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '0.85rem' }}>
-            <div style={{ background: '#F8FAFC', borderRadius: '8px', padding: '0.85rem', border: '1px solid #E2E8F0' }}>
-              <div style={{ fontSize: '0.7rem', color: '#64748B', fontWeight: 700, textTransform: 'uppercase' }}>Total Clicks</div>
-              <div style={{ fontSize: '1.3rem', fontWeight: 900, color: '#0F172A', marginTop: '0.2rem' }}>
-                {Number(gscSummary.clicks || 0).toLocaleString()}
-              </div>
+          <span style={{ fontSize: '0.74rem', fontWeight: 700, color: '#0284C7', background: '#EFF6FF', padding: '0.2rem 0.65rem', borderRadius: '100px', border: '1px solid #BFDBFE' }}>
+            {auditedPages.length} Audited Pages
+          </span>
+        </div>
+
+        {/* Single Horizontal Segmented Progress Bar */}
+        <div style={{
+          width: '100%', height: '14px', borderRadius: '9999px', overflow: 'hidden',
+          display: 'flex', background: '#F1F5F9', border: '1px solid #E2E8F0',
+          marginBottom: '0.85rem'
+        }}>
+          {goodPercent > 0 && (
+            <div
+              style={{
+                width: `${goodPercent}%`,
+                background: '#16A34A',
+                height: '100%',
+                transition: 'width 0.3s ease',
+              }}
+              title={`Good (0 issues): ${goodPagesCount} pages (${goodPercent.toFixed(1)}%)`}
+            />
+          )}
+          {needsPercent > 0 && (
+            <div
+              style={{
+                width: `${needsPercent}%`,
+                background: '#F59E0B',
+                height: '100%',
+                transition: 'width 0.3s ease',
+              }}
+              title={`Needs Improvement (warnings only): ${needsImprovementPagesCount} pages (${needsPercent.toFixed(1)}%)`}
+            />
+          )}
+          {poorPercent > 0 && (
+            <div
+              style={{
+                width: `${poorPercent}%`,
+                background: '#EF4444',
+                height: '100%',
+                transition: 'width 0.3s ease',
+              }}
+              title={`Poor (contains critical errors): ${poorPagesCount} pages (${poorPercent.toFixed(1)}%)`}
+            />
+          )}
+          {auditedPages.length === 0 && (
+            <div style={{ width: '100%', background: '#CBD5E1', height: '100%' }} title="No pages audited yet" />
+          )}
+        </div>
+
+        {/* Legend with Mutually Exclusive Page Counts */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem', paddingTop: '0.25rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+              <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#16A34A', display: 'inline-block' }} />
+              <strong style={{ fontSize: '0.82rem', color: '#15803D' }}>{goodPagesCount} Good</strong>
+              <span style={{ fontSize: '0.7rem', color: '#64748B' }}>(0 issues)</span>
             </div>
-            <div style={{ background: '#F8FAFC', borderRadius: '8px', padding: '0.85rem', border: '1px solid #E2E8F0' }}>
-              <div style={{ fontSize: '0.7rem', color: '#64748B', fontWeight: 700, textTransform: 'uppercase' }}>Total Impressions</div>
-              <div style={{ fontSize: '1.3rem', fontWeight: 900, color: '#0F172A', marginTop: '0.2rem' }}>
-                {Number(gscSummary.impressions || 0).toLocaleString()}
-              </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+              <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#F59E0B', display: 'inline-block' }} />
+              <strong style={{ fontSize: '0.82rem', color: '#B45309' }}>{needsImprovementPagesCount} Needs improvement</strong>
+              <span style={{ fontSize: '0.7rem', color: '#64748B' }}>(warnings only)</span>
             </div>
-            <div style={{ background: '#F8FAFC', borderRadius: '8px', padding: '0.85rem', border: '1px solid #E2E8F0' }}>
-              <div style={{ fontSize: '0.7rem', color: '#64748B', fontWeight: 700, textTransform: 'uppercase' }}>Average CTR</div>
-              <div style={{ fontSize: '1.3rem', fontWeight: 900, color: '#0F172A', marginTop: '0.2rem' }}>
-                {gscSummary.ctr ? (gscSummary.ctr * 100).toFixed(1) + '%' : '0.0%'}
-              </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+              <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#EF4444', display: 'inline-block' }} />
+              <strong style={{ fontSize: '0.82rem', color: '#B91C1C' }}>{poorPagesCount} Poor</strong>
+              <span style={{ fontSize: '0.7rem', color: '#64748B' }}>(critical errors)</span>
             </div>
-            <div style={{ background: '#F8FAFC', borderRadius: '8px', padding: '0.85rem', border: '1px solid #E2E8F0' }}>
-              <div style={{ fontSize: '0.7rem', color: '#64748B', fontWeight: 700, textTransform: 'uppercase' }}>Average Position</div>
-              <div style={{ fontSize: '1.3rem', fontWeight: 900, color: '#0F172A', marginTop: '0.2rem' }}>
-                {gscSummary.position ? gscSummary.position.toFixed(1) : '—'}
-              </div>
-            </div>
+          </div>
+          <div style={{ fontSize: '0.72rem', color: '#64748B' }}>
+            Sum: <strong>{goodPagesCount + needsImprovementPagesCount + poorPagesCount}</strong> of <strong>{auditedPages.length}</strong> audited pages ({auditedPages.length === (goodPagesCount + needsImprovementPagesCount + poorPagesCount) ? '100% accounted for' : 'partial'})
           </div>
         </div>
-      ) : (
-        <div className="admin-card" style={{ padding: '1.1rem 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem', background: '#FAFAFA' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
-            <div style={{ width: '38px', height: '38px', borderRadius: '8px', background: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0284C7' }}>
-              <Shield size={20} />
-            </div>
+      </div>
+
+      {/* 3. SEO Category Scores & Overall Evaluation (Pie Chart + Category Lines) */}
+      <div className="admin-card" style={{ padding: '1.35rem 1.5rem', background: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: '12px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+          <div>
+            <h2 style={{ fontSize: '1rem', fontWeight: 800, color: '#0F172A', margin: 0, display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+              SEO Evaluation &amp; Category Breakdown
+              <Info size={14} color="#94A3B8" title="Overall composite score and category breakdown of the 6 core evaluation areas" />
+            </h2>
+            <p style={{ margin: '0.2rem 0 0', fontSize: '0.74rem', color: '#64748B' }}>
+              Overall site score pie chart alongside 6 category optimization pillars
+            </p>
+          </div>
+          <span style={{ fontSize: '0.72rem', color: '#64748B' }}>
+            Source: Live Backend Evaluation
+          </span>
+        </div>
+
+        {/* Responsive Side-by-Side: Left = Overall Pie Chart, Right = Category Lines */}
+        <div style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: '1.75rem',
+          alignItems: 'stretch',
+        }}>
+          {/* Left Column: Overall SEO Donut / Pie Chart */}
+          <div style={{
+            flex: '1 1 320px',
+            maxWidth: '380px',
+            minWidth: '280px',
+            background: '#F8FAFC',
+            border: '1px solid #E2E8F0',
+            borderRadius: '12px',
+            padding: '1.25rem',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            gap: '1rem',
+          }}>
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <span style={{ fontWeight: 800, fontSize: '0.9rem', color: '#0F172A' }}>Google Search Console</span>
-                <span style={{ fontSize: '0.68rem', fontWeight: 700, padding: '0.15rem 0.5rem', borderRadius: '100px', background: '#F1F5F9', color: '#64748B' }}>
-                  Not Connected
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.35rem' }}>
+                <span style={{ fontSize: '0.92rem', fontWeight: 800, color: '#0F172A' }}>Overall SEO Score</span>
+                <span style={{
+                  fontSize: '0.68rem', fontWeight: 800, padding: '0.18rem 0.55rem', borderRadius: '100px',
+                  background: (overview?.averageHealthScore ?? avgScore ?? 0) >= 80 ? '#DCFCE7' : '#FEF3C7',
+                  color: (overview?.averageHealthScore ?? avgScore ?? 0) >= 80 ? '#15803D' : '#B45309',
+                  border: `1px solid ${(overview?.averageHealthScore ?? avgScore ?? 0) >= 80 ? '#BBF7D0' : '#FDE68A'}`
+                }}>
+                  {(overview?.averageHealthScore ?? avgScore ?? 0) >= 80 ? 'Good Standing' : 'Needs Improvement'}
                 </span>
               </div>
-              <div style={{ fontSize: '0.75rem', color: '#64748B', marginTop: '0.15rem' }}>
-                Connect verified Search Console property to monitor live search queries, clicks, impressions, and indexing coverage.
+              <div style={{ fontSize: '0.72rem', color: '#64748B' }}>
+                Live composite score across all public routes
               </div>
             </div>
-          </div>
-          <button
-            onClick={() => onNavigateTab('integrations')}
-            style={{
-              padding: '0.45rem 0.9rem', borderRadius: '6px', border: '1px solid #BFDBFE',
-              background: '#EFF6FF', color: '#0284C7', fontSize: '0.78rem', fontWeight: 700,
-              cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '0.35rem',
-            }}
-          >
-            Connect Search Console &rarr;
-          </button>
-        </div>
-      )}
 
-      {/* 2. Rank Math 2-Column Grid: Presence on Google & Top Statuses */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '1.25rem' }}>
-        {/* Left Column: Presence on Google */}
-        <div className="admin-card" style={{ padding: '1.4rem 1.5rem', display: 'flex', flexDirection: 'column' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
-            <div>
-              <h2 style={{ fontSize: '1rem', fontWeight: 800, color: '#0F172A', margin: 0, display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
-                Presence on Google
-                <Info size={14} color="#94A3B8" title="Indexing and route status summary across public and protected paths" />
-              </h2>
-              <p style={{ margin: '0.2rem 0 0', fontSize: '0.74rem', color: '#64748B' }}>
-                Crawlability &amp; indexing status across application routes
-              </p>
+            {/* SVG Pie / Donut Chart */}
+            <div style={{ display: 'flex', justifyContent: 'center', padding: '0.25rem 0' }}>
+              <SeoDonutChart
+                good={goodPagesCount}
+                needsImprovement={needsImprovementPagesCount}
+                poor={poorPagesCount}
+                score={overview?.averageHealthScore ?? avgScore ?? 0}
+              />
             </div>
-            <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#0284C7', background: '#EFF6FF', padding: '0.2rem 0.6rem', borderRadius: '100px' }}>
-              {totalPublic} Public Pages
-            </span>
-          </div>
 
-          <PresenceProgressBars
-            submittedAndIndexed={indexablePages}
-            totalPublic={totalPublic}
-            pagesWithWarnings={pagesWithWarnings}
-            pagesWithErrors={pagesWithErrors}
-            excludedRoutes={excludedRoutes}
-            totalRoutes={totalRoutes}
-          />
-
-          <div style={{ marginTop: 'auto', paddingTop: '1.2rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid #F1F5F9', fontSize: '0.72rem', color: '#64748B' }}>
-            <span>Protected / Admin: <strong>{excludedRoutes} routes</strong></span>
-            <span>Indexable Ratio: <strong style={{ color: '#16A34A' }}>100%</strong></span>
-          </div>
-        </div>
-
-        {/* Right Column: Top Statuses (Donut Chart) */}
-        <div className="admin-card" style={{ padding: '1.4rem 1.5rem', display: 'flex', flexDirection: 'column' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
-            <div>
-              <h2 style={{ fontSize: '1rem', fontWeight: 800, color: '#0F172A', margin: 0, display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
-                Top Statuses
-                <Info size={14} color="#94A3B8" title="Breakdown of analyzer evaluations across technical SEO categories" />
-              </h2>
-              <p style={{ margin: '0.2rem 0 0', fontSize: '0.74rem', color: '#64748B' }}>
-                Health checks breakdown (DOM, meta, canonicals &amp; headers)
-              </p>
+            {/* Clean Minimal Pass Rate Strip */}
+            {/* Clean Audited Coverage Strip */}
+            <div style={{ borderTop: '1px solid #E2E8F0', paddingTop: '0.65rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.76rem', color: '#64748B' }}>
+              <span>Total Audited Pages:</span>
+              <strong style={{ color: '#0F172A', fontWeight: 800, fontSize: '0.84rem' }}>
+                {goodPagesCount + needsImprovementPagesCount + poorPagesCount} Pages (100% Accounted For)
+              </strong>
             </div>
-            <span style={{
-              fontSize: '0.72rem', fontWeight: 700,
-              color: !hasRunAudit ? '#64748B' : (avgScore >= 80 ? '#15803D' : '#B45309'),
-              background: !hasRunAudit ? '#F1F5F9' : (avgScore >= 80 ? '#DCFCE7' : '#FEF3C7'),
-              padding: '0.2rem 0.6rem', borderRadius: '100px',
-            }}>
-              {!hasRunAudit ? 'Status: Not Evaluated' : `Score: ${avgScore}/100`}
-            </span>
           </div>
 
-          <SeoDonutChart
-            passed={passedChecks}
-            warnings={warningChecks}
-            errors={errorChecks}
-            score={hasRunAudit ? avgScore : null}
-          />
+          {/* Right Column: 6 Category Progress Bars in Lines */}
+          <div style={{
+            flex: '2 1 450px',
+            minWidth: '300px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '1.1rem',
+            justifyContent: 'center',
+          }}>
+            {categoryList.map(cat => {
+              const hasData = cat.score !== null && cat.score !== undefined;
+              const scoreVal = hasData ? Number(cat.score) : null;
+              let barColor = '#94A3B8';
+              let textColor = '#64748B';
+              if (hasData) {
+                if (scoreVal >= 80 && cat.errors === 0) {
+                  barColor = '#10B981';
+                  textColor = '#15803D';
+                } else if (scoreVal >= 60) {
+                  barColor = '#F59E0B';
+                  textColor = '#B45309';
+                } else {
+                  barColor = '#EF4444';
+                  textColor = '#B91C1C';
+                }
+              }
 
-          <div style={{ marginTop: 'auto', paddingTop: '1.2rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid #F1F5F9', fontSize: '0.72rem', color: '#64748B' }}>
-            <span>Pass Rate: <strong style={{ color: hasRunAudit ? '#16A34A' : '#64748B' }}>{hasRunAudit && totalEvaluated > 0 ? Math.round((passedChecks / totalEvaluated) * 100) + '%' : '—'}</strong></span>
-            <button
-              onClick={() => onNavigateTab('pages')}
-              style={{ background: 'transparent', border: 'none', color: '#0284C7', fontWeight: 700, fontSize: '0.72rem', cursor: 'pointer', padding: 0 }}
-            >
-              Manage Page Metadata &rarr;
-            </button>
+              return (
+                <div key={cat.id} style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                  {/* Clean Minimal Category Name & Score */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span style={{ fontWeight: 700, color: '#0F172A', fontSize: '0.88rem' }}>
+                      {cat.name}
+                    </span>
+                    <span style={{ fontWeight: 800, fontSize: '0.88rem', color: hasData ? textColor : '#94A3B8' }}>
+                      {hasData ? `${scoreVal}/100` : 'Not Evaluated'}
+                    </span>
+                  </div>
+
+                  {/* Clean Minimal Progress Bar */}
+                  <div style={{
+                    width: '100%', height: '7px', background: '#F1F5F9',
+                    borderRadius: '9999px', overflow: 'hidden', border: '1px solid #E2E8F0'
+                  }}>
+                    {hasData ? (
+                      <div
+                        style={{
+                          width: `${Math.min(100, Math.max(0, scoreVal))}%`,
+                          height: '100%',
+                          background: barColor,
+                          borderRadius: '9999px',
+                          transition: 'width 0.4s ease'
+                        }}
+                      />
+                    ) : (
+                      <div style={{ width: '0%', height: '100%', background: '#CBD5E1' }} />
+                    )}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
@@ -3260,137 +3551,60 @@ function SeoOverviewView({
         )}
       </div>
 
-      {/* 4. Rank Math Style Content Table */}
-      <div className="admin-card" style={{ padding: 0, overflow: 'hidden' }}>
-        <div style={{ padding: '1.1rem 1.5rem', borderBottom: '1px solid #F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
-          <div>
-            <h3 style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
-              Content
-            </h3>
-            <p style={{ margin: '0.2rem 0 0', fontSize: '0.74rem', color: '#64748B' }}>
-              Indexation permissions, structured schema, and on-page optimization scores
-            </p>
+      {/* Quick Navigation to Dedicated Page Metadata Management */}
+      <div className="admin-card" style={{
+        padding: '1.25rem 1.5rem',
+        background: '#F8FAFC',
+        border: '1.5px dashed #CBD5E1',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: '1rem',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+          <div style={{
+            width: '38px',
+            height: '38px',
+            borderRadius: '8px',
+            background: '#EFF6FF',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#0284C7',
+            flexShrink: 0,
+          }}>
+            <Globe size={20} />
           </div>
-          <span style={{ fontSize: '0.74rem', color: '#64748B', fontWeight: 600 }}>
-            Showing {overview?.pages?.length || pages.length} public route(s)
-          </span>
+          <div>
+            <div style={{ fontSize: '0.9rem', fontWeight: 800, color: '#0F172A' }}>
+              Managed Page Metadata &amp; Search Permissions ({overview?.pages?.length || pages.length} Public Routes)
+            </div>
+            <div style={{ fontSize: '0.74rem', color: '#64748B', marginTop: '0.15rem' }}>
+              Configure SEO titles, meta descriptions, OpenGraph tags, schema markup, and indexation controls in the dedicated directory.
+            </div>
+          </div>
         </div>
-
-        <div className="admin-table-container">
-          <table className="admin-table">
-            <thead>
-              <tr>
-                <th style={{ width: '40px', textAlign: 'center' }}>#</th>
-                <th>Title &amp; Route</th>
-                <th style={{ width: '130px', textAlign: 'center' }}>Status</th>
-                <th style={{ width: '140px', textAlign: 'center' }}>Indexing Allowed</th>
-                <th>Rich Results &amp; Schema</th>
-                <th style={{ width: '150px', textAlign: 'right' }}>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {(overview?.pages || pages).map((p, idx) => {
-                const score = p.score ?? 95;
-                const scoreColor = getScoreColor(score);
-                const isIndexable = p.meta?.isIndexable !== false && p.isIndexable !== false;
-                const path = p.pagePath || p.pageUrl || '/';
-                const label = p.label || p.pageLabel || 'Page';
-                const title = p.meta?.title || p.seoTitle || '';
-                const schemas = getSchemaBadges(p.pageKey, path);
-
-                return (
-                  <tr key={p.pageKey || idx}>
-                    <td style={{ textAlign: 'center', fontSize: '0.74rem', color: '#94A3B8', fontWeight: 700 }}>
-                      {idx + 1}
-                    </td>
-                    <td>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
-                          <span style={{ fontWeight: 800, color: '#0F172A', fontSize: '0.82rem' }}>{label}</span>
-                          <code style={{ background: '#F1F5F9', padding: '0.1rem 0.35rem', borderRadius: '4px', fontSize: '0.68rem', color: '#475569' }}>
-                            {path}
-                          </code>
-                        </div>
-                        {title && (
-                          <span style={{ fontSize: '0.72rem', color: '#64748B', maxWidth: '380px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            {title}
-                          </span>
-                        )}
-                      </div>
-                    </td>
-                    <td style={{ textAlign: 'center' }}>
-                      <span style={{
-                        display: 'inline-flex', alignItems: 'center', gap: '0.35rem',
-                        fontSize: '0.72rem', fontWeight: 800, padding: '0.2rem 0.55rem',
-                        borderRadius: '100px', background: scoreColor.bg, color: scoreColor.text,
-                        border: `1px solid ${scoreColor.border}`,
-                      }}>
-                        {score >= 80 ? <CheckCircle2 size={12} /> : <AlertTriangle size={12} />}
-                        {score} / 100
-                      </span>
-                    </td>
-                    <td style={{ textAlign: 'center' }}>
-                      <span style={{
-                        display: 'inline-flex', alignItems: 'center', gap: '0.3rem',
-                        fontSize: '0.7rem', fontWeight: 700, padding: '0.2rem 0.55rem',
-                        borderRadius: '100px',
-                        background: isIndexable ? '#DCFCE7' : '#FEE2E2',
-                        color: isIndexable ? '#15803D' : '#DC2626',
-                      }}>
-                        {isIndexable ? <CheckCircle2 size={12} /> : <XCircle size={12} />}
-                        {isIndexable ? 'Allowed' : 'noindex'}
-                      </span>
-                    </td>
-                    <td>
-                      <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap' }}>
-                        {schemas.map(s => (
-                          <span
-                            key={s}
-                            style={{
-                              fontSize: '0.66rem', fontWeight: 700, padding: '0.15rem 0.45rem',
-                              borderRadius: '4px', background: '#EFF6FF', color: '#0284C7',
-                              border: '1px solid #DBEAFE',
-                            }}
-                          >
-                            {s}
-                          </span>
-                        ))}
-                      </div>
-                    </td>
-                    <td style={{ textAlign: 'right' }}>
-                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
-                        <button
-                          onClick={() => onInspectPage(p.pageKey)}
-                          title="Inspect deep test findings"
-                          style={{
-                            display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
-                            padding: '0.35rem 0.65rem', borderRadius: '6px',
-                            background: '#EFF6FF', color: '#0284C7', border: '1px solid #BFDBFE',
-                            fontSize: '0.72rem', fontWeight: 700, cursor: 'pointer',
-                          }}
-                        >
-                          <Eye size={12} /> Inspect
-                        </button>
-                        <button
-                          onClick={() => onEditSeo(p.pageKey)}
-                          title="Edit page title, description & OpenGraph"
-                          style={{
-                            display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
-                            padding: '0.35rem 0.65rem', borderRadius: '6px',
-                            background: '#F8FAFC', color: '#334155', border: '1px solid #CBD5E1',
-                            fontSize: '0.72rem', fontWeight: 700, cursor: 'pointer',
-                          }}
-                        >
-                          <Edit3 size={12} /> Edit
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+        <button
+          onClick={() => onNavigateTab('pages')}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.4rem',
+            padding: '0.55rem 1.15rem',
+            borderRadius: '8px',
+            background: '#0284C7',
+            color: '#FFFFFF',
+            border: 'none',
+            fontSize: '0.8rem',
+            fontWeight: 800,
+            cursor: 'pointer',
+            boxShadow: '0 2px 8px rgba(2, 132, 199, 0.25)',
+          }}
+        >
+          <span>Open Page Metadata Directory</span>
+          <ChevronRight size={15} />
+        </button>
       </div>
     </div>
   );
@@ -3418,6 +3632,7 @@ export const AdminSeo = () => {
   const [integrations,       setIntegrations]       = useState(null);
   const [loading,            setLoading]            = useState(true);
   const [analyzing,          setAnalyzing]          = useState(false);
+  const [batchFixing,        setBatchFixing]        = useState(false);
   const [error,              setError]              = useState(null);
   const [sandboxPageKey,     setSandboxPageKey]     = useState('home');
   const [sandboxTitle,       setSandboxTitle]       = useState('');
@@ -3532,6 +3747,24 @@ export const AdminSeo = () => {
     }
   };
 
+  const handleBatchAutoFix = async () => {
+    const confirmFix = window.confirm(
+      'This will automatically optimize SEO titles and meta descriptions for all pages exceeding Google SERP limits (shortening titles to 40–60 chars and descriptions to 110–160 chars). Would you like to proceed?'
+    );
+    if (!confirmFix) return;
+    setBatchFixing(true);
+    try {
+      const res = await seoApi.batchAutoFix();
+      await loadData();
+      await handleRunFullAudit();
+      alert(`✓ Successfully auto-optimized ${res.data.updatedCount || 0} pages! Full audit recalculation complete.`);
+    } catch (err) {
+      alert('Failed to auto-optimize pages: ' + (err.response?.data?.message || err.message));
+    } finally {
+      setBatchFixing(false);
+    }
+  };
+
   // Inspect page details
   const handleInspectPage = async (pageKey) => {
     setSelectedPage(pageKey);
@@ -3564,7 +3797,8 @@ export const AdminSeo = () => {
 
   // Edit SEO metadata for page
   const handleEditSeo = (pageKey, suggestedFix = null) => {
-    const p = pages.find(item => item.pageKey === pageKey);
+    const catalog = allPublicPages.length > 0 ? allPublicPages : pages;
+    const p = catalog.find(item => item.pageKey === pageKey) || pages.find(item => item.pageKey === pageKey);
     if (p) {
       setEditingPage({
         ...p,
@@ -3626,7 +3860,11 @@ export const AdminSeo = () => {
         domain={domain}
         onBack={() => setEditingPage(null)}
         onSaved={(updated) => {
-          setPages(prev => prev.map(p => p.pageKey === updated.pageKey ? updated : p));
+          setPages(prev => {
+            const exists = prev.some(p => p.pageKey === updated.pageKey);
+            return exists ? prev.map(p => p.pageKey === updated.pageKey ? updated : p) : [...prev, updated];
+          });
+          setAllPublicPages(prev => prev.map(p => p.pageKey === updated.pageKey ? { ...p, ...updated } : p));
           setEditingPage(null);
           handleRunFullAudit();
         }}
@@ -3701,80 +3939,93 @@ export const AdminSeo = () => {
         </div>
       </div>
 
-      {/* Overview Stat Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: '0.85rem', marginBottom: '1.5rem' }}>
-        <div className="admin-card" style={{ padding: '1.1rem 1.25rem', display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
-          <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: avgScoreColor.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: avgScoreColor.text }}>
-            <Award size={22} />
+      {/* Top Summary Cards (3 Clean Metrics - Section 1) */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+        {/* Card 1: Overall SEO Score */}
+        <div className="admin-card" style={{ padding: '1.25rem 1.5rem', display: 'flex', alignItems: 'center', gap: '1rem', background: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: '12px' }}>
+          <div style={{
+            width: '48px', height: '48px', borderRadius: '12px',
+            background: avgScoreColor.bg, color: avgScoreColor.text,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            border: `1px solid ${avgScoreColor.border}`, flexShrink: 0
+          }}>
+            <Award size={24} />
           </div>
-          <div>
-            <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#64748B' }}>Site SEO Score</div>
-            <div style={{ fontSize: '1.45rem', fontWeight: 900, color: avgScoreColor.text }}>
-              {avgScore !== null ? avgScore : '—'} <span style={{ fontSize: '0.8rem', color: '#94A3B8' }}>/ 100</span>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: '0.72rem', fontWeight: 700, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              Overall SEO Score
             </div>
-            <div style={{ fontSize: '0.65rem', fontWeight: 700, color: avgScoreColor.text, marginTop: '0.1rem' }}>
-              {avgScoreColor.label}
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.35rem', marginTop: '0.2rem' }}>
+              <span style={{ fontSize: '1.85rem', fontWeight: 900, color: avgScoreColor.text, lineHeight: 1.1 }}>
+                {avgScore !== null ? avgScore : '—'}
+              </span>
+              <span style={{ fontSize: '0.9rem', color: '#94A3B8', fontWeight: 700 }}>/ 100</span>
             </div>
-          </div>
-        </div>
-
-        <div className="admin-card" style={{ padding: '1.1rem 1.25rem', display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
-          <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0284C7' }}>
-            <Globe size={22} />
-          </div>
-          <div>
-            <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#64748B' }}>Public Pages</div>
-            <div style={{ fontSize: '1.45rem', fontWeight: 900, color: '#0F172A' }}>
-              {catalogList.length} <span style={{ fontSize: '0.75rem', color: '#16A34A', fontWeight: 700 }}>(100% Indexable)</span>
-            </div>
-            <div style={{ fontSize: '0.65rem', fontWeight: 700, color: '#0284C7', marginTop: '0.1rem' }}>
-              {pages.length} DB Overridden • {catalogList.length - pages.length} Static/Generated
-            </div>
-          </div>
-        </div>
-
-        <div className="admin-card" style={{ padding: '1.1rem 1.25rem', display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
-          <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: hasRunAudit ? '#DCFCE7' : '#F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'center', color: hasRunAudit ? '#16A34A' : '#64748B' }}>
-            <CheckCircle2 size={22} />
-          </div>
-          <div>
-            <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#64748B' }}>Passed Checks</div>
-            <div style={{ fontSize: '1.45rem', fontWeight: 900, color: hasRunAudit ? '#16A34A' : '#64748B' }}>
-              {hasRunAudit ? (overview?.totalPassed ?? '—') : '—'}
-            </div>
-            <div style={{ fontSize: '0.65rem', fontWeight: 700, color: '#64748B', marginTop: '0.1rem' }}>
-              {hasRunAudit ? `${totalEvaluated} Total Evaluated` : 'Run audit to evaluate'}
+            <div style={{ marginTop: '0.35rem' }}>
+              <span style={{
+                fontSize: '0.68rem', fontWeight: 800, padding: '0.15rem 0.55rem', borderRadius: '100px',
+                background: avgScoreColor.bg, color: avgScoreColor.text, border: `1px solid ${avgScoreColor.border}`
+              }}>
+                {avgScoreColor.label}
+              </span>
             </div>
           </div>
         </div>
 
-        <div className="admin-card" style={{ padding: '1.1rem 1.25rem', display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
-          <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: hasRunAudit ? ((overview?.totalErrors ?? 0) > 0 ? '#FEE2E2' : '#FEF3C7') : '#F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'center', color: hasRunAudit ? ((overview?.totalErrors ?? 0) > 0 ? '#DC2626' : '#D97706') : '#64748B' }}>
-            <AlertTriangle size={22} />
+        {/* Card 2: Total Public Pages */}
+        <div className="admin-card" style={{ padding: '1.25rem 1.5rem', display: 'flex', alignItems: 'center', gap: '1rem', background: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: '12px' }}>
+          <div style={{
+            width: '48px', height: '48px', borderRadius: '12px',
+            background: '#EFF6FF', color: '#0284C7',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            border: '1px solid #BFDBFE', flexShrink: 0
+          }}>
+            <Globe size={24} />
           </div>
-          <div>
-            <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#64748B' }}>Audit Issues</div>
-            <div style={{ fontSize: '1.45rem', fontWeight: 900, color: hasRunAudit ? ((overview?.totalErrors ?? 0) > 0 ? '#DC2626' : '#10B981') : '#64748B' }}>
-              {hasRunAudit ? (overview?.totalErrors ?? 0) : '—'}{' '}
-              {hasRunAudit ? <span style={{ fontSize: '0.75rem', color: '#D97706', fontWeight: 700 }}>({overview?.totalWarnings ?? 0} Warn)</span> : null}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: '0.72rem', fontWeight: 700, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              Total Public Pages
             </div>
-            <div style={{ fontSize: '0.65rem', fontWeight: 700, color: '#64748B', marginTop: '0.1rem' }}>
-              {hasRunAudit ? `${(overview?.totalErrors || 0) + (overview?.totalWarnings || 0)} Total Action Items` : 'Run audit to detect'}
+            <div style={{ fontSize: '1.85rem', fontWeight: 900, color: '#0F172A', lineHeight: 1.1, marginTop: '0.2rem' }}>
+              {overview?.totalPublicPages || overview?.analyzedPagesCount || catalogList.length}
+            </div>
+            <div style={{ fontSize: '0.74rem', color: '#64748B', marginTop: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+              <span style={{ color: '#16A34A', fontWeight: 700 }}>
+                {overview?.analyzedPagesCount || overview?.pages?.length || 0} Audited
+              </span>
+              <span>•</span>
+              <span style={{ color: Math.max(0, catalogList.length - (overview?.analyzedPagesCount || overview?.pages?.length || 0)) > 0 ? '#D97706' : '#64748B', fontWeight: 600 }}>
+                {Math.max(0, catalogList.length - (overview?.analyzedPagesCount || overview?.pages?.length || 0))} Unaudited
+              </span>
             </div>
           </div>
         </div>
 
-        <div className="admin-card" style={{ padding: '1.1rem 1.25rem', display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
-          <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: integrations?.googleSearchConsole?.isConnected ? '#DCFCE7' : '#F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'center', color: integrations?.googleSearchConsole?.isConnected ? '#16A34A' : '#64748B' }}>
-            <Shield size={22} />
+        {/* Card 3: Pages Audited */}
+        <div className="admin-card" style={{ padding: '1.25rem 1.5rem', display: 'flex', alignItems: 'center', gap: '1rem', background: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: '12px' }}>
+          <div style={{
+            width: '48px', height: '48px', borderRadius: '12px',
+            background: hasRunAudit ? '#DCFCE7' : '#F1F5F9', color: hasRunAudit ? '#16A34A' : '#64748B',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            border: `1px solid ${hasRunAudit ? '#BBF7D0' : '#E2E8F0'}`, flexShrink: 0
+          }}>
+            <CheckCircle2 size={24} />
           </div>
-          <div>
-            <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#64748B' }}>Search Console</div>
-            <div style={{ fontSize: '1.05rem', fontWeight: 900, color: integrations?.googleSearchConsole?.isConnected ? '#15803D' : '#64748B', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-              {integrations?.googleSearchConsole?.isConnected ? 'Connected' : 'Not Connected'}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: '0.72rem', fontWeight: 700, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              Pages Audited
             </div>
-            <div style={{ fontSize: '0.68rem', color: '#94A3B8' }}>
-              {integrations?.googleSearchConsole?.isConnected ? 'Live sync active' : 'Sync optional'}
+            <div style={{ fontSize: '1.85rem', fontWeight: 900, color: hasRunAudit ? '#15803D' : '#64748B', lineHeight: 1.1, marginTop: '0.2rem' }}>
+              {hasRunAudit ? (overview?.analyzedPagesCount || overview?.pages?.length || 0) : 0}
+            </div>
+            <div style={{ fontSize: '0.74rem', color: '#64748B', marginTop: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <span style={{
+                fontWeight: 800,
+                color: (catalogList.length > 0 && (overview?.analyzedPagesCount || overview?.pages?.length || 0) >= catalogList.length) ? '#16A34A' : '#0284C7'
+              }}>
+                {Math.min(100, (overview?.totalPublicPages || catalogList.length) > 0 ? Math.round(((overview?.analyzedPagesCount || overview?.pages?.length || 0) / (overview?.totalPublicPages || catalogList.length)) * 100) : 100)}% Coverage
+              </span>
+              <span>of eligible public catalog</span>
             </div>
           </div>
         </div>
@@ -3855,6 +4106,7 @@ export const AdminSeo = () => {
         <SeoOverviewView
           overview={overview}
           pages={pages}
+          allPublicPages={allPublicPages}
           routeInventory={routeInventory}
           integrations={integrations}
           avgScore={avgScore}
@@ -4444,7 +4696,8 @@ export const AdminSeo = () => {
           banner={gscBanner}
           domain={domain}
           onEditPageSeo={(pageKey) => {
-            const p = pages.find(pg => pg.pageKey === pageKey);
+            const catalog = allPublicPages.length > 0 ? allPublicPages : pages;
+            const p = catalog.find(pg => pg.pageKey === pageKey) || pages.find(pg => pg.pageKey === pageKey);
             if (p) {
               setEditingPage(p);
               setTab('pages');

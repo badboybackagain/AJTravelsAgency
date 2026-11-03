@@ -167,9 +167,14 @@ const mockPrisma = {
       return { ...newBooking };
     },
   },
-  $transaction: async (callback) => {
-    // Execute callback passing transactional mock instance
-    return await callback(mockPrisma);
+  $transaction: async (callbackOrArray) => {
+    if (typeof callbackOrArray === 'function') {
+      return await callbackOrArray(mockPrisma);
+    }
+    if (Array.isArray(callbackOrArray)) {
+      return await Promise.all(callbackOrArray);
+    }
+    return callbackOrArray;
   },
 };
 

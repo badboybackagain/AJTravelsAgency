@@ -33,8 +33,20 @@ async function sendBookingOtp(phoneNumber) {
     };
   }
 
-  // 1. Get WhatsApp settings
-  const settings = await getWhatsAppSettings();
+  // 1 & 2. Concurrent DB Pre-checks: Fetch settings and rate-limiting history in parallel
+  const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
+  const [settings, recentChallenges] = await Promise.all([
+    getWhatsAppSettings(),
+    prisma.otpChallenge.findMany({
+      where: {
+        phoneNumber: cleanPhone,
+        purpose: 'BOOKING_VERIFICATION',
+        createdAt: { gte: fifteenMinutesAgo },
+      },
+      orderBy: { createdAt: 'desc' },
+    }),
+  ]);
+
   if (!settings.isEnabled) {
     return {
       success: false,
@@ -50,17 +62,6 @@ async function sendBookingOtp(phoneNumber) {
       message: 'WhatsApp gateway credentials are not configured.',
     };
   }
-
-  // 2. Check Resend Cooldown and Rate Limiting
-  const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
-  const recentChallenges = await prisma.otpChallenge.findMany({
-    where: {
-      phoneNumber: cleanPhone,
-      purpose: 'BOOKING_VERIFICATION',
-      createdAt: { gte: fifteenMinutesAgo },
-    },
-    orderBy: { createdAt: 'desc' },
-  });
 
   if (recentChallenges.length >= MAX_SENDS_PER_WINDOW) {
     return {
@@ -110,6 +111,17 @@ async function sendBookingOtp(phoneNumber) {
   });
 
   // 5. Dispatch real OTP through Wasms API
+  // Safety guard: Never dispatch real network OTPs in test mode or when dispatch is disabled
+  if (process.env.NODE_ENV === 'test' || process.env.DISABLE_REAL_OTP === 'true') {
+    return {
+      success: true,
+      provider: 'WASMS_TEST_MOCK',
+      expiresIn: OTP_EXPIRY_SECONDS,
+      cooldownSeconds: 60,
+      message: 'OTP dispatch suppressed in test mode.',
+    };
+  }
+
   const timeoutMs = 12000;
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
@@ -175,7 +187,10 @@ async function sendBookingOtp(phoneNumber) {
     };
   } catch (err) {
     clearTimeout(timeoutId);
-    const errMsg = err.name === 'AbortError' ? 'OTP gateway request timed out.' : err.message;
+    const isTimeout = err.name === 'AbortError';
+    const errMsg = isTimeout
+      ? 'WhatsApp gateway request timed out. Please try again or request a callback.'
+      : 'Network error communicating with WhatsApp gateway. Please try again or request a callback.';
     await prisma.otpChallenge.update({
       where: { id: challenge.id },
       data: { status: 'EXPIRED' },
@@ -183,7 +198,7 @@ async function sendBookingOtp(phoneNumber) {
 
     return {
       success: false,
-      code: 'PROVIDER_TIMEOUT',
+      code: isTimeout ? 'PROVIDER_TIMEOUT' : 'PROVIDER_UNAVAILABLE',
       message: errMsg,
     };
   }

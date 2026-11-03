@@ -102,7 +102,7 @@ export const AdminFares = () => {
     if (statusFilter === 'INACTIVE' && f.isActive) return false;
 
     // Trip type filter
-    if (tripTypeFilter !== 'ALL' && f.tripType !== tripTypeFilter) return false;
+    if (tripTypeFilter !== 'ALL' && (f.tripType || 'ONE_WAY').toUpperCase() !== tripTypeFilter) return false;
 
     // Search query
     if (searchQuery.trim()) {
@@ -232,13 +232,13 @@ export const AdminFares = () => {
             onClick={() => setTripTypeFilter('ONE_WAY')}
             className={`admin-filter-btn ${tripTypeFilter === 'ONE_WAY' ? 'active' : ''}`}
           >
-            One Way ({fares.filter((f) => f.tripType === 'ONE_WAY').length})
+            One Way ({fares.filter((f) => (f.tripType || 'ONE_WAY').toUpperCase() === 'ONE_WAY').length})
           </button>
           <button
             onClick={() => setTripTypeFilter('ROUND_TRIP')}
             className={`admin-filter-btn ${tripTypeFilter === 'ROUND_TRIP' ? 'active' : ''}`}
           >
-            Round Trip ({fares.filter((f) => f.tripType === 'ROUND_TRIP').length})
+            Round Trip ({fares.filter((f) => (f.tripType || '').toUpperCase() === 'ROUND_TRIP').length})
           </button>
         </div>
 
@@ -318,12 +318,12 @@ export const AdminFares = () => {
                               padding: '0.12rem 0.45rem',
                               borderRadius: '6px',
                               letterSpacing: '0.04em',
-                              backgroundColor: f.tripType === 'ROUND_TRIP' ? '#EEF2FF' : '#ECFDF5',
-                              color: f.tripType === 'ROUND_TRIP' ? '#4F46E5' : '#059669',
-                              border: f.tripType === 'ROUND_TRIP' ? '1px solid #C7D2FE' : '1px solid #A7F3D0',
+                              backgroundColor: (f.tripType || '').toUpperCase() === 'ROUND_TRIP' ? '#EEF2FF' : '#ECFDF5',
+                              color: (f.tripType || '').toUpperCase() === 'ROUND_TRIP' ? '#4F46E5' : '#059669',
+                              border: (f.tripType || '').toUpperCase() === 'ROUND_TRIP' ? '1px solid #C7D2FE' : '1px solid #A7F3D0',
                             }}
                           >
-                            {f.tripType === 'ROUND_TRIP' ? 'ROUND TRIP' : 'ONE WAY'}
+                            {(f.tripType || '').toUpperCase() === 'ROUND_TRIP' ? 'ROUND TRIP' : 'ONE WAY'}
                           </span>
                         </div>
                         <div style={{ fontSize: '0.74rem', color: '#64748B', display: 'flex', alignItems: 'center', gap: '0.35rem', marginTop: '0.25rem' }}>

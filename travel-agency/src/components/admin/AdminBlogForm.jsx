@@ -33,10 +33,8 @@ import {
   ListOrdered,
   Type,
   FileText,
-  Search,
   ExternalLink,
   ShieldAlert,
-  Car,
   Tag,
   Calendar,
   Clock,
@@ -506,10 +504,10 @@ export const AdminBlogForm = ({ isOpen, blog, onClose, onSuccess, availableArtic
         summary: formData.summary.trim(),
         featuredImage: formData.featuredImage.trim() || '/assets/pune-to-mumbai-premium-travel-banner.webp',
         imageAlt: formData.imageAlt.trim() || formData.title.trim(),
-        pickupDefault: formData.pickupDefault.trim() || 'pune',
-        dropDefault: formData.dropDefault.trim() || 'mumbai',
-        metaTitle: formData.metaTitle.trim() || null,
-        metaDesc: formData.metaDesc.trim() || null,
+        pickupDefault: (formData.pickupDefault || 'pune').trim().toLowerCase(),
+        dropDefault: (formData.dropDefault || 'mumbai').trim().toLowerCase(),
+        metaTitle: formData.metaTitle ? formData.metaTitle.trim() : null,
+        metaDesc: formData.metaDesc ? formData.metaDesc.trim() : null,
         canonicalUrl: `https://ajtravelspune.com/${resolvedSlug}/`,
         isPublished: targetPublish,
         isFeatured: Boolean(formData.isFeatured),
@@ -583,8 +581,8 @@ export const AdminBlogForm = ({ isOpen, blog, onClose, onSuccess, availableArtic
                 </h3>
                 <p style={{ fontSize: '0.78rem', color: '#64748B', margin: '0.15rem 0 0' }}>
                   {isEditMode
-                    ? 'Update structured content, SEO attributes, and publication status.'
-                    : 'Craft a new SEO-optimized route guide or fleet rental article.'}
+                    ? 'Update structured content, article details, and publication status.'
+                    : 'Craft a new travel guide or fleet rental article.'}
                 </p>
               </div>
             </div>
@@ -623,7 +621,6 @@ export const AdminBlogForm = ({ isOpen, blog, onClose, onSuccess, availableArtic
               { id: 'basic', label: 'Section A & B: Basic Info & Image', icon: Tag },
               { id: 'content', label: `Section C: Content Blocks (${formData.content.length})`, icon: Type },
               { id: 'faqs', label: `Section D & E: FAQs (${formData.faqs.length}) & Related`, icon: HelpCircle },
-              { id: 'seo', label: 'Section F & G: Booking & SEO', icon: Search },
             ].map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
@@ -844,14 +841,42 @@ export const AdminBlogForm = ({ isOpen, blog, onClose, onSuccess, availableArtic
                     </div>
                   </div>
 
-                  <div className="admin-form-group">
-                    <label className="admin-form-label">Publication Date</label>
-                    <input
-                      type="date"
-                      className="admin-form-input"
-                      value={formData.publishedAt}
-                      onChange={(e) => setFormData((p) => ({ ...p, publishedAt: e.target.value }))}
-                    />
+                  <div className="admin-form-grid-2">
+                    <div className="admin-form-group">
+                      <label className="admin-form-label">Publication Date</label>
+                      <input
+                        type="date"
+                        className="admin-form-input"
+                        value={formData.publishedAt}
+                        onChange={(e) => setFormData((p) => ({ ...p, publishedAt: e.target.value }))}
+                      />
+                    </div>
+
+                    <div className="admin-form-group">
+                      <label className="admin-form-label">Display Priority Order</label>
+                      <input
+                        type="number"
+                        className="admin-form-input"
+                        value={formData.displayOrder}
+                        onChange={(e) => setFormData((p) => ({ ...p, displayOrder: parseInt(e.target.value, 10) || 0 }))}
+                        placeholder="0"
+                      />
+                      <span style={{ fontSize: '0.72rem', color: '#64748B' }}>
+                        Lower number displays earlier in lists (e.g. 1 before 2).
+                      </span>
+                    </div>
+                  </div>
+
+                  <div style={{ marginBottom: '1.25rem' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 700, color: '#0F172A' }}>
+                      <input
+                        type="checkbox"
+                        checked={formData.isFeatured}
+                        onChange={(e) => setFormData((p) => ({ ...p, isFeatured: e.target.checked }))}
+                        style={{ width: '16px', height: '16px', cursor: 'pointer' }}
+                      />
+                      <span>Feature this article on Homepage Showcase</span>
+                    </label>
                   </div>
 
                   {/* Summary / Excerpt */}
@@ -1573,155 +1598,7 @@ export const AdminBlogForm = ({ isOpen, blog, onClose, onSuccess, availableArtic
               </div>
             )}
 
-            {/* ============================================================ */}
-            {/* TAB 4: BOOKING DEFAULTS & SEO SETTINGS (Sections F & G) */}
-            {/* ============================================================ */}
-            {activeTab === 'seo' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                {/* Section F — Booking Defaults Card */}
-                <div className="admin-form-section">
-                  <div className="admin-form-section-title">
-                    <Car size={16} color="#0284C7" />
-                    <span>Section F — Contextual Booking Sidebar Defaults</span>
-                  </div>
 
-                  <p style={{ fontSize: '0.78rem', color: '#64748B', marginTop: 0, marginBottom: '1rem' }}>
-                    Configure the corridor defaults used by the sticky sidebar booking calculator on this article's page.
-                  </p>
-
-                  <div className="admin-form-grid-2">
-                    <div className="admin-form-group">
-                      <label className="admin-form-label">Pickup Location Key</label>
-                      <input
-                        type="text"
-                        className="admin-form-input"
-                        value={formData.pickupDefault}
-                        onChange={(e) => setFormData((p) => ({ ...p, pickupDefault: e.target.value.toLowerCase() }))}
-                        placeholder="e.g. pune"
-                      />
-                    </div>
-
-                    <div className="admin-form-group">
-                      <label className="admin-form-label">Drop Location Key</label>
-                      <input
-                        type="text"
-                        className="admin-form-input"
-                        value={formData.dropDefault}
-                        onChange={(e) => setFormData((p) => ({ ...p, dropDefault: e.target.value.toLowerCase() }))}
-                        placeholder="e.g. mumbai"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Section G — SEO Settings Card */}
-                <div className="admin-form-section">
-                  <div className="admin-form-section-title">
-                    <Search size={16} color="#0284C7" />
-                    <span>Section G — Search Engine Optimization (SEO)</span>
-                  </div>
-
-                  <div className="admin-form-group">
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.35rem' }}>
-                      <label className="admin-form-label" style={{ margin: 0 }}>SEO Meta Title</label>
-                      <span style={{ fontSize: '0.72rem', color: formData.metaTitle.length > 60 ? '#D97706' : '#64748B' }}>
-                        {formData.metaTitle.length} / 60 recommended
-                      </span>
-                    </div>
-                    <input
-                      type="text"
-                      className="admin-form-input"
-                      value={formData.metaTitle}
-                      onChange={(e) => setFormData((p) => ({ ...p, metaTitle: e.target.value }))}
-                      placeholder="e.g. Pune to Mumbai One-Way Cab | Rates, Routes & Booking - AJ Travels"
-                    />
-                  </div>
-
-                  <div className="admin-form-group">
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.35rem' }}>
-                      <label className="admin-form-label" style={{ margin: 0 }}>SEO Meta Description</label>
-                      <span style={{ fontSize: '0.72rem', color: formData.metaDesc.length > 160 ? '#D97706' : '#64748B' }}>
-                        {formData.metaDesc.length} / 160 recommended
-                      </span>
-                    </div>
-                    <textarea
-                      className="admin-form-textarea"
-                      rows={3}
-                      value={formData.metaDesc}
-                      onChange={(e) => setFormData((p) => ({ ...p, metaDesc: e.target.value }))}
-                      placeholder="e.g. Looking for a reliable Pune to Mumbai one-way cab? Discover transparent fares with tolls included..."
-                    />
-                  </div>
-
-                  {/* Canonical URL Preview */}
-                  <div className="admin-form-group">
-                    <label className="admin-form-label">Canonical URL (Permanent Indexing Anchor)</label>
-                    <input
-                      type="text"
-                      className="admin-form-input"
-                      value={formData.canonicalUrl || `https://ajtravelspune.com/${formData.slug}/`}
-                      readOnly
-                      style={{ backgroundColor: '#F1F5F9', color: '#64748B' }}
-                    />
-                  </div>
-
-                  {/* Search Snippet Preview Box */}
-                  <div
-                    style={{
-                      marginTop: '1.25rem',
-                      padding: '1.25rem',
-                      borderRadius: '10px',
-                      backgroundColor: '#FFFFFF',
-                      border: '1px solid #CBD5E1',
-                    }}
-                  >
-                    <div style={{ fontSize: '0.72rem', fontWeight: 800, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '0.5rem' }}>
-                      Google Search Result Snippet Preview:
-                    </div>
-                    <div style={{ fontSize: '0.8rem', color: '#202124', marginBottom: '0.15rem' }}>
-                      https://ajtravelspune.com › blog › {formData.slug || 'pune-to-mumbai-cab'}
-                    </div>
-                    <div style={{ fontSize: '1.15rem', color: '#1A0DAB', fontWeight: 600, cursor: 'pointer', lineHeight: 1.3, marginBottom: '0.35rem' }}>
-                      {formData.metaTitle || formData.title || 'Untitled Travel Article — AJ Travels Pune'}
-                    </div>
-                    <div style={{ fontSize: '0.85rem', color: '#4D5156', lineHeight: 1.4 }}>
-                      {formData.metaDesc || formData.summary || 'Essential travel intelligence, route comparison, luggage capacities and taxi advice from AJ Travels.'}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Display Order & Featured Toggles */}
-                <div className="admin-form-section">
-                  <div className="admin-form-grid-2">
-                    <div className="admin-form-group">
-                      <label className="admin-form-label">Display Priority Order</label>
-                      <input
-                        type="number"
-                        className="admin-form-input"
-                        value={formData.displayOrder}
-                        onChange={(e) => setFormData((p) => ({ ...p, displayOrder: parseInt(e.target.value, 10) || 0 }))}
-                        placeholder="0"
-                      />
-                      <span style={{ fontSize: '0.72rem', color: '#64748B' }}>
-                        Lower number displays earlier in lists (e.g. 1 before 2).
-                      </span>
-                    </div>
-
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem', justifyContent: 'center' }}>
-                      <label style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 700, color: '#0F172A' }}>
-                        <input
-                          type="checkbox"
-                          checked={formData.isFeatured}
-                          onChange={(e) => setFormData((p) => ({ ...p, isFeatured: e.target.checked }))}
-                          style={{ width: '16px', height: '16px', cursor: 'pointer' }}
-                        />
-                        <span>Feature this article on Homepage Showcase</span>
-                      </label>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
 
           {/* Footer Save & Publish Controls */}

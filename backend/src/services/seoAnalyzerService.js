@@ -292,7 +292,7 @@ async function analyzePage(pageKey, options = {}) {
   }
 
   const pagePath = publicPageDef.pageUrl;
-  const expectedCanonical = `${SITE_DOMAIN}${pagePath}`;
+  const expectedCanonical = publicPageDef.canonicalUrl || `${SITE_DOMAIN}${pagePath}`;
 
   // 1. Fetch real HTTP response or fall back to catalog hydration
   let httpData = null;
@@ -621,12 +621,24 @@ async function analyzePage(pageKey, options = {}) {
           isAutomatedSafe: false,
         };
       }
-      if (canonical !== expectedCanonical) {
+      const normCanonical = (canonical || '').replace(/\/+$/, '');
+      const normExpected = (expectedCanonical || '').replace(/\/+$/, '');
+      if (normCanonical !== normExpected) {
         return {
           status: 'ERROR',
           observed: `Canonical points to: "${canonical}"`,
-          expected: `Matches page URL: "${expectedCanonical}"`,
+          expected: `Matches page URL or canonical: "${expectedCanonical}"`,
           impact: 'Incorrect canonical points crawlers away from this page.',
+          fix: `Update canonical to ${expectedCanonical}.`,
+          isAutomatedSafe: true,
+        };
+      }
+      if (canonical !== expectedCanonical) {
+        return {
+          status: 'WARNING',
+          observed: `Trailing slash inconsistency: "${canonical}" vs "${expectedCanonical}"`,
+          expected: `Consistent trailing slash matching standard: "${expectedCanonical}"`,
+          impact: 'Minor: Trailing slash variance can cause crawl duplication if redirects are missing.',
           fix: `Update canonical to ${expectedCanonical}.`,
           isAutomatedSafe: true,
         };
@@ -1321,6 +1333,118 @@ async function analyzePage(pageKey, options = {}) {
 }
 
 // ---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+// 6-Pillar SEO Category Definitions & Scoring Engine
+// ---------------------------------------------------------------------------
+const SEO_CATEGORY_DEFINITIONS = {
+  technical: {
+    id: 'technical',
+    name: 'Technical SEO',
+    desc: 'HTTP status, robots.txt, sitemap inclusion & index directives',
+    checkIds: [
+      'http_status_ok',
+      'robots_indexing_allowed',
+      'sitemap_inclusion',
+      'robots_txt_compliance',
+    ],
+  },
+  onPage: {
+    id: 'onPage',
+    name: 'On-page SEO',
+    desc: 'Title tags, meta descriptions, canonical URLs & OpenGraph tags',
+    checkIds: [
+      'meta_title_presence',
+      'meta_title_length',
+      'meta_desc_presence',
+      'meta_desc_length',
+      'canonical_tag',
+      'opengraph_metadata',
+      'cross_page_duplicate_title',
+      'cross_page_duplicate_desc',
+    ],
+  },
+  content: {
+    id: 'content',
+    name: 'Content Quality',
+    desc: 'Heading hierarchy, word count density & internal linking health',
+    checkIds: [
+      'h1_heading_count',
+      'h1_heading_content',
+      'heading_hierarchy',
+      'content_substance',
+      'image_alt_attributes',
+    ],
+  },
+  performance: {
+    id: 'performance',
+    name: 'Performance',
+    desc: 'Payload weight, server response latency & DOM rendering',
+    checkIds: [
+      'navigation_links_valid',
+      'no_redirect_links',
+      'html_payload_weight',
+    ],
+  },
+  schema: {
+    id: 'schema',
+    name: 'Schema Markup',
+    desc: 'Structured JSON-LD syntax, LocalBusiness & TravelAgency schemas',
+    checkIds: [
+      'jsonld_schema_valid',
+      'jsonld_schema_scoped',
+    ],
+  },
+  mobile: {
+    id: 'mobile',
+    name: 'Mobile SEO',
+    desc: 'Responsive viewport meta, mobile layout compliance & touch targets',
+    checkIds: [
+      'mobile_viewport',
+    ],
+  },
+};
+
+function calculateCategoryBreakdown(results) {
+  const allFindings = results.flatMap(r => r.findings || []);
+  const breakdown = {};
+
+  for (const [key, def] of Object.entries(SEO_CATEGORY_DEFINITIONS)) {
+    const catFindings = allFindings.filter(f => def.checkIds.includes(f.id));
+    const passed = catFindings.filter(f => f.status === 'PASS').length;
+    const warnings = catFindings.filter(f => f.status === 'WARNING').length;
+    const errors = catFindings.filter(f => f.status === 'ERROR').length;
+    const notEvaluated = catFindings.filter(f => f.status === 'NOT_EVALUATED').length;
+    const evaluated = catFindings.filter(f => f.status !== 'NOT_EVALUATED');
+
+    const earned = evaluated.reduce((sum, f) => sum + (f.scoreEarned || 0), 0);
+    const max = evaluated.reduce((sum, f) => sum + (f.weight || 0), 0);
+    const score = max > 0 ? Math.round((earned / max) * 100) : null;
+
+    let status = 'NOT_EVALUATED';
+    if (score !== null) {
+      if (score >= 80 && errors === 0) status = 'GOOD';
+      else if (score >= 60) status = 'NEEDS_IMPROVEMENT';
+      else status = 'POOR';
+    }
+
+    breakdown[key] = {
+      id: def.id,
+      name: def.name,
+      desc: def.desc,
+      score,
+      status,
+      passed,
+      warnings,
+      errors,
+      notEvaluated,
+      totalEvaluated: passed + warnings + errors,
+    };
+  }
+
+  return breakdown;
+}
+
+// ---------------------------------------------------------------------------
 // Analyze All Eligible Public Pages & Cross-Check for Duplicates
 // ---------------------------------------------------------------------------
 async function analyzeAllPages(options = {}) {
@@ -1419,7 +1543,25 @@ async function analyzeAllPages(options = {}) {
   const totalPassed = results.reduce((sum, r) => sum + (r.counts?.passed || 0), 0);
 
   const totalEligible = allCatalog.length > 0 ? allCatalog.length : PUBLIC_PAGES.length;
+  const categoryBreakdown = calculateCategoryBreakdown(results);
+  const goodPages = results.filter(p => (p.counts?.errors || 0) === 0 && (p.counts?.warnings || 0) === 0).length;
+  const needsImprovementPages = results.filter(p => (p.counts?.errors || 0) === 0 && (p.counts?.warnings || 0) > 0).length;
+  const poorPages = results.filter(p => (p.counts?.errors || 0) > 0).length;
+
   const overview = {
+    categories: categoryBreakdown,
+    categoryScores: categoryBreakdown,
+    pageHealthDistribution: {
+      good: goodPages,
+      needsImprovement: needsImprovementPages,
+      poor: poorPages,
+      totalAudited: results.length,
+      byScore: {
+        good: results.filter(p => (p.score ?? 0) >= 80).length,
+        needsImprovement: results.filter(p => (p.score ?? 0) >= 60 && (p.score ?? 0) < 80).length,
+        poor: results.filter(p => (p.score ?? 0) < 60).length,
+      },
+    },
     siteDomain: SITE_DOMAIN,
     totalPublicPages: totalEligible,
     totalCatalogPages: totalEligible,
@@ -1466,7 +1608,7 @@ async function analyzeAllPages(options = {}) {
 // Cached / Fast Overview
 // ---------------------------------------------------------------------------
 async function getCachedOverview() {
-  if (analysisCache.overview) {
+  if (analysisCache.overview && analysisCache.overview.categories) {
     return {
       ...analysisCache.overview,
       isCached: true,

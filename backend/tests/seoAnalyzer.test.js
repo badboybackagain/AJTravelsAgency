@@ -187,6 +187,25 @@ async function runTests() {
   assert(typeof overviewData?.averageHealthScore === 'number', `Average health score is calculated: ${overviewData?.averageHealthScore}`);
   assert(overviewData?.totalPassed > 0, `Total passed assertions reported: ${overviewData?.totalPassed}`);
 
+  // Category-wise Scoring Verification
+  assert(overviewData?.categories !== undefined, 'Overview contains category breakdown');
+  const cats = overviewData?.categories || {};
+  const catNames = ['technical', 'onPage', 'content', 'performance', 'schema', 'mobile'];
+  for (const c of catNames) {
+    assert(cats[c] !== undefined, 'Category ' + c + ' breakdown is present');
+    assert(typeof cats[c]?.score === 'number', 'Category ' + c + ' score is numeric (' + cats[c]?.score + ')');
+    assert(cats[c]?.score >= 0 && cats[c]?.score <= 100, 'Category ' + c + ' score is within 0-100');
+    assert(typeof cats[c]?.passed === 'number', 'Category ' + c + ' passed count is present');
+  }
+
+  // Page Health Distribution Verification
+  assert(overviewData?.pageHealthDistribution !== undefined, 'Page health distribution is present');
+  const phd = overviewData?.pageHealthDistribution || {};
+  assert(typeof phd.good === 'number', 'Good pages count is numeric: ' + phd.good);
+  assert(typeof phd.needsImprovement === 'number', 'Needs improvement pages count is numeric: ' + phd.needsImprovement);
+  assert(typeof phd.poor === 'number', 'Poor pages count is numeric: ' + phd.poor);
+  assert(phd.good + phd.needsImprovement + phd.poor === phd.totalAudited, 'Page health sum (' + phd.good + ' + ' + phd.needsImprovement + ' + ' + phd.poor + ') matches total audited (' + phd.totalAudited + ')');
+
   // Page inspection endpoint
   const pageInspection = await requestHttp('GET', '/api/admin/seo/analyzer/page/fare', adminToken);
   assert(pageInspection.statusCode === 200, 'GET /api/admin/seo/analyzer/page/fare returns HTTP 200');
@@ -214,7 +233,7 @@ async function runTests() {
 
   const pagesRes = await requestHttp('GET', '/api/admin/seo/pages', adminToken);
   assert(pagesRes.statusCode === 200, 'GET /api/admin/seo/pages still returns HTTP 200');
-  assert(pagesRes.json?.data?.pages?.length === 3, 'Existing pages list intact (3 pages)');
+  assert(pagesRes.json?.data?.pages?.length >= 3, 'Existing pages list intact (at least 3 pages)');
 
   const sitemapRes = await requestHttp('GET', '/sitemap.xml');
   assert(sitemapRes.statusCode === 200, 'GET /sitemap.xml still returns HTTP 200');

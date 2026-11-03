@@ -13,7 +13,8 @@ import {
   ChevronRight,
   Loader2,
   X,
-  FileText
+  FileText,
+  Info
 } from 'lucide-react';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
@@ -59,15 +60,20 @@ export function CustomerQuotePage() {
   const handleAccept = async () => {
     setActionLoading(true);
     try {
-      await quoteApi.accept(token);
+      const res = await quoteApi.accept(token);
+      const resData = res?.data?.data;
       setQuote((prev) => ({
         ...prev,
         status: 'ACCEPTED',
-        acceptedAt: new Date().toISOString(),
+        acceptedAt: resData?.acceptedAt || new Date().toISOString(),
+        bookingId: resData?.bookingId || prev.bookingId,
+        bookingRef: resData?.bookingRef || prev.bookingRef,
       }));
       setActionMessage({
         type: 'success',
-        text: 'Thank you! You have accepted this quotation. Our dispatch team will confirm vehicle allocation shortly.',
+        text: resData?.bookingRef
+          ? `Quotation accepted and Booking #${resData.bookingRef} confirmed!`
+          : 'Thank you! You have accepted this quotation. Our dispatch team will confirm vehicle allocation shortly.',
       });
     } catch (err) {
       console.error('Error accepting quote:', err);
@@ -428,33 +434,102 @@ export function CustomerQuotePage() {
                 </div>
               </div>
 
-              {/* Inclusions & Terms */}
+              {/* Additional Charges (If Applicable) */}
               <div style={{
+                marginBottom: '1.25rem',
+                padding: '1.15rem 1.25rem',
                 background: '#F8FAFC',
-                borderRadius: '12px',
-                padding: '1rem',
-                border: '1px solid #E2E8F0',
-                marginBottom: '1.5rem',
-                fontSize: '0.8rem',
-                lineHeight: 1.5,
+                border: '1.5px solid #E2E8F0',
+                borderRadius: '14px',
+                fontSize: '0.85rem',
               }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#16A34A', fontWeight: 700, marginBottom: '0.35rem' }}>
-                  <ShieldCheck size={16} />
-                  <span>Inclusions & Quality Guarantee:</span>
+                <div style={{ fontWeight: 800, color: '#0F172A', marginBottom: '0.55rem', display: 'flex', alignItems: 'center', gap: '0.45rem', fontSize: '0.88rem' }}>
+                  <Info size={16} color="#0284C7" />
+                  <span>Additional Charges (If Applicable)</span>
                 </div>
-                <p style={{ margin: '0 0 0.5rem 0', color: '#475569' }}>
-                  {quote.inclusions || 'Vehicle rental, fuel, experienced chauffeur, and highway tolls.'}
-                </p>
-
-                {quote.exclusions && (
-                  <>
-                    <div style={{ fontWeight: 700, color: '#B45309', marginBottom: '0.25rem' }}>
-                      Exclusions:
+                {quote.additionalCharges?.isConfigured ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem', color: '#475569' }}>
+                    {quote.additionalCharges.extraKmRate > 0 && (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span>Extra Distance Rate:</span>
+                        <strong style={{ color: '#0F172A' }}>₹{quote.additionalCharges.extraKmRate} per km</strong>
+                      </div>
+                    )}
+                    {quote.additionalCharges.extraHourRate > 0 && (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span>Extra Hour / Waiting Rate:</span>
+                        <strong style={{ color: '#0F172A' }}>₹{quote.additionalCharges.extraHourRate} per hour</strong>
+                      </div>
+                    )}
+                    {quote.additionalCharges.includedKm > 0 && (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span>Included Package Distance:</span>
+                        <strong style={{ color: '#0F172A' }}>{quote.additionalCharges.includedKm} km</strong>
+                      </div>
+                    )}
+                    <div style={{ fontSize: '0.74rem', color: '#64748B', marginTop: '0.4rem', fontStyle: 'italic', lineHeight: 1.45, borderTop: '1px dashed #CBD5E1', paddingTop: '0.45rem' }}>
+                      * Note: These are conditional charges that apply only if your travel exceeds the included package distance or waiting duration. They are not included in the quoted total above.
                     </div>
-                    <p style={{ margin: 0, color: '#78350F' }}>{quote.exclusions}</p>
-                  </>
+                  </div>
+                ) : (
+                  <div style={{ fontSize: '0.78rem', color: '#64748B', fontStyle: 'italic', lineHeight: 1.45 }}>
+                    Extra kilometre and hourly rates apply based on actual trip distance and waiting time. Contact dispatch for custom corridor limits.
+                  </div>
                 )}
               </div>
+
+              {/* Inclusions & Terms (Harmonized with Parking) */}
+              {(() => {
+                const hasParking = parseFloat(quote.parkingCharges || 0) > 0;
+                let displayInclusions = quote.inclusions || 'Vehicle rental, fuel, experienced chauffeur, and highway tolls.';
+                let displayExclusions = quote.exclusions;
+
+                if (hasParking) {
+                  if (!/parking/i.test(displayInclusions)) {
+                    displayInclusions = displayInclusions.replace(/\.\s*$/, '') + ', and airport/station parking.';
+                  }
+                  if (displayExclusions) {
+                    displayExclusions = displayExclusions
+                      .replace(/airport\/station\s*parking\s*(charges)?/gi, '')
+                      .replace(/parking\s*charges/gi, '')
+                      .replace(/,\s*,/g, ',')
+                      .replace(/^\s*,\s*|\s*,\s*$/g, '')
+                      .trim();
+                    if (!displayExclusions) {
+                      displayExclusions = 'Extra kilometre/hour charges over package limit, night travel allowance (if applicable).';
+                    }
+                  }
+                }
+
+                return (
+                  <div style={{
+                    background: '#F8FAFC',
+                    borderRadius: '12px',
+                    padding: '1rem',
+                    border: '1px solid #E2E8F0',
+                    marginBottom: '1.5rem',
+                    fontSize: '0.8rem',
+                    lineHeight: 1.5,
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#16A34A', fontWeight: 700, marginBottom: '0.35rem' }}>
+                      <ShieldCheck size={16} />
+                      <span>Inclusions & Quality Guarantee:</span>
+                    </div>
+                    <p style={{ margin: '0 0 0.5rem 0', color: '#475569' }}>
+                      {displayInclusions}
+                    </p>
+
+                    {displayExclusions && (
+                      <>
+                        <div style={{ fontWeight: 700, color: '#B45309', marginBottom: '0.25rem' }}>
+                          Exclusions:
+                        </div>
+                        <p style={{ margin: 0, color: '#78350F' }}>{displayExclusions}</p>
+                      </>
+                    )}
+                  </div>
+                );
+              })()}
 
               {/* Payment Transparency Notice */}
               <div style={{
@@ -537,12 +612,32 @@ export function CustomerQuotePage() {
                   textAlign: 'center',
                 }}>
                   <CheckCircle size={28} color="#16A34A" style={{ margin: '0 auto 0.5rem auto' }} />
-                  <div style={{ fontWeight: 800, color: '#15803D', fontSize: '1rem', marginBottom: '0.25rem' }}>
-                    Quotation Accepted
+                  <div style={{ fontWeight: 800, color: '#15803D', fontSize: '1.05rem', marginBottom: '0.35rem' }}>
+                    {quote.bookingRef ? `Booking Confirmed (#${quote.bookingRef})` : 'Quotation Accepted'}
                   </div>
-                  <p style={{ margin: 0, fontSize: '0.82rem', color: '#166534' }}>
-                    Accepted on {new Date(quote.acceptedAt || Date.now()).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' })}. Our dispatch team is allocating your executive cab.
+                  <p style={{ margin: 0, fontSize: '0.84rem', color: '#166534', lineHeight: 1.5 }}>
+                    {quote.bookingRef
+                      ? `Your booking #${quote.bookingRef} is confirmed! Our operations desk has scheduled your executive cab. Payment is payable directly to the chauffeur on vehicle arrival.`
+                      : `Accepted on ${new Date(quote.acceptedAt || Date.now()).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' })}. Our dispatch team is allocating your executive cab.`}
                   </p>
+                  {quote.bookingRef && (
+                    <div style={{
+                      marginTop: '0.85rem',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.4rem',
+                      padding: '0.45rem 1rem',
+                      borderRadius: '8px',
+                      background: '#DCFCE7',
+                      border: '1px solid #86EFAC',
+                      color: '#15803D',
+                      fontWeight: 800,
+                      fontSize: '0.82rem'
+                    }}>
+                      <span>Confirmed Booking Reference:</span>
+                      <strong style={{ letterSpacing: '0.05em' }}>#{quote.bookingRef}</strong>
+                    </div>
+                  )}
                 </div>
               ) : quote.status === 'SUPERSEDED' ? (
                 <div style={{

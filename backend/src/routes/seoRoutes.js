@@ -4,7 +4,7 @@
 
 const express = require('express');
 const router = express.Router();
-const { getPages, getPage, updatePage } = require('../controllers/seoController');
+const { getPages, getPage, updatePage, batchAutoFixPages } = require('../controllers/seoController');
 const {
   getAnalyzerOverview,
   analyzeAllPages,
@@ -28,6 +28,7 @@ const {
 
 // SEO Settings Management (Auth + Admin required)
 router.get('/pages', auth, adminOnly, getPages);
+router.post('/pages/batch-auto-fix', auth, adminOnly, batchAutoFixPages);
 router.get('/pages/:pageKey', auth, adminOnly, getPage);
 router.put('/pages/:pageKey', auth, adminOnly, updatePage);
 

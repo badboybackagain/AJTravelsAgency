@@ -44,14 +44,14 @@ function isValidPhoneNumber(phone) {
  * Format enquiry notification for WhatsApp
  */
 function formatEnquiryMessage(enquiry) {
-  const refCode = (enquiry.id || '').slice(-6).toUpperCase();
+  const refCode = enquiry.enquiryNumber || enquiry.reference || `#${(enquiry.id || '').slice(-6).toUpperCase()}`;
   const dateStr = enquiry.travelDate || 'Flexible / To be confirmed';
   const vehicleStr = enquiry.vehicle || 'Any Available';
   const notesStr = enquiry.message ? `\n📝 *Notes:* ${enquiry.message}` : '';
 
   return `🔔 *NEW TRIP ENQUIRY — AJ TOURS*
 ━━━━━━━━━━━━━━━━━━━━━━━━
-🔖 *Enquiry Ref:* #${refCode}
+🔖 *Enquiry Ref:* ${refCode.startsWith('#') || refCode.startsWith('ENQ') ? refCode : '#' + refCode}
 👤 *Customer:* ${enquiry.name}
 📞 *Mobile:* +${sanitizePhoneNumber(enquiry.phone)}
 📍 *Pickup:* ${enquiry.pickup}
@@ -259,6 +259,15 @@ async function verifyGatewayConnection(apiSecretOverride = null, accountIdOverri
  * Multipart or form-data: secret, account, recipient, type, message
  */
 async function dispatchWasmsMessage({ secret, accountId, recipientPhone, messageText }) {
+  // Safety guard: Never dispatch real network calls in test mode or when dispatch is disabled
+  if (process.env.NODE_ENV === 'test' || process.env.DISABLE_WHATSAPP_DISPATCH === 'true') {
+    return {
+      accepted: true,
+      statusCode: 200,
+      response: { status: 200, message: 'WhatsApp message suppressed in test mode' },
+    };
+  }
+
   const timeoutMs = 12000;
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);

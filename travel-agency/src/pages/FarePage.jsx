@@ -1572,23 +1572,6 @@ export const FarePage = () => {
                 <span>Request Custom Route Quote</span>
               </button>
 
-              <a
-                href={getWhatsAppLink({
-                  pickup: pickupAddressParam || pickupDisplayName,
-                  destination: dropAddressParam || dropDisplayName,
-                  date: departureDate,
-                  time: departureTime,
-                  tripType: tripType === 'ROUND_TRIP' ? 'Round Trip' : 'One Way',
-                  passengers,
-                })}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="custom-route-wa-btn"
-              >
-                <MessageSquare size={16} />
-                <span>Instant Quote on WhatsApp</span>
-              </a>
-
               <button
                 type="button"
                 onClick={handleModifyLocations}
@@ -1802,6 +1785,16 @@ export const FarePage = () => {
                           </div>
                         </div>
 
+                        {/* Additional Charges Quick Reference */}
+                        {(v.fare.extraKmRate > 0 || v.fare.extraHourRate > 0) && (
+                          <div style={{ fontSize: '0.72rem', color: '#64748B', marginTop: '0.45rem', display: 'flex', alignItems: 'center', gap: '0.35rem', flexWrap: 'wrap' }}>
+                            <span style={{ fontWeight: 700, color: '#0284C7' }}>Extra Charges (if limit exceeded):</span>
+                            {v.fare.extraKmRate > 0 && <span>Distance: ₹{v.fare.extraKmRate}/km</span>}
+                            {v.fare.extraKmRate > 0 && v.fare.extraHourRate > 0 && <span>•</span>}
+                            {v.fare.extraHourRate > 0 && <span>Hourly: ₹{v.fare.extraHourRate}/hr</span>}
+                          </div>
+                        )}
+
                         {/* Breakdown Toggle */}
                         {hasFare && (
                           <div className="cab-breakdown-wrapper">
@@ -1850,6 +1843,45 @@ export const FarePage = () => {
                                   <span>Estimated Final Total:</span>
                                   <span>₹{v.fare.total?.toLocaleString()}</span>
                                 </div>
+
+                                {/* Additional Charges (If Applicable) */}
+                                {(v.fare.extraKmRate > 0 || v.fare.extraHourRate > 0) && (
+                                  <div style={{
+                                    marginTop: '0.65rem',
+                                    paddingTop: '0.65rem',
+                                    borderTop: '1px dashed #CBD5E1',
+                                    fontSize: '0.74rem',
+                                    color: '#475569',
+                                  }}>
+                                    <div style={{ fontWeight: 800, color: '#0F172A', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                                      <Info size={12} color="#0284C7" />
+                                      <span>Additional Charges (If Applicable)</span>
+                                    </div>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                                      {v.fare.extraKmRate > 0 && (
+                                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                          <span>Extra distance rate:</span>
+                                          <strong style={{ color: '#0F172A' }}>₹{v.fare.extraKmRate} per km</strong>
+                                        </div>
+                                      )}
+                                      {v.fare.extraHourRate > 0 && (
+                                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                          <span>Extra hour / waiting:</span>
+                                          <strong style={{ color: '#0F172A' }}>₹{v.fare.extraHourRate} per hour</strong>
+                                        </div>
+                                      )}
+                                      {v.fare.includedKm > 0 && (
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', color: '#64748B' }}>
+                                          <span>Included package distance:</span>
+                                          <span>{v.fare.includedKm} km</span>
+                                        </div>
+                                      )}
+                                    </div>
+                                    <div style={{ fontSize: '0.67rem', color: '#64748B', marginTop: '0.25rem', fontStyle: 'italic' }}>
+                                      * Conditional charges — apply only when journey exceeds included distance or duration.
+                                    </div>
+                                  </div>
+                                )}
                               </div>
                             )}
                           </div>

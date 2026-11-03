@@ -353,6 +353,7 @@ export const seoApi = {
   getPages: () => api.get('/admin/seo/pages', { timeout: 60000 }),
   getPage: (pageKey) => api.get(`/admin/seo/pages/${pageKey}`),
   updatePage: (pageKey, data) => api.put(`/admin/seo/pages/${pageKey}`, data),
+  batchAutoFix: () => api.post('/admin/seo/pages/batch-auto-fix'),
   getPublicPages: () => api.get('/seo/public'),
   getAnalyzerOverview: () => api.get('/admin/seo/analyzer/overview', { timeout: 60000 }),
   analyzeAll: () => api.post('/admin/seo/analyzer/analyze-all'),
