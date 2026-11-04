@@ -8,33 +8,43 @@ const VALID_CATEGORIES = ['vehicles', 'blogs', 'destinations', 'services', 'gene
 
 // Resolve root uploads directory
 let uploadRootDir = path.resolve(__dirname, '../../uploads');
-try {
-  if (!fs.existsSync(uploadRootDir)) {
-    fs.mkdirSync(uploadRootDir, { recursive: true });
-  }
-} catch (err) {
-  // Fall back to system temporary directory in read-only environments
-  uploadRootDir = path.join(os.tmpdir(), 'ajtravels-uploads');
+
+// Detect if running in serverless / read-only runtime (e.g. Vercel, AWS Lambda)
+const isServerless = Boolean(
+  process.env.VERCEL ||
+  process.env.AWS_LAMBDA_FUNCTION_NAME ||
+  process.env.NOW_REGION ||
+  process.env.VERCEL_ENV
+);
+
+// Determine if disk is truly writable
+let isDiskWritable = !isServerless;
+if (isDiskWritable) {
   try {
     if (!fs.existsSync(uploadRootDir)) {
       fs.mkdirSync(uploadRootDir, { recursive: true });
     }
-  } catch (tmpErr) {
-    console.warn('⚠️ Warning: Could not initialize local upload directory:', tmpErr.message);
+    const testFile = path.join(uploadRootDir, `.write_probe_${Date.now()}`);
+    fs.writeFileSync(testFile, 'probe');
+    fs.unlinkSync(testFile);
+  } catch (err) {
+    isDiskWritable = false;
   }
 }
 
-// Pre-create category subdirectories
-VALID_CATEGORIES.forEach((cat) => {
-  const dir = path.join(uploadRootDir, cat);
-  try {
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
+// Pre-create category subdirectories if local disk is writable
+if (isDiskWritable) {
+  VALID_CATEGORIES.forEach((cat) => {
+    const dir = path.join(uploadRootDir, cat);
+    try {
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
+    } catch (err) {
+      console.warn(`⚠️ Warning: Could not create upload subdirectory for ${cat}:`, err.message);
     }
-  } catch (err) {
-    console.warn(`⚠️ Warning: Could not create upload subdirectory for ${cat}:`, err.message);
-  }
-});
+  });
+}
 
 // Category resolver helper
 const resolveCategory = (req) => {
@@ -49,7 +59,8 @@ const resolveCategory = (req) => {
   return VALID_CATEGORIES.includes(normalized) ? normalized : 'general';
 };
 
-const storage = multer.diskStorage({
+// Disk storage engine for writable local environments
+const diskStorageEngine = multer.diskStorage({
   destination: (req, file, cb) => {
     const category = resolveCategory(req);
     const targetDir = path.join(uploadRootDir, category);
@@ -81,6 +92,101 @@ const storage = multer.diskStorage({
   },
 });
 
+// Memory storage engine for serverless / read-only environments
+const memoryStorageEngine = multer.memoryStorage();
+
+// Hybrid storage engine: writes to disk if writable, keeps in memory as Data URI if read-only
+class HybridStorageEngine {
+  _handleFile(req, file, cb) {
+    if (isDiskWritable) {
+      return diskStorageEngine._handleFile(req, file, cb);
+    }
+
+    // In-memory fallback for Vercel / serverless runtimes
+    memoryStorageEngine._handleFile(req, file, (err, info) => {
+      if (err) return cb(err);
+      const category = resolveCategory(req);
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+      const ext = path.extname(file.originalname).toLowerCase() || '.jpg';
+      let cleanExt = '.jpg';
+      if (['.jpg', '.jpeg', '.png', '.webp', '.avif'].includes(ext)) {
+        cleanExt = ext;
+      } else if (ext === '.jfif') {
+        cleanExt = '.jpg';
+      }
+      const filename = `${category}-${uniqueSuffix}${cleanExt}`;
+      const dataUri = `data:${file.mimetype || 'image/jpeg'};base64,${info.buffer.toString('base64')}`;
+
+      file.targetCategory = category;
+      file.targetFilename = filename;
+      file.filename = filename;
+      file.publicUrl = dataUri;
+      file.size = info.buffer ? info.buffer.length : (info.size || 0);
+
+      cb(null, {
+        buffer: info.buffer,
+        size: info.size,
+        filename,
+        publicUrl: dataUri,
+      });
+    });
+  }
+
+  _removeFile(req, file, cb) {
+    if (isDiskWritable) {
+      return diskStorageEngine._removeFile(req, file, cb);
+    }
+    cb(null);
+  }
+}
+
+// Memory storage engine for serverless / read-only environments
+const memoryStorageEngine = multer.memoryStorage();
+
+// Hybrid storage engine: writes to disk if writable, keeps in memory as Data URI if read-only
+class HybridStorageEngine {
+  _handleFile(req, file, cb) {
+    if (isDiskWritable) {
+      return diskStorageEngine._handleFile(req, file, cb);
+    }
+
+    // In-memory fallback for Vercel / serverless runtimes
+    memoryStorageEngine._handleFile(req, file, (err, info) => {
+      if (err) return cb(err);
+      const category = resolveCategory(req);
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+      const ext = path.extname(file.originalname).toLowerCase() || '.jpg';
+      let cleanExt = '.jpg';
+      if (['.jpg', '.jpeg', '.png', '.webp', '.avif'].includes(ext)) {
+        cleanExt = ext;
+      } else if (ext === '.jfif') {
+        cleanExt = '.jpg';
+      }
+      const filename = `${category}-${uniqueSuffix}${cleanExt}`;
+      const dataUri = `data:${file.mimetype || 'image/jpeg'};base64,${info.buffer.toString('base64')}`;
+
+      file.targetCategory = category;
+      file.targetFilename = filename;
+      file.filename = filename;
+      file.publicUrl = dataUri;
+
+      cb(null, {
+        buffer: info.buffer,
+        size: info.size,
+        filename,
+        publicUrl: dataUri,
+      });
+    });
+  }
+
+  _removeFile(req, file, cb) {
+    if (isDiskWritable) {
+      return diskStorageEngine._removeFile(req, file, cb);
+    }
+    cb(null);
+  }
+}
+
 const fileFilter = (req, file, cb) => {
   const allowedMimes = [
     'image/jpeg',
@@ -107,7 +213,7 @@ const fileFilter = (req, file, cb) => {
 };
 
 const upload = multer({
-  storage,
+  storage: new HybridStorageEngine(),
   fileFilter,
   limits: {
     fileSize: 5 * 1024 * 1024, // 5MB limit
@@ -116,11 +222,14 @@ const upload = multer({
 
 /**
  * Delete a media file from disk safely with path traversal protection
- * @param {string} publicUrl - e.g. "/uploads/vehicles/vehicle-123.jpg"
+ * @param {string} publicUrl - e.g. "/uploads/vehicles/vehicle-123.jpg" or data: URI
  * @returns {boolean} true if deleted or not found
  */
 const deleteMediaFile = (publicUrl) => {
   if (!publicUrl || typeof publicUrl !== 'string') return false;
+
+  // Data URIs do not occupy server disk space
+  if (publicUrl.startsWith('data:')) return true;
 
   // Only manage files located under /uploads/
   if (!publicUrl.startsWith('/uploads/')) return false;
@@ -149,5 +258,6 @@ const deleteMediaFile = (publicUrl) => {
 upload.VALID_CATEGORIES = VALID_CATEGORIES;
 upload.uploadRootDir = uploadRootDir;
 upload.deleteMediaFile = deleteMediaFile;
+upload.isDiskWritable = isDiskWritable;
 
 module.exports = upload;
