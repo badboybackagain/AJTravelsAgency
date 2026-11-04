@@ -115,19 +115,48 @@ export function CustomerQuotePage() {
       minHeight: '100vh',
       display: 'flex',
       flexDirection: 'column',
-      background: '#F8F9FA',
+      background: '#F1F5F9',
       color: '#1E293B',
       fontFamily: "'Inter', sans-serif",
     }}>
+      <style>{`
+        .quote-container {
+          width: 100%;
+          max-width: 1020px;
+          margin: 0 auto;
+          padding: 5.5rem 1rem 2rem 1rem;
+          flex: 1;
+        }
+        .quote-sheet-card {
+          background: #FFFFFF;
+          border-radius: 16px;
+          border: 1px solid #E2E8F0;
+          box-shadow: 0 10px 30px -4px rgba(15, 23, 42, 0.08);
+          padding: 1.35rem 1.6rem;
+        }
+        .quote-grid {
+          display: grid;
+          grid-template-columns: 1.15fr 0.85fr;
+          gap: 1.25rem;
+          align-items: start;
+        }
+        @media (max-width: 820px) {
+          .quote-container {
+            padding: 5.25rem 0.75rem 1.5rem 0.75rem;
+          }
+          .quote-sheet-card {
+            padding: 1.15rem;
+          }
+          .quote-grid {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+          }
+        }
+      `}</style>
+
       <Header isDark={false} />
 
-      <main style={{
-        flex: 1,
-        maxWidth: '720px',
-        width: '100%',
-        margin: '0 auto',
-        padding: '2.5rem 1rem 4rem 1rem',
-      }}>
+      <main className="quote-container">
         {loading ? (
           <div style={{ padding: '6rem 1rem', textAlign: 'center', color: '#64748B' }}>
             <Loader2 size={36} className="animate-spin" style={{ margin: '0 auto 1rem auto', color: '#0284C7' }} />
@@ -141,17 +170,17 @@ export function CustomerQuotePage() {
         ) : error || !quote ? (
           <div style={{
             background: '#FFFFFF',
-            borderRadius: '20px',
-            padding: '3rem 2rem',
+            borderRadius: '16px',
+            padding: '2.5rem 1.5rem',
             border: '1px solid #E2E8F0',
             textAlign: 'center',
             boxShadow: '0 10px 30px rgba(0,0,0,0.04)',
           }}>
-            <AlertCircle size={44} color="#EF4444" style={{ margin: '0 auto 1rem auto' }} />
-            <h1 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#0F172A', margin: '0 0 0.5rem 0' }}>
+            <AlertCircle size={40} color="#EF4444" style={{ margin: '0 auto 0.75rem auto' }} />
+            <h1 style={{ fontSize: '1.3rem', fontWeight: 800, color: '#0F172A', margin: '0 0 0.4rem 0' }}>
               Quotation Unavailable
             </h1>
-            <p style={{ fontSize: '0.9rem', color: '#64748B', lineHeight: 1.6, maxWidth: '440px', margin: '0 auto 1.75rem auto' }}>
+            <p style={{ fontSize: '0.88rem', color: '#64748B', lineHeight: 1.5, maxWidth: '440px', margin: '0 auto 1.5rem auto' }}>
               {error}
             </p>
             <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', flexWrap: 'wrap' }}>
@@ -161,17 +190,17 @@ export function CustomerQuotePage() {
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: '0.4rem',
-                  padding: '0.75rem 1.5rem',
+                  padding: '0.65rem 1.25rem',
                   borderRadius: '10px',
                   backgroundColor: '#0284C7',
                   color: '#FFFFFF',
                   fontWeight: 700,
-                  fontSize: '0.88rem',
+                  fontSize: '0.85rem',
                   textDecoration: 'none',
                 }}
               >
                 <span>Check Live Fares</span>
-                <ChevronRight size={16} />
+                <ChevronRight size={15} />
               </Link>
               <a
                 href={`https://wa.me/${businessConfig.whatsapp}`}
@@ -181,60 +210,63 @@ export function CustomerQuotePage() {
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: '0.4rem',
-                  padding: '0.75rem 1.5rem',
+                  padding: '0.65rem 1.25rem',
                   borderRadius: '10px',
                   backgroundColor: '#25D366',
                   color: '#FFFFFF',
                   fontWeight: 700,
-                  fontSize: '0.88rem',
+                  fontSize: '0.85rem',
                   textDecoration: 'none',
                 }}
               >
-                <MessageSquare size={16} />
+                <MessageSquare size={15} />
                 <span>Chat with AJ Travels</span>
               </a>
             </div>
           </div>
         ) : (
           <div>
-            {/* Feedback Message */}
+            {/* Action Feedback Message */}
             {actionMessage && (
               <div style={{
-                marginBottom: '1.25rem',
-                padding: '1rem 1.25rem',
-                borderRadius: '12px',
-                fontSize: '0.88rem',
+                marginBottom: '1rem',
+                padding: '0.75rem 1rem',
+                borderRadius: '10px',
+                fontSize: '0.85rem',
                 fontWeight: 600,
                 display: 'flex',
                 alignItems: 'center',
-                gap: '0.75rem',
+                gap: '0.65rem',
                 backgroundColor: actionMessage.type === 'success' ? '#DCFCE7' : actionMessage.type === 'info' ? '#E0F2FE' : '#FEE2E2',
                 color: actionMessage.type === 'success' ? '#15803D' : actionMessage.type === 'info' ? '#0369A1' : '#991B1B',
                 border: `1px solid ${actionMessage.type === 'success' ? '#BBF7D0' : actionMessage.type === 'info' ? '#BAE6FD' : '#FECACA'}`,
               }}>
-                {actionMessage.type === 'success' ? <CheckCircle size={20} /> : <AlertCircle size={20} />}
+                {actionMessage.type === 'success' ? <CheckCircle size={18} /> : <AlertCircle size={18} />}
                 <span>{actionMessage.text}</span>
               </div>
             )}
 
-            {/* Top Card: Brand & Quotation Header */}
-            <div style={{
-              background: '#FFFFFF',
-              borderRadius: '20px',
-              padding: '1.75rem',
-              border: '1px solid #E2E8F0',
-              boxShadow: '0 10px 30px rgba(0,0,0,0.04)',
-              marginBottom: '1.25rem',
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem', borderBottom: '1px solid #F1F5F9', paddingBottom: '1.25rem', marginBottom: '1.25rem' }}>
+            {/* Unified One-Screen Quotation Card */}
+            <div className="quote-sheet-card">
+              {/* Header Bar */}
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                flexWrap: 'wrap',
+                gap: '0.75rem',
+                borderBottom: '1px solid #E2E8F0',
+                paddingBottom: '0.85rem',
+                marginBottom: '1rem',
+              }}>
                 <div>
-                  <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#0284C7', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                  <div style={{ fontSize: '0.68rem', fontWeight: 800, color: '#0284C7', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                     AJ Travels Pune • Official Quotation
-                  </span>
-                  <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0F172A', margin: '0.2rem 0 0 0' }}>
+                  </div>
+                  <h1 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#0F172A', margin: '0.1rem 0' }}>
                     Trip Quotation #{quote.quoteRef}
                   </h1>
-                  <span style={{ fontSize: '0.75rem', color: '#64748B', display: 'block', marginTop: '0.2rem' }}>
+                  <span style={{ fontSize: '0.75rem', color: '#64748B' }}>
                     Prepared for: <strong>{quote.customerName}</strong> ({quote.maskedPhone})
                   </span>
                 </div>
@@ -245,451 +277,368 @@ export function CustomerQuotePage() {
                     <span style={{
                       display: 'inline-flex',
                       alignItems: 'center',
-                      gap: '0.35rem',
-                      padding: '0.4rem 0.85rem',
+                      gap: '0.3rem',
+                      padding: '0.35rem 0.75rem',
                       borderRadius: '9999px',
                       backgroundColor: '#DCFCE7',
                       color: '#15803D',
                       fontWeight: 800,
-                      fontSize: '0.8rem',
+                      fontSize: '0.75rem',
                       border: '1px solid #BBF7D0',
                     }}>
-                      <CheckCircle size={15} />
+                      <CheckCircle size={14} />
                       <span>Quotation Accepted</span>
                     </span>
                   ) : quote.status === 'DECLINED' ? (
                     <span style={{
                       display: 'inline-flex',
                       alignItems: 'center',
-                      gap: '0.35rem',
-                      padding: '0.4rem 0.85rem',
+                      gap: '0.3rem',
+                      padding: '0.35rem 0.75rem',
                       borderRadius: '9999px',
                       backgroundColor: '#F1F5F9',
                       color: '#64748B',
                       fontWeight: 800,
-                      fontSize: '0.8rem',
+                      fontSize: '0.75rem',
                       border: '1px solid #E2E8F0',
                     }}>
-                      <X size={15} />
+                      <X size={14} />
                       <span>Quotation Declined</span>
                     </span>
                   ) : quote.status === 'SUPERSEDED' ? (
                     <span style={{
                       display: 'inline-flex',
                       alignItems: 'center',
-                      gap: '0.35rem',
-                      padding: '0.4rem 0.85rem',
+                      gap: '0.3rem',
+                      padding: '0.35rem 0.75rem',
                       borderRadius: '9999px',
                       backgroundColor: '#F1F5F9',
                       color: '#475569',
                       fontWeight: 800,
-                      fontSize: '0.8rem',
+                      fontSize: '0.75rem',
                       border: '1px solid #CBD5E1',
                     }}>
-                      <Clock size={15} />
-                      <span>Superseded by Newer Quote</span>
+                      <Clock size={14} />
+                      <span>Superseded</span>
                     </span>
                   ) : quote.isExpired || quote.status === 'EXPIRED' ? (
                     <span style={{
                       display: 'inline-flex',
                       alignItems: 'center',
-                      gap: '0.35rem',
-                      padding: '0.4rem 0.85rem',
+                      gap: '0.3rem',
+                      padding: '0.35rem 0.75rem',
                       borderRadius: '9999px',
                       backgroundColor: '#FEE2E2',
                       color: '#991B1B',
                       fontWeight: 800,
-                      fontSize: '0.8rem',
+                      fontSize: '0.75rem',
                       border: '1px solid #FECACA',
                     }}>
-                      <Clock size={15} />
+                      <Clock size={14} />
                       <span>Expired</span>
                     </span>
                   ) : (
                     <span style={{
                       display: 'inline-flex',
                       alignItems: 'center',
-                      gap: '0.35rem',
-                      padding: '0.4rem 0.85rem',
+                      gap: '0.3rem',
+                      padding: '0.35rem 0.75rem',
                       borderRadius: '9999px',
                       backgroundColor: '#FEF3C7',
                       color: '#B45309',
                       fontWeight: 800,
-                      fontSize: '0.8rem',
+                      fontSize: '0.75rem',
                       border: '1px solid #FDE68A',
                     }}>
-                      <Clock size={15} />
+                      <Clock size={14} />
                       <span>Active • Awaiting Review</span>
                     </span>
                   )}
                 </div>
               </div>
 
-              {/* Journey Route Card */}
-              <div style={{
-                background: '#F8FAFC',
-                borderRadius: '14px',
-                padding: '1.25rem',
-                border: '1px solid #E2E8F0',
-                marginBottom: '1.25rem',
-              }}>
-                <div style={{ fontSize: '0.72rem', fontWeight: 800, color: '#64748B', textTransform: 'uppercase', marginBottom: '0.75rem' }}>
-                  Confirmed Route & Journey Details
-                </div>
+              {/* 2-Column Responsive Body */}
+              <div className="quote-grid">
+                {/* Left Column: Route & Travel Essentials */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.65rem' }}>
-                    <MapPin size={18} color="#16A34A" style={{ marginTop: '0.15rem' }} />
-                    <div>
-                      <span style={{ fontSize: '0.72rem', color: '#94A3B8', display: 'block' }}>Pickup Location</span>
-                      <strong style={{ fontSize: '0.98rem', color: '#0F172A' }}>{quote.pickup}</strong>
-                    </div>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.65rem' }}>
-                    <MapPin size={18} color="#0284C7" style={{ marginTop: '0.15rem' }} />
-                    <div>
-                      <span style={{ fontSize: '0.72rem', color: '#94A3B8', display: 'block' }}>Destination</span>
-                      <strong style={{ fontSize: '0.98rem', color: '#0F172A' }}>{quote.destination}</strong>
-                    </div>
-                  </div>
-                </div>
-
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
-                  gap: '0.75rem',
-                  marginTop: '1rem',
-                  paddingTop: '1rem',
-                  borderTop: '1px dashed #CBD5E1',
-                }}>
-                  <div>
-                    <span style={{ fontSize: '0.7rem', color: '#64748B', display: 'block' }}>Travel Date</span>
-                    <strong style={{ fontSize: '0.88rem', color: '#0F172A' }}>{quote.travelDate}</strong>
-                  </div>
-                  <div>
-                    <span style={{ fontSize: '0.7rem', color: '#64748B', display: 'block' }}>Vehicle Category</span>
-                    <strong style={{ fontSize: '0.88rem', color: '#0F172A' }}>{quote.vehicleName || quote.vehicleCategory}</strong>
-                  </div>
-                  <div>
-                    <span style={{ fontSize: '0.7rem', color: '#64748B', display: 'block' }}>Trip Type</span>
-                    <strong style={{ fontSize: '0.88rem', color: '#0F172A' }}>{quote.tripType?.replace('_', ' ')}</strong>
-                  </div>
-                </div>
-              </div>
-
-              {/* Itemized Fare Breakdown */}
-              <div style={{
-                background: '#FFFFFF',
-                borderRadius: '14px',
-                border: '1.5px solid #E2E8F0',
-                padding: '1.25rem',
-                marginBottom: '1.25rem',
-              }}>
-                <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#0F172A', textTransform: 'uppercase', marginBottom: '0.85rem' }}>
-                  Itemized Fare Breakdown
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.55rem' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.88rem', color: '#475569' }}>
-                    <span>Base Vehicle & Chauffeur Fare:</span>
-                    <strong style={{ color: '#0F172A' }}>₹{parseFloat(quote.baseFare || 0).toFixed(2)}</strong>
-                  </div>
-                  {quote.tollCharges > 0 && (
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.88rem', color: '#475569' }}>
-                      <span>Highway Tolls & State Taxes:</span>
-                      <strong style={{ color: '#0F172A' }}>₹{parseFloat(quote.tollCharges).toFixed(2)}</strong>
-                    </div>
-                  )}
-                  {quote.driverAllowance > 0 && (
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.88rem', color: '#475569' }}>
-                      <span>Driver Bata / Night Allowance:</span>
-                      <strong style={{ color: '#0F172A' }}>₹{parseFloat(quote.driverAllowance).toFixed(2)}</strong>
-                    </div>
-                  )}
-                  {quote.parkingCharges > 0 && (
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.88rem', color: '#475569' }}>
-                      <span>Airport / Station Parking:</span>
-                      <strong style={{ color: '#0F172A' }}>₹{parseFloat(quote.parkingCharges).toFixed(2)}</strong>
-                    </div>
-                  )}
-
-                  <div style={{
-                    marginTop: '0.5rem',
-                    paddingTop: '0.75rem',
-                    borderTop: '2px solid #E2E8F0',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                  }}>
-                    <div>
-                      <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#0284C7', textTransform: 'uppercase', display: 'block' }}>
-                        Total Quoted Fare
-                      </span>
-                      <span style={{ fontSize: '0.7rem', color: '#94A3B8' }}>
-                        All inclusive as per agreed terms
-                      </span>
-                    </div>
-                    <span style={{ fontSize: '1.45rem', fontWeight: 900, color: '#0F172A' }}>
-                      ₹{parseFloat(quote.totalFare || 0).toFixed(2)}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Additional Charges (If Applicable) */}
-              <div style={{
-                marginBottom: '1.25rem',
-                padding: '1.15rem 1.25rem',
-                background: '#F8FAFC',
-                border: '1.5px solid #E2E8F0',
-                borderRadius: '14px',
-                fontSize: '0.85rem',
-              }}>
-                <div style={{ fontWeight: 800, color: '#0F172A', marginBottom: '0.55rem', display: 'flex', alignItems: 'center', gap: '0.45rem', fontSize: '0.88rem' }}>
-                  <Info size={16} color="#0284C7" />
-                  <span>Additional Charges (If Applicable)</span>
-                </div>
-                {quote.additionalCharges?.isConfigured ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem', color: '#475569' }}>
-                    {quote.additionalCharges.extraKmRate > 0 && (
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span>Extra Distance Rate:</span>
-                        <strong style={{ color: '#0F172A' }}>₹{quote.additionalCharges.extraKmRate} per km</strong>
-                      </div>
-                    )}
-                    {quote.additionalCharges.extraHourRate > 0 && (
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span>Extra Hour / Waiting Rate:</span>
-                        <strong style={{ color: '#0F172A' }}>₹{quote.additionalCharges.extraHourRate} per hour</strong>
-                      </div>
-                    )}
-                    {quote.additionalCharges.includedKm > 0 && (
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span>Included Package Distance:</span>
-                        <strong style={{ color: '#0F172A' }}>{quote.additionalCharges.includedKm} km</strong>
-                      </div>
-                    )}
-                    <div style={{ fontSize: '0.74rem', color: '#64748B', marginTop: '0.4rem', fontStyle: 'italic', lineHeight: 1.45, borderTop: '1px dashed #CBD5E1', paddingTop: '0.45rem' }}>
-                      * Note: These are conditional charges that apply only if your travel exceeds the included package distance or waiting duration. They are not included in the quoted total above.
-                    </div>
-                  </div>
-                ) : (
-                  <div style={{ fontSize: '0.78rem', color: '#64748B', fontStyle: 'italic', lineHeight: 1.45 }}>
-                    Extra kilometre and hourly rates apply based on actual trip distance and waiting time. Contact dispatch for custom corridor limits.
-                  </div>
-                )}
-              </div>
-
-              {/* Inclusions & Terms (Harmonized with Parking) */}
-              {(() => {
-                const hasParking = parseFloat(quote.parkingCharges || 0) > 0;
-                let displayInclusions = quote.inclusions || 'Vehicle rental, fuel, experienced chauffeur, and highway tolls.';
-                let displayExclusions = quote.exclusions;
-
-                if (hasParking) {
-                  if (!/parking/i.test(displayInclusions)) {
-                    displayInclusions = displayInclusions.replace(/\.\s*$/, '') + ', and airport/station parking.';
-                  }
-                  if (displayExclusions) {
-                    displayExclusions = displayExclusions
-                      .replace(/airport\/station\s*parking\s*(charges)?/gi, '')
-                      .replace(/parking\s*charges/gi, '')
-                      .replace(/,\s*,/g, ',')
-                      .replace(/^\s*,\s*|\s*,\s*$/g, '')
-                      .trim();
-                    if (!displayExclusions) {
-                      displayExclusions = 'Extra kilometre/hour charges over package limit, night travel allowance (if applicable).';
-                    }
-                  }
-                }
-
-                return (
+                  {/* Confirmed Journey Strip */}
                   <div style={{
                     background: '#F8FAFC',
                     borderRadius: '12px',
-                    padding: '1rem',
+                    padding: '0.9rem 1rem',
                     border: '1px solid #E2E8F0',
-                    marginBottom: '1.5rem',
-                    fontSize: '0.8rem',
-                    lineHeight: 1.5,
                   }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#16A34A', fontWeight: 700, marginBottom: '0.35rem' }}>
-                      <ShieldCheck size={16} />
-                      <span>Inclusions & Quality Guarantee:</span>
+                    <div style={{ fontSize: '0.68rem', fontWeight: 800, color: '#64748B', textTransform: 'uppercase', marginBottom: '0.5rem', letterSpacing: '0.04em' }}>
+                      Confirmed Route & Journey
                     </div>
-                    <p style={{ margin: '0 0 0.5rem 0', color: '#475569' }}>
-                      {displayInclusions}
-                    </p>
 
-                    {displayExclusions && (
-                      <>
-                        <div style={{ fontWeight: 700, color: '#B45309', marginBottom: '0.25rem' }}>
-                          Exclusions:
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <MapPin size={16} color="#16A34A" style={{ flexShrink: 0 }} />
+                        <span style={{ fontSize: '0.78rem', color: '#64748B' }}>Pickup:</span>
+                        <strong style={{ fontSize: '0.92rem', color: '#0F172A' }}>{quote.pickup}</strong>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <MapPin size={16} color="#0284C7" style={{ flexShrink: 0 }} />
+                        <span style={{ fontSize: '0.78rem', color: '#64748B' }}>Drop:</span>
+                        <strong style={{ fontSize: '0.92rem', color: '#0F172A' }}>{quote.destination}</strong>
+                      </div>
+                    </div>
+
+                    {/* Metadata Strip */}
+                    <div style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(3, 1fr)',
+                      gap: '0.5rem',
+                      marginTop: '0.65rem',
+                      paddingTop: '0.65rem',
+                      borderTop: '1px dashed #CBD5E1',
+                    }}>
+                      <div>
+                        <span style={{ fontSize: '0.68rem', color: '#64748B', display: 'block' }}>Date</span>
+                        <strong style={{ fontSize: '0.82rem', color: '#0F172A' }}>{quote.travelDate}</strong>
+                      </div>
+                      <div>
+                        <span style={{ fontSize: '0.68rem', color: '#64748B', display: 'block' }}>Vehicle</span>
+                        <strong style={{ fontSize: '0.82rem', color: '#0F172A' }}>{quote.vehicleName || quote.vehicleCategory}</strong>
+                      </div>
+                      <div>
+                        <span style={{ fontSize: '0.68rem', color: '#64748B', display: 'block' }}>Type</span>
+                        <strong style={{ fontSize: '0.82rem', color: '#0F172A' }}>{quote.tripType?.replace('_', ' ')}</strong>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Additional Conditional Charges (Compact Strip) */}
+                  <div style={{
+                    padding: '0.75rem 0.9rem',
+                    background: '#F8FAFC',
+                    border: '1px solid #E2E8F0',
+                    borderRadius: '10px',
+                    fontSize: '0.78rem',
+                  }}>
+                    <div style={{ fontWeight: 800, color: '#0F172A', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.75rem' }}>
+                      <Info size={13} color="#0284C7" />
+                      <span>Additional Charges (If Applicable)</span>
+                    </div>
+
+                    {quote.additionalCharges?.isConfigured ? (
+                      <div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.5rem', flexWrap: 'wrap', color: '#334155', fontWeight: 600 }}>
+                          {quote.additionalCharges.extraKmRate > 0 && (
+                            <span>Extra Km: <strong>₹{quote.additionalCharges.extraKmRate}/km</strong></span>
+                          )}
+                          {quote.additionalCharges.extraHourRate > 0 && (
+                            <span>Extra Hr: <strong>₹{quote.additionalCharges.extraHourRate}/hr</strong></span>
+                          )}
+                          {quote.additionalCharges.includedKm > 0 && (
+                            <span>Package: <strong>{quote.additionalCharges.includedKm} km</strong></span>
+                          )}
                         </div>
-                        <p style={{ margin: 0, color: '#78350F' }}>{displayExclusions}</p>
-                      </>
+                        <div style={{ fontSize: '0.7rem', color: '#64748B', marginTop: '0.25rem', fontStyle: 'italic' }}>
+                          * Applies only if journey exceeds agreed package limits. Excluded from quoted total.
+                        </div>
+                      </div>
+                    ) : (
+                      <div style={{ fontSize: '0.72rem', color: '#64748B', fontStyle: 'italic' }}>
+                        Standard extra km and hourly rates apply based on actual travel beyond corridor limits.
+                      </div>
                     )}
                   </div>
-                );
-              })()}
 
-              {/* Payment Transparency Notice */}
-              <div style={{
-                background: '#EFF6FF',
-                border: '1px solid #BFDBFE',
-                borderRadius: '12px',
-                padding: '0.85rem 1rem',
-                marginBottom: '1.5rem',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.75rem',
-              }}>
-                <ShieldCheck size={22} color="#1D4ED8" style={{ flexShrink: 0 }} />
-                <div style={{ fontSize: '0.8rem', color: '#1E40AF', lineHeight: 1.45 }}>
-                  <strong>Zero Advance Payment Required:</strong> Accepting this quotation does not require advance card or UPI payment. You pay directly to the chauffeur upon vehicle arrival.
-                </div>
-              </div>
-
-              {/* Validity Info */}
-              {quote.validUntil && quote.status === 'QUOTED' && !quote.isExpired && (
-                <div style={{ fontSize: '0.75rem', color: '#64748B', textAlign: 'center', marginBottom: '1.5rem' }}>
-                  <Clock size={14} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '0.3rem' }} />
-                  <span>This quotation is valid until: <strong>{new Date(quote.validUntil).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' })}</strong></span>
-                </div>
-              )}
-
-              {/* Action Buttons (Strictly when QUOTED and not expired) */}
-              {quote.status === 'QUOTED' && !quote.isExpired ? (
-                <div style={{ display: 'flex', gap: '0.85rem', flexWrap: 'wrap' }}>
-                  <button
-                    onClick={handleAccept}
-                    disabled={actionLoading}
-                    style={{
-                      flex: 2,
-                      minWidth: '200px',
-                      padding: '0.85rem 1.5rem',
-                      borderRadius: '12px',
-                      background: 'linear-gradient(135deg, #16A34A 0%, #15803D 100%)',
-                      color: '#FFFFFF',
-                      border: 'none',
-                      fontWeight: 800,
-                      fontSize: '0.95rem',
-                      cursor: actionLoading ? 'not-allowed' : 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '0.5rem',
-                      boxShadow: '0 4px 14px rgba(22, 163, 74, 0.3)',
-                    }}
-                  >
-                    {actionLoading ? <Loader2 size={18} className="animate-spin" /> : <CheckCircle size={18} />}
-                    <span>Accept Quotation</span>
-                  </button>
-
-                  <button
-                    onClick={() => setIsDeclineModalOpen(true)}
-                    disabled={actionLoading}
-                    style={{
-                      flex: 1,
-                      minWidth: '120px',
-                      padding: '0.85rem 1rem',
-                      borderRadius: '12px',
-                      background: '#FFFFFF',
-                      color: '#64748B',
-                      border: '1.5px solid #CBD5E1',
-                      fontWeight: 700,
-                      fontSize: '0.88rem',
-                      cursor: actionLoading ? 'not-allowed' : 'pointer',
-                    }}
-                  >
-                    <span>Decline Quote</span>
-                  </button>
-                </div>
-              ) : quote.status === 'ACCEPTED' ? (
-                <div style={{
-                  padding: '1.25rem',
-                  borderRadius: '12px',
-                  background: '#F0FDF4',
-                  border: '1.5px solid #86EFAC',
-                  textAlign: 'center',
-                }}>
-                  <CheckCircle size={28} color="#16A34A" style={{ margin: '0 auto 0.5rem auto' }} />
-                  <div style={{ fontWeight: 800, color: '#15803D', fontSize: '1.05rem', marginBottom: '0.35rem' }}>
-                    {quote.bookingRef ? `Booking Confirmed (#${quote.bookingRef})` : 'Quotation Accepted'}
-                  </div>
-                  <p style={{ margin: 0, fontSize: '0.84rem', color: '#166534', lineHeight: 1.5 }}>
-                    {quote.bookingRef
-                      ? `Your booking #${quote.bookingRef} is confirmed! Our operations desk has scheduled your executive cab. Payment is payable directly to the chauffeur on vehicle arrival.`
-                      : `Accepted on ${new Date(quote.acceptedAt || Date.now()).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' })}. Our dispatch team is allocating your executive cab.`}
-                  </p>
-                  {quote.bookingRef && (
-                    <div style={{
-                      marginTop: '0.85rem',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '0.4rem',
-                      padding: '0.45rem 1rem',
-                      borderRadius: '8px',
-                      background: '#DCFCE7',
-                      border: '1px solid #86EFAC',
-                      color: '#15803D',
-                      fontWeight: 800,
-                      fontSize: '0.82rem'
-                    }}>
-                      <span>Confirmed Booking Reference:</span>
-                      <strong style={{ letterSpacing: '0.05em' }}>#{quote.bookingRef}</strong>
+                  {/* Zero Advance Notice */}
+                  <div style={{
+                    background: '#EFF6FF',
+                    border: '1px solid #BFDBFE',
+                    borderRadius: '10px',
+                    padding: '0.65rem 0.85rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                  }}>
+                    <ShieldCheck size={18} color="#1D4ED8" style={{ flexShrink: 0 }} />
+                    <div style={{ fontSize: '0.75rem', color: '#1E40AF', lineHeight: 1.35 }}>
+                      <strong>Zero Advance Required:</strong> Pay directly to chauffeur on vehicle arrival (Cash / UPI).
                     </div>
-                  )}
-                </div>
-              ) : quote.status === 'SUPERSEDED' ? (
-                <div style={{
-                  padding: '1.25rem',
-                  borderRadius: '12px',
-                  background: '#F8FAFC',
-                  border: '1.5px solid #CBD5E1',
-                  textAlign: 'center',
-                }}>
-                  <AlertCircle size={28} color="#64748B" style={{ margin: '0 auto 0.5rem auto' }} />
-                  <div style={{ fontWeight: 800, color: '#334155', fontSize: '1rem', marginBottom: '0.25rem' }}>
-                    Quotation Superseded
                   </div>
-                  <p style={{ margin: 0, fontSize: '0.82rem', color: '#64748B' }}>
-                    A more recent quotation has been issued for this trip enquiry. Please check your latest quote link or contact AJ Travels.
-                  </p>
                 </div>
-              ) : null}
 
-              {/* Direct Support Quick Links */}
-              <div style={{
-                marginTop: '1.75rem',
-                paddingTop: '1.25rem',
-                borderTop: '1px solid #F1F5F9',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                flexWrap: 'wrap',
-                gap: '0.75rem',
-                fontSize: '0.8rem',
-                color: '#64748B',
-              }}>
-                <span>Questions about this quote?</span>
-                <div style={{ display: 'flex', gap: '0.75rem' }}>
-                  <a
-                    href={`tel:${businessConfig.phone}`}
-                    style={{ color: '#0284C7', textDecoration: 'none', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}
-                  >
-                    <Phone size={14} />
-                    <span>{businessConfig.phoneDisplay}</span>
-                  </a>
-                  <a
-                    href={`https://wa.me/${businessConfig.whatsapp}?text=${encodeURIComponent(
-                      `Hello AJ Travels, I have a question regarding Quotation #Q-${quote.quoteRef}.`
-                    )}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{ color: '#16A34A', textDecoration: 'none', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}
-                  >
-                    <MessageSquare size={14} />
-                    <span>WhatsApp Desk</span>
-                  </a>
+                {/* Right Column: Fare Breakdown & Immediate Action CTAs */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  {/* Fare Summary Box */}
+                  <div style={{
+                    background: '#FFFFFF',
+                    borderRadius: '12px',
+                    border: '1.5px solid #CBD5E1',
+                    padding: '0.9rem 1rem',
+                  }}>
+                    <div style={{ fontSize: '0.7rem', fontWeight: 800, color: '#0F172A', textTransform: 'uppercase', marginBottom: '0.5rem', letterSpacing: '0.04em' }}>
+                      Itemized Fare Details
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', fontSize: '0.82rem', color: '#475569' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span>Base Vehicle & Chauffeur:</span>
+                        <strong style={{ color: '#0F172A' }}>₹{parseFloat(quote.baseFare || 0).toFixed(2)}</strong>
+                      </div>
+                      {quote.tollCharges > 0 && (
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                          <span>Highway Tolls & Taxes:</span>
+                          <strong style={{ color: '#0F172A' }}>₹{parseFloat(quote.tollCharges).toFixed(2)}</strong>
+                        </div>
+                      )}
+                      {quote.parkingCharges > 0 && (
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                          <span>Airport / Station Parking:</span>
+                          <strong style={{ color: '#0F172A' }}>₹{parseFloat(quote.parkingCharges).toFixed(2)}</strong>
+                        </div>
+                      )}
+                      {quote.driverAllowance > 0 && (
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                          <span>Driver Bata:</span>
+                          <strong style={{ color: '#0F172A' }}>₹{parseFloat(quote.driverAllowance).toFixed(2)}</strong>
+                        </div>
+                      )}
+
+                      <div style={{
+                        marginTop: '0.4rem',
+                        paddingTop: '0.55rem',
+                        borderTop: '2px solid #E2E8F0',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'baseline',
+                      }}>
+                        <div>
+                          <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#0284C7', textTransform: 'uppercase', display: 'block' }}>
+                            Total Quoted Fare
+                          </span>
+                          <span style={{ fontSize: '0.68rem', color: '#94A3B8' }}>
+                            Payable on Arrival
+                          </span>
+                        </div>
+                        <span style={{ fontSize: '1.45rem', fontWeight: 900, color: '#0F172A' }}>
+                          ₹{parseFloat(quote.totalFare || 0).toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Immediate Action Buttons (NO SCROLLING NEEDED) */}
+                  {quote.status === 'QUOTED' && !quote.isExpired ? (
+                    <div>
+                      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.4rem' }}>
+                        <button
+                          onClick={handleAccept}
+                          disabled={actionLoading}
+                          style={{
+                            flex: 2,
+                            padding: '0.75rem 1rem',
+                            borderRadius: '10px',
+                            background: 'linear-gradient(135deg, #16A34A 0%, #15803D 100%)',
+                            color: '#FFFFFF',
+                            border: 'none',
+                            fontWeight: 800,
+                            fontSize: '0.92rem',
+                            cursor: actionLoading ? 'not-allowed' : 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '0.4rem',
+                            boxShadow: '0 4px 12px rgba(22, 163, 74, 0.25)',
+                          }}
+                        >
+                          {actionLoading ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle size={16} />}
+                          <span>Accept Quotation</span>
+                        </button>
+
+                        <button
+                          onClick={() => setIsDeclineModalOpen(true)}
+                          disabled={actionLoading}
+                          style={{
+                            flex: 1,
+                            padding: '0.75rem 0.65rem',
+                            borderRadius: '10px',
+                            background: '#FFFFFF',
+                            color: '#64748B',
+                            border: '1px solid #CBD5E1',
+                            fontWeight: 700,
+                            fontSize: '0.82rem',
+                            cursor: actionLoading ? 'not-allowed' : 'pointer',
+                          }}
+                        >
+                          <span>Decline</span>
+                        </button>
+                      </div>
+
+                      {quote.validUntil && (
+                        <div style={{ fontSize: '0.68rem', color: '#64748B', textAlign: 'center' }}>
+                          <Clock size={11} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '0.25rem' }} />
+                          <span>Valid until: <strong>{new Date(quote.validUntil).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' })}</strong></span>
+                        </div>
+                      )}
+                    </div>
+                  ) : quote.status === 'ACCEPTED' ? (
+                    <div style={{
+                      padding: '0.85rem',
+                      borderRadius: '10px',
+                      background: '#F0FDF4',
+                      border: '1.5px solid #86EFAC',
+                      textAlign: 'center',
+                    }}>
+                      <CheckCircle size={22} color="#16A34A" style={{ margin: '0 auto 0.25rem auto' }} />
+                      <div style={{ fontWeight: 800, color: '#15803D', fontSize: '0.92rem' }}>
+                        {quote.bookingRef ? `Booking Confirmed (#${quote.bookingRef})` : 'Quotation Accepted'}
+                      </div>
+                      <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.75rem', color: '#166534' }}>
+                        Our operations desk has scheduled your vehicle. Driver collects fare upon arrival.
+                      </p>
+                    </div>
+                  ) : quote.status === 'DECLINED' ? (
+                    <div style={{
+                      padding: '0.85rem',
+                      borderRadius: '10px',
+                      background: '#F8FAFC',
+                      border: '1px solid #CBD5E1',
+                      textAlign: 'center',
+                    }}>
+                      <div style={{ fontWeight: 800, color: '#475569', fontSize: '0.88rem' }}>
+                        Quotation Declined
+                      </div>
+                    </div>
+                  ) : null}
+
+                  {/* Quick Contact Desk Links */}
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    paddingTop: '0.45rem',
+                    borderTop: '1px solid #F1F5F9',
+                    fontSize: '0.74rem',
+                    color: '#64748B',
+                  }}>
+                    <span>Direct Desk:</span>
+                    <div style={{ display: 'flex', gap: '0.65rem' }}>
+                      <a
+                        href={`tel:${businessConfig.phone}`}
+                        style={{ color: '#0284C7', textDecoration: 'none', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '0.2rem' }}
+                      >
+                        <Phone size={12} />
+                        <span>Call</span>
+                      </a>
+                      <a
+                        href={`https://wa.me/${businessConfig.whatsapp}?text=${encodeURIComponent(
+                          `Hello AJ Travels, I have a question regarding Quotation #${quote.quoteRef}.`
+                        )}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ color: '#16A34A', textDecoration: 'none', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '0.2rem' }}
+                      >
+                        <MessageSquare size={12} />
+                        <span>WhatsApp</span>
+                      </a>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -712,16 +661,16 @@ export function CustomerQuotePage() {
         }}>
           <div style={{
             background: '#FFFFFF',
-            borderRadius: '16px',
-            maxWidth: '440px',
+            borderRadius: '14px',
+            maxWidth: '420px',
             width: '100%',
-            padding: '1.5rem',
+            padding: '1.25rem',
             boxShadow: '0 20px 40px rgba(0,0,0,0.2)',
           }}>
-            <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0F172A', margin: '0 0 0.5rem 0' }}>
+            <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#0F172A', margin: '0 0 0.4rem 0' }}>
               Decline Quotation
             </h3>
-            <p style={{ fontSize: '0.82rem', color: '#64748B', margin: '0 0 1rem 0' }}>
+            <p style={{ fontSize: '0.78rem', color: '#64748B', margin: '0 0 0.85rem 0' }}>
               Please let us know why you are declining so we can provide a more suitable travel option.
             </p>
 
@@ -732,11 +681,11 @@ export function CustomerQuotePage() {
               placeholder="e.g. Travel dates changed, found alternative transport, budget constraints..."
               style={{
                 width: '100%',
-                padding: '0.65rem',
+                padding: '0.6rem',
                 borderRadius: '8px',
                 border: '1px solid #CBD5E1',
-                fontSize: '0.85rem',
-                marginBottom: '1.25rem',
+                fontSize: '0.82rem',
+                marginBottom: '1rem',
                 fontFamily: 'inherit',
                 boxSizing: 'border-box',
               }}
@@ -747,12 +696,12 @@ export function CustomerQuotePage() {
                 onClick={() => setIsDeclineModalOpen(false)}
                 disabled={actionLoading}
                 style={{
-                  padding: '0.55rem 1rem',
+                  padding: '0.5rem 0.85rem',
                   borderRadius: '8px',
                   border: '1px solid #CBD5E1',
                   background: '#FFFFFF',
                   color: '#475569',
-                  fontSize: '0.82rem',
+                  fontSize: '0.8rem',
                   fontWeight: 700,
                   cursor: 'pointer',
                 }}
@@ -763,12 +712,12 @@ export function CustomerQuotePage() {
                 onClick={handleDecline}
                 disabled={actionLoading}
                 style={{
-                  padding: '0.55rem 1rem',
+                  padding: '0.5rem 0.85rem',
                   borderRadius: '8px',
                   border: 'none',
                   background: '#EF4444',
                   color: '#FFFFFF',
-                  fontSize: '0.82rem',
+                  fontSize: '0.8rem',
                   fontWeight: 700,
                   cursor: 'pointer',
                 }}
