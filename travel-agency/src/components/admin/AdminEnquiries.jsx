@@ -1776,48 +1776,27 @@ export const AdminEnquiries = () => {
                       }}
                     />
                   </div>
+                </div>
 
-                  <div>
-                    <label style={{ fontSize: '0.7rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '0.2rem' }}>
-                      Driver Bata / Night Charge
-                    </label>
-                    <input
-                      type="number"
-                      min="0"
-                      placeholder="e.g. 300"
-                      value={quoteForm.driverAllowance}
-                      onChange={(e) => handleQuoteFormChange('driverAllowance', e.target.value)}
-                      style={{
-                        width: '100%',
-                        padding: '0.45rem',
-                        borderRadius: '6px',
-                        border: '1px solid #CBD5E1',
-                        fontSize: '0.82rem',
-                        boxSizing: 'border-box'
-                      }}
-                    />
-                  </div>
-
-                  <div>
-                    <label style={{ fontSize: '0.7rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '0.2rem' }}>
-                      Parking (Airport / Station)
-                    </label>
-                    <input
-                      type="number"
-                      min="0"
-                      placeholder="e.g. 150"
-                      value={quoteForm.parkingCharges}
-                      onChange={(e) => handleQuoteFormChange('parkingCharges', e.target.value)}
-                      style={{
-                        width: '100%',
-                        padding: '0.45rem',
-                        borderRadius: '6px',
-                        border: '1px solid #CBD5E1',
-                        fontSize: '0.82rem',
-                        boxSizing: 'border-box'
-                      }}
-                    />
-                  </div>
+                <div style={{ marginTop: '0.65rem' }}>
+                  <label style={{ fontSize: '0.7rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '0.2rem' }}>
+                    Parking Charges (Airport / Station — Optional)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    placeholder="e.g. 0 (leave 0 if not applicable)"
+                    value={quoteForm.parkingCharges}
+                    onChange={(e) => handleQuoteFormChange('parkingCharges', e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '0.45rem',
+                      borderRadius: '6px',
+                      border: '1px solid #CBD5E1',
+                      fontSize: '0.82rem',
+                      boxSizing: 'border-box'
+                    }}
+                  />
                 </div>
 
                 {/* Total Calculated Fare Banner */}
@@ -1838,26 +1817,21 @@ export const AdminEnquiries = () => {
                 </div>
               </div>
 
-              {/* Additional Charges (Conditional - If Applicable) */}
-              <div style={{
+              {/* Optional: Extra Distance / Waiting Rates (Collapsible to keep form compact) */}
+              <details style={{
                 background: '#F8FAFC',
-                borderRadius: '10px',
-                padding: '0.85rem',
+                borderRadius: '8px',
+                padding: '0.55rem 0.85rem',
                 border: '1px solid #E2E8F0',
                 marginBottom: '1rem'
               }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.55rem' }}>
-                  <div style={{ fontSize: '0.72rem', fontWeight: 800, color: '#0F172A', textTransform: 'uppercase' }}>
-                    Additional Charges (If Applicable — Conditional)
-                  </div>
-                  <span style={{ fontSize: '0.68rem', color: '#64748B', fontWeight: 600 }}>
-                    Excluded from Total Quoted Fare
-                  </span>
-                </div>
+                <summary style={{ fontSize: '0.72rem', fontWeight: 700, color: '#475569', cursor: 'pointer', userSelect: 'none' }}>
+                  + Extra Distance & Waiting Hourly Rates (Optional)
+                </summary>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.65rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.65rem', marginTop: '0.65rem' }}>
                   <div>
-                    <label style={{ fontSize: '0.7rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '0.2rem' }}>
+                    <label style={{ fontSize: '0.68rem', fontWeight: 600, color: '#64748B', display: 'block', marginBottom: '0.2rem' }}>
                       Extra Km Rate (₹/km)
                     </label>
                     <input
@@ -1868,17 +1842,17 @@ export const AdminEnquiries = () => {
                       onChange={(e) => handleQuoteFormChange('extraKmRate', e.target.value)}
                       style={{
                         width: '100%',
-                        padding: '0.45rem',
+                        padding: '0.4rem',
                         borderRadius: '6px',
                         border: '1px solid #CBD5E1',
-                        fontSize: '0.82rem',
+                        fontSize: '0.8rem',
                         boxSizing: 'border-box'
                       }}
                     />
                   </div>
 
                   <div>
-                    <label style={{ fontSize: '0.7rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '0.2rem' }}>
+                    <label style={{ fontSize: '0.68rem', fontWeight: 600, color: '#64748B', display: 'block', marginBottom: '0.2rem' }}>
                       Extra Hour Rate (₹/hr)
                     </label>
                     <input
@@ -1889,18 +1863,18 @@ export const AdminEnquiries = () => {
                       onChange={(e) => handleQuoteFormChange('extraHourRate', e.target.value)}
                       style={{
                         width: '100%',
-                        padding: '0.45rem',
+                        padding: '0.4rem',
                         borderRadius: '6px',
                         border: '1px solid #CBD5E1',
-                        fontSize: '0.82rem',
+                        fontSize: '0.8rem',
                         boxSizing: 'border-box'
                       }}
                     />
                   </div>
 
                   <div>
-                    <label style={{ fontSize: '0.7rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '0.2rem' }}>
-                      Included Package (km)
+                    <label style={{ fontSize: '0.68rem', fontWeight: 600, color: '#64748B', display: 'block', marginBottom: '0.2rem' }}>
+                      Included Distance (km)
                     </label>
                     <input
                       type="number"
@@ -1910,24 +1884,16 @@ export const AdminEnquiries = () => {
                       onChange={(e) => handleQuoteFormChange('includedKm', e.target.value)}
                       style={{
                         width: '100%',
-                        padding: '0.45rem',
+                        padding: '0.4rem',
                         borderRadius: '6px',
                         border: '1px solid #CBD5E1',
-                        fontSize: '0.82rem',
+                        fontSize: '0.8rem',
                         boxSizing: 'border-box'
                       }}
                     />
                   </div>
                 </div>
-
-                <div style={{ fontSize: '0.7rem', color: '#64748B', marginTop: '0.5rem', lineHeight: 1.4, fontStyle: 'italic' }}>
-                  {quoteForm.extraKmRate || quoteForm.extraHourRate ? (
-                    <span>Configured: ₹{quoteForm.extraKmRate || '0'}/km beyond {quoteForm.includedKm || 'package'} km, ₹{quoteForm.extraHourRate || '0'}/hr waiting. These apply conditionally only if package limits are exceeded.</span>
-                  ) : (
-                    <span>Not configured for this corridor. Customer quotation will advise contacting dispatch for corridor rates.</span>
-                  )}
-                </div>
-              </div>
+              </details>
 
               {/* Inclusions and Exclusions Editable Fields */}
               <div style={{ marginBottom: '1rem' }}>

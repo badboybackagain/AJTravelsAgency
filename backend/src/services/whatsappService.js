@@ -44,23 +44,19 @@ function isValidPhoneNumber(phone) {
  * Format enquiry notification for WhatsApp
  */
 function formatEnquiryMessage(enquiry) {
-  const refCode = enquiry.enquiryNumber || enquiry.reference || `#${(enquiry.id || '').slice(-6).toUpperCase()}`;
+  const refCode = enquiry.enquiryNumber || enquiry.reference || (enquiry.id ? `ENQ-${enquiry.id.slice(-4).toUpperCase()}` : 'ENQ');
   const dateStr = enquiry.travelDate || 'Flexible / To be confirmed';
   const vehicleStr = enquiry.vehicle || 'Any Available';
-  const notesStr = enquiry.message ? `\n📝 *Notes:* ${enquiry.message}` : '';
+  const notesStr = enquiry.message ? `\n• *Notes:* ${enquiry.message}` : '';
 
-  return `🔔 *NEW TRIP ENQUIRY — AJ TOURS*
+  return `🔔 *New Trip Enquiry — AJ Travels*
 ━━━━━━━━━━━━━━━━━━━━━━━━
-🔖 *Enquiry Ref:* ${refCode.startsWith('#') || refCode.startsWith('ENQ') ? refCode : '#' + refCode}
-👤 *Customer:* ${enquiry.name}
-📞 *Mobile:* +${sanitizePhoneNumber(enquiry.phone)}
-📍 *Pickup:* ${enquiry.pickup}
-🏁 *Drop:* ${enquiry.destination}
-📅 *Date:* ${dateStr}
-🚗 *Vehicle:* ${vehicleStr}${notesStr}
-🕒 *Received:* ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}
-━━━━━━━━━━━━━━━━━━━━━━━━
-_Action: Please review availability and call customer promptly._`;
+• *Enquiry ID:* ${refCode}
+• *Customer:* ${enquiry.name} (+${sanitizePhoneNumber(enquiry.phone)})
+• *Route:* ${enquiry.pickup || 'Pune'} ➔ ${enquiry.destination || 'Mumbai'}
+• *Date:* ${dateStr}
+• *Vehicle:* ${vehicleStr}${notesStr}
+━━━━━━━━━━━━━━━━━━━━━━━━`;
 }
 
 /**
@@ -72,25 +68,17 @@ function formatBookingMessage(booking, vehicleName = 'Reserved Vehicle') {
     ? new Date(booking.pickupDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
     : 'N/A';
   const pickupTime = booking.pickupTime || 'Flexible';
-  const totalStr = booking.fareTotal ? `₹${parseFloat(booking.fareTotal).toFixed(2)}` : 'Calculated';
-  const statusStr = booking.status === 'CONFIRMED' ? '✅ Confirmed' : booking.status;
+  const totalStr = booking.fareTotal ? `₹${parseFloat(booking.fareTotal).toLocaleString('en-IN')}` : 'Calculated';
 
-  return `🚗 *NEW BOOKING CONFIRMED — AJ TOURS*
+  return `🚕 *Booking Confirmed — AJ Travels*
 ━━━━━━━━━━━━━━━━━━━━━━━━
-🔖 *Booking Ref:* #${refCode}
-👤 *Passenger:* ${booking.customerName}
-📞 *Mobile:* +${sanitizePhoneNumber(booking.customerPhone)}
-${booking.customerEmail ? `📧 *Email:* ${booking.customerEmail}\n` : ''}🗺️ *Trip Type:* ${booking.tripType}
-📍 *Pickup:* ${booking.pickupAddress || 'Standard Pickup Point'}
-🏁 *Drop:* ${booking.dropAddress || 'Standard Drop Point'}
-📅 *Date & Time:* ${dateStr} at ${pickupTime}
-👥 *Passengers:* ${booking.passengers || 1}
-🚘 *Vehicle:* ${vehicleName}
-💰 *Total Fare:* ${totalStr}
-💳 *Status:* ${statusStr}
-${booking.notes ? `📝 *Notes:* ${booking.notes}\n` : ''}🕒 *Booked At:* ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}
-━━━━━━━━━━━━━━━━━━━━━━━━
-_Chauffeur allocation required prior to departure._`;
+• *Booking ID:* #${refCode}
+• *Customer:* ${booking.customerName} (+${sanitizePhoneNumber(booking.customerPhone)})
+• *Route:* ${booking.pickupAddress || 'Pune'} ➔ ${booking.dropAddress || 'Mumbai'}
+• *Date & Time:* ${dateStr} at ${pickupTime}
+• *Vehicle:* ${vehicleName} (${booking.passengers || 1} Pax)
+• *Total Fare:* ${totalStr} (Pay to Driver)
+${booking.notes ? `• *Notes:* ${booking.notes}\n` : ''}━━━━━━━━━━━━━━━━━━━━━━━━`;
 }
 
 /**

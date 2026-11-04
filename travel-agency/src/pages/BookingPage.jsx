@@ -120,11 +120,21 @@ export const BookingPage = () => {
       return;
     }
 
+    const effectivePId =
+      pickupId && pickupId !== 'custom'
+        ? pickupId
+        : quoteData?.route?.pickup?.id || quoteData?.searchParams?.pickupLocationId || '';
+
+    const effectiveDId =
+      dropId && dropId !== 'custom'
+        ? dropId
+        : quoteData?.route?.drop?.id || quoteData?.searchParams?.dropLocationId || '';
+
     // Skip API call if we lack the required IDs (would cause 400)
     const hasValidRoute =
       tripType === 'LOCAL'
         ? city && duration
-        : pickupId || dropId;
+        : Boolean(effectivePId && effectivePId !== 'custom' && effectiveDId && effectiveDId !== 'custom');
 
     if (!hasValidRoute) {
       setRecalculatingQuote(false);
@@ -137,8 +147,8 @@ export const BookingPage = () => {
       try {
         const payload = {
           tripType,
-          pickupLocationId: pickupId || undefined,
-          dropLocationId: dropId || undefined,
+          pickupLocationId: effectivePId && effectivePId !== 'custom' ? effectivePId : undefined,
+          dropLocationId: effectiveDId && effectiveDId !== 'custom' ? effectiveDId : undefined,
           city: tripType === 'LOCAL' ? city : undefined,
           duration: tripType === 'LOCAL' ? parseInt(duration, 10) : undefined,
           date,
@@ -278,13 +288,31 @@ export const BookingPage = () => {
       return;
     }
 
+    // Resolve final master location IDs (never send 'custom' or unresolvable IDs)
+    const finalPickupLocationId =
+      pickupId && pickupId !== 'custom'
+        ? pickupId
+        : quoteData?.route?.pickup?.id || quoteData?.searchParams?.pickupLocationId || null;
+
+    const finalDropLocationId =
+      dropId && dropId !== 'custom'
+        ? dropId
+        : quoteData?.route?.drop?.id || quoteData?.searchParams?.dropLocationId || null;
+
+    if (tripType !== 'LOCAL') {
+      if (!finalPickupLocationId || finalPickupLocationId === 'custom' || !finalDropLocationId || finalDropLocationId === 'custom') {
+        setSubmitError('Unable to resolve master corridor locations for this booking. Please re-select your route via the Fare Calculator.');
+        return;
+      }
+    }
+
     setIsSubmitting(true);
 
     try {
       const payload = {
         tripType,
-        pickupLocationId: pickupId || undefined,
-        dropLocationId: dropId || undefined,
+        pickupLocationId: tripType !== 'LOCAL' ? finalPickupLocationId : undefined,
+        dropLocationId: tripType !== 'LOCAL' ? finalDropLocationId : undefined,
         vehicleId: selectedVehicle?.vehicleId || vehicleId,
         localVehicleId: tripType === 'LOCAL' ? (selectedVehicle?.vehicleId || vehicleId) : undefined,
         city: tripType === 'LOCAL' ? city : undefined,
@@ -437,8 +465,8 @@ export const BookingPage = () => {
         departureTime: departureTime || time,
         vehicle: selectedVehName,
         vehicleId: selectedVehicle?.vehicleId || vehicleId || undefined,
-        pickupLocationId: pickupId || undefined,
-        dropLocationId: dropId || undefined,
+        pickupLocationId: (pickupId && pickupId !== 'custom' ? pickupId : quoteData?.route?.pickup?.id || quoteData?.searchParams?.pickupLocationId) || undefined,
+        dropLocationId: (dropId && dropId !== 'custom' ? dropId : quoteData?.route?.drop?.id || quoteData?.searchParams?.dropLocationId) || undefined,
         tripType,
         city: tripType === 'LOCAL' ? city : undefined,
         duration: tripType === 'LOCAL' ? parseInt(duration, 10) : undefined,

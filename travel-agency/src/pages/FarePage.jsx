@@ -431,11 +431,22 @@ export const FarePage = () => {
 
   // Navigate to booking page with full trip parameters preserved
   const handleSelectCab = (vehicle) => {
+    // Preserve existing valid database IDs; if missing or 'custom', resolve from quoteData
+    const resolvedPickupId =
+      pickupId && pickupId !== 'custom'
+        ? pickupId
+        : quoteData?.route?.pickup?.id || quoteData?.searchParams?.pickupLocationId || '';
+
+    const resolvedDropId =
+      dropId && dropId !== 'custom'
+        ? dropId
+        : quoteData?.route?.drop?.id || quoteData?.searchParams?.dropLocationId || '';
+
     const bookingParams = new URLSearchParams({
       tripType,
       vehicleId: vehicle.vehicleId,
-      ...(pickupId && { pickupId }),
-      ...(dropId && { dropId }),
+      ...(resolvedPickupId && { pickupId: resolvedPickupId }),
+      ...(resolvedDropId && { dropId: resolvedDropId }),
       ...(pickupAddressParam && { pickupAddress: pickupAddressParam }),
       ...(dropAddressParam && { dropAddress: dropAddressParam }),
       ...(pickupNameParam && { pickupName: pickupNameParam }),
@@ -461,8 +472,8 @@ export const FarePage = () => {
         dropName: dropNameParam,
         searchParams: {
           tripType,
-          pickupLocationId: pickupId,
-          dropLocationId: dropId,
+          pickupLocationId: resolvedPickupId,
+          dropLocationId: resolvedDropId,
           pickupAddress: pickupAddressParam,
           dropAddress: dropAddressParam,
           pickupName: pickupNameParam,

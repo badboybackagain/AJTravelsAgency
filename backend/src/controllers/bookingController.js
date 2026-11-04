@@ -274,7 +274,33 @@ const adminGetBookings = async (req, res, next) => {
       orderBy: { createdAt: 'desc' },
     });
 
-    res.json({ success: true, data: bookings, count: bookings.length });
+    // 1. Fetch sequential booking number mapping (e.g. BK-1001, BK-1002...)
+    const allBookingsOrder = await prisma.booking.findMany({
+      select: { id: true, createdAt: true },
+      orderBy: { createdAt: 'asc' },
+    });
+    const bookingNumberMap = new Map();
+    allBookingsOrder.forEach((item, index) => {
+      bookingNumberMap.set(item.id, `BK-${1001 + index}`);
+    });
+
+    // 2. Fetch sequential enquiry mapping (e.g. ENQ-1001, ENQ-1002...)
+    const allEnquiries = await prisma.enquiry.findMany({
+      select: { id: true, createdAt: true },
+      orderBy: { createdAt: 'asc' },
+    });
+    const enquiryMap = new Map();
+    allEnquiries.forEach((item, index) => {
+      enquiryMap.set(item.id, `ENQ-${1001 + index}`);
+    });
+
+    const enrichedBookings = bookings.map((b) => ({
+      ...b,
+      bookingNumber: bookingNumberMap.get(b.id) || `BK-${b.id.slice(-4).toUpperCase()}`,
+      enquiryNumber: b.enquiryId ? (enquiryMap.get(b.enquiryId) || `ENQ-${b.enquiryId.slice(-4).toUpperCase()}`) : null,
+    }));
+
+    res.json({ success: true, data: enrichedBookings, count: enrichedBookings.length });
   } catch (err) {
     next(err);
   }

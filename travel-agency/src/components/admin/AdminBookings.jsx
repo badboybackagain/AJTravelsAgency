@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Calendar,
   Clock,
@@ -104,6 +104,18 @@ export const AdminBookings = () => {
   const [error, setError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [updatingId, setUpdatingId] = useState(null);
+
+  // Deterministic, crystal-clear Booking ID formatter (e.g. BK-1001, BK-1002...)
+  const getBookingDisplayId = useCallback((b) => {
+    if (!b) return 'N/A';
+    if (b.bookingNumber) return b.bookingNumber;
+    if (bookings && bookings.length > 0) {
+      const sorted = [...bookings].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+      const idx = sorted.findIndex((item) => item.id === b.id);
+      if (idx !== -1) return `BK-${1001 + idx}`;
+    }
+    return `BK-${b.id ? b.id.slice(-4).toUpperCase() : '1001'}`;
+  }, [bookings]);
   const [feedbackMsg, setFeedbackMsg] = useState(null);
 
   const fetchBookings = async () => {
@@ -159,7 +171,8 @@ export const AdminBookings = () => {
       b.customerEmail?.toLowerCase().includes(q) ||
       b.route?.routeName?.toLowerCase().includes(q) ||
       b.vehicle?.name?.toLowerCase().includes(q) ||
-      b.id?.toLowerCase().includes(q)
+      b.id?.toLowerCase().includes(q) ||
+      b.enquiryNumber?.toLowerCase().includes(q) || getBookingDisplayId(b).toLowerCase().includes(q)
     );
   });
 
@@ -317,28 +330,26 @@ export const AdminBookings = () => {
             </p>
           </div>
         ) : (
-          <div style={{ overflowX: 'auto' }}>
-            <table className="admin-table">
+          <div style={{ width: '100%', overflowX: 'hidden' }}>
+            <table className="admin-table" style={{ width: '100%', tableLayout: 'fixed' }}>
               <thead>
                 <tr>
-                  <th style={{ minWidth: '120px' }}>Booking ID & Date</th>
-                  <th style={{ minWidth: '180px' }}>Customer Details</th>
-                  <th style={{ minWidth: '200px' }}>Route & Travel Date</th>
-                  <th style={{ minWidth: '160px' }}>Vehicle & Class</th>
-                  <th style={{ minWidth: '130px' }}>Fare (Payable)</th>
-                  <th style={{ minWidth: '200px' }}>Payment Mode</th>
-                  <th style={{ minWidth: '140px' }}>Booking Status</th>
-                  <th style={{ minWidth: '150px', textAlign: 'right' }}>Quick Contact</th>
+                  <th style={{ width: '14%' }}>Booking ID</th>
+                  <th style={{ width: '20%' }}>Customer</th>
+                  <th style={{ width: '24%' }}>Route & Time</th>
+                  <th style={{ width: '14%' }}>Vehicle</th>
+                  <th style={{ width: '10%' }}>Fare</th>
+                  <th style={{ width: '10%' }}>Status</th>
+                  <th style={{ width: '8%', textAlign: 'center' }}>Contact</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredBookings.map((b) => {
-                  const payDisplay = resolvePaymentDisplay(b);
+                  const displayId = getBookingDisplayId(b);
 
                   const bookingDate = new Date(b.createdAt).toLocaleDateString('en-IN', {
                     day: 'numeric',
                     month: 'short',
-                    year: 'numeric',
                     hour: '2-digit',
                     minute: '2-digit',
                   });
@@ -347,7 +358,6 @@ export const AdminBookings = () => {
                     ? new Date(b.pickupDate).toLocaleDateString('en-IN', {
                         day: 'numeric',
                         month: 'short',
-                        year: 'numeric',
                       })
                     : 'Flexible';
 
@@ -355,111 +365,88 @@ export const AdminBookings = () => {
 
                   return (
                     <tr key={b.id}>
-                      {/* ID & Date */}
-                      <td>
+                      {/* 1. Clean Booking ID & Date */}
+                      <td style={{ padding: '0.7rem 0.85rem' }}>
                         <div
                           style={{
-                            fontFamily: 'monospace',
                             fontWeight: 800,
                             color: '#0F172A',
                             fontSize: '0.85rem',
+                            letterSpacing: '0.02em',
                           }}
                         >
-                          #{b.id.slice(-6).toUpperCase()}
+                          {displayId}
                         </div>
-                        <div style={{ fontSize: '0.7rem', color: '#94A3B8', marginTop: '0.15rem' }}>{bookingDate}</div>
+                        <div style={{ fontSize: '0.68rem', color: '#94A3B8', marginTop: '0.1rem' }}>{bookingDate}</div>
                         {b.enquiryId && (
                           <div
                             style={{
                               display: 'inline-flex',
                               alignItems: 'center',
-                              gap: '0.25rem',
-                              padding: '0.15rem 0.45rem',
+                              gap: '0.2rem',
+                              padding: '0.1rem 0.35rem',
                               borderRadius: '4px',
                               backgroundColor: '#EFF6FF',
                               border: '1px solid #DBEAFE',
                               color: '#1D4ED8',
-                              fontSize: '0.66rem',
+                              fontSize: '0.64rem',
                               fontWeight: 700,
-                              marginTop: '0.35rem',
+                              marginTop: '0.25rem',
                             }}
-                            title={`Converted from Enquiry #${b.enquiryId}`}
+                            title={`Converted from Enquiry ${b.enquiryNumber || `ENQ-${b.enquiryId.slice(-4).toUpperCase()}`}`}
                           >
-                            <FileText size={10} />
-                            <span>Enquiry #{b.enquiryId.slice(-6).toUpperCase()}</span>
+                            <FileText size={9} />
+                            <span>{b.enquiryNumber || `ENQ-${b.enquiryId.slice(-4).toUpperCase()}`}</span>
                           </div>
                         )}
                       </td>
 
-                      {/* Customer Details */}
-                      <td>
+                      {/* 2. Customer Details */}
+                      <td style={{ padding: '0.7rem 0.85rem' }}>
                         <div
                           style={{
                             fontWeight: 700,
                             color: '#0F172A',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.35rem',
+                            fontSize: '0.82rem',
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
                           }}
                         >
-                          <User size={13} color="#0284C7" />
-                          <span>{b.customerName || 'Guest Customer'}</span>
+                          {b.customerName || 'Guest Customer'}
                         </div>
                         <div
                           style={{
-                            fontSize: '0.75rem',
+                            fontSize: '0.74rem',
                             color: '#475569',
                             display: 'flex',
                             alignItems: 'center',
-                            gap: '0.35rem',
+                            gap: '0.3rem',
                             marginTop: '0.15rem',
                           }}
                         >
-                          <Phone size={13} color="#16A34A" />
+                          <Phone size={11} color="#16A34A" />
                           <span>{b.customerPhone}</span>
-                          <span
-                            style={{
-                              fontSize: '0.62rem',
-                              color: '#15803D',
-                              background: '#DCFCE7',
-                              padding: '0.1rem 0.35rem',
-                              borderRadius: '4px',
-                              fontWeight: 800,
-                            }}
-                          >
-                            ✓ Verified
-                          </span>
                         </div>
-                        {b.customerEmail && (
-                          <div
-                            style={{
-                              fontSize: '0.7rem',
-                              color: '#94A3B8',
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '0.35rem',
-                              marginTop: '0.15rem',
-                            }}
-                          >
-                            <Mail size={13} color="#94A3B8" />
-                            <span>{b.customerEmail}</span>
-                          </div>
-                        )}
                       </td>
 
-                      {/* Route & Travel Date */}
-                      <td>
+                      {/* 3. Route & Travel Date */}
+                      <td style={{ padding: '0.7rem 0.85rem' }}>
                         <div
                           style={{
                             fontWeight: 700,
                             color: '#0F172A',
+                            fontSize: '0.82rem',
                             display: 'flex',
                             alignItems: 'center',
-                            gap: '0.35rem',
+                            gap: '0.3rem',
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
                           }}
                         >
-                          <MapPin size={13} color="#0284C7" />
-                          <span>
+                          <MapPin size={12} color="#0284C7" style={{ flexShrink: 0 }} />
+                          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>
                             {b.route?.routeName ||
                               `${b.route?.pickupLocation?.name || b.pickupAddress || 'Pune'} ➔ ${
                                 b.route?.dropLocation?.name || b.dropAddress || 'Mumbai'
@@ -468,90 +455,52 @@ export const AdminBookings = () => {
                         </div>
                         <div
                           style={{
-                            fontSize: '0.72rem',
+                            fontSize: '0.7rem',
                             color: '#64748B',
                             display: 'flex',
                             alignItems: 'center',
-                            gap: '0.35rem',
-                            marginTop: '0.2rem',
+                            gap: '0.3rem',
+                            marginTop: '0.15rem',
                           }}
                         >
-                          <Calendar size={13} color="#94A3B8" />
+                          <Calendar size={11} color="#94A3B8" style={{ flexShrink: 0 }} />
                           <span>
                             {travelDate} • {b.pickupTime || '08:00 AM'}
                           </span>
                         </div>
                       </td>
 
-                      {/* Vehicle */}
-                      <td>
-                        <div style={{ fontWeight: 700, color: '#0F172A' }}>
+                      {/* 4. Vehicle */}
+                      <td style={{ padding: '0.7rem 0.85rem' }}>
+                        <div style={{ fontWeight: 700, color: '#0F172A', fontSize: '0.8rem' }}>
                           {b.vehicle?.name || b.localVehicle?.name || 'Executive Cab'}
                         </div>
-                        <div style={{ fontSize: '0.72rem', color: '#64748B' }}>
-                          {b.vehicle?.category || b.localVehicle?.category || 'SEDAN'} • {b.passengers} Pax
+                        <div style={{ fontSize: '0.7rem', color: '#64748B' }}>
+                          {b.passengers || 1} Pax
                         </div>
                       </td>
 
-                      {/* Fare Payable */}
-                      <td>
-                        <div style={{ fontSize: '0.92rem', fontWeight: 900, color: '#0369A1' }}>
-                          ₹{b.fareTotal?.toLocaleString()}
+                      {/* 5. Fare & Payment Mode */}
+                      <td style={{ padding: '0.7rem 0.85rem' }}>
+                        <div style={{ fontSize: '0.9rem', fontWeight: 900, color: '#0369A1' }}>
+                          ₹{b.fareTotal ? parseFloat(b.fareTotal).toLocaleString('en-IN') : '0'}
                         </div>
-                        <div style={{ fontSize: '0.68rem', color: '#64748B' }}>
-                          {payDisplay.isVerifiedOnline ? 'Paid Online' : 'Due on Arrival'}
-                        </div>
-                      </td>
-
-                      {/* Truthful Payment Status Column */}
-                      <td>
-                        <div style={{ display: 'inline-flex', flexDirection: 'column', gap: '0.25rem' }}>
-                          <span
-                            style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '0.35rem',
-                              padding: '0.22rem 0.6rem',
-                              borderRadius: '9999px',
-                              backgroundColor: payDisplay.badgeBg,
-                              border: `1px solid ${payDisplay.badgeBorder}`,
-                              color: payDisplay.badgeColor,
-                              fontSize: '0.7rem',
-                              fontWeight: 800,
-                              whiteSpace: 'nowrap',
-                            }}
-                          >
-                            {payDisplay.icon === 'check' && <CheckCircle size={11} color={payDisplay.badgeColor} />}
-                            {payDisplay.icon === 'clock' && <Clock size={11} color={payDisplay.badgeColor} />}
-                            {payDisplay.icon === 'alert' && <AlertCircle size={11} color={payDisplay.badgeColor} />}
-                            <span>{payDisplay.statusLabel}</span>
-                          </span>
-
-                          {payDisplay.refLabel && (
-                            <div style={{ fontSize: '0.68rem', color: '#64748B' }}>
-                              <span style={{ fontFamily: 'monospace', color: '#0F172A', fontWeight: 700 }}>
-                                {payDisplay.refLabel}
-                              </span>
-                            </div>
-                          )}
-
-                          <div style={{ fontSize: '0.67rem', color: '#475569', fontWeight: 600 }}>
-                            {payDisplay.methodLabel}
-                          </div>
+                        <div style={{ fontSize: '0.66rem', color: '#15803D', fontWeight: 700 }}>
+                          Pay to Driver
                         </div>
                       </td>
 
-                      {/* Interactive Booking Status Selector */}
-                      <td>
-                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
+                      {/* 6. Status Dropdown */}
+                      <td style={{ padding: '0.7rem 0.65rem' }}>
+                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
                           <select
                             value={b.status || 'CONFIRMED'}
                             disabled={isUpdatingThis}
                             onChange={(e) => handleStatusChange(b.id, e.target.value)}
                             style={{
-                              padding: '0.3rem 0.55rem',
-                              borderRadius: '8px',
-                              fontSize: '0.74rem',
+                              padding: '0.26rem 0.45rem',
+                              borderRadius: '6px',
+                              fontSize: '0.72rem',
                               fontWeight: 700,
                               border: '1px solid #CBD5E1',
                               backgroundColor:
@@ -575,53 +524,53 @@ export const AdminBookings = () => {
                             <option value="CANCELLED">Cancelled</option>
                             <option value="PENDING">Pending</option>
                           </select>
-                          {isUpdatingThis && <Loader2 size={12} className="animate-spin text-sky-500" />}
+                          {isUpdatingThis && <Loader2 size={11} className="animate-spin text-sky-500" />}
                         </div>
                       </td>
 
-                      {/* Quick Contact Actions */}
-                      <td style={{ textAlign: 'right' }}>
-                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
+                      {/* 7. Quick Contact Icons Only */}
+                      <td style={{ padding: '0.7rem 0.65rem', textAlign: 'center' }}>
+                        <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem' }}>
                           <a
-                            href={`https://wa.me/91${b.customerPhone?.replace(/[^0-9]/g, '')}?text=Hello%20${encodeURIComponent(
-                              b.customerName || ''
-                            )},%20regarding%20your%20Pune-Mumbai%20travel%20booking%20#${b.id.slice(-6).toUpperCase()}`}
+                            href={`https://wa.me/91${b.customerPhone?.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(
+                              `Hello ${b.customerName || 'Customer'}, regarding your travel booking ${displayId} with AJ Travels.`
+                            )}`}
                             target="_blank"
                             rel="noopener noreferrer"
+                            title="Chat on WhatsApp"
                             style={{
                               display: 'inline-flex',
                               alignItems: 'center',
-                              gap: '0.3rem',
-                              padding: '0.35rem 0.65rem',
-                              borderRadius: '8px',
+                              justifyContent: 'center',
+                              width: '28px',
+                              height: '28px',
+                              borderRadius: '6px',
                               backgroundColor: '#DCFCE7',
+                              border: '1px solid #BBF7D0',
                               color: '#15803D',
-                              fontSize: '0.75rem',
-                              fontWeight: 700,
                               textDecoration: 'none',
                             }}
                           >
                             <MessageSquare size={13} />
-                            <span>WhatsApp</span>
                           </a>
 
                           <a
                             href={`tel:${b.customerPhone}`}
+                            title="Call Customer"
                             style={{
                               display: 'inline-flex',
                               alignItems: 'center',
-                              gap: '0.3rem',
-                              padding: '0.35rem 0.65rem',
-                              borderRadius: '8px',
+                              justifyContent: 'center',
+                              width: '28px',
+                              height: '28px',
+                              borderRadius: '6px',
                               backgroundColor: '#E0F2FE',
+                              border: '1px solid #BAE6FD',
                               color: '#0369A1',
-                              fontSize: '0.75rem',
-                              fontWeight: 700,
                               textDecoration: 'none',
                             }}
                           >
                             <Phone size={13} />
-                            <span>Call</span>
                           </a>
                         </div>
                       </td>
