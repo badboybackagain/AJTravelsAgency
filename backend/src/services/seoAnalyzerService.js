@@ -324,7 +324,8 @@ async function analyzePage(pageKey, options = {}) {
   let browserData = { dom: null, available: false, error: 'Not run' };
   if (options.useBrowser === true) {
     try {
-      browserData = await renderBrowserDom(`http://localhost:${FRONTEND_PORT}${pagePath}`);
+      const frontendBase = process.env.FRONTEND_URL || `http://localhost:${FRONTEND_PORT}`;
+      browserData = await renderBrowserDom(`${frontendBase}${pagePath}`);
     } catch (_e) {
       browserData = { dom: null, available: false, error: 'Browser render exception' };
     }

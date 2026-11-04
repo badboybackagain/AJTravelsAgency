@@ -83,4 +83,8 @@ async function startServer() {
   process.on('SIGTERM', shutdown);
 }
 
-startServer();
+if (require.main === module) {
+  startServer();
+}
+
+module.exports = app;

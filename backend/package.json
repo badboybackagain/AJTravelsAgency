@@ -5,6 +5,7 @@
   "main": "src/server.js",
   "type": "commonjs",
   "scripts": {
+    "build": "npx prisma generate",
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
     "test:seo": "node tests/seo.test.js",

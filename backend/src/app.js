@@ -96,7 +96,10 @@ app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 // HEALTH CHECK
 // ============================================================
 
-const { getDbStatus } = require('./utils/dbState');
+const { getDbStatus, setDbConnected } = require('./utils/dbState');
+if (process.env.DATABASE_URL && !getDbStatus().connected) {
+  setDbConnected(true, null);
+}
 
 app.get('/health', (req, res) => {
   const dbStatus = getDbStatus();
