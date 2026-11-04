@@ -58,28 +58,9 @@
       }
     },
     {
-      "source": "/assets/(.*)",
-      "destination": {
-        "service": "travel-agency"
-      }
-    },
-    {
-      "source": "/favicon:ext(.*)",
-      "destination": {
-        "service": "travel-agency"
-      }
-    },
-    {
-      "source": "/icons.svg",
-      "destination": {
-        "service": "travel-agency"
-      }
-    },
-    {
       "source": "/(.*)",
       "destination": {
-        "service": "travel-agency",
-        "path": "/index.html"
+        "service": "travel-agency"
       }
     }
   ]
