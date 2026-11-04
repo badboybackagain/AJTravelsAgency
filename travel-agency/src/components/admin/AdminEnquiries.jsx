@@ -204,11 +204,11 @@ export const AdminEnquiries = () => {
     if (matchedInitFare) {
       initExtraKm = matchedInitFare.perKmFare !== undefined && matchedInitFare.perKmFare !== null ? matchedInitFare.perKmFare.toString() : '14';
       initExtraHr = (matchedInitFare.fareWaiting?.perHourCharge || 150).toString();
-      initIncludedKm = '150';
+      initIncludedKm = '';
     } else if (isPuneMumbai) {
       initExtraKm = '14';
       initExtraHr = '150';
-      initIncludedKm = '150';
+      initIncludedKm = '';
     }
 
     setQuoteForm({
@@ -294,7 +294,7 @@ export const AdminEnquiries = () => {
         const toll = matched.tollCharges || 430;
         const perKm = matched.perKmFare !== undefined && matched.perKmFare !== null ? matched.perKmFare : (quoteForm.tripType === 'ROUND_TRIP' ? 13 : 14);
         const waiting = matched.fareWaiting?.perHourCharge || 150;
-        const included = quoteForm.tripType === 'ROUND_TRIP' ? 300 : 150;
+        const included = quoteForm.includedKm || '';
 
         setQuoteForm((prev) => ({
           ...prev,
@@ -317,7 +317,7 @@ export const AdminEnquiries = () => {
         let suggestedToll = quoteForm.tripType === 'ROUND_TRIP' ? 640 : 430;
         const extraKm = quoteForm.tripType === 'ROUND_TRIP' ? 13 : 14;
         const extraHr = 150;
-        const inclKm = quoteForm.tripType === 'ROUND_TRIP' ? 300 : 150;
+        const inclKm = quoteForm.includedKm || '';
 
         if (quoteForm.vehicleCategory === 'INNOVA_CRYSTA') {
           suggestedBase = quoteForm.tripType === 'ROUND_TRIP' ? 8999 : 4899;
@@ -1373,7 +1373,7 @@ export const AdminEnquiries = () => {
                           }}>
                             <span>Extra Km: <strong>₹{q.additionalCharges.extraKmRate}/km</strong></span>
                             <span>Extra Hour: <strong>₹{q.additionalCharges.extraHourRate}/hr</strong></span>
-                            <span>Included: <strong>{q.additionalCharges.includedKm} km</strong></span>
+                            {Boolean(q.additionalCharges.includedKm && Number(q.additionalCharges.includedKm) > 0) && (<span>Included: <strong>{q.additionalCharges.includedKm} km</strong></span>)}
                           </div>
                         )}
 
@@ -1858,7 +1858,7 @@ export const AdminEnquiries = () => {
                     <input
                       type="number"
                       min="0"
-                      placeholder="e.g. 150"
+                      placeholder="e.g. 100"
                       value={quoteForm.extraHourRate}
                       onChange={(e) => handleQuoteFormChange('extraHourRate', e.target.value)}
                       style={{
@@ -1879,7 +1879,7 @@ export const AdminEnquiries = () => {
                     <input
                       type="number"
                       min="0"
-                      placeholder="e.g. 150"
+                      placeholder="Optional (leave empty for fixed trip)"
                       value={quoteForm.includedKm}
                       onChange={(e) => handleQuoteFormChange('includedKm', e.target.value)}
                       style={{

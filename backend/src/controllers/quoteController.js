@@ -19,15 +19,19 @@ async function resolveAdditionalRates(pickupStr, dropStr, vehicleCategory, tripT
     if (metaMatch) {
       try {
         const parsed = JSON.parse(metaMatch[1]);
-        if (parsed && (parsed.extraKmRate || parsed.extraHourRate)) {
-          const standardKm = tripType === 'ROUND_TRIP' ? 300 : 150;
+        if (parsed && (parsed.extraKmRate || parsed.extraHourRate || parsed.includedKm)) {
+          const parsedIncl = parsed.includedKm !== undefined && parsed.includedKm !== null && parsed.includedKm !== '' && Number(parsed.includedKm) > 0
+            ? parseFloat(parsed.includedKm)
+            : null;
           return {
             isConfigured: true,
             extraKmRate: parsed.extraKmRate ? parseFloat(parsed.extraKmRate) : null,
             extraHourRate: parsed.extraHourRate ? parseFloat(parsed.extraHourRate) : null,
-            includedKm: parsed.includedKm ? parseFloat(parsed.includedKm) : standardKm,
+            includedKm: parsedIncl,
             freeWaitingMinutes: parsed.freeWaitingMinutes ? parseInt(parsed.freeWaitingMinutes, 10) : 30,
-            notice: `Conditional charges. Apply only when included distance (${parsed.includedKm || standardKm} km) or waiting duration is exceeded.`,
+            notice: parsedIncl
+              ? `Conditional charges. Apply only when included distance (${parsedIncl} km) or waiting duration is exceeded.`
+              : 'Conditional charges. Apply only when extra detour distance or driver waiting duration is requested.',
           };
         }
       } catch (e) {}
@@ -77,19 +81,21 @@ async function resolveAdditionalRates(pickupStr, dropStr, vehicleCategory, tripT
     });
 
     if (fare) {
-      const standardKm = tripType === 'ROUND_TRIP' ? 300 : 150;
       const extraKm = fare.perKmFare > 0 ? fare.perKmFare : null;
       const extraHour = fare.fareWaiting && fare.fareWaiting.enabled && fare.fareWaiting.perHourCharge > 0
         ? fare.fareWaiting.perHourCharge
         : null;
+      const fareIncl = fare.includedKm && Number(fare.includedKm) > 0 ? parseFloat(fare.includedKm) : null;
 
       return {
-        isConfigured: Boolean(extraKm || extraHour),
+        isConfigured: Boolean(extraKm || extraHour || fareIncl),
         extraKmRate: extraKm,
         extraHourRate: extraHour,
-        includedKm: standardKm,
+        includedKm: fareIncl,
         freeWaitingMinutes: fare.fareWaiting?.freeMinutes || 30,
-        notice: `Conditional charges. Apply only when included distance (${standardKm} km) or waiting duration is exceeded.`,
+        notice: fareIncl
+          ? `Conditional charges. Apply only when included distance (${fareIncl} km) or waiting duration is exceeded.`
+          : 'Conditional charges. Apply only when extra detour distance or driver waiting duration is requested.',
       };
     }
   } catch (err) {
@@ -225,9 +231,9 @@ const prepareQuote = async (req, res, next) => {
     let extraHourNum = req.body.extraHourRate !== undefined && req.body.extraHourRate !== null && req.body.extraHourRate !== ''
       ? parseFloat(req.body.extraHourRate)
       : null;
-    let includedKmNum = req.body.includedKm !== undefined && req.body.includedKm !== null && req.body.includedKm !== ''
+    let includedKmNum = req.body.includedKm !== undefined && req.body.includedKm !== null && req.body.includedKm !== '' && Number(req.body.includedKm) > 0
       ? parseFloat(req.body.includedKm)
-      : (resolvedTripType === 'ROUND_TRIP' ? 300 : 150);
+      : null;
 
     // If not supplied explicitly, resolve from DB
     if (extraKmNum === null && extraHourNum === null) {
