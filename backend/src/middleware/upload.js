@@ -125,54 +125,7 @@ class HybridStorageEngine {
 
       cb(null, {
         buffer: info.buffer,
-        size: info.size,
-        filename,
-        publicUrl: dataUri,
-      });
-    });
-  }
-
-  _removeFile(req, file, cb) {
-    if (isDiskWritable) {
-      return diskStorageEngine._removeFile(req, file, cb);
-    }
-    cb(null);
-  }
-}
-
-// Memory storage engine for serverless / read-only environments
-const memoryStorageEngine = multer.memoryStorage();
-
-// Hybrid storage engine: writes to disk if writable, keeps in memory as Data URI if read-only
-class HybridStorageEngine {
-  _handleFile(req, file, cb) {
-    if (isDiskWritable) {
-      return diskStorageEngine._handleFile(req, file, cb);
-    }
-
-    // In-memory fallback for Vercel / serverless runtimes
-    memoryStorageEngine._handleFile(req, file, (err, info) => {
-      if (err) return cb(err);
-      const category = resolveCategory(req);
-      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-      const ext = path.extname(file.originalname).toLowerCase() || '.jpg';
-      let cleanExt = '.jpg';
-      if (['.jpg', '.jpeg', '.png', '.webp', '.avif'].includes(ext)) {
-        cleanExt = ext;
-      } else if (ext === '.jfif') {
-        cleanExt = '.jpg';
-      }
-      const filename = `${category}-${uniqueSuffix}${cleanExt}`;
-      const dataUri = `data:${file.mimetype || 'image/jpeg'};base64,${info.buffer.toString('base64')}`;
-
-      file.targetCategory = category;
-      file.targetFilename = filename;
-      file.filename = filename;
-      file.publicUrl = dataUri;
-
-      cb(null, {
-        buffer: info.buffer,
-        size: info.size,
+        size: file.size,
         filename,
         publicUrl: dataUri,
       });
