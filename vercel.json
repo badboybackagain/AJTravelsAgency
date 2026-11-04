@@ -58,9 +58,22 @@
       }
     },
     {
-      "source": "/(.*)",
+      "source": "/assets/(.*)",
       "destination": {
         "service": "travel-agency"
+      }
+    },
+    {
+      "source": "/(.*\\.(?:ico|png|svg|jpg|jpeg|webp|js|css|json|txt|woff|woff2|ttf))",
+      "destination": {
+        "service": "travel-agency"
+      }
+    },
+    {
+      "source": "/(.*)",
+      "destination": {
+        "service": "travel-agency",
+        "path": "/index.html"
       }
     }
   ]
