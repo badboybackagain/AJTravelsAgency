@@ -64,7 +64,13 @@
       }
     },
     {
-      "source": "/(.*\\.(?:ico|png|svg|jpg|jpeg|webp|js|css|json|txt|woff|woff2|ttf))",
+      "source": "/favicon:ext(.*)",
+      "destination": {
+        "service": "travel-agency"
+      }
+    },
+    {
+      "source": "/icons.svg",
       "destination": {
         "service": "travel-agency"
       }
