@@ -23,6 +23,7 @@ import {
   MessageSquare,
   PhoneCall,
   X,
+  Info,
 } from 'lucide-react';
 import { fareApi, locationApi, API_BASE_URL } from '../services/api';
 import { Header } from '../components/Header';
