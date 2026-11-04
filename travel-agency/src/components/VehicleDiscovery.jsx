@@ -517,9 +517,9 @@ export const VehicleDiscovery = () => {
             display: flex;
             overflow-x: auto;
             scroll-snap-type: x mandatory;
-            gap: 1rem;
-            padding: 0.5rem 0.25rem 1rem;
-            margin-top: 1rem;
+            gap: 0.85rem;
+            padding: 0.5rem 0.25rem 0.85rem;
+            margin-top: 0.75rem;
             -webkit-overflow-scrolling: touch;
             scrollbar-width: none;
           }
@@ -527,28 +527,65 @@ export const VehicleDiscovery = () => {
             display: none;
           }
           .vehicle-card {
-            flex: 0 0 84%;
+            flex: 0 0 85%;
             max-width: 310px;
             scroll-snap-align: start;
             border-radius: 16px;
           }
           .vehicle-img-wrapper {
-            height: 140px;
+            height: 130px;
           }
           .vehicle-body {
-            padding: 1rem 1.1rem;
+            padding: 0.75rem 0.85rem 0.85rem;
           }
           .vehicle-title {
-            font-size: 1.25rem;
-            margin-bottom: 0.5rem;
+            font-size: 1.15rem;
+            margin-bottom: 0.35rem;
+          }
+          .vehicle-specs-row {
+            gap: 0.35rem;
+            margin-bottom: 0.55rem;
+          }
+          .spec-badge-pill {
+            padding: 0.22rem 0.55rem;
+            font-size: 0.72rem;
+          }
+          /* Solution 1: Compact 2-column clean checklist without box-inside-box */
+          .vehicle-features-list {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.35rem 0.5rem;
+            margin-bottom: 0.65rem;
+          }
+          .feat-chip {
+            display: inline-flex;
+            align-items: flex-start;
+            gap: 0.3rem;
+            font-size: 0.71rem;
+            line-height: 1.25;
+            color: #334155;
+            background: transparent;
+            border: none;
+            padding: 0;
+            border-radius: 0;
+          }
+          .feat-chip svg {
+            flex-shrink: 0;
+            margin-top: 1px;
           }
           .vehicle-ideal-text {
-            font-size: 0.78rem;
-            margin-bottom: 0.85rem;
+            font-size: 0.73rem;
+            line-height: 1.35;
+            margin-bottom: 0.65rem;
+            color: #64748B;
           }
           .vehicle-btn {
-            padding: 0.65rem 1rem;
-            font-size: 0.82rem;
+            padding: 0.6rem 0.85rem;
+            font-size: 0.8rem;
+          }
+          .vehicle-detail-link {
+            padding: 0 0.85rem;
+            font-size: 0.78rem;
           }
         }
       `}</style>

@@ -397,12 +397,99 @@ export function ServicesPage() {
           }
         }
 
-        @media (max-width: 640px) {
+        @media (max-width: 768px) {
+          .internal-hero-section {
+            padding: 1.35rem 0 1rem;
+          }
           .internal-hero-title {
-            font-size: 1.85rem;
+            font-size: 1.4rem;
+            margin-bottom: 0.35rem;
+          }
+          .internal-hero-subtitle {
+            font-size: 0.8rem;
+            line-height: 1.4;
+          }
+          .services-main-section {
+            padding: 1rem 0 2rem;
+          }
+          .services-stack {
+            gap: 1rem;
+          }
+          .service-showcase-card {
+            border-radius: 14px;
+          }
+          .svc-img-side {
+            min-height: auto;
+            height: 160px;
+          }
+          .svc-floating-badge {
+            top: 0.65rem;
+            left: 0.65rem;
+            font-size: 0.65rem;
+            padding: 0.2rem 0.55rem;
           }
           .svc-info-side {
-            padding: 1.5rem;
+            padding: 0.85rem 0.95rem 1rem;
+          }
+          .svc-route-meta-strip {
+            gap: 0.3rem;
+            margin-bottom: 0.4rem;
+          }
+          .meta-pill {
+            padding: 0.18rem 0.45rem;
+            font-size: 0.68rem;
+            gap: 0.25rem;
+          }
+          .svc-card-title {
+            font-size: 1.15rem;
+            margin-bottom: 0.2rem;
+            line-height: 1.25;
+          }
+          .svc-tagline {
+            font-size: 0.76rem;
+            margin-bottom: 0.35rem;
+          }
+          .svc-overview-txt {
+            font-size: 0.78rem;
+            line-height: 1.42;
+            color: #64748B;
+            margin-bottom: 0.6rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+          }
+          .svc-highlights-list {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.3rem 0.5rem;
+            margin-bottom: 0.75rem;
+          }
+          .svc-hl-item {
+            font-size: 0.72rem;
+            gap: 0.35rem;
+            line-height: 1.25;
+          }
+          .svc-hl-item svg {
+            flex-shrink: 0;
+            width: 13px;
+            height: 13px;
+          }
+          .svc-action-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+            width: 100%;
+          }
+          .btn-book-corridor {
+            padding: 0.55rem 0.75rem;
+            font-size: 0.78rem;
+            justify-content: center;
+          }
+          .btn-view-details {
+            padding: 0.55rem 0.75rem;
+            font-size: 0.78rem;
+            justify-content: center;
           }
         }
       `}</style>

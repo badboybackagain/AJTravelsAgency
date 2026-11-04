@@ -812,12 +812,94 @@ export function ServiceDetailPage() {
           }
         }
 
-        @media (max-width: 640px) {
+        @media (max-width: 768px) {
+          .svc-breadcrumbs-strip {
+            padding: 0.65rem 0;
+          }
+          .svc-hero-section {
+            padding: 1.25rem 0 1rem;
+          }
           .svc-hero-title {
-            font-size: 1.85rem;
+            font-size: 1.45rem;
+            margin-bottom: 0.35rem;
+            line-height: 1.25;
+          }
+          .svc-hero-tagline {
+            font-size: 0.82rem;
+            margin-bottom: 0.75rem;
+          }
+          .svc-stats-chips-row {
+            gap: 0.45rem;
+            margin-bottom: 0.85rem;
+          }
+          .chip-box {
+            padding: 0.45rem 0.65rem;
+            gap: 0.45rem;
+            flex: 1 1 calc(50% - 0.45rem);
+          }
+          .chip-lbl {
+            font-size: 0.62rem;
+          }
+          .chip-box strong {
+            font-size: 0.78rem;
+          }
+          .svc-hero-cta-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+          }
+          .btn-book-now-solid,
+          .btn-custom-inquiry {
+            padding: 0.6rem 0.65rem;
+            font-size: 0.78rem;
+            justify-content: center;
+            text-align: center;
+          }
+          .svc-hero-cover-photo {
+            height: 180px;
+          }
+          .svc-image-badge-glass {
+            padding: 0.45rem 0.75rem;
+            font-size: 0.75rem;
+            bottom: 0.65rem;
+            left: 0.65rem;
+            right: 0.65rem;
+          }
+          .svc-detail-content-section {
+            padding: 1.25rem 0 2.5rem;
           }
           .content-card {
-            padding: 1.5rem;
+            padding: 1rem 1.1rem;
+            border-radius: 14px;
+          }
+          .content-card-title {
+            font-size: 1.25rem;
+            margin-bottom: 0.5rem;
+          }
+          .lead-text {
+            font-size: 0.82rem;
+            line-height: 1.45;
+          }
+          .subsection-title {
+            font-size: 1.05rem;
+            margin-top: 1rem;
+            margin-bottom: 0.65rem;
+          }
+          .highlights-grid {
+            grid-template-columns: 1fr;
+            gap: 0.45rem;
+          }
+          .highlight-pill {
+            padding: 0.5rem 0.65rem;
+            font-size: 0.78rem;
+          }
+          .sidebar-booking-card {
+            padding: 1.1rem 1rem;
+            border-radius: 14px;
+          }
+          .sidebar-booking-card h3 {
+            font-size: 1.15rem;
           }
         }
       `}</style>
