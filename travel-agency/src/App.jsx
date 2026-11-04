@@ -1,8 +1,5 @@
 import React, { useState, useEffect, useLayoutEffect, lazy, Suspense } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useLocation, useParams } from 'react-router-dom';
-import { getPostBySlug } from './data/blogData';
-import { getServiceBySlug } from './data/servicesData';
-import { getVehicleBySlug } from './data/vehiclesData';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Header } from './components/Header';
 import { HeroBooking } from './components/HeroBooking';
 import { TrustBar } from './components/TrustBar';
@@ -21,7 +18,6 @@ import { EnquiryModal } from './components/EnquiryModal';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { usePageSeo } from './hooks/usePageSeo';
 import { useScrollReveal } from './hooks/useScrollReveal';
-import { getLivePage } from './data/livePagesContent';
 import { homepageContent } from './data/homepageContent';
 
 // Lazy-load heavy pages — keeps initial JS bundle small
@@ -42,6 +38,7 @@ const CustomerQuotePage = lazy(() => import('./pages/CustomerQuotePage').then(m 
 const SitemapPage    = lazy(() => import('./pages/SitemapPage').then(m => ({ default: m.SitemapPage })));
 const PrivacyPolicyPage = lazy(() => import('./pages/PrivacyPolicyPage').then(m => ({ default: m.PrivacyPolicyPage })));
 const TermsPage      = lazy(() => import('./pages/TermsPage').then(m => ({ default: m.TermsPage })));
+const RootSlugResolver = lazy(() => import('./components/RootSlugResolver').then(m => ({ default: m.RootSlugResolver })));
 
 // Minimal loading placeholder — fully transparent to avoid flash
 const PageLoader = () => (
@@ -256,35 +253,7 @@ function ScrollToTop() {
   return null;
 }
 
-function RootSlugResolver() {
-  const { slug } = useParams();
-  const cleanSlug = slug ? slug.replace(/^\/|\/$/g, '') : '';
 
-  if (cleanSlug === 'sitemap') return <SitemapPage />;
-
-  // 1. Explicit Commercial Service Landing Pages
-  const service = getServiceBySlug(cleanSlug);
-  if (service) return <ServiceDetailPage />;
-
-  // 2. Explicit Vehicle Fleet Landing Pages
-  const vehicle = getVehicleBySlug(cleanSlug);
-  if (vehicle) return <VehicleDetailPage />;
-
-  // 3. Commercial Migrated Locality Rentals, Fleet & Corridors (prevents blog post shadowing)
-  const livePage = getLivePage(cleanSlug);
-  if (livePage && livePage.category !== 'Travel Guide') {
-    return <LiveMigratedPage />;
-  }
-
-  // 4. Curated Blog Articles & Travel Guides
-  const post = getPostBySlug(cleanSlug);
-  if (post) return <BlogPostPage isRootFallback={true} />;
-
-  // 5. Migrated Travel Guides & Blog Articles
-  if (livePage) return <LiveMigratedPage />;
-
-  return <NotFoundPage />;
-}
 
 function GlobalAnimationObserver() {
   const { pathname } = useLocation();

@@ -356,22 +356,77 @@ export const Footer = () => {
 
         @media (max-width: 768px) {
           .footer-wrapper {
-            padding-top: 3.5rem;
-            padding-bottom: 7.5rem; /* Full clearance for mobile sticky bottom bar */
+            background-image: none !important;
+            background: linear-gradient(180deg, #080E1C 0%, #0B162D 50%, #060A14 100%) !important;
+            padding-top: 2.25rem;
+            padding-bottom: 6.25rem; /* Full clearance for mobile sticky bottom bar */
           }
           .footer-top-grid {
-            grid-template-columns: 1fr;
-            gap: 1.75rem;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem 1rem;
+            margin-bottom: 2rem;
+          }
+          .footer-brand-col {
+            grid-column: 1 / -1;
+          }
+          .footer-contact-col {
+            grid-column: 1 / -1;
+          }
+          .footer-brand {
+            margin-bottom: 0.85rem;
+          }
+          .footer-brand-logo-img {
+            height: 38px;
+            max-width: 180px;
+          }
+          .footer-tagline {
+            font-size: 0.8rem;
+            line-height: 1.5;
+            margin-bottom: 0.85rem;
+            max-width: 100%;
+          }
+          .footer-dispatch-note {
+            font-size: 0.72rem;
+            padding: 0.5rem 0.75rem;
+            max-width: 100%;
+          }
+          .footer-col-title {
+            font-size: 0.92rem;
+            margin-bottom: 0.65rem;
+          }
+          .footer-links-list {
+            gap: 0.45rem;
+          }
+          .footer-links-list a {
+            font-size: 0.78rem;
+          }
+          .footer-contact-info p {
+            font-size: 0.8rem;
+            margin-bottom: 0.55rem;
+          }
+          .footer-hours-pill {
+            font-size: 0.7rem;
+            padding: 0.25rem 0.6rem;
+            margin-top: 0.35rem;
           }
           .footer-bottom {
             flex-direction: column;
             text-align: center;
             align-items: center;
-            gap: 1rem;
+            gap: 0.75rem;
+            padding-top: 1.25rem;
             padding-right: 0;
+          }
+          .copyright-text {
+            font-size: 0.76rem;
+          }
+          .sub-legal-note {
+            font-size: 0.7rem;
           }
           .legal-links {
             justify-content: center;
+            gap: 0.35rem 0.55rem;
+            font-size: 0.72rem;
           }
         }
       `}</style>
