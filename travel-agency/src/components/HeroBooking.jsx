@@ -769,7 +769,7 @@ export const HeroBooking = () => {
               {/* ================================================= */}
               {tripType === 'LOCAL' && (
                 <>
-                  <div className="booking-row-2col">
+                  <div className="booking-row-2col booking-row-local-package">
                     <div className="booking-field-group">
                       <label className="booking-label">
                         <MapPin size={13} color="#0099FF" />

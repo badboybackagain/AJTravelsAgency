@@ -323,13 +323,13 @@ img { max-width: 100%; height: auto; display: block; }
 .booking-label {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
-  font-size: 0.75rem;
-  font-weight: 550;
+  gap: 0.35rem;
+  font-size: 0.74rem;
+  font-weight: 600;
   color: #334155;
   text-transform: uppercase;
-  letter-spacing: 0.03em;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
 }
 .booking-select-control,
 .booking-input-control {
@@ -431,19 +431,48 @@ img { max-width: 100%; height: auto; display: block; }
   .hero-title { font-size: 2.2rem; }
   .hero-split-section { padding: 6.25rem 0 3rem; }
 }
+
 @media (max-width: 768px) {
-  .hero-split-section { padding: 5.5rem 0 2rem; min-height: auto; }
-  .booking-card-wrapper { border-radius: 16px; }
+  .hero-split-section { padding: 5.5rem 0.75rem 2rem; min-height: auto; }
+  .hero-split-container { grid-template-columns: 1fr; gap: 1.5rem; padding: 0 0.5rem; }
+  .booking-card-wrapper { border-radius: 16px; margin: 0 auto; box-shadow: 0 12px 36px rgba(0, 0, 0, 0.28); }
   .booking-form-body { padding: 0.85rem 1rem 1rem; }
-  .booking-select-control, .booking-input-control { height: 40px; font-size: 0.82rem; }
-  .booking-label { font-size: 0.66rem; }
-  .booking-submit-btn { height: 46px; font-size: 0.88rem; }
-  .booking-locations-horizontal { grid-template-columns: 1fr; gap: 0.35rem; }
+  .booking-select-control, .booking-input-control { height: 42px; font-size: 0.84rem; padding: 0 0.75rem; }
+  .booking-label { font-size: 0.68rem; white-space: nowrap; }
+  .booking-submit-btn { height: 48px; font-size: 0.9rem; }
+  .booking-locations-horizontal { grid-template-columns: 1fr; gap: 0.35rem; margin-bottom: 0.65rem; }
   .booking-swap-container-inline { margin: -0.2rem 0; height: 32px; }
   .booking-swap-btn { width: 32px; height: 32px; }
-  .booking-row-3col, .booking-row-4col { grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+  .booking-row-2col { gap: 0.65rem; margin-bottom: 0.65rem; }
+  .booking-row-3col, .booking-row-4col { grid-template-columns: 1fr 1fr; gap: 0.65rem; margin-bottom: 0.65rem; }
+  .booking-row-3col > :nth-child(3) { grid-column: 1 / -1; }
+  .booking-row-2col.booking-row-local-package { grid-template-columns: 1fr; gap: 0.65rem; }
   .hero-title { font-size: 1.75rem; }
   .hero-description { font-size: 0.88rem; margin-bottom: 0.85rem; }
+}
+
+@media (max-width: 540px) {
+  .hero-split-section { padding: 4.85rem 0.4rem 1.25rem; }
+  .hero-split-container { gap: 0.85rem; padding: 0 0.25rem; }
+  .hero-eyebrow { margin-bottom: 0.45rem; font-size: 0.68rem; padding: 0.25rem 0.7rem; }
+  .hero-title { font-size: 1.45rem; margin-bottom: 0.3rem; }
+  .hero-title-sub { font-size: 0.92rem; margin-top: 0.15rem; }
+  .hero-description { font-size: 0.82rem; line-height: 1.4; margin-bottom: 0.55rem; }
+  .hero-trust-chips { gap: 0.35rem; margin-bottom: 0.55rem; }
+  .hero-chip { font-size: 0.68rem; padding: 0.2rem 0.5rem; }
+  .hero-dispatch-notice-pill { padding: 0.4rem 0.65rem; border-radius: 10px; gap: 0.45rem; margin-bottom: 0.25rem; }
+  .notice-text { font-size: 0.72rem; line-height: 1.3; }
+  .booking-card-wrapper { border-radius: 14px; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2); }
+  .booking-tabs-grid { padding: 0.3rem; gap: 0.25rem; }
+  .booking-tab-btn { padding: 0.55rem 0.35rem; font-size: 0.8rem; gap: 0.3rem; border-radius: 7px; }
+  .booking-form-body { padding: 0.65rem 0.75rem 0.75rem; }
+  .booking-row-2col.booking-row-local-package { grid-template-columns: 1fr; gap: 0.5rem; }
+  .booking-row-2col { gap: 0.5rem; margin-bottom: 0.55rem; }
+  .booking-row-3col, .booking-row-4col { gap: 0.5rem; margin-bottom: 0.55rem; }
+  .booking-select-control, .booking-input-control { height: 40px; font-size: 0.82rem; padding: 0 0.6rem; border-radius: 8px; }
+  .booking-label { font-size: 0.65rem; gap: 0.25rem; }
+  .booking-perks-strip { padding: 0.35rem 0.5rem; font-size: 0.7rem; gap: 0.35rem; margin-bottom: 0.55rem; border-radius: 6px; }
+  .booking-submit-btn { height: 44px; font-size: 0.86rem; border-radius: 10px; margin-top: 0.15rem; }
 }
 
 /* ==========================================================================

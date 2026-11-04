@@ -543,11 +543,11 @@ export const Header = ({ isDark = false, onOpenEnquiry }) => {
 
         @media (max-width: 640px) {
           .header {
-            padding: 0.45rem 0.75rem;
-            margin-bottom: -72px;
+            padding: 0.35rem 0.65rem;
+            margin-bottom: -58px;
           }
           .header-capsule {
-            height: 52px;
+            height: 48px;
             padding: 0.25rem 0.35rem 0.25rem 0.65rem;
           }
           .brand-logo-badge {
