@@ -89,8 +89,8 @@ app.use(globalLimiter);
 // ============================================================
 // REQUEST PARSING
 // ============================================================
-app.use(express.json({ limit: '10kb' })); // Limit payload size
-app.use(express.urlencoded({ extended: true, limit: '10kb' }));
+app.use(express.json({ limit: '10mb' })); // Limit payload size
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // ============================================================
 // HEALTH CHECK
