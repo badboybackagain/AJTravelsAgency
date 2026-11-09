@@ -17,6 +17,7 @@ import {
   Check,
   Bell,
   CheckCheck,
+  Globe,
 } from 'lucide-react';
 import { adminWhatsAppApi } from '../../services/api';
 import './admin.css';
@@ -37,6 +38,7 @@ export const AdminWhatsAppSettings = () => {
   const [isEnabled, setIsEnabled] = useState(false);
   const [notifyBookings, setNotifyBookings] = useState(true);
   const [notifyEnquiries, setNotifyEnquiries] = useState(true);
+  const [apiUrl, setApiUrl] = useState('https://wasms.nirosha.org');
   const [senderId, setSenderId] = useState(''); // WhatsApp Account ID
   const [apiKey, setApiKey] = useState(''); // API Secret
   const [isEditingKey, setIsEditingKey] = useState(false);
@@ -58,6 +60,7 @@ export const AdminWhatsAppSettings = () => {
       if (res.data?.success) {
         const d = res.data.data;
         setIsEnabled(Boolean(d.isEnabled));
+        setApiUrl(d.apiUrl || 'https://wasms.nirosha.org');
         setNotifyBookings(d.notifyBookings ?? true);
         setNotifyEnquiries(d.notifyEnquiries ?? true);
         setSenderId(d.senderId || '');
@@ -120,6 +123,7 @@ export const AdminWhatsAppSettings = () => {
 
     try {
       const payload = {
+        apiUrl: apiUrl.trim() || 'https://wasms.nirosha.org',
         isEnabled,
         notifyBookings,
         notifyEnquiries,
@@ -136,6 +140,7 @@ export const AdminWhatsAppSettings = () => {
       if (res.data?.success) {
         const updated = res.data.data;
         setIsEnabled(Boolean(updated.isEnabled));
+        setApiUrl(updated.apiUrl || 'https://wasms.nirosha.org');
         setNotifyBookings(updated.notifyBookings ?? true);
         setNotifyEnquiries(updated.notifyEnquiries ?? true);
         setSenderId(updated.senderId || '');
@@ -168,6 +173,9 @@ export const AdminWhatsAppSettings = () => {
 
     try {
       const payload = {};
+      if (apiUrl.trim()) {
+        payload.apiUrl = apiUrl.trim();
+      }
       if (isEditingKey && apiKey.trim()) {
         payload.apiKey = apiKey.trim();
       }
@@ -263,7 +271,7 @@ export const AdminWhatsAppSettings = () => {
             <MessageSquare color="#25D366" size={24} /> WhatsApp Notifications & OTP Settings
           </h2>
           <p className="admin-page-subtitle">
-            Wasms Gateway (<span style={{ fontFamily: 'monospace', color: '#0284C7' }}>https://wasms.nirosha.org</span>) Configuration
+            Wasms Gateway (<span style={{ fontFamily: 'monospace', color: '#0284C7' }}>{apiUrl || 'https://wasms.nirosha.org'}</span>) Configuration
           </p>
         </div>
       </div>
@@ -419,6 +427,24 @@ export const AdminWhatsAppSettings = () => {
                   onChange={(e) => setNotifyEnquiries(e.target.checked)}
                   style={{ width: '18px', height: '18px', accentColor: '#25D366', cursor: 'pointer' }}
                 />
+              </div>
+            </div>
+
+            {/* Gateway Endpoint URL */}
+            <div>
+              <label className="admin-form-label" style={{ fontWeight: 700, fontSize: '0.82rem', color: '#334155', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                <Globe size={14} color="#0284C7" /> Gateway Endpoint URL
+              </label>
+              <input
+                type="url"
+                value={apiUrl}
+                onChange={(e) => setApiUrl(e.target.value)}
+                placeholder="https://wasms.nirosha.org"
+                className="admin-input"
+                style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1.5px solid #E2E8F0', fontSize: '0.88rem', fontFamily: 'monospace' }}
+              />
+              <div style={{ fontSize: '0.74rem', color: '#64748B', marginTop: '0.25rem' }}>
+                The base URL of your Wasms / WhatsApp gateway (default: https://wasms.nirosha.org). Configurable if using custom proxy or domain.
               </div>
             </div>
 

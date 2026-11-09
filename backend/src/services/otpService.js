@@ -9,6 +9,7 @@ const crypto = require('crypto');
 const prisma = require('../utils/prisma');
 const {
   WASMS_BASE_URL,
+  resolveBaseUrl,
   sanitizePhoneNumber,
   isValidPhoneNumber,
   getWhatsAppSettings,
@@ -137,7 +138,8 @@ async function sendBookingOtp(phoneNumber) {
     formData.append('phone', cleanPhone);
     formData.append('expire', String(OTP_EXPIRY_SECONDS));
 
-    const response = await fetch(`${WASMS_BASE_URL}/api/send/otp`, {
+    const baseUrl = resolveBaseUrl(settings);
+    const response = await fetch(`${baseUrl}/api/send/otp`, {
       method: 'POST',
       body: formData,
       signal: controller.signal,
@@ -292,7 +294,8 @@ async function verifyBookingOtp(phoneNumber, otpCode) {
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
-    const verifyUrl = `${WASMS_BASE_URL}/api/get/otp?secret=${encodeURIComponent(settings.apiKey.trim())}&otp=${encodeURIComponent(cleanOtp)}&phone=${encodeURIComponent(cleanPhone)}`;
+    const baseUrl = resolveBaseUrl(settings);
+    const verifyUrl = `${baseUrl}/api/get/otp?secret=${encodeURIComponent(settings.apiKey.trim())}&otp=${encodeURIComponent(cleanOtp)}&phone=${encodeURIComponent(cleanPhone)}`;
 
     const response = await fetch(verifyUrl, {
       method: 'GET',

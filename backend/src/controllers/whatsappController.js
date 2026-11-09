@@ -32,6 +32,7 @@ const getSettings = async (req, res, next) => {
     const safeData = {
       id: settings.id,
       service: settings.service,
+      apiUrl: settings.apiUrl || WASMS_BASE_URL,
       senderId: settings.senderId || '', // WhatsApp Account ID
       apiKey: maskSecret(settings.apiKey),
       hasApiKey: Boolean(settings.apiKey),
@@ -59,6 +60,7 @@ const getSettings = async (req, res, next) => {
 const updateSettings = async (req, res, next) => {
   try {
     const {
+      apiUrl,
       senderId,
       apiKey,
       destinationNumber,
@@ -68,6 +70,13 @@ const updateSettings = async (req, res, next) => {
     } = req.body;
 
     const current = await getWhatsAppSettings();
+
+    // Clean and normalize gateway endpoint apiUrl
+    let finalApiUrl = current.apiUrl || WASMS_BASE_URL;
+    if (apiUrl !== undefined) {
+      const trimmedUrl = apiUrl.trim();
+      finalApiUrl = trimmedUrl ? trimmedUrl.replace(/\/+$/, '') : WASMS_BASE_URL;
+    }
 
     // Validate destination phone number if provided
     let cleanDestination = current.destinationNumber;
@@ -92,7 +101,7 @@ const updateSettings = async (req, res, next) => {
       where: { id: current.id },
       data: {
         provider: 'WASMS',
-        apiUrl: WASMS_BASE_URL,
+        apiUrl: finalApiUrl,
         senderId: senderId !== undefined ? senderId.trim() : current.senderId,
         apiKey: finalApiKey,
         destinationNumber: cleanDestination,
@@ -116,6 +125,7 @@ const updateSettings = async (req, res, next) => {
             notifyEnquiries: updated.notifyEnquiries,
             senderId: updated.senderId,
             destinationNumber: updated.destinationNumber,
+            apiUrlUpdated: finalApiUrl !== current.apiUrl,
             apiKeyUpdated: finalApiKey !== current.apiKey,
           }),
         },
@@ -129,6 +139,7 @@ const updateSettings = async (req, res, next) => {
       data: {
         id: updated.id,
         service: updated.service,
+        apiUrl: updated.apiUrl,
         senderId: updated.senderId,
         apiKey: maskSecret(updated.apiKey),
         hasApiKey: Boolean(updated.apiKey),
@@ -153,8 +164,8 @@ const updateSettings = async (req, res, next) => {
  */
 const handleVerifyConnection = async (req, res, next) => {
   try {
-    const { apiKey, senderId } = req.body || {};
-    const result = await verifyGatewayConnection(apiKey, senderId);
+    const { apiKey, senderId, apiUrl } = req.body || {};
+    const result = await verifyGatewayConnection(apiKey, senderId, apiUrl);
 
     if (!result.connected) {
       return res.status(400).json({

@@ -8,6 +8,14 @@ const prisma = require('../utils/prisma');
 const WASMS_BASE_URL = 'https://wasms.nirosha.org';
 
 /**
+ * Resolve gateway base URL from database setting, environment variable, or default fallback
+ */
+function resolveBaseUrl(settings, override = null) {
+  const url = override || (settings && settings.apiUrl) || process.env.WASMS_BASE_URL || WASMS_BASE_URL;
+  return (url && url.trim()) ? url.trim().replace(/\/+$/, '') : WASMS_BASE_URL;
+}
+
+/**
  * Mask sensitive credentials for safe UI display (e.g. ••••••••abcd)
  */
 function maskSecret(secret) {
@@ -84,12 +92,12 @@ ${booking.notes ? `• *Notes:* ${booking.notes}\n` : ''}━━━━━━━�
 /**
  * Format test connection message for WhatsApp
  */
-function formatTestMessage() {
+function formatTestMessage(baseUrl = WASMS_BASE_URL) {
   return `✅ *AJ TOURS — WHATSAPP TEST MESSAGE*
 ━━━━━━━━━━━━━━━━━━━━━━━━
 Wasms / Nirosha WhatsApp Gateway test triggered from Admin Dashboard.
 🕒 *Timestamp:* ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}
-⚙️ *Gateway:* https://wasms.nirosha.org
+⚙️ *Gateway:* ${baseUrl}
 ━━━━━━━━━━━━━━━━━━━━━━━━
 _Your WhatsApp notifications channel is operational and verified._`;
 }
@@ -142,10 +150,11 @@ async function getWhatsAppSettings() {
  * Verify Wasms Gateway Connection using Wasms accounts check
  * Endpoint: GET https://wasms.nirosha.org/api/get/wa.accounts?secret=...
  */
-async function verifyGatewayConnection(apiSecretOverride = null, accountIdOverride = null) {
+async function verifyGatewayConnection(apiSecretOverride = null, accountIdOverride = null, apiUrlOverride = null) {
   const settings = await getWhatsAppSettings();
   const secret = apiSecretOverride || settings.apiKey;
   const accountId = accountIdOverride !== undefined ? accountIdOverride : settings.senderId;
+  const baseUrl = resolveBaseUrl(settings, apiUrlOverride);
 
   if (!secret || !secret.trim()) {
     return {
@@ -156,7 +165,7 @@ async function verifyGatewayConnection(apiSecretOverride = null, accountIdOverri
   }
 
   try {
-    const targetUrl = `${WASMS_BASE_URL}/api/get/wa.accounts?secret=${encodeURIComponent(secret.trim())}`;
+    const targetUrl = `${baseUrl}/api/get/wa.accounts?secret=${encodeURIComponent(secret.trim())}`;
     const timeoutMs = 50000;
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
@@ -246,7 +255,8 @@ async function verifyGatewayConnection(apiSecretOverride = null, accountIdOverri
  * Endpoint: POST https://wasms.nirosha.org/api/send/whatsapp
  * Multipart or form-data: secret, account, recipient, type, message
  */
-async function dispatchWasmsMessage({ secret, accountId, recipientPhone, messageText }) {
+async function dispatchWasmsMessage({ baseUrl, secret, accountId, recipientPhone, messageText }) {
+  const targetBaseUrl = (baseUrl && baseUrl.trim()) ? baseUrl.trim().replace(/\/+$/, '') : WASMS_BASE_URL;
   // Safety guard: Never dispatch real network calls in test mode or when dispatch is disabled
   if (process.env.NODE_ENV === 'test' || process.env.DISABLE_WHATSAPP_DISPATCH === 'true') {
     return {
@@ -270,7 +280,7 @@ async function dispatchWasmsMessage({ secret, accountId, recipientPhone, message
     formData.append('type', 'text');
     formData.append('message', messageText);
 
-    const response = await fetch(`${WASMS_BASE_URL}/api/send/whatsapp`, {
+    const response = await fetch(`${targetBaseUrl}/api/send/whatsapp`, {
       method: 'POST',
       body: formData,
       signal: controller.signal,
@@ -448,7 +458,9 @@ async function dispatchNotification({
 
   // 6. Execute Provider Dispatch
   try {
+    const baseUrl = resolveBaseUrl(settings);
     const result = await dispatchWasmsMessage({
+      baseUrl,
       secret: settings.apiKey,
       accountId: settings.senderId,
       recipientPhone: cleanPhone,
@@ -553,7 +565,9 @@ async function sendBookingNotification(booking, vehicleName) {
  * Admin trigger: Send test message
  */
 async function sendTestMessage(destinationOverride = null) {
-  const message = formatTestMessage();
+  const settings = await getWhatsAppSettings();
+  const baseUrl = resolveBaseUrl(settings);
+  const message = formatTestMessage(baseUrl);
   return await dispatchNotification({
     eventType: 'ADMIN_TEST',
     referenceId: null,
@@ -564,6 +578,7 @@ async function sendTestMessage(destinationOverride = null) {
 
 module.exports = {
   WASMS_BASE_URL,
+  resolveBaseUrl,
   maskSecret,
   sanitizePhoneNumber,
   isValidPhoneNumber,
