@@ -9,11 +9,14 @@ const crypto = require('crypto');
 const prisma = require('../utils/prisma');
 const {
   WASMS_BASE_URL,
+  PROVIDER_WASMS_LEGACY,
+  PROVIDER_WASMS_NEXT,
   resolveBaseUrl,
   sanitizePhoneNumber,
   isValidPhoneNumber,
   getWhatsAppSettings,
 } = require('./whatsappService');
+const wasmsNextService = require('./wasmsNextService');
 
 const OTP_EXPIRY_SECONDS = 300; // 5 minutes
 const RESEND_COOLDOWN_SECONDS = 60; // 1 minute
@@ -56,12 +59,23 @@ async function sendBookingOtp(phoneNumber) {
     };
   }
 
-  if (!settings.apiKey || !settings.apiKey.trim()) {
-    return {
-      success: false,
-      code: 'UNCONFIGURED',
-      message: 'WhatsApp gateway credentials are not configured.',
-    };
+  const activeProvider = settings.provider === PROVIDER_WASMS_NEXT ? PROVIDER_WASMS_NEXT : PROVIDER_WASMS_LEGACY;
+  if (activeProvider === PROVIDER_WASMS_NEXT) {
+    if (!settings.nextApiKey || !settings.nextApiKey.trim()) {
+      return {
+        success: false,
+        code: 'UNCONFIGURED',
+        message: 'WASMS Next gateway Bearer token is not configured.',
+      };
+    }
+  } else {
+    if (!settings.apiKey || !settings.apiKey.trim()) {
+      return {
+        success: false,
+        code: 'UNCONFIGURED',
+        message: 'WhatsApp gateway credentials are not configured.',
+      };
+    }
   }
 
   if (recentChallenges.length >= MAX_SENDS_PER_WINDOW) {
@@ -98,6 +112,14 @@ async function sendBookingOtp(phoneNumber) {
 
   // 4. Create new PENDING OTP Challenge
   const expiresAt = new Date(Date.now() + OTP_EXPIRY_SECONDS * 1000);
+  // Generate internal OTP code if using WASMS Next
+  let internalOtpCode = null;
+  let internalHashedOtp = null;
+  if (activeProvider === PROVIDER_WASMS_NEXT) {
+    internalOtpCode = crypto.randomInt(100000, 1000000).toString();
+    internalHashedOtp = crypto.createHash('sha256').update(internalOtpCode).digest('hex');
+  }
+
   const challenge = await prisma.otpChallenge.create({
     data: {
       phoneNumber: cleanPhone,
@@ -106,12 +128,48 @@ async function sendBookingOtp(phoneNumber) {
       attempts: 0,
       maxAttempts: MAX_VERIFY_ATTEMPTS,
       resendCount: recentChallenges.length,
-      provider: 'WASMS',
+      provider: activeProvider,
+      providerRef: internalHashedOtp,
       expiresAt,
     },
   });
 
-  // 5. Dispatch real OTP through Wasms API
+  // 5. Dispatch real OTP through active provider
+  if (activeProvider === PROVIDER_WASMS_NEXT) {
+    try {
+      const endpointUrl = wasmsNextService.resolveWasmsNextUrl(settings);
+      const otpText = `Your OTP for AJ Tours booking verification is ${internalOtpCode}. Valid for 5 minutes. Do not share this code.`;
+
+      await wasmsNextService.dispatchWasmsNextMessage({
+        endpointUrl,
+        bearerToken: settings.nextApiKey,
+        accountId: settings.nextAccountId,
+        recipientPhone: cleanPhone,
+        messageText: otpText,
+        reference: `OTP-${challenge.id}`,
+      });
+
+      return {
+        success: true,
+        message: `OTP sent via WhatsApp to +${cleanPhone}.`,
+        cooldownSeconds: RESEND_COOLDOWN_SECONDS,
+        expiresAt,
+      };
+    } catch (err) {
+      await prisma.otpChallenge.update({
+        where: { id: challenge.id },
+        data: { status: 'EXPIRED' },
+      });
+
+      return {
+        success: false,
+        code: 'PROVIDER_ERROR',
+        message: err.message || 'Failed to dispatch OTP via WASMS Next gateway.',
+      };
+    }
+  }
+
+  // PROVIDER 1: WASMS Legacy
   // Safety guard: Never dispatch real network OTPs in test mode or when dispatch is disabled
   if (process.env.NODE_ENV === 'test' || process.env.DISABLE_REAL_OTP === 'true') {
     return {
@@ -279,7 +337,44 @@ async function verifyBookingOtp(phoneNumber, otpCode) {
     data: { attempts: updatedAttempts },
   });
 
-  // 2. Query Wasms verification endpoint
+  // 2. Verify according to the challenge provider
+  if (challenge.provider === PROVIDER_WASMS_NEXT) {
+    const inputHash = crypto.createHash('sha256').update(cleanOtp).digest('hex');
+    const isVerified = (inputHash === challenge.providerRef);
+
+    if (!isVerified) {
+      const remaining = challenge.maxAttempts - updatedAttempts;
+      return {
+        success: false,
+        code: 'INVALID_OTP',
+        message: remaining > 0
+          ? `Invalid OTP code. ${remaining} attempt(s) remaining.`
+          : 'Invalid OTP code. Maximum attempts reached. Please request a new OTP.',
+        remainingAttempts: Math.max(0, remaining),
+      };
+    }
+
+    // Provider accepted the OTP!
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+    await prisma.otpChallenge.update({
+      where: { id: challenge.id },
+      data: {
+        status: 'VERIFIED',
+        verificationToken,
+        verifiedAt: new Date(),
+      },
+    });
+
+    return {
+      success: true,
+      message: 'Mobile number verified successfully.',
+      verificationToken,
+      phoneNumber: cleanPhone,
+      expiresInMinutes: TOKEN_EXPIRY_MINUTES,
+    };
+  }
+
+  // Query Wasms legacy verification endpoint
   const settings = await getWhatsAppSettings();
   if (!settings.apiKey) {
     return {

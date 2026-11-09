@@ -6,6 +6,11 @@
 const prisma = require('../utils/prisma');
 
 const WASMS_BASE_URL = 'https://wasms.nirosha.org';
+const wasmsNextService = require('./wasmsNextService');
+
+const PROVIDER_WASMS_LEGACY = 'WASMS';
+const PROVIDER_WASMS_NEXT = 'WASMS_NEXT';
+const ALLOWED_PROVIDERS = [PROVIDER_WASMS_LEGACY, PROVIDER_WASMS_NEXT];
 
 /**
  * Resolve gateway base URL from database setting, environment variable, or default fallback
@@ -29,7 +34,8 @@ function maskSecret(secret) {
  */
 function sanitizePhoneNumber(phone) {
   if (!phone) return '';
-  let cleaned = phone.replace(/[^\d+]/g, '');
+  const str = typeof phone === 'string' ? phone : String(phone);
+  let cleaned = str.replace(/[^\d+]/g, '');
   if (cleaned.startsWith('+')) {
     cleaned = cleaned.substring(1);
   }
@@ -92,12 +98,15 @@ ${booking.notes ? `• *Notes:* ${booking.notes}\n` : ''}━━━━━━━�
 /**
  * Format test connection message for WhatsApp
  */
-function formatTestMessage(baseUrl = WASMS_BASE_URL) {
+function formatTestMessage({ provider = PROVIDER_WASMS_LEGACY, endpoint = WASMS_BASE_URL } = {}) {
+  const isNext = provider === PROVIDER_WASMS_NEXT;
+  const label = isNext ? 'WASMS Next Integration (v1 API)' : 'Current WhatsApp Integration (Wasms / Nirosha)';
   return `✅ *AJ TOURS — WHATSAPP TEST MESSAGE*
 ━━━━━━━━━━━━━━━━━━━━━━━━
-Wasms / Nirosha WhatsApp Gateway test triggered from Admin Dashboard.
+${label} test triggered from Admin Dashboard.
 🕒 *Timestamp:* ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}
-⚙️ *Gateway:* ${baseUrl}
+⚙️ *Active Provider:* ${isNext ? 'WASMS Next' : 'Current WhatsApp (Wasms)'}
+🌐 *Endpoint:* ${endpoint}
 ━━━━━━━━━━━━━━━━━━━━━━━━
 _Your WhatsApp notifications channel is operational and verified._`;
 }
@@ -150,13 +159,36 @@ async function getWhatsAppSettings() {
  * Verify Wasms Gateway Connection using Wasms accounts check
  * Endpoint: GET https://wasms.nirosha.org/api/get/wa.accounts?secret=...
  */
-async function verifyGatewayConnection(apiSecretOverride = null, accountIdOverride = null, apiUrlOverride = null) {
-  const settings = await getWhatsAppSettings();
-  const secret = apiSecretOverride || settings.apiKey;
-  const accountId = accountIdOverride !== undefined ? accountIdOverride : settings.senderId;
-  const baseUrl = resolveBaseUrl(settings, apiUrlOverride);
+async function verifyGatewayConnection(apiSecretOverride = null, accountIdOverride = null, apiUrlOverride = null, providerOverride = null) {
+  // Support options object invocation or positional parameters
+  let targetProvider = providerOverride;
+  let secret = apiSecretOverride;
+  let accountId = accountIdOverride;
+  let targetUrl = apiUrlOverride;
 
-  if (!secret || !secret.trim()) {
+  if (typeof apiSecretOverride === 'object' && apiSecretOverride !== null) {
+    targetProvider = apiSecretOverride.provider || providerOverride;
+    secret = apiSecretOverride.apiKey ?? apiSecretOverride.apiSecretOverride;
+    accountId = apiSecretOverride.senderId ?? apiSecretOverride.accountIdOverride;
+    targetUrl = apiSecretOverride.apiUrl ?? apiSecretOverride.apiUrlOverride;
+  }
+
+  const settings = await getWhatsAppSettings();
+  const effectiveProvider = targetProvider || settings.provider || PROVIDER_WASMS_LEGACY;
+
+  if (effectiveProvider === PROVIDER_WASMS_NEXT) {
+    const tokenToTest = secret !== undefined ? secret : settings.nextApiKey;
+    const accountToTest = accountId !== undefined ? accountId : settings.nextAccountId;
+    const urlToTest = targetUrl || settings.nextApiUrl;
+    return await wasmsNextService.verifyWasmsNextConnection(tokenToTest, accountToTest, urlToTest);
+  }
+
+  // Legacy Wasms Provider Verification
+  const legacySecret = secret !== undefined ? secret : settings.apiKey;
+  const legacyAccount = accountId !== undefined ? accountId : settings.senderId;
+  const baseUrl = resolveBaseUrl(settings, targetUrl);
+
+  if (!legacySecret || !legacySecret.trim()) {
     return {
       connected: false,
       status: 'UNCONFIGURED',
@@ -165,12 +197,12 @@ async function verifyGatewayConnection(apiSecretOverride = null, accountIdOverri
   }
 
   try {
-    const targetUrl = `${baseUrl}/api/get/wa.accounts?secret=${encodeURIComponent(secret.trim())}`;
+    const endpoint = `${baseUrl}/api/get/wa.accounts?secret=${encodeURIComponent(legacySecret.trim())}`;
     const timeoutMs = 50000;
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
-    const response = await fetch(targetUrl, {
+    const response = await fetch(endpoint, {
       method: 'GET',
       headers: { Accept: 'application/json' },
       signal: controller.signal,
@@ -186,21 +218,19 @@ async function verifyGatewayConnection(apiSecretOverride = null, accountIdOverri
       parsed = { raw: responseText.slice(0, 300) };
     }
 
-    // Wasms returns {"status": 200, ...} or 401 if invalid secret
     const isSuccess = response.ok && (parsed.status === 200 || parsed.status === '200' || parsed.status === 'success' || parsed.status === true);
 
     if (isSuccess) {
       let extraNote = '';
-      if (accountId && Array.isArray(parsed.data)) {
+      if (legacyAccount && Array.isArray(parsed.data)) {
         const found = parsed.data.some(
-          (acc) => String(acc.id) === String(accountId).trim() || String(acc.unique) === String(accountId).trim()
+          (acc) => String(acc.id) === String(legacyAccount).trim() || String(acc.unique) === String(legacyAccount).trim()
         );
         extraNote = found
           ? ` Account ID verified.`
-          : ` (Notice: Account ID ${accountId} not in returned list; please ensure account is linked)`;
+          : ` (Notice: Account ID ${legacyAccount} not in returned list; please ensure account is linked)`;
       }
 
-      // Update settings in database
       await prisma.integrationSetting.update({
         where: { id: settings.id },
         data: {
@@ -324,8 +354,12 @@ async function dispatchNotification({
   eventType, // 'ENQUIRY' | 'BOOKING_CREATED' | 'ADMIN_TEST'
   referenceId = null,
   messageText,
+  message,
   overrideDestination = null,
+  recipient = null,
+  providerOverride = null,
 }) {
+  const content = messageText || message || '';
   const settings = await getWhatsAppSettings();
 
   // 1. Check master enable toggle
@@ -335,7 +369,7 @@ async function dispatchNotification({
         channel: 'WHATSAPP',
         eventType,
         referenceId,
-        recipient: settings.destinationNumber || 'NOT_CONFIGURED',
+        recipient: recipient || overrideDestination || settings.destinationNumber || 'NOT_CONFIGURED',
         status: 'SKIPPED_DISABLED',
         errorMessage: 'WhatsApp integration is currently disabled.',
       },
@@ -344,6 +378,7 @@ async function dispatchNotification({
       success: false,
       skipped: true,
       reason: 'DISABLED',
+      status: 'SKIPPED_DISABLED',
       message: 'WhatsApp notification skipped: Integration is disabled.',
     };
   }
@@ -408,7 +443,7 @@ async function dispatchNotification({
   }
 
   // 4. Resolve destination phone
-  const targetDestination = overrideDestination || settings.destinationNumber;
+  const targetDestination = overrideDestination || recipient || settings.destinationNumber;
   if (!targetDestination) {
     const errMsg = 'Destination WhatsApp number is not configured.';
     await prisma.notificationLog.create({
@@ -440,12 +475,111 @@ async function dispatchNotification({
     return { success: false, reason: 'INVALID_PHONE', message: errMsg };
   }
 
-  // 5. Validate Wasms credentials
-  if (!settings.apiKey) {
+  // 5. Determine active provider — EXACTLY ONE provider is used
+  const activeProvider = providerOverride || ((settings.provider === PROVIDER_WASMS_NEXT) ? PROVIDER_WASMS_NEXT : PROVIDER_WASMS_LEGACY);
+
+  // ------------------------------------------------------------
+  // PROVIDER 2: WASMS NEXT (POST with Bearer Token, JSON body)
+  // ------------------------------------------------------------
+  if (activeProvider === PROVIDER_WASMS_NEXT) {
+    if (!settings.nextApiKey || !settings.nextApiKey.trim()) {
+      const errMsg = 'WASMS Next Bearer token is required to dispatch notifications.';
+      await prisma.notificationLog.create({
+        data: {
+          channel: 'WHATSAPP',
+          provider: PROVIDER_WASMS_NEXT,
+          eventType,
+          referenceId,
+          recipient: cleanPhone,
+          status: 'FAILED',
+          errorMessage: errMsg,
+        },
+      });
+      return { success: false, reason: 'MISSING_CREDENTIALS', provider: PROVIDER_WASMS_NEXT, message: errMsg };
+    }
+
+    try {
+      const endpointUrl = wasmsNextService.resolveWasmsNextUrl(settings);
+      const result = await wasmsNextService.dispatchWasmsNextMessage({
+        endpointUrl,
+        bearerToken: settings.nextApiKey,
+        accountId: settings.nextAccountId,
+        recipientPhone: cleanPhone,
+        messageText: content,
+        reference: referenceId,
+      });
+
+      await prisma.notificationLog.create({
+        data: {
+          channel: 'WHATSAPP',
+          provider: PROVIDER_WASMS_NEXT,
+          eventType,
+          referenceId,
+          recipient: cleanPhone,
+          status: 'ACCEPTED',
+          providerResponse: JSON.stringify(result.response),
+        },
+      });
+
+      await prisma.integrationSetting.update({
+        where: { id: settings.id },
+        data: {
+          nextLastStatus: 'CONNECTED',
+          nextLastVerifiedAt: new Date(),
+          nextLastError: null,
+        },
+      });
+
+      return {
+        success: true,
+        status: 'ACCEPTED',
+        provider: PROVIDER_WASMS_NEXT,
+        idempotencyKey: result.idempotencyKey,
+        message: 'WhatsApp notification accepted by WASMS Next gateway.',
+        providerResponse: result.response,
+      };
+    } catch (err) {
+      const errMsg = err.message || 'Unknown WASMS Next provider error';
+
+      await prisma.notificationLog.create({
+        data: {
+          channel: 'WHATSAPP',
+          provider: PROVIDER_WASMS_NEXT,
+          eventType,
+          referenceId,
+          recipient: cleanPhone,
+          status: 'FAILED',
+          errorMessage: errMsg,
+        },
+      });
+
+      await prisma.integrationSetting.update({
+        where: { id: settings.id },
+        data: {
+          nextLastStatus: 'ERROR',
+          nextLastError: errMsg,
+        },
+      });
+
+      // Strict requirement: NEVER fallback to the inactive provider on failure
+      return {
+        success: false,
+        status: 'FAILED',
+        provider: PROVIDER_WASMS_NEXT,
+        message: errMsg,
+      };
+    }
+  }
+
+  // ------------------------------------------------------------
+  // PROVIDER 1: CURRENT WHATSAPP (Wasms Standard Form-Data)
+  // ------------------------------------------------------------
+  if (!settings.apiKey || !settings.apiKey.trim()) {
     const errMsg = 'Wasms API Secret is required to dispatch notifications.';
     await prisma.notificationLog.create({
       data: {
         channel: 'WHATSAPP',
+        provider: PROVIDER_WASMS_LEGACY,
         eventType,
         referenceId,
         recipient: cleanPhone,
@@ -453,10 +587,9 @@ async function dispatchNotification({
         errorMessage: errMsg,
       },
     });
-    return { success: false, reason: 'MISSING_CREDENTIALS', message: errMsg };
+    return { success: false, reason: 'MISSING_CREDENTIALS', provider: PROVIDER_WASMS_LEGACY, message: errMsg };
   }
 
-  // 6. Execute Provider Dispatch
   try {
     const baseUrl = resolveBaseUrl(settings);
     const result = await dispatchWasmsMessage({
@@ -464,13 +597,13 @@ async function dispatchNotification({
       secret: settings.apiKey,
       accountId: settings.senderId,
       recipientPhone: cleanPhone,
-      messageText,
+      messageText: content,
     });
 
-    // Record Success in NotificationLog
     await prisma.notificationLog.create({
       data: {
         channel: 'WHATSAPP',
+        provider: PROVIDER_WASMS_LEGACY,
         eventType,
         referenceId,
         recipient: cleanPhone,
@@ -479,7 +612,6 @@ async function dispatchNotification({
       },
     });
 
-    // Update settings status
     await prisma.integrationSetting.update({
       where: { id: settings.id },
       data: {
@@ -492,16 +624,17 @@ async function dispatchNotification({
     return {
       success: true,
       status: 'ACCEPTED',
+      provider: PROVIDER_WASMS_LEGACY,
       message: 'WhatsApp notification accepted by Wasms gateway.',
       providerResponse: result.response,
     };
   } catch (err) {
     const errMsg = err.message || 'Unknown Wasms provider error';
 
-    // Record Failure in NotificationLog
     await prisma.notificationLog.create({
       data: {
         channel: 'WHATSAPP',
+        provider: PROVIDER_WASMS_LEGACY,
         eventType,
         referenceId,
         recipient: cleanPhone,
@@ -510,7 +643,6 @@ async function dispatchNotification({
       },
     });
 
-    // Update settings status
     await prisma.integrationSetting.update({
       where: { id: settings.id },
       data: {
@@ -519,9 +651,11 @@ async function dispatchNotification({
       },
     });
 
+    // Strict requirement: NEVER fallback to the inactive provider on failure
     return {
       success: false,
       status: 'FAILED',
+      provider: PROVIDER_WASMS_LEGACY,
       message: errMsg,
     };
   }
@@ -564,20 +698,35 @@ async function sendBookingNotification(booking, vehicleName) {
 /**
  * Admin trigger: Send test message
  */
-async function sendTestMessage(destinationOverride = null) {
+async function sendTestMessage(destinationOverride = null, providerOverride = null) {
+  let dest = destinationOverride;
+  let prov = providerOverride;
+  if (destinationOverride && typeof destinationOverride === 'object') {
+    dest = destinationOverride.destinationNumber || destinationOverride.destination || destinationOverride.recipient;
+    prov = destinationOverride.provider || prov;
+  }
+
   const settings = await getWhatsAppSettings();
-  const baseUrl = resolveBaseUrl(settings);
-  const message = formatTestMessage(baseUrl);
+  const activeProvider = prov || settings.provider || PROVIDER_WASMS_LEGACY;
+  const endpoint = activeProvider === PROVIDER_WASMS_NEXT
+    ? wasmsNextService.resolveWasmsNextUrl(settings)
+    : resolveBaseUrl(settings);
+
+  const message = formatTestMessage({ provider: activeProvider, endpoint });
   return await dispatchNotification({
     eventType: 'ADMIN_TEST',
     referenceId: null,
     messageText: message,
-    overrideDestination: destinationOverride,
+    overrideDestination: dest,
+    providerOverride: prov,
   });
 }
 
 module.exports = {
   WASMS_BASE_URL,
+  PROVIDER_WASMS_LEGACY,
+  PROVIDER_WASMS_NEXT,
+  ALLOWED_PROVIDERS,
   resolveBaseUrl,
   maskSecret,
   sanitizePhoneNumber,
@@ -585,6 +734,7 @@ module.exports = {
   getWhatsAppSettings,
   invalidateWhatsAppSettingsCache,
   verifyGatewayConnection,
+  dispatchNotification,
   sendEnquiryNotification,
   sendBookingNotification,
   sendTestMessage,

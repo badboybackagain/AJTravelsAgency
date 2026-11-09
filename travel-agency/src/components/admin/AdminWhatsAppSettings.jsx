@@ -9,14 +9,11 @@ import {
   Save,
   Key,
   Smartphone,
-  Server,
   RefreshCw,
   Power,
   Clock,
   Radio,
   Check,
-  Bell,
-  CheckCheck,
   Globe,
 } from 'lucide-react';
 import { adminWhatsAppApi } from '../../services/api';
@@ -30,26 +27,42 @@ export const AdminWhatsAppSettings = () => {
   const [refreshingLogs, setRefreshingLogs] = useState(false);
 
   // Alert State
-  const [alert, setAlert] = useState(null); // { type: 'success' | 'error', message: '' }
+  const [alert, setAlert] = useState(null);
   const [verifyResult, setVerifyResult] = useState(null);
   const [testResult, setTestResult] = useState(null);
 
-  // Form Fields
+  // Provider State
+  const [activeProvider, setActiveProvider] = useState('WASMS');
+  const [selectedProvider, setSelectedProvider] = useState('WASMS');
+
+  // Common Form Fields
   const [isEnabled, setIsEnabled] = useState(false);
   const [notifyBookings, setNotifyBookings] = useState(true);
   const [notifyEnquiries, setNotifyEnquiries] = useState(true);
-  const [apiUrl, setApiUrl] = useState('https://wasms.nirosha.org');
-  const [senderId, setSenderId] = useState(''); // WhatsApp Account ID
-  const [apiKey, setApiKey] = useState(''); // API Secret
-  const [isEditingKey, setIsEditingKey] = useState(false);
-  const [hasApiKey, setHasApiKey] = useState(false);
   const [destinationNumber, setDestinationNumber] = useState('');
   const [testDestination, setTestDestination] = useState('');
 
-  // Status & Logs
+  // Provider 1: Wasms Legacy Credentials & Status
+  const [apiUrl, setApiUrl] = useState('https://wasms.nirosha.org');
+  const [senderId, setSenderId] = useState('');
+  const [apiKey, setApiKey] = useState('');
+  const [isEditingKey, setIsEditingKey] = useState(false);
+  const [hasApiKey, setHasApiKey] = useState(false);
   const [lastStatus, setLastStatus] = useState('UNCONFIGURED');
   const [lastVerifiedAt, setLastVerifiedAt] = useState(null);
   const [lastError, setLastError] = useState(null);
+
+  // Provider 2: WASMS Next Credentials & Status
+  const [nextApiUrl, setNextApiUrl] = useState('https://wasmsnext.nirosha.org/api/v1/messages/whatsapp');
+  const [nextAccountId, setNextAccountId] = useState('');
+  const [nextApiKey, setNextApiKey] = useState('');
+  const [isEditingNextKey, setIsEditingNextKey] = useState(false);
+  const [hasNextApiKey, setHasNextApiKey] = useState(false);
+  const [nextLastStatus, setNextLastStatus] = useState('UNCONFIGURED');
+  const [nextLastVerifiedAt, setNextLastVerifiedAt] = useState(null);
+  const [nextLastError, setNextLastError] = useState(null);
+
+  // Delivery Logs
   const [logs, setLogs] = useState([]);
 
   // Load Settings on Mount
@@ -59,26 +72,43 @@ export const AdminWhatsAppSettings = () => {
       const res = await adminWhatsAppApi.getSettings();
       if (res.data?.success) {
         const d = res.data.data;
+        const currentActive = d.provider === 'WASMS_NEXT' ? 'WASMS_NEXT' : 'WASMS';
+        setActiveProvider(currentActive);
+        setSelectedProvider(currentActive);
+
         setIsEnabled(Boolean(d.isEnabled));
-        setApiUrl(d.apiUrl || 'https://wasms.nirosha.org');
         setNotifyBookings(d.notifyBookings ?? true);
         setNotifyEnquiries(d.notifyEnquiries ?? true);
+        setDestinationNumber(d.destinationNumber || '');
+        setTestDestination(d.destinationNumber || '');
+
+        // Legacy Wasms
+        setApiUrl(d.apiUrl || 'https://wasms.nirosha.org');
         setSenderId(d.senderId || '');
         setApiKey(d.apiKey || '');
         setHasApiKey(Boolean(d.hasApiKey));
-        setDestinationNumber(d.destinationNumber || '');
-        setTestDestination(d.destinationNumber || '');
         setLastStatus(d.lastStatus || 'UNCONFIGURED');
         setLastVerifiedAt(d.lastVerifiedAt || null);
         setLastError(d.lastError || null);
-        setLogs(d.recentLogs || []);
         setIsEditingKey(false);
+
+        // WASMS Next
+        setNextApiUrl(d.nextApiUrl || 'https://wasmsnext.nirosha.org/api/v1/messages/whatsapp');
+        setNextAccountId(d.nextAccountId || '');
+        setNextApiKey(d.nextApiKey || '');
+        setHasNextApiKey(Boolean(d.hasNextApiKey));
+        setNextLastStatus(d.nextLastStatus || 'UNCONFIGURED');
+        setNextLastVerifiedAt(d.nextLastVerifiedAt || null);
+        setNextLastError(d.nextLastError || null);
+        setIsEditingNextKey(false);
+
+        setLogs(d.recentLogs || []);
       }
     } catch (err) {
       console.error('Failed to load WhatsApp settings:', err);
       setAlert({
         type: 'error',
-        message: err.response?.data?.message || 'Failed to load WhatsApp settings from server.',
+        message: err.response?.data?.message || 'Failed to load WhatsApp settings.',
       });
     } finally {
       setLoading(false);
@@ -105,17 +135,16 @@ export const AdminWhatsAppSettings = () => {
 
   // Handle Form Submit
   const handleSave = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     setSaving(true);
     setAlert(null);
     setVerifyResult(null);
     setTestResult(null);
 
-    // Validate destination number if notifications enabled
     if (isEnabled && !destinationNumber.trim()) {
       setAlert({
         type: 'error',
-        message: 'Destination WhatsApp number is required when notifications are enabled.',
+        message: 'Destination phone number is required when WhatsApp service is enabled.',
       });
       setSaving(false);
       return;
@@ -123,34 +152,54 @@ export const AdminWhatsAppSettings = () => {
 
     try {
       const payload = {
-        apiUrl: apiUrl.trim() || 'https://wasms.nirosha.org',
+        provider: selectedProvider,
         isEnabled,
         notifyBookings,
         notifyEnquiries,
-        senderId: senderId.trim(),
         destinationNumber: destinationNumber.trim(),
+        apiUrl: apiUrl.trim() || 'https://wasms.nirosha.org',
+        senderId: senderId.trim(),
+        nextApiUrl: nextApiUrl.trim() || 'https://wasmsnext.nirosha.org/api/v1/messages/whatsapp',
+        nextAccountId: nextAccountId.trim(),
       };
 
-      // Only send apiKey if actively updated or entered for the first time
       if (isEditingKey || !hasApiKey) {
         payload.apiKey = apiKey.trim();
+      }
+
+      if (isEditingNextKey || !hasNextApiKey) {
+        payload.nextApiKey = nextApiKey.trim();
       }
 
       const res = await adminWhatsAppApi.updateSettings(payload);
       if (res.data?.success) {
         const updated = res.data.data;
+        const savedProvider = updated.provider || 'WASMS';
+        setActiveProvider(savedProvider);
+        setSelectedProvider(savedProvider);
+
         setIsEnabled(Boolean(updated.isEnabled));
-        setApiUrl(updated.apiUrl || 'https://wasms.nirosha.org');
         setNotifyBookings(updated.notifyBookings ?? true);
         setNotifyEnquiries(updated.notifyEnquiries ?? true);
+        setDestinationNumber(updated.destinationNumber || '');
+
+        setApiUrl(updated.apiUrl || 'https://wasms.nirosha.org');
         setSenderId(updated.senderId || '');
         setApiKey(updated.apiKey || '');
         setHasApiKey(Boolean(updated.hasApiKey));
         setIsEditingKey(false);
         setLastStatus(updated.lastStatus);
+
+        setNextApiUrl(updated.nextApiUrl || 'https://wasmsnext.nirosha.org/api/v1/messages/whatsapp');
+        setNextAccountId(updated.nextAccountId || '');
+        setNextApiKey(updated.nextApiKey || '');
+        setHasNextApiKey(Boolean(updated.hasNextApiKey));
+        setIsEditingNextKey(false);
+        setNextLastStatus(updated.nextLastStatus);
+
         setAlert({
           type: 'success',
-          message: 'WhatsApp configuration saved securely.',
+          message: 'Settings saved successfully.',
         });
         refreshLogs();
       }
@@ -158,51 +207,62 @@ export const AdminWhatsAppSettings = () => {
       console.error('Failed to save settings:', err);
       setAlert({
         type: 'error',
-        message: err.response?.data?.message || 'Error saving settings. Please check required fields.',
+        message: err.response?.data?.message || 'Error saving settings.',
       });
     } finally {
       setSaving(false);
     }
   };
 
-  // Handle Real-time Gateway Verification
+  // Handle Verify Connection
   const handleVerifyGateway = async () => {
     setVerifying(true);
     setVerifyResult(null);
     setAlert(null);
 
     try {
-      const payload = {};
-      if (apiUrl.trim()) {
-        payload.apiUrl = apiUrl.trim();
-      }
-      if (isEditingKey && apiKey.trim()) {
-        payload.apiKey = apiKey.trim();
-      }
-      if (senderId.trim()) {
-        payload.senderId = senderId.trim();
+      const payload = { provider: selectedProvider };
+      if (selectedProvider === 'WASMS') {
+        if (apiUrl.trim()) payload.apiUrl = apiUrl.trim();
+        if (isEditingKey && apiKey.trim()) payload.apiKey = apiKey.trim();
+        if (senderId.trim()) payload.senderId = senderId.trim();
+      } else {
+        if (nextApiUrl.trim()) payload.nextApiUrl = nextApiUrl.trim();
+        if (isEditingNextKey && nextApiKey.trim()) payload.nextApiKey = nextApiKey.trim();
+        if (nextAccountId.trim()) payload.nextAccountId = nextAccountId.trim();
       }
 
       const res = await adminWhatsAppApi.verifyConnection(payload);
       if (res.data?.success) {
         setVerifyResult({
           success: true,
-          status: res.data.status,
-          message: res.data.message || 'Gateway connection verified with Wasms successfully.',
+          message: 'Connection verified successfully.',
         });
-        setLastStatus('CONNECTED');
-        setLastVerifiedAt(new Date().toISOString());
-        setLastError(null);
+
+        if (selectedProvider === 'WASMS') {
+          setLastStatus('CONNECTED');
+          setLastVerifiedAt(new Date().toISOString());
+          setLastError(null);
+        } else {
+          setNextLastStatus('CONNECTED');
+          setNextLastVerifiedAt(new Date().toISOString());
+          setNextLastError(null);
+        }
       }
     } catch (err) {
       const errMsg = err.response?.data?.message || err.message || 'Verification failed.';
       setVerifyResult({
         success: false,
-        status: 'ERROR',
         message: errMsg,
       });
-      setLastStatus('ERROR');
-      setLastError(errMsg);
+
+      if (selectedProvider === 'WASMS') {
+        setLastStatus('ERROR');
+        setLastError(errMsg);
+      } else {
+        setNextLastStatus('ERROR');
+        setNextLastError(errMsg);
+      }
     } finally {
       setVerifying(false);
     }
@@ -218,65 +278,81 @@ export const AdminWhatsAppSettings = () => {
     if (!target) {
       setAlert({
         type: 'error',
-        message: 'Please provide a valid destination phone number for the test message.',
+        message: 'Please provide a valid destination phone number.',
       });
       setTesting(false);
       return;
     }
 
     try {
-      const res = await adminWhatsAppApi.test(target);
+      const res = await adminWhatsAppApi.test({
+        destinationNumber: target,
+        provider: selectedProvider,
+      });
+
       if (res.data?.success) {
         setTestResult({
           success: true,
-          status: res.data.status,
-          message: 'Test message accepted by Wasms gateway.',
-          details: res.data.data,
+          message: 'Test message sent successfully.',
         });
-        setLastStatus('CONNECTED');
-        setLastVerifiedAt(new Date().toISOString());
-        setLastError(null);
+
+        if (selectedProvider === 'WASMS') {
+          setLastStatus('CONNECTED');
+          setLastVerifiedAt(new Date().toISOString());
+          setLastError(null);
+        } else {
+          setNextLastStatus('CONNECTED');
+          setNextLastVerifiedAt(new Date().toISOString());
+          setNextLastError(null);
+        }
         refreshLogs();
       }
     } catch (err) {
       const errMsg = err.response?.data?.message || err.message || 'Test message failed.';
       setTestResult({
         success: false,
-        status: err.response?.data?.status || 'FAILED',
         message: errMsg,
       });
-      setLastStatus('ERROR');
-      setLastError(errMsg);
+
+      if (selectedProvider === 'WASMS') {
+        setLastStatus('ERROR');
+        setLastError(errMsg);
+      } else {
+        setNextLastStatus('ERROR');
+        setNextLastError(errMsg);
+      }
       refreshLogs();
     } finally {
       setTesting(false);
     }
   };
 
+  const currentStatus = selectedProvider === 'WASMS_NEXT' ? nextLastStatus : lastStatus;
+  const currentVerifiedAt = selectedProvider === 'WASMS_NEXT' ? nextLastVerifiedAt : lastVerifiedAt;
+  const currentError = selectedProvider === 'WASMS_NEXT' ? nextLastError : lastError;
+
   if (loading) {
     return (
       <div className="admin-loading-container">
-        <Loader2 className="animate-spin" size={32} color="#C89B3C" />
-        <p>Loading WhatsApp settings...</p>
+        <Loader2 className="animate-spin" size={28} color="#C89B3C" />
+        <p style={{ fontSize: '0.88rem', color: '#64748B' }}>Loading WhatsApp settings...</p>
       </div>
     );
   }
 
   return (
-    <div className="admin-section-container">
+    <div className="admin-section-container" style={{ maxWidth: '1100px', margin: '0 auto' }}>
       {/* Page Header */}
-      <div className="admin-header-row">
-        <div>
-          <h2 className="admin-page-title" style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-            <MessageSquare color="#25D366" size={24} /> WhatsApp Notifications & OTP Settings
-          </h2>
-          <p className="admin-page-subtitle">
-            Wasms Gateway (<span style={{ fontFamily: 'monospace', color: '#0284C7' }}>{apiUrl || 'https://wasms.nirosha.org'}</span>) Configuration
-          </p>
-        </div>
+      <div style={{ marginBottom: '1.25rem' }}>
+        <h2 className="admin-page-title" style={{ fontSize: '1.35rem', fontWeight: 800, color: '#0F172A', display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>
+          <MessageSquare color="#25D366" size={22} /> WhatsApp Integration
+        </h2>
+        <p className="admin-page-subtitle" style={{ fontSize: '0.85rem', color: '#64748B', marginTop: '0.2rem', margin: 0 }}>
+          Manage providers and notification settings.
+        </p>
       </div>
 
-      {/* Global Alert */}
+      {/* Global Alert Notification */}
       {alert && (
         <div
           className={`admin-alert ${alert.type}`}
@@ -284,65 +360,54 @@ export const AdminWhatsAppSettings = () => {
             display: 'flex',
             alignItems: 'center',
             gap: '0.5rem',
-            padding: '0.85rem 1.1rem',
-            borderRadius: '10px',
-            marginBottom: '1.25rem',
+            padding: '0.65rem 0.9rem',
+            borderRadius: '8px',
+            marginBottom: '1rem',
             backgroundColor: alert.type === 'success' ? '#ECFDF5' : '#FEF2F2',
             border: alert.type === 'success' ? '1px solid #A7F3D0' : '1px solid #FECACA',
             color: alert.type === 'success' ? '#065F46' : '#991B1B',
             fontWeight: 600,
-            fontSize: '0.88rem',
+            fontSize: '0.84rem',
           }}
         >
-          {alert.type === 'success' ? <CheckCircle2 size={18} color="#10B981" /> : <AlertCircle size={18} color="#EF4444" />}
+          {alert.type === 'success' ? <CheckCircle2 size={16} color="#10B981" /> : <AlertCircle size={16} color="#EF4444" />}
           <span style={{ flex: 1 }}>{alert.message}</span>
           <button
             onClick={() => setAlert(null)}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', fontWeight: 'bold' }}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', fontWeight: 'bold', fontSize: '0.9rem' }}
           >
             ✕
           </button>
         </div>
       )}
 
-      {/* Grid: Settings Form & Status/Test Panel */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '1.5rem', alignItems: 'start' }}>
+      {/* Main Two-Column Layout */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1.35fr 1fr', gap: '1.25rem', alignItems: 'start' }}>
         
-        {/* Left Column: Clean Configuration Form */}
-        <div className="admin-card">
-          <div className="admin-card-header">
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0F172A', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <Server size={18} color="#0284C7" /> Gateway Credentials & Routing
-            </h3>
-            <span style={{ fontSize: '0.78rem', color: '#16A34A', fontWeight: 700 }}>
-              Encrypted Server-Side Storage
-            </span>
-          </div>
-
-          <form onSubmit={handleSave} style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
-            
-            {/* 1. Master Enable/Disable Toggle */}
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              padding: '0.9rem 1.1rem',
-              borderRadius: '10px',
-              backgroundColor: isEnabled ? '#F0FDF4' : '#F8FAFC',
-              border: isEnabled ? '1.5px solid #86EFAC' : '1.5px solid #E2E8F0',
-            }}>
-              <div>
-                <div style={{ fontWeight: 800, fontSize: '0.92rem', color: isEnabled ? '#15803D' : '#334155', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                  <Power size={16} /> WhatsApp Service: {isEnabled ? 'ENABLED' : 'PAUSED'}
-                </div>
-                <div style={{ fontSize: '0.78rem', color: '#64748B', marginTop: '0.15rem' }}>
-                  {isEnabled
-                    ? 'Active: Booking confirmations, OTP delivery, and enquiry alerts will dispatch.'
-                    : 'Paused: No messages or OTPs will be sent. Enquiries and bookings will still save.'}
-                </div>
+        {/* Left Column: Configuration Form */}
+        <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
+          
+          {/* Section 1 — WhatsApp Service */}
+          <div className="admin-card" style={{ padding: '0.85rem 1.1rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Power size={17} color={isEnabled ? '#16A34A' : '#94A3B8'} />
+                <span style={{ fontWeight: 700, fontSize: '0.9rem', color: '#0F172A' }}>
+                  WhatsApp Service:
+                </span>
+                <span style={{
+                  fontSize: '0.82rem',
+                  fontWeight: 800,
+                  color: isEnabled ? '#15803D' : '#64748B',
+                  backgroundColor: isEnabled ? '#DCFCE7' : '#F1F5F9',
+                  padding: '0.15rem 0.5rem',
+                  borderRadius: '12px',
+                }}>
+                  {isEnabled ? 'Enabled' : 'Disabled'}
+                </span>
               </div>
 
-              <label className="switch" style={{ position: 'relative', display: 'inline-block', width: '48px', height: '26px' }}>
+              <label className="switch" style={{ position: 'relative', display: 'inline-block', width: '42px', height: '22px' }}>
                 <input
                   type="checkbox"
                   checked={isEnabled}
@@ -355,254 +420,416 @@ export const AdminWhatsAppSettings = () => {
                     cursor: 'pointer',
                     top: 0, left: 0, right: 0, bottom: 0,
                     backgroundColor: isEnabled ? '#25D366' : '#CBD5E1',
-                    borderRadius: '26px',
-                    transition: '0.3s',
+                    borderRadius: '22px',
+                    transition: '0.25s',
                   }}
                 >
                   <span
                     style={{
                       position: 'absolute',
-                      content: '',
-                      height: '20px',
-                      width: '20px',
-                      left: isEnabled ? '24px' : '3px',
+                      height: '16px',
+                      width: '16px',
+                      left: isEnabled ? '22px' : '3px',
                       bottom: '3px',
                       backgroundColor: 'white',
                       borderRadius: '50%',
-                      transition: '0.3s',
-                      boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+                      transition: '0.25s',
+                      boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
                     }}
                   />
                 </span>
               </label>
             </div>
+          </div>
 
-            {/* 2. Independent Notification Toggles */}
-            <div style={{
-              padding: '0.9rem 1.1rem',
-              borderRadius: '10px',
-              backgroundColor: '#F8FAFC',
-              border: '1.5px solid #E2E8F0',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '0.8rem',
-            }}>
-              <div style={{ fontSize: '0.82rem', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                Notification Event Toggles
-              </div>
-
-              {/* Booking Notifications Toggle */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div>
-                  <div style={{ fontWeight: 700, fontSize: '0.88rem', color: '#0F172A' }}>
-                    Booking Confirmation Alerts
-                  </div>
-                  <div style={{ fontSize: '0.76rem', color: '#64748B' }}>
-                    Send operational alert to admin when a new booking is confirmed
-                  </div>
-                </div>
-                <input
-                  type="checkbox"
-                  checked={notifyBookings}
-                  onChange={(e) => setNotifyBookings(e.target.checked)}
-                  style={{ width: '18px', height: '18px', accentColor: '#25D366', cursor: 'pointer' }}
-                />
-              </div>
-
-              <div style={{ height: '1px', backgroundColor: '#E2E8F0' }} />
-
-              {/* Enquiry Notifications Toggle */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div>
-                  <div style={{ fontWeight: 700, fontSize: '0.88rem', color: '#0F172A' }}>
-                    Customer Enquiry Alerts
-                  </div>
-                  <div style={{ fontSize: '0.76rem', color: '#64748B' }}>
-                    Send operational alert to admin when a customer submits a trip enquiry
-                  </div>
-                </div>
-                <input
-                  type="checkbox"
-                  checked={notifyEnquiries}
-                  onChange={(e) => setNotifyEnquiries(e.target.checked)}
-                  style={{ width: '18px', height: '18px', accentColor: '#25D366', cursor: 'pointer' }}
-                />
-              </div>
+          {/* Section 2 — Outbound Provider */}
+          <div className="admin-card" style={{ padding: '1rem 1.1rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.65rem' }}>
+              <span style={{ fontSize: '0.82rem', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                Outbound Provider
+              </span>
+              <span style={{ fontSize: '0.74rem', color: '#64748B' }}>
+                Only the selected provider receives messages.
+              </span>
             </div>
 
-            {/* Gateway Endpoint URL */}
-            <div>
-              <label className="admin-form-label" style={{ fontWeight: 700, fontSize: '0.82rem', color: '#334155', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                <Globe size={14} color="#0284C7" /> Gateway Endpoint URL
-              </label>
-              <input
-                type="url"
-                value={apiUrl}
-                onChange={(e) => setApiUrl(e.target.value)}
-                placeholder="https://wasms.nirosha.org"
-                className="admin-input"
-                style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1.5px solid #E2E8F0', fontSize: '0.88rem', fontFamily: 'monospace' }}
-              />
-              <div style={{ fontSize: '0.74rem', color: '#64748B', marginTop: '0.25rem' }}>
-                The base URL of your Wasms / WhatsApp gateway (default: https://wasms.nirosha.org). Configurable if using custom proxy or domain.
-              </div>
-            </div>
-
-            {/* 3. WhatsApp Account ID */}
-            <div>
-              <label className="admin-form-label" style={{ fontWeight: 700, fontSize: '0.82rem', color: '#334155', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                <Radio size={14} color="#0284C7" /> WhatsApp Account ID
-              </label>
-              <input
-                type="text"
-                value={senderId}
-                onChange={(e) => setSenderId(e.target.value)}
-                placeholder="e.g. 1, 2, or your connected WhatsApp account ID"
-                className="admin-input"
-                style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1.5px solid #E2E8F0', fontSize: '0.88rem' }}
-              />
-              <div style={{ fontSize: '0.74rem', color: '#64748B', marginTop: '0.25rem' }}>
-                The Account / Session ID from your Wasms dashboard. Required when dispatching messages from a specific WhatsApp device.
-              </div>
-            </div>
-
-            {/* 4. API Secret Credential */}
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
-                <label className="admin-form-label" style={{ fontWeight: 700, fontSize: '0.82rem', color: '#334155', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                  <Key size={14} color="#C89B3C" /> API Secret Credential *
-                </label>
-                {hasApiKey && !isEditingKey && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsEditingKey(true);
-                      setApiKey('');
-                    }}
-                    style={{ fontSize: '0.74rem', color: '#0284C7', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700 }}
-                  >
-                    Change Secret
-                  </button>
-                )}
-                {isEditingKey && hasApiKey && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsEditingKey(false);
-                      loadSettings();
-                    }}
-                    style={{ fontSize: '0.74rem', color: '#64748B', background: 'none', border: 'none', cursor: 'pointer' }}
-                  >
-                    Cancel
-                  </button>
-                )}
-              </div>
-
-              {!isEditingKey && hasApiKey ? (
-                <div style={{
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+              {/* Radio 1: Current WhatsApp */}
+              <label
+                style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '0.5rem',
-                  padding: '0.6rem 0.85rem',
-                  backgroundColor: '#F8FAFC',
+                  justifyContent: 'space-between',
+                  padding: '0.65rem 0.85rem',
                   borderRadius: '8px',
-                  border: '1.5px solid #CBD5E1',
-                  color: '#475569',
-                  fontFamily: 'monospace',
-                  fontSize: '0.88rem',
-                }}>
-                  <ShieldCheck size={16} color="#16A34A" />
-                  <span>{apiKey || '••••••••'}</span>
-                  <span style={{ fontSize: '0.72rem', color: '#16A34A', marginLeft: 'auto', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-                    <Check size={13} /> Saved & Masked
-                  </span>
+                  cursor: 'pointer',
+                  border: selectedProvider === 'WASMS' ? '2px solid #25D366' : '1.5px solid #E2E8F0',
+                  backgroundColor: selectedProvider === 'WASMS' ? '#F0FDF4' : '#FFFFFF',
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <input
+                    type="radio"
+                    name="provider_choice"
+                    value="WASMS"
+                    checked={selectedProvider === 'WASMS'}
+                    onChange={() => setSelectedProvider('WASMS')}
+                    style={{ accentColor: '#25D366', cursor: 'pointer' }}
+                  />
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: '0.85rem', color: '#0F172A' }}>Current WhatsApp</div>
+                    <div style={{ fontSize: '0.72rem', color: '#64748B' }}>Existing gateway</div>
+                  </div>
                 </div>
-              ) : (
-                <input
-                  type="password"
-                  value={apiKey}
-                  onChange={(e) => setApiKey(e.target.value)}
-                  placeholder="Enter Wasms API secret credential"
-                  className="admin-input"
-                  style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1.5px solid #E2E8F0', fontSize: '0.88rem' }}
-                />
-              )}
-              <div style={{ fontSize: '0.74rem', color: '#64748B', marginTop: '0.25rem' }}>
-                Your secret is stored securely on the server and is never returned in plaintext to the browser.
-              </div>
+                {selectedProvider === 'WASMS' && (
+                  <span style={{
+                    fontSize: '0.68rem',
+                    fontWeight: 800,
+                    backgroundColor: '#DCFCE7',
+                    color: '#15803D',
+                    padding: '0.15rem 0.45rem',
+                    borderRadius: '6px',
+                  }}>
+                    Active
+                  </span>
+                )}
+              </label>
+
+              {/* Radio 2: WASMS Next */}
+              <label
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '0.65rem 0.85rem',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  border: selectedProvider === 'WASMS_NEXT' ? '2px solid #0284C7' : '1.5px solid #E2E8F0',
+                  backgroundColor: selectedProvider === 'WASMS_NEXT' ? '#F0F9FF' : '#FFFFFF',
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <input
+                    type="radio"
+                    name="provider_choice"
+                    value="WASMS_NEXT"
+                    checked={selectedProvider === 'WASMS_NEXT'}
+                    onChange={() => setSelectedProvider('WASMS_NEXT')}
+                    style={{ accentColor: '#0284C7', cursor: 'pointer' }}
+                  />
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: '0.85rem', color: '#0F172A' }}>WASMS Next</div>
+                    <div style={{ fontSize: '0.72rem', color: '#64748B' }}>V1 API</div>
+                  </div>
+                </div>
+                {selectedProvider === 'WASMS_NEXT' && (
+                  <span style={{
+                    fontSize: '0.68rem',
+                    fontWeight: 800,
+                    backgroundColor: '#E0F2FE',
+                    color: '#0369A1',
+                    padding: '0.15rem 0.45rem',
+                    borderRadius: '6px',
+                  }}>
+                    Active
+                  </span>
+                )}
+              </label>
+            </div>
+          </div>
+
+          {/* Section 3 — Provider Configuration */}
+          <div className="admin-card" style={{ padding: '1.1rem' }}>
+            <div style={{ fontSize: '0.88rem', fontWeight: 800, color: '#0F172A', marginBottom: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <Globe size={16} color="#0284C7" /> {selectedProvider === 'WASMS_NEXT' ? 'WASMS Next Configuration' : 'Current WhatsApp Configuration'}
             </div>
 
-            {/* 5. Destination WhatsApp Number */}
-            <div>
-              <label className="admin-form-label" style={{ fontWeight: 700, fontSize: '0.82rem', color: '#334155', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                <Smartphone size={14} color="#C89B3C" /> Admin Notification Phone Number *
-              </label>
-              <input
-                type="text"
-                value={destinationNumber}
-                onChange={(e) => setDestinationNumber(e.target.value)}
-                placeholder="+91 98220 12345"
-                className="admin-input"
-                style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1.5px solid #E2E8F0', fontSize: '0.88rem' }}
-              />
-              <div style={{ fontSize: '0.74rem', color: '#64748B', marginTop: '0.25rem' }}>
-                Operational WhatsApp number where booking and enquiry notifications will be sent (include country code).
-              </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+              {selectedProvider === 'WASMS' ? (
+                <>
+                  {/* Current WhatsApp Fields */}
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#334155', marginBottom: '0.25rem' }}>
+                      Endpoint URL
+                    </label>
+                    <input
+                      type="url"
+                      value={apiUrl}
+                      onChange={(e) => setApiUrl(e.target.value)}
+                      placeholder="https://wasms.nirosha.org"
+                      className="admin-input"
+                      style={{ width: '100%', padding: '0.55rem 0.75rem', borderRadius: '7px', border: '1.5px solid #E2E8F0', fontSize: '0.85rem', fontFamily: 'monospace' }}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#334155', marginBottom: '0.25rem' }}>
+                      Account ID
+                    </label>
+                    <input
+                      type="text"
+                      value={senderId}
+                      onChange={(e) => setSenderId(e.target.value)}
+                      placeholder="e.g. 1"
+                      className="admin-input"
+                      style={{ width: '100%', padding: '0.55rem 0.75rem', borderRadius: '7px', border: '1.5px solid #E2E8F0', fontSize: '0.85rem' }}
+                    />
+                  </div>
+
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.25rem' }}>
+                      <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#334155' }}>
+                        API Secret
+                      </label>
+                      {hasApiKey && !isEditingKey && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsEditingKey(true);
+                            setApiKey('');
+                          }}
+                          style={{ fontSize: '0.74rem', color: '#0284C7', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700 }}
+                        >
+                          Change Secret
+                        </button>
+                      )}
+                      {isEditingKey && hasApiKey && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsEditingKey(false);
+                            loadSettings();
+                          }}
+                          style={{ fontSize: '0.74rem', color: '#64748B', background: 'none', border: 'none', cursor: 'pointer' }}
+                        >
+                          Cancel
+                        </button>
+                      )}
+                    </div>
+
+                    {!isEditingKey && hasApiKey ? (
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '0.55rem 0.75rem',
+                        backgroundColor: '#F8FAFC',
+                        borderRadius: '7px',
+                        border: '1.5px solid #CBD5E1',
+                        fontFamily: 'monospace',
+                        fontSize: '0.85rem',
+                        color: '#475569',
+                      }}>
+                        <span>{apiKey || '••••••••'}</span>
+                        <span style={{ fontSize: '0.72rem', color: '#16A34A', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                          <Check size={12} /> Masked
+                        </span>
+                      </div>
+                    ) : (
+                      <input
+                        type="password"
+                        value={apiKey}
+                        onChange={(e) => setApiKey(e.target.value)}
+                        placeholder="Enter API secret"
+                        className="admin-input"
+                        style={{ width: '100%', padding: '0.55rem 0.75rem', borderRadius: '7px', border: '1.5px solid #E2E8F0', fontSize: '0.85rem' }}
+                      />
+                    )}
+                  </div>
+                </>
+              ) : (
+                <>
+                  {/* WASMS Next Fields */}
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#334155', marginBottom: '0.25rem' }}>
+                      Endpoint URL
+                    </label>
+                    <input
+                      type="url"
+                      value={nextApiUrl}
+                      onChange={(e) => setNextApiUrl(e.target.value)}
+                      placeholder="https://wasmsnext.nirosha.org/api/v1/messages/whatsapp"
+                      className="admin-input"
+                      style={{ width: '100%', padding: '0.55rem 0.75rem', borderRadius: '7px', border: '1.5px solid #E2E8F0', fontSize: '0.85rem', fontFamily: 'monospace' }}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#334155', marginBottom: '0.25rem' }}>
+                      WhatsApp Account ID (optional)
+                    </label>
+                    <input
+                      type="text"
+                      value={nextAccountId}
+                      onChange={(e) => setNextAccountId(e.target.value)}
+                      placeholder="Optional (defaults to default linked device)"
+                      className="admin-input"
+                      style={{ width: '100%', padding: '0.55rem 0.75rem', borderRadius: '7px', border: '1.5px solid #E2E8F0', fontSize: '0.85rem' }}
+                    />
+                  </div>
+
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.25rem' }}>
+                      <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#334155' }}>
+                        Bearer Token
+                      </label>
+                      {hasNextApiKey && !isEditingNextKey && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsEditingNextKey(true);
+                            setNextApiKey('');
+                          }}
+                          style={{ fontSize: '0.74rem', color: '#0284C7', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700 }}
+                        >
+                          Change Token
+                        </button>
+                      )}
+                      {isEditingNextKey && hasNextApiKey && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsEditingNextKey(false);
+                            loadSettings();
+                          }}
+                          style={{ fontSize: '0.74rem', color: '#64748B', background: 'none', border: 'none', cursor: 'pointer' }}
+                        >
+                          Cancel
+                        </button>
+                      )}
+                    </div>
+
+                    {!isEditingNextKey && hasNextApiKey ? (
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '0.55rem 0.75rem',
+                        backgroundColor: '#F8FAFC',
+                        borderRadius: '7px',
+                        border: '1.5px solid #CBD5E1',
+                        fontFamily: 'monospace',
+                        fontSize: '0.85rem',
+                        color: '#475569',
+                      }}>
+                        <span>{nextApiKey || '••••••••'}</span>
+                        <span style={{ fontSize: '0.72rem', color: '#0284C7', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                          <Check size={12} /> Masked
+                        </span>
+                      </div>
+                    ) : (
+                      <input
+                        type="password"
+                        value={nextApiKey}
+                        onChange={(e) => setNextApiKey(e.target.value)}
+                        placeholder="Enter WASMS Next Bearer token"
+                        className="admin-input"
+                        style={{ width: '100%', padding: '0.55rem 0.75rem', borderRadius: '7px', border: '1.5px solid #E2E8F0', fontSize: '0.85rem' }}
+                      />
+                    )}
+                  </div>
+                </>
+              )}
             </div>
 
             {/* Save Button */}
-            <div style={{ marginTop: '0.5rem', display: 'flex', justifyContent: 'flex-end' }}>
+            <div style={{ marginTop: '1rem', display: 'flex', justifyContent: 'flex-end' }}>
               <button
                 type="submit"
                 disabled={saving}
                 className="admin-btn-primary"
-                style={{ padding: '0.75rem 1.4rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 800 }}
+                style={{ padding: '0.6rem 1.25rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 800 }}
               >
                 {saving ? (
                   <>
-                    <Loader2 size={16} className="animate-spin" /> Saving Configuration...
+                    <Loader2 size={15} className="animate-spin" /> Saving...
                   </>
                 ) : (
                   <>
-                    <Save size={16} /> Save Configuration
+                    <Save size={15} /> Save Configuration
                   </>
                 )}
               </button>
             </div>
+          </div>
 
-          </form>
-        </div>
-
-        {/* Right Column: Connection Diagnostics & Live Actions */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-          
-          {/* Card A: Gateway Connection & Verification */}
-          <div className="admin-card">
-            <div className="admin-card-header">
-              <h3 style={{ fontSize: '1rem', fontWeight: 800, color: '#0F172A', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                <ShieldCheck size={17} color="#16A34A" /> Gateway Connection
-              </h3>
+          {/* Section 6 — Notification Events */}
+          <div className="admin-card" style={{ padding: '1rem 1.1rem' }}>
+            <div style={{ fontSize: '0.82rem', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '0.75rem' }}>
+              Notification Events & Destination
             </div>
 
-            <div style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#334155', marginBottom: '0.25rem' }}>
+                  Admin Notification Phone Number
+                </label>
+                <input
+                  type="text"
+                  value={destinationNumber}
+                  onChange={(e) => setDestinationNumber(e.target.value)}
+                  placeholder="+91 98220 12345"
+                  className="admin-input"
+                  style={{ width: '100%', padding: '0.55rem 0.75rem', borderRadius: '7px', border: '1.5px solid #E2E8F0', fontSize: '0.85rem' }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: '1.5rem', marginTop: '0.25rem' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontSize: '0.82rem', fontWeight: 600, color: '#0F172A', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={notifyBookings}
+                    onChange={(e) => setNotifyBookings(e.target.checked)}
+                    style={{ accentColor: '#25D366', cursor: 'pointer' }}
+                  />
+                  Booking Alerts
+                </label>
+
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontSize: '0.82rem', fontWeight: 600, color: '#0F172A', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={notifyEnquiries}
+                    onChange={(e) => setNotifyEnquiries(e.target.checked)}
+                    style={{ accentColor: '#25D366', cursor: 'pointer' }}
+                  />
+                  Enquiry Alerts
+                </label>
+              </div>
+            </div>
+          </div>
+
+        </form>
+
+        {/* Right Column: Connection Diagnostics & Test Message */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
+          
+          {/* Section 4 — Connection Status */}
+          <div className="admin-card" style={{ padding: '1rem 1.1rem' }}>
+            <div style={{ fontSize: '0.88rem', fontWeight: 800, color: '#0F172A', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.75rem' }}>
+              <ShieldCheck size={16} color={currentStatus === 'CONNECTED' ? '#16A34A' : '#64748B'} /> Connection Status
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: '0.82rem', color: '#64748B', fontWeight: 600 }}>Connection Status:</span>
+                <span style={{ fontSize: '0.8rem', color: '#64748B' }}>Status:</span>
                 <span
                   style={{
-                    padding: '0.3rem 0.75rem',
-                    borderRadius: '20px',
-                    fontSize: '0.78rem',
+                    padding: '0.2rem 0.6rem',
+                    borderRadius: '16px',
+                    fontSize: '0.75rem',
                     fontWeight: 800,
                     backgroundColor:
-                      lastStatus === 'CONNECTED'
+                      currentStatus === 'CONNECTED'
                         ? '#DCFCE7'
-                        : lastStatus === 'ERROR'
+                        : currentStatus === 'ERROR'
                         ? '#FEE2E2'
                         : '#F1F5F9',
                     color:
-                      lastStatus === 'CONNECTED'
+                      currentStatus === 'CONNECTED'
                         ? '#15803D'
-                        : lastStatus === 'ERROR'
+                        : currentStatus === 'ERROR'
                         ? '#B91C1C'
                         : '#475569',
                     display: 'flex',
@@ -612,45 +839,50 @@ export const AdminWhatsAppSettings = () => {
                 >
                   <span
                     style={{
-                      width: '7px',
-                      height: '7px',
+                      width: '6px',
+                      height: '6px',
                       borderRadius: '50%',
                       backgroundColor:
-                        lastStatus === 'CONNECTED'
+                        currentStatus === 'CONNECTED'
                           ? '#16A34A'
-                          : lastStatus === 'ERROR'
+                          : currentStatus === 'ERROR'
                           ? '#DC2626'
                           : '#94A3B8',
                     }}
                   />
-                  {lastStatus}
+                  {currentStatus}
                 </span>
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: '0.82rem', color: '#64748B', fontWeight: 600 }}>Last Verification:</span>
-                <span style={{ fontSize: '0.82rem', color: '#0F172A', fontWeight: 700 }}>
-                  {lastVerifiedAt
-                    ? new Date(lastVerifiedAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })
+                <span style={{ fontSize: '0.8rem', color: '#64748B' }}>Last Verified:</span>
+                <span style={{ fontSize: '0.8rem', color: '#0F172A', fontWeight: 600 }}>
+                  {currentVerifiedAt
+                    ? new Date(currentVerifiedAt).toLocaleDateString('en-IN', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })
                     : 'Not yet verified'}
                 </span>
               </div>
 
-              {lastError && (
+              {currentError && (
                 <div style={{
                   backgroundColor: '#FEF2F2',
                   border: '1px solid #FECACA',
-                  padding: '0.65rem 0.85rem',
-                  borderRadius: '8px',
-                  fontSize: '0.78rem',
+                  padding: '0.5rem 0.75rem',
+                  borderRadius: '6px',
+                  fontSize: '0.76rem',
                   color: '#991B1B',
-                  lineHeight: 1.4,
+                  lineHeight: 1.35,
                 }}>
-                  <strong>Gateway Notice:</strong> {lastError}
+                  {currentError}
                 </div>
               )}
 
-              {/* Verify Gateway Button */}
               <button
                 type="button"
                 onClick={handleVerifyGateway}
@@ -658,34 +890,33 @@ export const AdminWhatsAppSettings = () => {
                 className="admin-btn-secondary"
                 style={{
                   width: '100%',
-                  padding: '0.65rem',
-                  borderRadius: '8px',
+                  padding: '0.55rem',
+                  borderRadius: '7px',
                   fontWeight: 700,
-                  fontSize: '0.84rem',
+                  fontSize: '0.82rem',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: '0.4rem',
-                  marginTop: '0.3rem',
+                  gap: '0.35rem',
+                  marginTop: '0.25rem',
                 }}
               >
                 {verifying ? (
                   <>
-                    <Loader2 size={15} className="animate-spin" /> Verifying Gateway (~30s)...
+                    <Loader2 size={14} className="animate-spin" /> Verifying...
                   </>
                 ) : (
                   <>
-                    <ShieldCheck size={15} color="#0284C7" /> Verify Gateway Connection
+                    <ShieldCheck size={14} /> Verify Connection
                   </>
                 )}
               </button>
 
-              {/* Verify Result Feedback */}
               {verifyResult && (
                 <div style={{
-                  padding: '0.65rem 0.85rem',
-                  borderRadius: '8px',
-                  fontSize: '0.78rem',
+                  padding: '0.5rem 0.75rem',
+                  borderRadius: '6px',
+                  fontSize: '0.76rem',
                   backgroundColor: verifyResult.success ? '#F0FDF4' : '#FEF2F2',
                   border: verifyResult.success ? '1px solid #BBF7D0' : '1px solid #FECACA',
                   color: verifyResult.success ? '#166534' : '#991B1B',
@@ -694,26 +925,19 @@ export const AdminWhatsAppSettings = () => {
                   {verifyResult.success ? '✓ ' : '✕ '} {verifyResult.message}
                 </div>
               )}
-
             </div>
           </div>
 
-          {/* Card B: Live Test Message */}
-          <div className="admin-card">
-            <div className="admin-card-header">
-              <h3 style={{ fontSize: '1rem', fontWeight: 800, color: '#0F172A', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                <Send size={17} color="#25D366" /> Send Test Message
-              </h3>
+          {/* Section 5 — Test Message */}
+          <div className="admin-card" style={{ padding: '1rem 1.1rem' }}>
+            <div style={{ fontSize: '0.88rem', fontWeight: 800, color: '#0F172A', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.75rem' }}>
+              <Send size={15} color="#25D366" /> Test Message
             </div>
 
-            <div style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.9rem' }}>
-              <p style={{ fontSize: '0.78rem', color: '#64748B', lineHeight: 1.45, margin: 0 }}>
-                Dispatches an administrative test message via Wasms WhatsApp API to confirm outbound routing.
-              </p>
-
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
               <div>
-                <label style={{ fontSize: '0.78rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '0.25rem' }}>
-                  Test Target Phone Number
+                <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.25rem' }}>
+                  Destination Phone Number
                 </label>
                 <input
                   type="text"
@@ -721,7 +945,7 @@ export const AdminWhatsAppSettings = () => {
                   onChange={(e) => setTestDestination(e.target.value)}
                   placeholder="+91 98220 12345"
                   className="admin-input"
-                  style={{ width: '100%', padding: '0.6rem 0.75rem', borderRadius: '8px', border: '1.5px solid #E2E8F0', fontSize: '0.85rem' }}
+                  style={{ width: '100%', padding: '0.55rem 0.75rem', borderRadius: '7px', border: '1.5px solid #E2E8F0', fontSize: '0.85rem' }}
                 />
               </div>
 
@@ -732,49 +956,41 @@ export const AdminWhatsAppSettings = () => {
                 className="btn-whatsapp"
                 style={{
                   width: '100%',
-                  padding: '0.7rem',
-                  borderRadius: '8px',
+                  padding: '0.55rem',
+                  borderRadius: '7px',
                   fontWeight: 800,
-                  fontSize: '0.85rem',
+                  fontSize: '0.82rem',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: '0.4rem',
+                  gap: '0.35rem',
                   cursor: testing ? 'not-allowed' : 'pointer',
                   opacity: testing ? 0.75 : 1,
                 }}
               >
                 {testing ? (
                   <>
-                    <Loader2 size={16} className="animate-spin" /> Dispatching Test...
+                    <Loader2 size={14} className="animate-spin" /> Sending...
                   </>
                 ) : (
                   <>
-                    <Send size={15} /> Send Test Message
+                    <Send size={14} /> Send Test Message
                   </>
                 )}
               </button>
 
-              {/* Test Result Feedback */}
               {testResult && (
                 <div style={{
-                  padding: '0.75rem 0.9rem',
-                  borderRadius: '8px',
-                  fontSize: '0.8rem',
-                  lineHeight: 1.4,
+                  padding: '0.55rem 0.75rem',
+                  borderRadius: '6px',
+                  fontSize: '0.76rem',
+                  lineHeight: 1.35,
                   backgroundColor: testResult.success ? '#F0FDF4' : '#FEF2F2',
                   border: testResult.success ? '1px solid #BBF7D0' : '1px solid #FECACA',
                   color: testResult.success ? '#166534' : '#991B1B',
+                  fontWeight: 600,
                 }}>
-                  <div style={{ fontWeight: 800, marginBottom: '0.2rem' }}>
-                    {testResult.success ? '✅ Provider Accepted Request' : '❌ Test Dispatch Failed'}
-                  </div>
-                  <div>{testResult.message}</div>
-                  {testResult.success && (
-                    <div style={{ fontSize: '0.72rem', color: '#15803D', marginTop: '0.35rem', fontStyle: 'italic' }}>
-                      Notice: Wasms accepted the request. Final delivery requires an active session on your WhatsApp device.
-                    </div>
-                  )}
+                  {testResult.success ? '✓ ' : '✕ '} {testResult.message}
                 </div>
               )}
             </div>
@@ -784,16 +1000,13 @@ export const AdminWhatsAppSettings = () => {
 
       </div>
 
-      {/* Bottom Section: Delivery Audit Logs */}
-      <div className="admin-card" style={{ marginTop: '1.75rem' }}>
-        <div className="admin-card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      {/* Audit Logs Table */}
+      <div className="admin-card" style={{ marginTop: '1.5rem', padding: '1rem 1.1rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
           <div>
-            <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#0F172A', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-              <Clock size={17} color="#0284C7" /> Notification Delivery Audit Log
-            </h3>
-            <span style={{ fontSize: '0.76rem', color: '#64748B' }}>
-              Live audit history of WhatsApp dispatches (credentials and secrets are never logged)
-            </span>
+            <div style={{ fontSize: '0.9rem', fontWeight: 800, color: '#0F172A', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <Clock size={16} color="#0284C7" /> Notification Delivery Log
+            </div>
           </div>
 
           <button
@@ -801,16 +1014,16 @@ export const AdminWhatsAppSettings = () => {
             onClick={refreshLogs}
             disabled={refreshingLogs}
             className="admin-btn-secondary"
-            style={{ fontSize: '0.78rem', padding: '0.45rem 0.75rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
+            style={{ fontSize: '0.75rem', padding: '0.35rem 0.65rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
           >
-            <RefreshCw size={13} className={refreshingLogs ? 'animate-spin' : ''} />
-            <span>Refresh Logs</span>
+            <RefreshCw size={12} className={refreshingLogs ? 'animate-spin' : ''} />
+            <span>Refresh</span>
           </button>
         </div>
 
         <div className="admin-table-container">
           {logs.length === 0 ? (
-            <div style={{ padding: '2.5rem', textAlign: 'center', color: '#64748B', fontSize: '0.88rem' }}>
+            <div style={{ padding: '2rem', textAlign: 'center', color: '#64748B', fontSize: '0.84rem' }}>
               No notification events recorded yet.
             </div>
           ) : (
@@ -818,10 +1031,11 @@ export const AdminWhatsAppSettings = () => {
               <thead>
                 <tr>
                   <th>Timestamp</th>
-                  <th>Event Type</th>
+                  <th>Event</th>
+                  <th>Provider</th>
                   <th>Recipient</th>
                   <th>Status</th>
-                  <th>Provider Details / Error</th>
+                  <th>Details</th>
                 </tr>
               </thead>
               <tbody>
@@ -830,29 +1044,49 @@ export const AdminWhatsAppSettings = () => {
                     ACCEPTED: { bg: '#DCFCE7', text: '#15803D', label: 'Accepted' },
                     DELIVERED: { bg: '#DCFCE7', text: '#15803D', label: 'Delivered' },
                     SENT: { bg: '#DCFCE7', text: '#15803D', label: 'Sent' },
-                    SKIPPED_DISABLED: { bg: '#F1F5F9', text: '#475569', label: 'Skipped (Disabled)' },
+                    SKIPPED_DISABLED: { bg: '#F1F5F9', text: '#475569', label: 'Skipped' },
                     FAILED: { bg: '#FEE2E2', text: '#B91C1C', label: 'Failed' },
                   };
                   const color = statusColors[log.status] || { bg: '#F1F5F9', text: '#475569', label: log.status };
+                  const isWasmsNext = log.provider === 'WASMS_NEXT';
 
                   return (
                     <tr key={log.id}>
-                      <td style={{ whiteSpace: 'nowrap', fontSize: '0.78rem', color: '#64748B' }}>
-                        {new Date(log.createdAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}
+                      <td style={{ whiteSpace: 'nowrap', fontSize: '0.75rem', color: '#64748B' }}>
+                        {new Date(log.createdAt).toLocaleString('en-IN', {
+                          day: 'numeric',
+                          month: 'short',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
                       </td>
-                      <td style={{ fontWeight: 700, fontSize: '0.82rem', color: '#0F172A' }}>
-                        {log.eventType === 'ENQUIRY' ? '🔔 Customer Enquiry' : log.eventType === 'BOOKING_CREATED' ? '🚗 New Booking' : log.eventType === 'ADMIN_TEST' ? '🧪 Test Message' : log.eventType}
+                      <td style={{ fontWeight: 600, fontSize: '0.8rem', color: '#0F172A' }}>
+                        {log.eventType === 'ENQUIRY' ? 'Enquiry' : log.eventType === 'BOOKING_CREATED' ? 'Booking' : log.eventType === 'ADMIN_TEST' ? 'Test' : log.eventType}
                       </td>
-                      <td style={{ fontFamily: 'monospace', fontSize: '0.82rem', color: '#334155' }}>
+                      <td>
+                        <span
+                          style={{
+                            padding: '0.15rem 0.45rem',
+                            borderRadius: '10px',
+                            fontSize: '0.7rem',
+                            fontWeight: 700,
+                            backgroundColor: isWasmsNext ? '#E0F2FE' : '#DCFCE7',
+                            color: isWasmsNext ? '#0369A1' : '#15803D',
+                          }}
+                        >
+                          {isWasmsNext ? 'WASMS Next' : 'Current'}
+                        </span>
+                      </td>
+                      <td style={{ fontFamily: 'monospace', fontSize: '0.8rem', color: '#334155' }}>
                         {log.recipient}
                       </td>
                       <td>
                         <span
                           style={{
-                            padding: '0.2rem 0.55rem',
-                            borderRadius: '12px',
-                            fontSize: '0.72rem',
-                            fontWeight: 800,
+                            padding: '0.15rem 0.45rem',
+                            borderRadius: '10px',
+                            fontSize: '0.7rem',
+                            fontWeight: 700,
                             backgroundColor: color.bg,
                             color: color.text,
                           }}
@@ -860,8 +1094,8 @@ export const AdminWhatsAppSettings = () => {
                           {color.label}
                         </span>
                       </td>
-                      <td style={{ fontSize: '0.78rem', color: log.errorMessage ? '#B91C1C' : '#64748B', maxWidth: '320px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {log.errorMessage || (log.providerResponse ? 'Wasms gateway accepted' : 'Success')}
+                      <td style={{ fontSize: '0.75rem', color: log.errorMessage ? '#B91C1C' : '#64748B', maxWidth: '280px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {log.errorMessage || 'Success'}
                       </td>
                     </tr>
                   );
@@ -875,6 +1109,3 @@ export const AdminWhatsAppSettings = () => {
     </div>
   );
 };
-
-
-

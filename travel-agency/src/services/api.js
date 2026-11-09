@@ -322,7 +322,7 @@ export const adminWhatsAppApi = {
   updateSettings: (data) => api.put('/admin/whatsapp/settings', data),
   verifyConnection: (data) => api.post('/admin/whatsapp/verify', data, { timeout: 60000 }),
   toggle: (isEnabled) => api.patch('/admin/whatsapp/toggle', { isEnabled }),
-  test: (destinationNumber) => api.post('/admin/whatsapp/test', { destinationNumber }),
+  test: (data) => api.post('/admin/whatsapp/test', typeof data === 'string' ? { destinationNumber: data } : (data || {})),
   getLogs: () => api.get('/admin/whatsapp/logs'),
 };
 

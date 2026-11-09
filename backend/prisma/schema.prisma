@@ -302,10 +302,10 @@ model AuditLog {
 model IntegrationSetting {
   id                String    @id @default(cuid())
   service           String    @unique @default("WHATSAPP")
-  provider          String    @default("WASMS") // "WASMS"
+  provider          String    @default("WASMS") // "WASMS" | "WASMS_NEXT"
   apiUrl            String?   @default("https://wasms.nirosha.org")
   apiKey            String?   @db.Text
-  senderId          String?   // WhatsApp Account ID
+  senderId          String?   // WhatsApp Account ID (Legacy)
   destinationNumber String?
   isEnabled         Boolean   @default(false)
   notifyBookings    Boolean   @default(true)
@@ -313,6 +313,13 @@ model IntegrationSetting {
   lastStatus        String    @default("UNCONFIGURED") // "CONNECTED" | "DISCONNECTED" | "ERROR" | "UNCONFIGURED"
   lastVerifiedAt    DateTime?
   lastError         String?   @db.Text
+  // WASMS Next Provider Configuration
+  nextApiUrl        String?   @default("https://wasmsnext.nirosha.org/api/v1/messages/whatsapp")
+  nextApiKey        String?   @db.Text // Bearer token
+  nextAccountId     String?   // WhatsApp Account ID (WASMS Next wa_account_id)
+  nextLastStatus    String    @default("UNCONFIGURED")
+  nextLastVerifiedAt DateTime?
+  nextLastError     String?   @db.Text
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
@@ -398,6 +405,7 @@ model NotificationLog {
   referenceId      String?  // Enquiry ID or Booking ID
   recipient        String
   status           String   // "SENT" | "ACCEPTED" | "FAILED" | "SKIPPED_DISABLED"
+  provider         String?  @default("WASMS") // "WASMS" | "WASMS_NEXT"
   providerResponse String?  @db.Text
   errorMessage     String?  @db.Text
   createdAt        DateTime @default(now())

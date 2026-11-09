@@ -6,6 +6,9 @@ const prisma = require('../utils/prisma');
 const { AppError } = require('../middleware/errorHandler');
 const {
   WASMS_BASE_URL,
+  PROVIDER_WASMS_LEGACY,
+  PROVIDER_WASMS_NEXT,
+  ALLOWED_PROVIDERS,
   maskSecret,
   sanitizePhoneNumber,
   isValidPhoneNumber,
@@ -14,6 +17,7 @@ const {
   verifyGatewayConnection,
   sendTestMessage,
 } = require('../services/whatsappService');
+const wasmsNextService = require('../services/wasmsNextService');
 
 /**
  * GET /api/admin/whatsapp/settings
@@ -32,17 +36,30 @@ const getSettings = async (req, res, next) => {
     const safeData = {
       id: settings.id,
       service: settings.service,
-      apiUrl: settings.apiUrl || WASMS_BASE_URL,
-      senderId: settings.senderId || '', // WhatsApp Account ID
-      apiKey: maskSecret(settings.apiKey),
-      hasApiKey: Boolean(settings.apiKey),
+      provider: settings.provider || PROVIDER_WASMS_LEGACY, // 'WASMS' | 'WASMS_NEXT'
       destinationNumber: settings.destinationNumber || '',
       isEnabled: settings.isEnabled,
       notifyBookings: settings.notifyBookings ?? true,
       notifyEnquiries: settings.notifyEnquiries ?? true,
+
+      // Provider 1: Current / Legacy Wasms
+      apiUrl: settings.apiUrl || WASMS_BASE_URL,
+      senderId: settings.senderId || '', // WhatsApp Account ID
+      apiKey: maskSecret(settings.apiKey),
+      hasApiKey: Boolean(settings.apiKey),
       lastStatus: settings.lastStatus,
       lastVerifiedAt: settings.lastVerifiedAt,
       lastError: settings.lastError,
+
+      // Provider 2: WASMS Next
+      nextApiUrl: settings.nextApiUrl || wasmsNextService.DEFAULT_WASMS_NEXT_URL,
+      nextAccountId: settings.nextAccountId || '',
+      nextApiKey: maskSecret(settings.nextApiKey),
+      hasNextApiKey: Boolean(settings.nextApiKey),
+      nextLastStatus: settings.nextLastStatus || 'UNCONFIGURED',
+      nextLastVerifiedAt: settings.nextLastVerifiedAt,
+      nextLastError: settings.nextLastError,
+
       updatedAt: settings.updatedAt,
       recentLogs,
     };
@@ -60,9 +77,13 @@ const getSettings = async (req, res, next) => {
 const updateSettings = async (req, res, next) => {
   try {
     const {
+      provider,
       apiUrl,
       senderId,
       apiKey,
+      nextApiUrl,
+      nextAccountId,
+      nextApiKey,
       destinationNumber,
       isEnabled,
       notifyBookings,
@@ -71,14 +92,34 @@ const updateSettings = async (req, res, next) => {
 
     const current = await getWhatsAppSettings();
 
-    // Clean and normalize gateway endpoint apiUrl
+    // 1. Validate Provider Selection (Strict Backend Validation)
+    let finalProvider = current.provider || PROVIDER_WASMS_LEGACY;
+    if (provider !== undefined) {
+      const trimmedProvider = String(provider).trim().toUpperCase();
+      if (!ALLOWED_PROVIDERS.includes(trimmedProvider)) {
+        return next(new AppError(`Invalid WhatsApp provider selected (${provider}). Must be WASMS or WASMS_NEXT.`, 400));
+      }
+      finalProvider = trimmedProvider;
+    }
+
+    // 2. Validate and clean Legacy apiUrl
     let finalApiUrl = current.apiUrl || WASMS_BASE_URL;
     if (apiUrl !== undefined) {
       const trimmedUrl = apiUrl.trim();
       finalApiUrl = trimmedUrl ? trimmedUrl.replace(/\/+$/, '') : WASMS_BASE_URL;
     }
 
-    // Validate destination phone number if provided
+    // 3. Validate and clean WASMS Next nextApiUrl
+    let finalNextApiUrl = current.nextApiUrl || wasmsNextService.DEFAULT_WASMS_NEXT_URL;
+    if (nextApiUrl !== undefined && nextApiUrl.trim()) {
+      const validation = wasmsNextService.validateEndpointUrl(nextApiUrl);
+      if (!validation.valid) {
+        return next(new AppError(`Invalid WASMS Next URL: ${validation.error}`, 400));
+      }
+      finalNextApiUrl = validation.url;
+    }
+
+    // 4. Validate destination phone number if provided
     let cleanDestination = current.destinationNumber;
     if (destinationNumber !== undefined) {
       const sanitized = sanitizePhoneNumber(destinationNumber);
@@ -88,7 +129,7 @@ const updateSettings = async (req, res, next) => {
       cleanDestination = sanitized ? `+${sanitized}` : '';
     }
 
-    // Determine apiKey update (preserve existing if masked placeholder or blank sent)
+    // 5. Preserve Legacy apiKey (do not overwrite if masked placeholder or blank sent)
     let finalApiKey = current.apiKey;
     if (apiKey !== undefined && apiKey !== null) {
       const trimmed = apiKey.trim();
@@ -97,13 +138,26 @@ const updateSettings = async (req, res, next) => {
       }
     }
 
+    // 6. Preserve WASMS Next nextApiKey (do not overwrite if masked placeholder or blank sent)
+    let finalNextApiKey = current.nextApiKey;
+    if (nextApiKey !== undefined && nextApiKey !== null) {
+      const trimmedNext = nextApiKey.trim();
+      if (trimmedNext && !trimmedNext.startsWith('••••')) {
+        finalNextApiKey = trimmedNext;
+      }
+    }
+
+    // 7. Update in database safely
     const updated = await prisma.integrationSetting.update({
       where: { id: current.id },
       data: {
-        provider: 'WASMS',
+        provider: finalProvider,
         apiUrl: finalApiUrl,
         senderId: senderId !== undefined ? senderId.trim() : current.senderId,
         apiKey: finalApiKey,
+        nextApiUrl: finalNextApiUrl,
+        nextAccountId: nextAccountId !== undefined ? nextAccountId.trim() : current.nextAccountId,
+        nextApiKey: finalNextApiKey,
         destinationNumber: cleanDestination,
         ...(isEnabled !== undefined && { isEnabled: Boolean(isEnabled) }),
         ...(notifyBookings !== undefined && { notifyBookings: Boolean(notifyBookings) }),
@@ -111,22 +165,26 @@ const updateSettings = async (req, res, next) => {
       },
     });
 
-    // Record Audit Log (without logging secret)
+    // 8. Record Audit Log (Never log secret keys)
     if (req.user?.id) {
       await prisma.auditLog.create({
         data: {
           adminId: req.user.id,
-          action: 'UPDATE_WASMS_WHATSAPP_CONFIG',
+          action: 'UPDATE_WHATSAPP_CONFIG',
           entity: 'IntegrationSetting',
           entityId: updated.id,
           newValue: JSON.stringify({
+            provider: updated.provider,
             isEnabled: updated.isEnabled,
             notifyBookings: updated.notifyBookings,
             notifyEnquiries: updated.notifyEnquiries,
             senderId: updated.senderId,
+            nextAccountId: updated.nextAccountId,
             destinationNumber: updated.destinationNumber,
             apiUrlUpdated: finalApiUrl !== current.apiUrl,
+            nextApiUrlUpdated: finalNextApiUrl !== current.nextApiUrl,
             apiKeyUpdated: finalApiKey !== current.apiKey,
+            nextApiKeyUpdated: finalNextApiKey !== current.nextApiKey,
           }),
         },
       });
@@ -135,21 +193,34 @@ const updateSettings = async (req, res, next) => {
     invalidateWhatsAppSettingsCache();
     res.json({
       success: true,
-      message: 'WhatsApp settings saved successfully.',
+      message: `WhatsApp settings saved successfully with active provider: ${updated.provider === PROVIDER_WASMS_NEXT ? 'WASMS Next' : 'Current WhatsApp'}.`,
       data: {
         id: updated.id,
         service: updated.service,
+        provider: updated.provider,
+        isEnabled: updated.isEnabled,
+        notifyBookings: updated.notifyBookings,
+        notifyEnquiries: updated.notifyEnquiries,
+        destinationNumber: updated.destinationNumber,
+
+        // Provider 1: Current Wasms
         apiUrl: updated.apiUrl,
         senderId: updated.senderId,
         apiKey: maskSecret(updated.apiKey),
         hasApiKey: Boolean(updated.apiKey),
-        destinationNumber: updated.destinationNumber,
-        isEnabled: updated.isEnabled,
-        notifyBookings: updated.notifyBookings,
-        notifyEnquiries: updated.notifyEnquiries,
         lastStatus: updated.lastStatus,
         lastVerifiedAt: updated.lastVerifiedAt,
         lastError: updated.lastError,
+
+        // Provider 2: WASMS Next
+        nextApiUrl: updated.nextApiUrl,
+        nextAccountId: updated.nextAccountId,
+        nextApiKey: maskSecret(updated.nextApiKey),
+        hasNextApiKey: Boolean(updated.nextApiKey),
+        nextLastStatus: updated.nextLastStatus,
+        nextLastVerifiedAt: updated.nextLastVerifiedAt,
+        nextLastError: updated.nextLastError,
+
         updatedAt: updated.updatedAt,
       },
     });
@@ -164,19 +235,42 @@ const updateSettings = async (req, res, next) => {
  */
 const handleVerifyConnection = async (req, res, next) => {
   try {
-    const { apiKey, senderId, apiUrl } = req.body || {};
-    const result = await verifyGatewayConnection(apiKey, senderId, apiUrl);
+    const body = req.body || {};
+    const settings = await getWhatsAppSettings();
+    const targetProvider = body.provider || settings.provider || PROVIDER_WASMS_LEGACY;
+
+    let result;
+    if (targetProvider === PROVIDER_WASMS_NEXT) {
+      const token = body.nextApiKey || body.apiKey;
+      const accountId = body.nextAccountId !== undefined ? body.nextAccountId : body.senderId;
+      const url = body.nextApiUrl || body.apiUrl;
+      result = await verifyGatewayConnection({
+        provider: PROVIDER_WASMS_NEXT,
+        apiKey: token,
+        senderId: accountId,
+        apiUrl: url,
+      });
+    } else {
+      result = await verifyGatewayConnection({
+        provider: PROVIDER_WASMS_LEGACY,
+        apiKey: body.apiKey,
+        senderId: body.senderId,
+        apiUrl: body.apiUrl,
+      });
+    }
 
     if (!result.connected) {
       return res.status(400).json({
         success: false,
+        provider: targetProvider,
         status: result.status,
-        message: result.message || 'Wasms gateway verification failed.',
+        message: result.message || 'Gateway verification failed.',
       });
     }
 
     res.json({
       success: true,
+      provider: targetProvider,
       status: result.status,
       message: result.message,
       data: result.data,
@@ -192,8 +286,8 @@ const handleVerifyConnection = async (req, res, next) => {
  */
 const handleTestMessage = async (req, res, next) => {
   try {
-    const { destinationNumber } = req.body || {};
-    const result = await sendTestMessage(destinationNumber);
+    const { destinationNumber, provider } = req.body || {};
+    const result = await sendTestMessage(destinationNumber, provider);
 
     if (!result.success) {
       return res.status(400).json({
