@@ -117,7 +117,7 @@ export function VehicleDetailPage() {
     vehicle ? `vehicle_${vehicle.slug}` : 'vehicle_not_found',
     vehicle ? vehicle.metaTitle : 'Vehicle Not Found | AJ Travels Fleet',
     vehicle ? vehicle.metaDesc : 'Executive fleet vehicle specifications and rental details from AJ Travels.',
-    vehicle ? `https://ajtravelspune.com/vehicles/${vehicle.slug}` : undefined
+    vehicle ? `https://ajtravelsagency.vercel.app/vehicles/${vehicle.slug}` : undefined
   );
 
   if (loading) {

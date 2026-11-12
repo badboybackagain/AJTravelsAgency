@@ -921,7 +921,7 @@ export const FarePage = () => {
   }
 
   // Reactive Page SEO hook
-  usePageSeo('fare', seoPageTitle, undefined, 'https://ajtravelspune.com/fare');
+  usePageSeo('fare', seoPageTitle, undefined, 'https://ajtravelsagency.vercel.app/fare');
 
   return (
     <div className="fare-page-wrapper">

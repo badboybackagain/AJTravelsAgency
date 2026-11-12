@@ -40,7 +40,7 @@ import { useScrollReveal } from '../hooks/useScrollReveal';
 import './fare.css';
 
 export const BookingPage = () => {
-  usePageSeo('booking', 'Book Pune to Mumbai Cab Online | AJ Tours & Travels', undefined, 'https://ajtravelspune.com/booking');
+  usePageSeo('booking', 'Book Pune to Mumbai Cab Online | AJ Tours & Travels', undefined, 'https://ajtravelsagency.vercel.app/booking');
   const [searchParams] = useSearchParams();
   const locationState = useLocation();
   const navigate = useNavigate();

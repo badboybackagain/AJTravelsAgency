@@ -82,7 +82,7 @@ export function BlogPostPage({ isRootFallback = false }) {
     post ? `post_${post.slug}` : 'post_not_found',
     post ? (post.metaTitle || `${post.title} | AJ Travels`) : 'Article Not Found | AJ Travels Blog',
     post ? (post.metaDesc || post.summary) : 'Travel guide and intercity cab advice from AJ Travels.',
-    post ? `https://ajtravelspune.com/${post.slug}/` : undefined
+    post ? `https://ajtravelsagency.vercel.app/${post.slug}/` : undefined
   );
 
   // Structured Data (BlogPosting, BreadcrumbList, and conditional FAQPage)
@@ -102,10 +102,10 @@ export function BlogPostPage({ isRootFallback = false }) {
       document.head.appendChild(scriptTag);
     }
 
-    const postCanonical = `https://ajtravelspune.com/${post.slug}/`;
+    const postCanonical = `https://ajtravelsagency.vercel.app/${post.slug}/`;
     const imageUrl = post.featuredImage?.startsWith('http')
       ? post.featuredImage
-      : `https://ajtravelspune.com${post.featuredImage}`;
+      : `https://ajtravelsagency.vercel.app${post.featuredImage}`;
 
     const schemaData = {
       '@context': 'https://schema.org',
@@ -122,7 +122,7 @@ export function BlogPostPage({ isRootFallback = false }) {
         'name': 'AJ Travels',
         'logo': {
           '@type': 'ImageObject',
-          'url': 'https://ajtravelspune.com/assets/aj-travels-logo.png',
+          'url': 'https://ajtravelsagency.vercel.app/assets/aj-travels-logo.png',
         },
       },
       'datePublished': post.publishedAt ? post.publishedAt.split('T')[0] : '2026-03-15',
@@ -151,13 +151,13 @@ export function BlogPostPage({ isRootFallback = false }) {
           '@type': 'ListItem',
           'position': 1,
           'name': 'Home',
-          'item': 'https://ajtravelspune.com/',
+          'item': 'https://ajtravelsagency.vercel.app/',
         },
         {
           '@type': 'ListItem',
           'position': 2,
           'name': 'Blog',
-          'item': 'https://ajtravelspune.com/blog/',
+          'item': 'https://ajtravelsagency.vercel.app/blog/',
         },
         {
           '@type': 'ListItem',

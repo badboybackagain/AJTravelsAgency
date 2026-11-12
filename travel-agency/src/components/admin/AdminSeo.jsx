@@ -121,7 +121,7 @@ function SerpPreview({
   title = '',
   description = '',
   url = '/',
-  domain = 'https://ajtravelspune.com',
+  domain = 'https://ajtravelsagency.vercel.app',
   isIndexable = true,
   canonicalUrl = '',
   seoScore = null,
@@ -129,7 +129,7 @@ function SerpPreview({
   const [viewMode, setViewMode] = useState('desktop');
   const [imgError, setImgError] = useState(false);
 
-  const rawDomain = (domain || 'https://ajtravelspune.com').replace(/\/$/, '');
+  const rawDomain = (domain || 'https://ajtravelsagency.vercel.app').replace(/\/$/, '');
   const cleanHostname = rawDomain.replace(/^https?:\/\//, '');
   const cleanPath = (url || '/').replace(/^\//, '').replace(/\/$/, '');
   const breadcrumb = cleanPath ? cleanPath.split('/').join(' › ') : '';
@@ -939,7 +939,7 @@ function QuickFixModal({ page, onClose, onSaved }) {
   );
 }
 
-function PageEditor({ page, onBack, onSaved, domain = 'https://ajtravelspune.com' }) {
+function PageEditor({ page, onBack, onSaved, domain = 'https://ajtravelsagency.vercel.app' }) {
   const [form, setForm] = useState({
     seoTitle:        page.seoTitle        || '',
     metaDescription: page.metaDescription || '',
@@ -1506,7 +1506,7 @@ function PageEditor({ page, onBack, onSaved, domain = 'https://ajtravelspune.com
 // ---------------------------------------------------------------------------
 // Static Page Metadata Viewer Modal (Safe Read-Only View for Code/Content Pages)
 // ---------------------------------------------------------------------------
-function StaticPageMetaModal({ page, onClose, domain = 'https://ajtravelspune.com' }) {
+function StaticPageMetaModal({ page, onClose, domain = 'https://ajtravelsagency.vercel.app' }) {
   if (!page) return null;
 
   const titleLen = page.seoTitle ? page.seoTitle.length : 0;
@@ -2449,7 +2449,7 @@ function IntegrationsView({ integrations, loading, onReloadIntegrations, banner,
                   </select>
                 ) : (
                   <code style={{ fontSize: '0.75rem', color: '#0284C7', fontWeight: 700 }}>
-                    {selectedProperty || 'Default (https://ajtravelspune.com)'}
+                    {selectedProperty || 'Default (https://ajtravelsagency.vercel.app)'}
                   </code>
                 )}
                 {selectedProperty && (
@@ -2901,7 +2901,7 @@ function IntegrationsView({ integrations, loading, onReloadIntegrations, banner,
                         </code>
                       </li>
                       <li>
-                        <strong>Search Console Property:</strong> Ensure your Google account has verified ownership of <code>https://ajtravelspune.com</code> or <code>sc-domain:ajtravelspune.com</code>.
+                        <strong>Search Console Property:</strong> Ensure your Google account has verified ownership of <code>https://ajtravelsagency.vercel.app</code> or <code>sc-domain:ajtravelspune.com</code>.
                       </li>
                     </ol>
                   </div>
@@ -3639,7 +3639,7 @@ export const AdminSeo = () => {
   const [sandboxDesc,        setSandboxDesc]        = useState('');
   const [gscBanner,          setGscBanner]          = useState(null);
 
-  const domain = overview?.siteDomain || 'https://ajtravelspune.com';
+  const domain = overview?.siteDomain || 'https://ajtravelsagency.vercel.app';
 
   // Check URL query parameters for OAuth callback results
   useEffect(() => {

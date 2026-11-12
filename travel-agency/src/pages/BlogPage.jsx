@@ -22,7 +22,7 @@ export function BlogPage() {
     'blog',
     'Travel Guides & Cab Rental Advice | AJ Travels Pune',
     'Read Maharashtra travel guides, Pune to Mumbai cab travel tips, Tempo Traveller rental advice, and weekend getaway itineraries from AJ Travels.',
-    'https://ajtravelspune.com/blog/'
+    'https://ajtravelsagency.vercel.app/blog/'
   );
 
   const [isEnquiryOpen, setIsEnquiryOpen] = useState(false);

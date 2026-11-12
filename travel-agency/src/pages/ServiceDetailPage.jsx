@@ -58,7 +58,7 @@ export function ServiceDetailPage() {
   const crystaFare = crystaMatch?.startingBaseFare ? `₹${crystaMatch.startingBaseFare.toLocaleString()}` : '₹4,899';
 
   const canonicalUrl = service
-    ? (service.slug.endsWith('-taxi') ? `https://ajtravelspune.com/${service.slug}/` : `https://ajtravelspune.com/services/${service.slug}`)
+    ? (service.slug.endsWith('-taxi') ? `https://ajtravelsagency.vercel.app/${service.slug}/` : `https://ajtravelsagency.vercel.app/services/${service.slug}`)
     : undefined;
 
   usePageSeo(

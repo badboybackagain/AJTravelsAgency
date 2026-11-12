@@ -24,7 +24,7 @@ export function ServicesPage() {
     'services',
     'Car Rental Services in Pune | Intercity Cabs & Airport Transfers - AJ Travels',
     'Explore chauffeur-driven car rental services in Pune: Pune to Mumbai cabs, 24/7 airport transfers (BOM & PNQ), outstation tours, and corporate car rentals with AJ Travels.',
-    'https://ajtravelspune.com/services/'
+    'https://ajtravelsagency.vercel.app/services/'
   );
 
   const navigate = useNavigate();

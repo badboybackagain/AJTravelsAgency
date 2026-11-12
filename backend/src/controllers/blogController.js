@@ -408,7 +408,7 @@ const createBlog = async (req, res, next) => {
         slug: resolvedSlug,
         metaTitle: metaTitle?.trim() || null,
         metaDesc: metaDesc?.trim() || null,
-        canonicalUrl: canonicalUrl?.trim() || `https://ajtravelspune.com/${resolvedSlug}/`,
+        canonicalUrl: canonicalUrl?.trim() || `${require('../config/seoConfig').SITE_DOMAIN}/${resolvedSlug}/`,
         category: category.trim(),
         categorySlug: categorySlug?.trim() || slugify(category),
         author: author?.trim() || 'AJ Travels Editorial Team',

@@ -16,7 +16,7 @@ export function TermsPage() {
     'terms',
     'Terms & Conditions | Booking Policies - AJ Travels',
     'Terms of service and booking conditions for AJ Travels Pune. Details on transparent all-inclusive toll pricing, cancellation terms, and chauffeur standards.',
-    'https://ajtravelspune.com/terms/'
+    'https://ajtravelsagency.vercel.app/terms/'
   );
 
   const [isEnquiryOpen, setIsEnquiryOpen] = useState(false);

@@ -916,9 +916,23 @@ const getSitemap = async (req, res) => {
     for (const p of coreList) {
       if (p.isIndexable === false) continue;
       const pathPart = p.pageUrl || '/';
-      const loc = p.canonicalUrl
-        ? (p.canonicalUrl.startsWith('http') ? p.canonicalUrl : `${domain}${p.canonicalUrl}`)
-        : (pathPart === '/' ? `${domain}/` : `${domain}${pathPart}`);
+      let loc;
+      if (p.canonicalUrl) {
+        if (p.canonicalUrl.startsWith('http')) {
+          try {
+            const cu = new URL(p.canonicalUrl);
+            loc = cu.hostname.replace(/^www\./, '') === 'ajtravelspune.com'
+              ? `${domain}${cu.pathname}`
+              : p.canonicalUrl;
+          } catch (_) {
+            loc = p.canonicalUrl;
+          }
+        } else {
+          loc = `${domain}${p.canonicalUrl}`;
+        }
+      } else {
+        loc = pathPart === '/' ? `${domain}/` : `${domain}${pathPart}`;
+      }
 
       const priority = pathPart === '/' ? '1.0' : '0.8';
       const changefreq = 'weekly';

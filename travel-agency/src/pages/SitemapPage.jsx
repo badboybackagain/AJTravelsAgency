@@ -13,7 +13,7 @@ export function SitemapPage() {
     'sitemap',
     'Sitemap | Complete Website Directory - AJ Travels Pune',
     'Browse the complete customer-friendly sitemap of AJ Travels Pune. Easily navigate our intercity cab services, vehicle fleet, fare calculation tools, travel guides, and contact information.',
-    'https://ajtravelspune.com/sitemap'
+    'https://ajtravelsagency.vercel.app/sitemap'
   );
 
   const [isEnquiryOpen, setIsEnquiryOpen] = useState(false);
@@ -26,14 +26,14 @@ export function SitemapPage() {
   useEffect(() => {
     const canonicalTags = document.querySelectorAll('link[rel="canonical"]');
     if (canonicalTags.length > 0) {
-      canonicalTags[0].setAttribute('href', 'https://ajtravelspune.com/sitemap');
+      canonicalTags[0].setAttribute('href', 'https://ajtravelsagency.vercel.app/sitemap');
       for (let i = 1; i < canonicalTags.length; i++) {
         canonicalTags[i].remove();
       }
     } else {
       const canonicalTag = document.createElement('link');
       canonicalTag.setAttribute('rel', 'canonical');
-      canonicalTag.setAttribute('href', 'https://ajtravelspune.com/sitemap');
+      canonicalTag.setAttribute('href', 'https://ajtravelsagency.vercel.app/sitemap');
       document.head.appendChild(canonicalTag);
     }
 
@@ -51,8 +51,8 @@ export function SitemapPage() {
       '@graph': [
         {
           '@type': 'WebPage',
-          '@id': 'https://ajtravelspune.com/sitemap#webpage',
-          'url': 'https://ajtravelspune.com/sitemap',
+          '@id': 'https://ajtravelsagency.vercel.app/sitemap#webpage',
+          'url': 'https://ajtravelsagency.vercel.app/sitemap',
           'name': 'Sitemap | Complete Website Directory - AJ Travels Pune',
           'description': 'Customer-friendly directory of verified intercity cab services, vehicle fleet options, fare calculators, travel guides, and company support.',
           'breadcrumb': {
@@ -62,13 +62,13 @@ export function SitemapPage() {
                 '@type': 'ListItem',
                 'position': 1,
                 'name': 'Home',
-                'item': 'https://ajtravelspune.com/'
+                'item': 'https://ajtravelsagency.vercel.app/'
               },
               {
                 '@type': 'ListItem',
                 'position': 2,
                 'name': 'Sitemap',
-                'item': 'https://ajtravelspune.com/sitemap'
+                'item': 'https://ajtravelsagency.vercel.app/sitemap'
               }
             ]
           }

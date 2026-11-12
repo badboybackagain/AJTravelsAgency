@@ -50,7 +50,7 @@ const PageLoader = () => (
 
 
 function MainWebsite() {
-  usePageSeo('home', homepageContent.seo.pageTitle, homepageContent.seo.metaDescription, 'https://ajtravelspune.com/');
+  usePageSeo('home', homepageContent.seo.pageTitle, homepageContent.seo.metaDescription, 'https://ajtravelsagency.vercel.app/');
   const [isEnquiryOpen, setIsEnquiryOpen] = useState(false);
 
   useEffect(() => {
@@ -68,10 +68,10 @@ function MainWebsite() {
       '@graph': [
         {
           '@type': 'TravelAgency',
-          '@id': 'https://ajtravelspune.com/#agency',
+          '@id': 'https://ajtravelsagency.vercel.app/#agency',
           'name': 'AJ Travels',
           'alternateName': 'AJ Tours & Travels Pune',
-          'url': 'https://ajtravelspune.com/',
+          'url': 'https://ajtravelsagency.vercel.app/',
           'telephone': '+917447443536',
           'email': 'ajtravelpune@gmail.com',
           'priceRange': '₹₹',
@@ -95,7 +95,7 @@ function MainWebsite() {
         },
         {
           '@type': 'FAQPage',
-          '@id': 'https://ajtravelspune.com/#faq',
+          '@id': 'https://ajtravelsagency.vercel.app/#faq',
           'mainEntity': homepageContent.faqs.map(faq => ({
             '@type': 'Question',
             'name': faq.q,

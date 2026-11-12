@@ -25,7 +25,7 @@ export function ContactPage() {
     'contact',
     'Contact AJ Travels Pune | 24/7 Car Rental & Cab Booking Desk',
     'Contact AJ Travels Pune. Call +91 7447443536 / +91 8421051299 or WhatsApp for instant car rental with driver, outstation cabs, and airport transfer bookings.',
-    'https://ajtravelspune.com/contact-us/'
+    'https://ajtravelsagency.vercel.app/contact-us/'
   );
 
   const [isEnquiryOpen, setIsEnquiryOpen] = useState(false);

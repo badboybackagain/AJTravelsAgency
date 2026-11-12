@@ -25,7 +25,7 @@ export function AboutPage() {
     'about',
     'About AJ Travels | Car Rental & Outstation Cab Service in Pune',
     'Discover AJ Travels, Pune’s trusted agency for chauffeur-driven car rental, intercity outstation cabs, and group Tempo Traveller rentals with transparent pricing.',
-    'https://ajtravelspune.com/about-us/'
+    'https://ajtravelsagency.vercel.app/about-us/'
   );
 
   const [isEnquiryOpen, setIsEnquiryOpen] = useState(false);

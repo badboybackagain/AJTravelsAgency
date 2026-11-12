@@ -19,7 +19,7 @@ export function PrivacyPolicyPage() {
     'privacy_policy',
     'Privacy Policy | AJ Travels Pune Vehicle Rental Agency',
     'Read the privacy policy of AJ Travels Pune. Information on passenger privacy, OTP phone verification security, and customer data protection standards.',
-    'https://ajtravelspune.com/privacy-policy/'
+    'https://ajtravelsagency.vercel.app/privacy-policy/'
   );
 
   const [isEnquiryOpen, setIsEnquiryOpen] = useState(false);

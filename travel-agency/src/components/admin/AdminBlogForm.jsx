@@ -129,7 +129,7 @@ export const AdminBlogForm = ({ isOpen, blog, onClose, onSuccess, availableArtic
         dropDefault: blog.dropDefault || 'mumbai',
         metaTitle: blog.metaTitle || '',
         metaDesc: blog.metaDesc || '',
-        canonicalUrl: blog.canonicalUrl || `https://ajtravelspune.com/${blog.slug}/`,
+        canonicalUrl: blog.canonicalUrl || `https://ajtravelsagency.vercel.app/${blog.slug}/`,
         isPublished: Boolean(blog.isPublished),
         isFeatured: Boolean(blog.isFeatured),
         displayOrder: blog.displayOrder !== undefined ? blog.displayOrder : 0,
@@ -179,7 +179,7 @@ export const AdminBlogForm = ({ isOpen, blog, onClose, onSuccess, availableArtic
       if (!isSlugManual && !isEditMode) {
         const genSlug = slugify(val);
         updated.slug = genSlug;
-        updated.canonicalUrl = genSlug ? `https://ajtravelspune.com/${genSlug}/` : '';
+        updated.canonicalUrl = genSlug ? `https://ajtravelsagency.vercel.app/${genSlug}/` : '';
       }
       if (!prev.imageAlt || prev.imageAlt === prev.title) {
         updated.imageAlt = val;
@@ -508,7 +508,7 @@ export const AdminBlogForm = ({ isOpen, blog, onClose, onSuccess, availableArtic
         dropDefault: (formData.dropDefault || 'mumbai').trim().toLowerCase(),
         metaTitle: formData.metaTitle ? formData.metaTitle.trim() : null,
         metaDesc: formData.metaDesc ? formData.metaDesc.trim() : null,
-        canonicalUrl: `https://ajtravelspune.com/${resolvedSlug}/`,
+        canonicalUrl: `https://ajtravelsagency.vercel.app/${resolvedSlug}/`,
         isPublished: targetPublish,
         isFeatured: Boolean(formData.isFeatured),
         displayOrder: parseInt(formData.displayOrder, 10) || 0,
@@ -766,7 +766,7 @@ export const AdminBlogForm = ({ isOpen, blog, onClose, onSuccess, availableArtic
                           setFormData((p) => ({
                             ...p,
                             slug: slugify(e.target.value),
-                            canonicalUrl: `https://ajtravelspune.com/${slugify(e.target.value)}/`,
+                            canonicalUrl: `https://ajtravelsagency.vercel.app/${slugify(e.target.value)}/`,
                           }));
                         }}
                         placeholder="pune-to-mumbai-one-way-cab"

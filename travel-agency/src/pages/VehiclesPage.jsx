@@ -26,7 +26,7 @@ export function VehiclesPage() {
     'vehicles',
     'Rental Cars & Tempo Travellers in Pune | Fleet Options - AJ Travels',
     'Hire rental cars with driver in Pune: Swift Dzire, 6-seater Ertiga, Toyota Innova Crysta, and luxury 13 to 20-seater Force Tempo Travellers for outstation & airport trips.',
-    'https://ajtravelspune.com/vehicles/'
+    'https://ajtravelsagency.vercel.app/vehicles/'
   );
 
   const navigate = useNavigate();

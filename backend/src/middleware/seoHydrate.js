@@ -245,7 +245,7 @@ function injectFaqToJsonLd(html) {
       if (!alreadyHas) {
         json['@graph'].push({
           '@type': 'FAQPage',
-          '@id': 'https://ajtravelspune.com/#faq',
+          '@id': `${require('../config/seoConfig').SITE_DOMAIN}/#faq`,
           'mainEntity': HOMEPAGE_FAQS.map(faq => ({
             '@type': 'Question',
             'name': faq.q,
