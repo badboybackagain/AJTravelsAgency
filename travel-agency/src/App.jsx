@@ -262,10 +262,28 @@ function GlobalAnimationObserver() {
   return null;
 }
 
+// Automatically track SPA route changes in Google Analytics 4
+function AnalyticsTracker() {
+  const { pathname, search } = useLocation();
+
+  useEffect(() => {
+    if (typeof window.gtag === 'function') {
+      window.gtag('config', 'G-8NMEZNKH7V', {
+        page_path: pathname + search,
+        page_location: window.location.href,
+        page_title: document.title,
+      });
+    }
+  }, [pathname, search]);
+
+  return null;
+}
+
 function App() {
   return (
     <BrowserRouter>
       <ScrollToTop />
+      <AnalyticsTracker />
       <GlobalAnimationObserver />
       {/* Floating WhatsApp bubble — shown on all public pages, hidden on /admin/* */}
       <WhatsAppBubble />
