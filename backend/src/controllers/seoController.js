@@ -1023,6 +1023,11 @@ const getRobots = (req, res) => {
     'Disallow: /admin/',
     'Disallow: /api/',
     'Disallow: /auth/',
+    '',
+    '# Explicit allow for OpenAI / ChatGPT search crawler',
+    'User-agent: OAI-SearchBot',
+    'Allow: /',
+    '',
     `Sitemap: ${domain}/sitemap.xml`,
     '',
   ].join('\n');

@@ -4,5 +4,8 @@ Disallow: /admin/
 Disallow: /api/
 Disallow: /auth/
 
-Sitemap: https://ajtravelsagency.vercel.app/sitemap.xml
+# Explicit allow for OpenAI / ChatGPT search crawler
+User-agent: OAI-SearchBot
+Allow: /
 
+Sitemap: https://www.ajtravelspune.com/sitemap.xml

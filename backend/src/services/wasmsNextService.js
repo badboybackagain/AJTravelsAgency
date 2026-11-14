@@ -344,7 +344,7 @@ async function startWasmsNextOtpVerification({
       success: true,
       reference: 'mock-wasms-next-ref',
       status: 'pending',
-      channel: 'wa',
+      channel: ['wa'],
       expiresAt: new Date(Date.now() + 300 * 1000),
     };
   }
