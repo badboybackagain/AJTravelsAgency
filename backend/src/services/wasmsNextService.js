@@ -41,6 +41,19 @@ function resolveWasmsNextUrl(settings, override = null) {
 }
 
 /**
+ * Resolves the WASMS Next base origin (scheme + host) from settings, env or default.
+ */
+function resolveWasmsNextOrigin(settings, override = null) {
+  const candidate = override || (settings && (settings.nextApiUrl || settings.apiUrl)) || process.env.WASMS_NEXT_URL || DEFAULT_WASMS_NEXT_URL;
+  try {
+    const parsed = new URL(candidate);
+    return parsed.origin;
+  } catch {
+    return 'https://wasmsnext.nirosha.org';
+  }
+}
+
+/**
  * Normalizes phone number to strict E.164 with leading plus sign (e.g. +919876543210).
  */
 function formatE164Phone(phone) {
@@ -302,6 +315,300 @@ async function verifyWasmsNextConnection(tokenOverride = null, accountIdOverride
 }
 
 /**
+ * Starts an OTP verification with WASMS Next dedicated OTP API.
+ * Endpoint: POST https://wasmsnext.nirosha.org/api/v1/otp/verifications
+ *
+ * CRITICAL REQUIREMENTS:
+ * - channels array must contain exactly ["wa"].
+ * - Never include "sms" or "waba".
+ * - Never allow channel fallback.
+ * - Zero OTP value generation/logging.
+ */
+async function startWasmsNextOtpVerification({
+  endpointOrigin,
+  bearerToken,
+  recipientPhone,
+  timeoutMs = 15000,
+}) {
+  if (!bearerToken || !bearerToken.trim()) {
+    return {
+      success: false,
+      code: 'UNCONFIGURED',
+      message: 'WASMS Next Bearer token is not configured.',
+    };
+  }
+
+  // Safety guard: Never dispatch real network OTPs in test mode
+  if (process.env.NODE_ENV === 'test' || process.env.DISABLE_REAL_OTP === 'true') {
+    return {
+      success: true,
+      reference: 'mock-wasms-next-ref',
+      status: 'pending',
+      channel: 'wa',
+      expiresAt: new Date(Date.now() + 300 * 1000),
+    };
+  }
+
+  const origin = endpointOrigin ? endpointOrigin.replace(/\/+$/, '') : 'https://wasmsnext.nirosha.org';
+  const targetUrl = `${origin}/api/v1/otp/verifications`;
+  const e164Phone = formatE164Phone(recipientPhone);
+
+  // Strict WA-only request body: exactly ["wa"], never "sms", never "waba"
+  const bodyPayload = {
+    to: e164Phone,
+    channels: ['wa'],
+  };
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const response = await fetch(targetUrl, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${bearerToken.trim()}`,
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(bodyPayload),
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
+    const responseText = await response.text();
+    let parsed = null;
+    try {
+      parsed = JSON.parse(responseText);
+    } catch {
+      parsed = { raw: responseText.slice(0, 500) };
+    }
+
+    const isAccepted = (response.status === 202 || response.status === 200) && parsed && parsed.reference;
+
+    if (isAccepted) {
+      // Validate strict WA-only response channel
+      if (parsed.channel && parsed.channel !== 'wa') {
+        return {
+          success: false,
+          code: 'CHANNEL_MISMATCH',
+          message: 'Non-WhatsApp channel was returned by gateway.',
+        };
+      }
+
+      if (parsed.status === 'failed' || parsed.status === 'canceled') {
+        return {
+          success: false,
+          code: 'DELIVERY_FAILED',
+          message: 'WhatsApp OTP delivery was rejected by gateway.',
+        };
+      }
+
+      return {
+        success: true,
+        reference: parsed.reference,
+        status: parsed.status,
+        channel: parsed.channel || 'wa',
+        expiresAt: parsed.expires_at ? new Date(parsed.expires_at) : null,
+      };
+    }
+
+    const errCode = parsed?.error?.code || 'PROVIDER_ERROR';
+    const errMsg = parsed?.error?.message || parsed?.message || `WASMS Next OTP error (status ${response.status})`;
+
+    // Strict channel failure handling: Zero fallback
+    if (
+      errCode === 'channel_unavailable' ||
+      errCode === 'no_channel_available' ||
+      errCode === 'channel_not_available' ||
+      errMsg.toLowerCase().includes('channel')
+    ) {
+      return {
+        success: false,
+        code: 'CHANNEL_UNAVAILABLE',
+        message: 'WhatsApp channel is currently unavailable. Please try again later.',
+        rawError: errCode,
+      };
+    }
+
+    return {
+      success: false,
+      code: errCode,
+      message: errMsg,
+    };
+  } catch (err) {
+    clearTimeout(timeoutId);
+    if (err.name === 'AbortError') {
+      return {
+        success: false,
+        code: 'PROVIDER_TIMEOUT',
+        message: 'WhatsApp OTP request timed out after 15 seconds.',
+      };
+    }
+    return {
+      success: false,
+      code: 'NETWORK_ERROR',
+      message: err.message || 'Network error communicating with WhatsApp gateway.',
+    };
+  }
+}
+
+/**
+ * Checks / verifies an OTP code with WASMS Next dedicated OTP API.
+ * Endpoint: POST https://wasmsnext.nirosha.org/api/v1/otp/verifications/{reference}/check
+ */
+async function checkWasmsNextOtpVerification({
+  endpointOrigin,
+  bearerToken,
+  reference,
+  code,
+  timeoutMs = 15000,
+}) {
+  if (!bearerToken || !bearerToken.trim()) {
+    return {
+      success: false,
+      code: 'UNCONFIGURED',
+      message: 'WASMS Next Bearer token is not configured.',
+    };
+  }
+
+  if (!reference || !reference.trim()) {
+    return {
+      success: false,
+      code: 'MISSING_REFERENCE',
+      message: 'Verification reference is missing.',
+    };
+  }
+
+  const cleanCode = String(code || '').trim();
+  if (!cleanCode) {
+    return {
+      success: false,
+      code: 'MISSING_OTP',
+      message: 'Please enter the verification code received on WhatsApp.',
+    };
+  }
+
+  // Safety guard: Mock responses in test mode
+  if (process.env.NODE_ENV === 'test' || process.env.DISABLE_REAL_OTP === 'true') {
+    if (cleanCode === 'INVALID_TEST_OTP') {
+      return {
+        success: false,
+        code: 'INVALID_OTP',
+        message: 'Invalid OTP code. 2 attempt(s) remaining.',
+        remainingAttempts: 2,
+      };
+    }
+    return {
+      success: true,
+      approved: true,
+      reference,
+      approvedAt: new Date().toISOString(),
+    };
+  }
+
+  const origin = endpointOrigin ? endpointOrigin.replace(/\/+$/, '') : 'https://wasmsnext.nirosha.org';
+  const targetUrl = `${origin}/api/v1/otp/verifications/${encodeURIComponent(reference.trim())}/check`;
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const response = await fetch(targetUrl, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${bearerToken.trim()}`,
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ code: cleanCode }),
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
+    const responseText = await response.text();
+    let parsed = null;
+    try {
+      parsed = JSON.parse(responseText);
+    } catch {
+      parsed = { raw: responseText.slice(0, 500) };
+    }
+
+    if (response.status === 200 && parsed) {
+      if (parsed.status === 'approved') {
+        return {
+          success: true,
+          approved: true,
+          reference: parsed.reference,
+          approvedAt: parsed.approved_at,
+        };
+      }
+
+      if (parsed.status === 'max_attempts_reached') {
+        return {
+          success: false,
+          code: 'MAX_ATTEMPTS_EXCEEDED',
+          message: 'Maximum verification attempts exceeded. Please request a new OTP.',
+          remainingAttempts: 0,
+        };
+      }
+
+      if (parsed.status === 'pending') {
+        const remaining = typeof parsed.attempts_remaining === 'number' ? parsed.attempts_remaining : undefined;
+        return {
+          success: false,
+          code: 'INVALID_OTP',
+          message: remaining !== undefined
+            ? `Invalid OTP code. ${remaining} attempt(s) remaining.`
+            : 'Invalid OTP code. Please check your WhatsApp and try again.',
+          remainingAttempts: remaining,
+        };
+      }
+    }
+
+    if (response.status === 410) {
+      return {
+        success: false,
+        code: 'OTP_EXPIRED',
+        message: 'OTP has expired. Please request a new OTP.',
+      };
+    }
+
+    if (response.status === 409) {
+      return {
+        success: false,
+        code: 'VERIFICATION_CONFLICT',
+        message: parsed?.error?.message || 'Verification is no longer active. Please request a new OTP.',
+      };
+    }
+
+    const errCode = parsed?.error?.code || 'INVALID_OTP';
+    const errMsg = parsed?.error?.message || parsed?.message || `Verification check failed (status ${response.status})`;
+
+    return {
+      success: false,
+      code: errCode,
+      message: errMsg,
+    };
+  } catch (err) {
+    clearTimeout(timeoutId);
+    if (err.name === 'AbortError') {
+      return {
+        success: false,
+        code: 'PROVIDER_TIMEOUT',
+        message: 'WhatsApp verification check timed out after 15 seconds.',
+      };
+    }
+    return {
+      success: false,
+      code: 'NETWORK_ERROR',
+      message: err.message || 'Network error communicating with WhatsApp gateway.',
+    };
+  }
+}
+
+/**
  * Masks secrets for safe display in UI/API responses
  */
 function maskSecret(secret) {
@@ -313,9 +620,12 @@ module.exports = {
   DEFAULT_WASMS_NEXT_URL,
   validateEndpointUrl,
   resolveWasmsNextUrl,
+  resolveWasmsNextOrigin,
   formatE164Phone,
   generateIdempotencyKey,
   maskSecret,
   dispatchWasmsNextMessage,
   verifyWasmsNextConnection,
+  startWasmsNextOtpVerification,
+  checkWasmsNextOtpVerification,
 };

@@ -58,6 +58,8 @@ async function runTests() {
       data: {
         provider: 'WASMS',
         isEnabled: true,
+        notifyBookings: true,
+        notifyEnquiries: true,
         destinationNumber: '+919876543210',
       },
     });
@@ -311,12 +313,10 @@ async function runTests() {
     });
 
     let otpDispatched = false;
-    wasmsNextService.dispatchWasmsNextMessage = async (params) => {
+    wasmsNextService.startWasmsNextOtpVerification = async (params) => {
       otpDispatched = true;
       assert(params.recipientPhone, 'Recipient phone must be present');
-      assert(params.messageText, 'Message body must be present');
-      assert(params.messageText.includes('verification') || params.messageText.includes('AJ Tours') || params.messageText.includes('AJ Travels'));
-      return { success: true, messageId: 'mock-otp-msg', status: 'ACCEPTED', response: { status: 200 } };
+      return { success: true, reference: 'mock-next-otp-ref', status: 'pending', channel: 'wa' };
     };
 
     const challenge = await otpService.sendBookingOtp('9876543210');

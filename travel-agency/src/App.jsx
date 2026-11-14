@@ -15,6 +15,7 @@ import { Footer } from './components/Footer';
 import { FinalCTA } from './components/FinalCTA';
 import { MobileStickyBar } from './components/MobileStickyBar';
 import { EnquiryModal } from './components/EnquiryModal';
+import { WhatsAppBubble } from './components/WhatsAppBubble';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { usePageSeo } from './hooks/usePageSeo';
 import { useScrollReveal } from './hooks/useScrollReveal';
@@ -266,6 +267,8 @@ function App() {
     <BrowserRouter>
       <ScrollToTop />
       <GlobalAnimationObserver />
+      {/* Floating WhatsApp bubble — shown on all public pages, hidden on /admin/* */}
+      <WhatsAppBubble />
       <Suspense fallback={<PageLoader />}>
         <Routes>
           {/* Core Booking & Calculator SPA routes */}
