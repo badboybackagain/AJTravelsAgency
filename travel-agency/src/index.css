@@ -151,12 +151,12 @@ img { max-width: 100%; height: auto; display: block; }
   overflow: hidden;
 }
 .internal-hero-section {
-  padding-top: 6.25rem !important;
+  padding-top: calc(env(safe-area-inset-top, 0px) + 6.25rem) !important;
 }
 .svc-breadcrumbs-strip,
 .article-breadcrumbs-strip,
 .veh-breadcrumbs-strip {
-  padding-top: 6rem !important;
+  padding-top: calc(env(safe-area-inset-top, 0px) + 6rem) !important;
 }
 .hero-bg-wrapper { position: absolute; inset: 0; z-index: 1; }
 .hero-bg-picture { display: block; width: 100%; height: 100%; }
@@ -663,35 +663,37 @@ img { max-width: 100%; height: auto; display: block; }
    ═══════════════════════════════════════════════════════ */
 @media (max-width: 768px) {
   .hero-split-section {
-    padding: 4.25rem 0.85rem 6.5rem !important;
+    padding: calc(env(safe-area-inset-top, 0px) + 4.85rem) 0.85rem 6.5rem !important;
     min-height: auto;
     position: relative;
   }
   .hero-bg-img {
     object-position: center top !important;
+    filter: saturate(1.12) brightness(1.07) !important;
   }
   .hero-bg-overlay {
     background: 
-      /* Subtle warm golden sunset glow matching desktop evening light */
+      /* Warm golden sunset light matching desktop evening atmosphere */
       radial-gradient(
-        ellipse 80% 50% at 85% 12%,
-        rgba(245, 158, 11, 0.15) 0%,
-        rgba(217, 119, 6, 0.05) 45%,
-        transparent 70%
+        ellipse 90% 60% at 82% 16%,
+        rgba(251, 191, 36, 0.28) 0%,
+        rgba(245, 158, 11, 0.15) 35%,
+        rgba(217, 119, 6, 0.05) 55%,
+        transparent 75%
       ),
       /* Left-side text protection matching desktop palette (rgba(11, 22, 41, ...)) */
       linear-gradient(
         90deg,
-        rgba(11, 22, 41, 0.75) 0%,
-        rgba(11, 22, 41, 0.52) 36%,
-        rgba(11, 22, 41, 0.10) 60%,
-        transparent 75%
+        rgba(11, 22, 41, 0.68) 0%,
+        rgba(11, 22, 41, 0.45) 38%,
+        rgba(11, 22, 41, 0.05) 65%,
+        transparent 80%
       ),
       /* Top header clearance gradient */
       linear-gradient(
         180deg,
-        rgba(11, 22, 41, 0.50) 0%,
-        rgba(11, 22, 41, 0.10) 18%,
+        rgba(11, 22, 41, 0.38) 0%,
+        rgba(11, 22, 41, 0.08) 18%,
         transparent 35%
       ) !important;
   }

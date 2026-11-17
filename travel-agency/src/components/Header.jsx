@@ -239,7 +239,7 @@ export const Header = ({ isDark = false, onOpenEnquiry }) => {
           left: 0;
           right: 0;
           z-index: 1000;
-          padding: 0.85rem 1.25rem 0.5rem;
+          padding: calc(env(safe-area-inset-top, 0px) + 0.85rem) 1.25rem 0.5rem;
           background: transparent;
           border: none;
           box-shadow: none;
@@ -250,7 +250,7 @@ export const Header = ({ isDark = false, onOpenEnquiry }) => {
         }
 
         .header.scrolled {
-          padding: 0.55rem 1.25rem;
+          padding: calc(env(safe-area-inset-top, 0px) + 0.55rem) 1.25rem 0.5rem;
         }
 
         /* ── Floating Translucent Dark Glass Capsule (CakeStory Style) ── */
@@ -541,10 +541,13 @@ export const Header = ({ isDark = false, onOpenEnquiry }) => {
           }
         }
 
-        @media (max-width: 640px) {
+        @media (max-width: 768px) {
           .header {
-            padding: 0.45rem 0.65rem;
-            margin-bottom: -58px;
+            padding: calc(env(safe-area-inset-top, 0px) + 0.85rem) 0.75rem 0.35rem;
+            margin-bottom: -68px;
+          }
+          .header.scrolled {
+            padding: calc(env(safe-area-inset-top, 0px) + 0.55rem) 0.75rem 0.35rem;
           }
           .header-capsule {
             height: 50px;
@@ -574,6 +577,25 @@ export const Header = ({ isDark = false, onOpenEnquiry }) => {
             align-items: center;
             justify-content: center;
             border-radius: 50%;
+          }
+        }
+
+        @media (max-width: 360px) {
+          .header {
+            padding-left: 0.45rem;
+            padding-right: 0.45rem;
+          }
+          .header-capsule {
+            padding: 0.25rem 0.4rem 0.25rem 0.55rem;
+            gap: 0.35rem;
+          }
+          .brand-logo-img {
+            height: 20px;
+            max-width: 108px;
+          }
+          .btn-enquiry-header {
+            padding: 0 0.65rem !important;
+            font-size: 0.70rem !important;
           }
         }
       `}</style>
