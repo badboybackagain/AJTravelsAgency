@@ -128,9 +128,9 @@ export const Header = ({ isDark = false, onOpenEnquiry }) => {
             <Link
               to="/booking"
               className="btn-action btn-enquiry-header"
-              aria-label="Book a Cab"
+              aria-label="Enquire Now"
             >
-              <span>Book Cab</span>
+              <span>Enquire Now</span>
             </Link>
           )}
 
@@ -260,7 +260,7 @@ export const Header = ({ isDark = false, onOpenEnquiry }) => {
           align-items: center;
           justify-content: space-between;
           width: 100%;
-          max-width: 1380px;
+          max-width: 1280px;
           margin: 0 auto;
           background: rgba(15, 23, 42, 0.76);
           backdrop-filter: blur(20px) saturate(180%);
@@ -456,7 +456,7 @@ export const Header = ({ isDark = false, onOpenEnquiry }) => {
           margin-top: 0.5rem;
           box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
           animation: dropdownFade 0.2s ease-out;
-          max-width: 1380px;
+          max-width: 1280px;
           margin-left: auto;
           margin-right: auto;
         }
@@ -543,32 +543,37 @@ export const Header = ({ isDark = false, onOpenEnquiry }) => {
 
         @media (max-width: 640px) {
           .header {
-            padding: 0.35rem 0.65rem;
+            padding: 0.45rem 0.65rem;
             margin-bottom: -58px;
           }
           .header-capsule {
-            height: 48px;
-            padding: 0.25rem 0.35rem 0.25rem 0.65rem;
-          }
-          .brand-logo-badge {
-            height: 34px;
-            padding: 0.25rem 0.65rem;
+            height: 50px;
+            padding: 0.25rem 0.5rem 0.25rem 0.75rem;
+            gap: 0.5rem;
           }
           .brand-logo-img {
-            height: 20px;
-          }
-          .btn-login {
-            height: 34px;
-            padding: 0 0.85rem;
-            font-size: 0.76rem;
+            height: 22px;
+            max-width: 125px;
           }
           .header-phone-chip {
-            width: 34px;
-            height: 34px;
+            display: none !important;
+          }
+          .btn-enquiry-header {
+            display: inline-flex !important;
+            height: 33px !important;
+            padding: 0 0.8rem !important;
+            font-size: 0.74rem !important;
+            font-weight: 600 !important;
+            border-radius: 9999px !important;
+            white-space: nowrap !important;
           }
           .mobile-menu-toggle {
             width: 34px;
             height: 34px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
           }
         }
       `}</style>

@@ -1146,6 +1146,7 @@
    ========================================================================== */
 
 .fare-calculator-form-card {
+  scroll-margin-top: 100px;
   background: #FFFFFF;
   border-radius: 20px;
   border: 1.5px solid #DCE3EB;
@@ -1252,6 +1253,15 @@
 
 .fare-trip-tab:hover {
   color: #1E293B;
+}
+
+
+.tab-full-txt {
+  display: inline;
+}
+
+.tab-short-txt {
+  display: none;
 }
 
 .fare-trip-tab.active {
@@ -1451,35 +1461,152 @@
 }
 
 @media (max-width: 860px) {
-  .fare-calculator-form-card {
-    padding: 1.5rem 1.15rem;
+  #fare-form-card {
+    scroll-margin-top: 90px;
   }
+
+  .fare-calculator-form-card {
+    padding: 1.35rem 1rem;
+    border-radius: 16px;
+    margin-bottom: 1.5rem;
+  }
+
+  .fare-form-header {
+    margin-bottom: 1.15rem;
+  }
+
+  .fare-form-badge {
+    padding: 0.25rem 0.65rem;
+    font-size: 0.7rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .fare-form-header h2 {
+    font-size: 1.25rem;
+    line-height: 1.3;
+    margin-bottom: 0.35rem;
+  }
+
+  .fare-form-header p {
+    font-size: 0.84rem;
+    line-height: 1.45;
+  }
+
+  /* Trip Switcher Tabs on Mobile: Equal 3-column single row */
+  .fare-form-trip-tabs {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    padding: 0.25rem !important;
+    gap: 0.25rem !important;
+    border-radius: 10px;
+  }
+
+  .fare-trip-tab {
+    width: 100% !important;
+    padding: 0.55rem 0.15rem !important;
+    font-size: 0.78rem !important;
+    text-align: center !important;
+    justify-content: center !important;
+    border-radius: 8px;
+    white-space: nowrap !important;
+  }
+
+  .tab-full-txt {
+    display: none !important;
+  }
+
+  .tab-short-txt {
+    display: inline !important;
+  }
+
+  /* Locations Stack with Centered Vertical Swap */
   .fare-form-locations-wrapper {
     grid-template-columns: 1fr;
-    gap: 0.75rem;
+    gap: 0.5rem;
   }
+
   .fare-form-swap-col {
     height: auto;
-    margin: -0.25rem 0;
+    margin: -0.15rem 0;
+    display: flex;
+    justify-content: center;
   }
-  .fare-form-grid-2,
-  .fare-form-grid-3 {
+
+  .fare-form-swap-btn {
+    width: 36px;
+    height: 36px;
+    transform: rotate(90deg);
+    transition: transform 0.2s ease, background 0.2s ease;
+  }
+
+  /* Form Fields: Date & Time in 2 columns (50% / 50%), Vehicle Preference full width */
+  .fare-form-grid-3,
+  .fare-schedule-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.65rem;
+  }
+
+  .fare-form-grid-3 .fare-form-field:last-child,
+  .fare-schedule-grid .fare-form-field:last-child {
+    grid-column: 1 / -1;
+  }
+
+  /* Round Trip Return Date & Time in 2 columns side-by-side */
+  .fare-roundtrip-grid {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 0.65rem !important;
+  }
+
+  /* Local Rental Grid: Stack city & duration */
+  .fare-local-grid {
     grid-template-columns: 1fr;
-    gap: 0.75rem;
+    gap: 0.65rem;
   }
+
+  .fare-form-field {
+    gap: 0.35rem;
+  }
+
+  .fare-form-label {
+    font-size: 0.74rem;
+  }
+
+  .fare-form-input {
+    height: 46px;
+    font-size: 0.88rem;
+    padding: 0 0.75rem;
+  }
+
+  input[type="date"].fare-form-input {
+    min-height: 46px;
+    display: flex;
+    align-items: center;
+  }
+
   .fare-form-actions-row {
     flex-direction: column;
     width: 100%;
+    margin-top: 0.5rem;
+    gap: 0.65rem;
   }
+
   .fare-form-calculate-btn,
   .fare-form-cancel-btn {
     width: 100%;
+    height: 48px;
+    font-size: 0.95rem;
     justify-content: center;
   }
+
   .fare-journey-summary-bar {
     flex-direction: column;
     align-items: flex-start;
   }
+
   .fare-modify-route-btn {
     width: 100%;
     justify-content: center;

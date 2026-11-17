@@ -91,11 +91,14 @@ export const MumbaiToPuneSection = () => {
       </div>
 
       <style>{`
-        .split-reverse {
+        #mumbai-to-pune .split-grid {
+          display: grid;
           grid-template-columns: 1.15fr 0.85fr;
+          gap: 3.5rem;
+          align-items: center;
         }
 
-        .split-media {
+        #mumbai-to-pune .split-media {
           position: relative;
           border-radius: 20px;
           overflow: hidden;
@@ -103,18 +106,18 @@ export const MumbaiToPuneSection = () => {
           border: 1.5px solid #DCE3EB;
         }
 
-        .split-img {
+        #mumbai-to-pune .split-img {
           width: 100%;
           height: 460px;
           object-fit: cover;
           transition: transform 0.4s ease;
         }
 
-        .split-media:hover .split-img {
+        #mumbai-to-pune .split-media:hover .split-img {
           transform: scale(1.02);
         }
 
-        .media-overlay-badge {
+        #mumbai-to-pune .media-overlay-badge {
           position: absolute;
           bottom: 1.5rem;
           left: 1.5rem;
@@ -132,42 +135,44 @@ export const MumbaiToPuneSection = () => {
           gap: 0.5rem;
         }
 
-        .lead-paragraph {
+        #mumbai-to-pune .lead-paragraph {
           font-size: 0.98rem;
           line-height: 1.65;
           margin-bottom: 1.5rem;
         }
 
-        .benefits-grid {
+        #mumbai-to-pune .benefits-grid {
           display: grid;
           grid-template-columns: 1fr 1fr;
-          gap: 1.15rem;
+          gap: 0.85rem 1.5rem;
           margin-bottom: 2rem;
         }
 
-        .benefit-item {
+        #mumbai-to-pune .benefit-item {
           display: flex;
-          align-items: flex-start;
+          align-items: center;
           gap: 0.65rem;
         }
 
-        .benefit-icon {
+        #mumbai-to-pune .benefit-icon {
           flex-shrink: 0;
-          margin-top: 0.15rem;
+          color: #2563EB;
         }
 
-        .benefit-title {
-          font-size: 0.88rem;
+        #mumbai-to-pune .benefit-title {
+          font-size: 0.92rem;
           font-weight: 700;
-          margin-bottom: 0.15rem;
+          color: #17324D;
+          margin-bottom: 0;
+          line-height: 1.35;
         }
 
-        .benefit-desc {
-          font-size: 0.78rem;
-          line-height: 1.4;
+        /* Hide verbose descriptive subtitle lines — keep clean single main points */
+        #mumbai-to-pune .benefit-desc {
+          display: none !important;
         }
 
-        .action-row {
+        #mumbai-to-pune .action-row {
           display: flex;
           align-items: center;
           gap: 1rem;
@@ -175,22 +180,90 @@ export const MumbaiToPuneSection = () => {
         }
 
         @media (max-width: 992px) {
-          .card-white {
-            padding: 1.5rem !important;
+          #mumbai-to-pune .card-white {
+            padding: 1.75rem !important;
           }
-          .split-reverse {
-            grid-template-columns: 1fr;
-            gap: 2rem;
+          #mumbai-to-pune .split-grid {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 1.75rem;
           }
-          .split-reverse .split-media {
+          #mumbai-to-pune .split-media {
             order: -1;
+            width: 100%;
           }
-          .split-reverse .split-img {
+          #mumbai-to-pune .split-content {
+            order: 1;
+            width: 100%;
+          }
+          #mumbai-to-pune .split-img {
             height: 220px;
           }
-          .split-reverse .benefits-grid {
+          #mumbai-to-pune .benefits-grid {
             grid-template-columns: 1fr;
-            gap: 0.85rem;
+            gap: 0.75rem;
+          }
+        }
+
+        @media (max-width: 768px) {
+          #mumbai-to-pune {
+            padding-top: 3rem !important;
+            padding-bottom: 3rem !important;
+          }
+          #mumbai-to-pune .card-white {
+            padding: 1.5rem 1.25rem !important;
+            border-radius: 20px !important;
+          }
+          #mumbai-to-pune .split-img {
+            height: 200px;
+            border-radius: 16px;
+          }
+          #mumbai-to-pune .media-overlay-badge {
+            bottom: 0.85rem;
+            left: 0.85rem;
+            padding: 0.45rem 0.85rem;
+            font-size: 0.75rem;
+          }
+          #mumbai-to-pune .lovable-title {
+            font-size: 1.6rem !important;
+            line-height: 1.25;
+            margin-bottom: 0.65rem !important;
+          }
+          #mumbai-to-pune .lead-paragraph {
+            font-size: 0.90rem;
+            line-height: 1.55;
+            margin-bottom: 1.25rem;
+          }
+          #mumbai-to-pune .subheading {
+            font-size: 1.05rem !important;
+            margin-bottom: 0.85rem !important;
+          }
+          /* Show only the first two features on mobile view */
+          #mumbai-to-pune .benefit-item:nth-child(n+3) {
+            display: none !important;
+          }
+          #mumbai-to-pune .benefits-grid {
+            grid-template-columns: 1fr !important;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+          }
+          #mumbai-to-pune .benefit-title {
+            font-size: 0.90rem;
+          }
+          #mumbai-to-pune .action-row {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            gap: 0.75rem;
+          }
+          #mumbai-to-pune .action-row a,
+          #mumbai-to-pune .action-row .btn {
+            width: 100%;
+            justify-content: center;
+            text-align: center;
+            box-sizing: border-box;
+            padding: 0.85rem 1.25rem;
+            font-size: 0.88rem;
           }
         }
       `}</style>

@@ -54,40 +54,45 @@ export const WhatsAppBubble = () => {
   return (
     <div
       className="wa-bubble-wrapper"
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
       style={{
         position: 'fixed',
-        // Desktop: 24px from bottom-right; Mobile: 20px bottom, 16px right
+        // Desktop: 24px from bottom-right; Mobile: 16px bottom, 14px right
         bottom: 'var(--wa-bottom, 24px)',
         right: 'var(--wa-right, 24px)',
         zIndex: 9999,
         display: 'flex',
-        alignItems: 'center',
-        gap: '10px',
+        flexDirection: 'column',
+        alignItems: 'flex-end',
+        gap: '6px',
       }}
       aria-label="Chat with AJ Travels on WhatsApp"
     >
-      {/* Tooltip — appears on hover, desktop only */}
-      {tooltipVisible && (
-        <div
-          style={{
-            background: '#1a1a1a',
-            color: '#fff',
-            fontSize: '13px',
-            fontWeight: 500,
-            padding: '7px 13px',
-            borderRadius: '20px',
-            whiteSpace: 'nowrap',
-            boxShadow: '0 2px 10px rgba(0,0,0,0.25)',
-            opacity: tooltipVisible ? 1 : 0,
-            transition: 'opacity 0.2s ease',
-            pointerEvents: 'none',
-            userSelect: 'none',
-          }}
-          aria-hidden="true"
-        >
-          Chat on WhatsApp
-        </div>
-      )}
+      {/* Tooltip — visible only on hover/focus */}
+      <div
+        className="wa-bubble-tooltip"
+        style={{
+          background: '#FFFFFF',
+          color: '#0F172A',
+          fontSize: '12px',
+          fontWeight: 600,
+          padding: '5px 11px',
+          borderRadius: '8px',
+          whiteSpace: 'nowrap',
+          boxShadow: '0 4px 14px rgba(0,0,0,0.18)',
+          pointerEvents: 'none',
+          userSelect: 'none',
+          marginBottom: '4px',
+          opacity: hovered ? 1 : 0,
+          visibility: hovered ? 'visible' : 'hidden',
+          transform: hovered ? 'translateY(0) scale(1)' : 'translateY(6px) scale(0.95)',
+          transition: 'opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.2s ease',
+        }}
+        aria-hidden={!hovered}
+      >
+        Chat with us
+      </div>
 
       {/* The bubble button */}
       <a
@@ -95,6 +100,7 @@ export const WhatsAppBubble = () => {
         target="_blank"
         rel="noopener noreferrer"
         aria-label="Chat with AJ Travels on WhatsApp"
+        className="wa-bubble-btn"
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         onFocus={handleMouseEnter}
@@ -164,15 +170,31 @@ export const WhatsAppBubble = () => {
           pointer-events: none;
           z-index: 9998;
         }
+        .wa-bubble-wrapper:hover .wa-bubble-tooltip,
+        .wa-bubble-wrapper:focus-within .wa-bubble-tooltip {
+          opacity: 1 !important;
+          visibility: visible !important;
+          transform: translateY(0) scale(1) !important;
+        }
         /* Mobile: lift above any browser chrome at bottom, tuck in from edge */
         @media (max-width: 767px) {
           .wa-bubble-pulse {
-            bottom: 20px;
-            right: 16px;
+            bottom: 16px;
+            right: 14px;
+            width: 52px;
+            height: 52px;
           }
           .wa-bubble-wrapper {
-            bottom: 20px !important;
-            right: 16px !important;
+            bottom: 16px !important;
+            right: 14px !important;
+          }
+          .wa-bubble-btn {
+            width: 52px !important;
+            height: 52px !important;
+          }
+          .wa-bubble-btn svg {
+            width: 28px !important;
+            height: 28px !important;
           }
         }
       `}</style>

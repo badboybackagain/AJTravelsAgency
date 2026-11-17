@@ -318,7 +318,7 @@ export function ContactPage() {
                       </div>
                     </div>
 
-                    <div className="form-row-2col">
+                    <div className="form-row-2col form-row-datetime">
                       <div className="input-group">
                         <label htmlFor="travelDate">Travel Date *</label>
                         <input
@@ -747,7 +747,15 @@ export function ContactPage() {
             grid-template-columns: 1fr;
           }
           .form-card-container {
-            padding: 1.5rem;
+            padding: 1.35rem 1.15rem;
+            border-radius: 18px;
+          }
+          .form-row-datetime {
+            grid-template-columns: 1fr 1fr !important;
+            gap: 0.65rem !important;
+          }
+          .btn-submit-inquiry {
+            width: 100%;
           }
         }
       `}</style>

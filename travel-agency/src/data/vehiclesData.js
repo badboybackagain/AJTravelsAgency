@@ -18,11 +18,10 @@ export const vehiclesData = [
     fareStarting: '₹2,199',
     overview: 'Our Executive Sedan fleet features fuel-efficient, well-maintained Swift Dzire and Toyota Etios cars with experienced drivers. Ideal for solo business travelers, couples, and small nuclear families seeking dependable point-to-point and outstation car rental in Pune.',
     features: [
-      'Dual Air-Conditioning with rapid cooling',
-      'Plush fabric or leatherette seating with ample legroom',
-      'Generous 378L+ boot space for standard trolley suitcases',
-      'Mobile charging port & USB audio connectivity',
-      'All-inclusive toll package available on Pune-Mumbai runs'
+      'Dual Air-Conditioning',
+      'Plush Seating',
+      '378L+ Boot Space',
+      'USB Mobile Charging'
     ],
     idealFor: 'Swift Dzire rental in Pune for Pune to Mumbai airport transfers, daily business meetings, and small family visits.',
     specs: {
@@ -47,11 +46,10 @@ export const vehiclesData = [
     fareStarting: '₹3,199',
     overview: 'The Maruti Suzuki Ertiga and Kia Carens are Maharashtra’s favorite 6-seater family SUVs. Designed with three comfortable seating rows, roof-mounted rear AC blowers, and flexible luggage capacity, this category delivers supreme highway ride quality without the bulk of larger commercial vehicles.',
     features: [
-      'Roof-mounted rear AC vents keeping 2nd and 3rd row passengers cool',
-      'Flexible folding 3rd-row seats expanding luggage room when needed',
-      'Smooth suspension optimized for highway cruising and ghat roads',
-      'Ample legroom in both front and middle row captain/bench seats',
-      'Punctual door-to-door service with verified drivers'
+      'Rear AC Vents',
+      'Folding 3rd Row',
+      'Ghat Suspension',
+      'Plush Seating'
     ],
     idealFor: 'Ertiga & Kia Carens rental in Pune for family airport drops, weekend getaways to Mahabaleshwar and Lonavala, and group road trips.',
     specs: {
@@ -76,11 +74,10 @@ export const vehiclesData = [
     fareStarting: '₹4,899',
     overview: 'The Toyota Innova Crysta is the gold standard in executive long-distance highway comfort. Featuring ergonomic reclining captain seats, exceptional sound insulation, and bulletproof reliability, it turns every road journey into first-class travel.',
     features: [
-      'Ultra-comfortable ergonomic captain chairs with armrests',
-      'Whisper-quiet cabin with superior acoustic damping',
-      'Automatic multi-zone climate control with personal air vents',
-      'Exceptional highway ride stability on the Bhor Ghat curves',
-      'Experienced executive chauffeurs accustomed to VIP travel'
+      'Plush Seating',
+      'Quiet Cabin',
+      'Multi-Zone Climate AC',
+      'Ride Stability'
     ],
     idealFor: 'Innova rental in Pune for VIP delegations, corporate executives, wedding guest transfers, and luxury long-distance tourism.',
     specs: {
@@ -105,10 +102,10 @@ export const vehiclesData = [
     fareStarting: '₹1,899',
     overview: 'Our Compact Hatchback category offers budget-friendly outstation and airport travel for 1-4 passengers. Clean AC cabins, high fuel efficiency, and punctual chauffeurs ensure great value for solo travelers, couples, and light packers.',
     features: [
-      'High-efficiency AC cooling',
-      'Compact dimensions ideal for busy city pickups and quick highway transit',
-      'Economical per-km and fixed package outstation pricing',
-      'Professional courteous drivers with verified documents'
+      'Quick-Cooling AC',
+      'Compact & Fuel-Efficient',
+      'Standard Boot Space',
+      'Verified City Chauffeur'
     ],
     idealFor: 'Budget-conscious point-to-point city drops, quick airport transfers, and light-luggage commuters.',
     specs: {
@@ -133,10 +130,10 @@ export const vehiclesData = [
     fareStarting: '₹6,499',
     overview: 'The 14-Seater Executive Tempo Traveller combines mid-size group convenience with executive road manners. Perfect for corporate shuttles, team offsites, and medium family pilgrimages traveling across Maharashtra.',
     features: [
-      'Comfortable 2x1 pushback seats with ample knee room',
-      'High-output roof-mounted ducted air-conditioning',
-      'Expansive windows with sun curtains and USB charge ports',
-      'Verified commercial interstate drivers specialized in ghat highways'
+      '2x1 Pushback Seats',
+      'High-Output Ducted AC',
+      'Dedicated Luggage Deck',
+      'Interstate Highway Driver'
     ],
     idealFor: 'Corporate meetings, team pilgrimages to Shirdi, and medium wedding party transfers.',
     specs: {
@@ -161,11 +158,10 @@ export const vehiclesData = [
     fareStarting: '₹7,999',
     overview: 'Keep your entire group comfortable and traveling together. Our luxury Force Tempo Travellers are outfitted with individual luxury pushback seats, wide panoramic windows, personal charging sockets, and expansive rear luggage compartments.',
     features: [
-      '2x1 or 1x1 luxury high-back reclining captain seats',
-      'High-capacity roof-mounted ducted air conditioning',
-      'State-of-the-art music system, mic, and LED ambient lighting',
-      'Huge separate luggage deck accommodating all bags easily',
-      'Commercial licensed interstate chauffeurs with deep route expertise'
+      'Luxury Pushback Seats',
+      'High-Capacity Ducted AC',
+      'Separate Luggage Deck',
+      'Interstate Highway Driver'
     ],
     idealFor: 'Tempo Traveller on rent in Pune for wedding guest shuttles, Shirdi-Nashik pilgrimages, Goa holiday road trips, and corporate offsites.',
     specs: {

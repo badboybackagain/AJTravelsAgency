@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Phone, MessageSquare, Mail, MapPin, Shield, Clock, ExternalLink } from 'lucide-react';
+import { Phone, MessageSquare, Mail, MapPin, Clock } from 'lucide-react';
 import { businessConfig } from '../config/business.config';
 
 export const Footer = () => {
@@ -8,7 +8,7 @@ export const Footer = () => {
     <footer className="footer-wrapper">
       <div className="container">
         <div className="footer-top-grid">
-          {/* Column 1: Brand Info & Dispatch Guarantee */}
+          {/* Column 1: Brand Logo & Direct Contact Information */}
           <div className="footer-brand-col">
             <Link to="/" className="footer-brand" aria-label="AJ Travels Home">
               <img
@@ -17,47 +17,7 @@ export const Footer = () => {
                 className="footer-brand-logo-img"
               />
             </Link>
-            <p className="footer-tagline">
-              Maharashtra's premier executive intercity cab network. Clean private sedans, family SUVs, and luxury tempo travellers connecting Pune, Mumbai, and International Airports with 100% all-inclusive fares.
-            </p>
-            <div className="footer-dispatch-note">
-              <Shield size={15} color="#38BDF8" className="dispatch-icon" />
-              <span>{businessConfig.dispatchDisclaimer}</span>
-            </div>
-          </div>
 
-          {/* Column 2: Quick Links */}
-          <div className="footer-links-col">
-            <h4 className="footer-col-title">Quick Links</h4>
-            <ul className="footer-links-list">
-              <li><Link to="/">Home</Link></li>
-              <li><Link to="/services">Our Services</Link></li>
-              <li><Link to="/vehicles">Fleet & Vehicles</Link></li>
-              <li><Link to="/fare">Fare Calculator & Tolls</Link></li>
-              <li><Link to="/booking">Book Cab Online</Link></li>
-              <li><Link to="/blog">Blog & Travel Guides</Link></li>
-              <li><Link to="/about">About Us</Link></li>
-              <li><Link to="/contact">Contact Support</Link></li>
-              <li><Link to="/sitemap">Sitemap</Link></li>
-            </ul>
-          </div>
-
-          {/* Column 3: Verified Travel Corridors */}
-          <div className="footer-links-col">
-            <h4 className="footer-col-title">Our Corridors</h4>
-            <ul className="footer-links-list">
-              <li><Link to="/services/pune-to-mumbai-cab">Pune to Mumbai Cab</Link></li>
-              <li><Link to="/services/mumbai-to-pune-cab">Mumbai to Pune Cab</Link></li>
-              <li><Link to="/services/airport-transfers">Airport Transfers (BOM / PNQ)</Link></li>
-              <li><Link to="/services/outstation-cabs">Outstation Travel</Link></li>
-              <li><Link to="/services/corporate-car-rental">Corporate Car Rental</Link></li>
-              <li><Link to="/vehicles/tempo-traveller">Group Tempo Travellers</Link></li>
-            </ul>
-          </div>
-
-          {/* Column 4: Contact & Operations Desk */}
-          <div className="footer-contact-col">
-            <h4 className="footer-col-title">Contact Information</h4>
             <div className="footer-contact-info">
               <p>
                 <Phone size={14} color="#38BDF8" />
@@ -94,19 +54,39 @@ export const Footer = () => {
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Footer Bottom Bar with Floating Buttons Clearance */}
-        <div className="footer-bottom">
-          <div className="footer-bottom-info">
-            <p className="copyright-text">
-              © {new Date().getFullYear()} {businessConfig.businessName} (AJ Tours & Travels Pune). All rights reserved.
-            </p>
-            <p className="sub-legal-note">
-              Verified Chauffeur-Driven Car & Tempo Traveller Hire • GST Invoicing Available
-            </p>
+          {/* Column 2: Quick Links */}
+          <div className="footer-links-col">
+            <h4 className="footer-col-title">Quick Links</h4>
+            <ul className="footer-links-list">
+              <li><Link to="/">Home</Link></li>
+              <li><Link to="/services">Our Services</Link></li>
+              <li><Link to="/vehicles">Fleet & Vehicles</Link></li>
+              <li><Link to="/fare">Fare Calculator & Tolls</Link></li>
+              <li><Link to="/booking">Book Cab Online</Link></li>
+              <li><Link to="/blog">Blog & Travel Guides</Link></li>
+              <li><Link to="/about">About Us</Link></li>
+              <li><Link to="/contact">Contact Support</Link></li>
+              <li><Link to="/sitemap">Sitemap</Link></li>
+            </ul>
           </div>
 
+          {/* Column 3: Verified Travel Corridors */}
+          <div className="footer-links-col">
+            <h4 className="footer-col-title">Our Corridors</h4>
+            <ul className="footer-links-list">
+              <li><Link to="/services/pune-to-mumbai-cab">Pune to Mumbai Cab</Link></li>
+              <li><Link to="/services/mumbai-to-pune-cab">Mumbai to Pune Cab</Link></li>
+              <li><Link to="/services/airport-transfers">Airport Transfers (BOM / PNQ)</Link></li>
+              <li><Link to="/services/outstation-cabs">Outstation Travel</Link></li>
+              <li><Link to="/services/corporate-car-rental">Corporate Car Rental</Link></li>
+              <li><Link to="/vehicles/tempo-traveller">Group Tempo Travellers</Link></li>
+            </ul>
+          </div>
+        </div>
+
+        {/* Footer Bottom Bar: Links in One Single Row on Top & Copyright Below */}
+        <div className="footer-bottom">
           <div className="legal-links">
             <Link to="/">Home</Link>
             <span className="dot-sep">•</span>
@@ -127,6 +107,15 @@ export const Footer = () => {
             <Link to="/privacy-policy">Privacy Policy</Link>
             <span className="dot-sep">•</span>
             <Link to="/terms">Terms &amp; Conditions</Link>
+          </div>
+
+          <div className="footer-bottom-info">
+            <p className="copyright-text">
+              © {new Date().getFullYear()} {businessConfig.businessName} (AJ Tours & Travels Pune). All rights reserved.
+            </p>
+            <p className="sub-legal-note">
+              Verified Chauffeur-Driven Car & Tempo Traveller Hire • GST Invoicing Available
+            </p>
           </div>
         </div>
       </div>
@@ -153,8 +142,8 @@ export const Footer = () => {
 
         .footer-top-grid {
           display: grid;
-          grid-template-columns: 2fr 1fr 1fr 1.5fr;
-          gap: 2.75rem;
+          grid-template-columns: 1.5fr 1fr 1fr;
+          gap: 3.5rem;
           margin-bottom: 3rem;
           position: relative;
           z-index: 2;
@@ -178,36 +167,6 @@ export const Footer = () => {
 
         .footer-brand:hover .footer-brand-logo-img {
           transform: scale(1.03);
-        }
-
-        .footer-tagline {
-          font-size: 0.9rem;
-          line-height: 1.65;
-          color: #F1F5F9;
-          text-shadow: 0 1px 4px rgba(0, 0, 0, 0.85);
-          margin-bottom: 1.35rem;
-          max-width: 380px;
-          font-weight: 450;
-        }
-
-        .footer-dispatch-note {
-          display: flex;
-          align-items: flex-start;
-          gap: 0.55rem;
-          font-size: 0.78rem;
-          color: #E2E8F0;
-          background: rgba(15, 23, 42, 0.75);
-          padding: 0.65rem 0.95rem;
-          border-radius: 10px;
-          border: 1px solid rgba(255, 255, 255, 0.15);
-          backdrop-filter: blur(8px);
-          text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
-          max-width: 380px;
-        }
-
-        .dispatch-icon {
-          flex-shrink: 0;
-          margin-top: 2px;
         }
 
         .footer-col-title {
@@ -283,11 +242,13 @@ export const Footer = () => {
           font-weight: 600;
         }
 
-        /* ── Footer Bottom Bar ── */
+        /* ── Footer Bottom Bar: Links in One Single Row on Top & Copyright Below ── */
         .footer-bottom {
           display: flex;
+          flex-direction: column;
           align-items: center;
-          justify-content: space-between;
+          justify-content: center;
+          text-align: center;
           padding-top: 2rem;
           border-top: 1px solid rgba(255, 255, 255, 0.12);
           font-size: 0.82rem;
@@ -295,14 +256,15 @@ export const Footer = () => {
           text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
           position: relative;
           z-index: 2;
-          gap: 1.5rem;
-          /* Ensure desktop layout leaves room for bottom-right floating buttons */
-          padding-right: 210px;
+          gap: 0.95rem;
+          width: 100%;
         }
 
         .footer-bottom-info {
           display: flex;
           flex-direction: column;
+          align-items: center;
+          text-align: center;
           gap: 0.25rem;
         }
 
@@ -319,8 +281,10 @@ export const Footer = () => {
         .legal-links {
           display: flex;
           align-items: center;
+          justify-content: center;
           gap: 0.65rem;
-          flex-wrap: wrap;
+          flex-wrap: nowrap;
+          width: 100%;
         }
 
         .legal-links a {
@@ -328,6 +292,7 @@ export const Footer = () => {
           transition: color 0.2s ease;
           text-decoration: none;
           font-weight: 500;
+          white-space: nowrap;
         }
 
         .legal-links a:hover {
@@ -339,18 +304,18 @@ export const Footer = () => {
         }
 
         @media (max-width: 1200px) {
-          .footer-bottom {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 1rem;
-            padding-right: 210px;
+          .legal-links {
+            flex-wrap: wrap;
           }
         }
 
-        @media (max-width: 1024px) {
+        @media (max-width: 992px) {
           .footer-top-grid {
             grid-template-columns: 1fr 1fr;
-            gap: 2rem;
+            gap: 2.25rem;
+          }
+          .footer-brand-col {
+            grid-column: 1 / -1;
           }
         }
 
@@ -369,26 +334,12 @@ export const Footer = () => {
           .footer-brand-col {
             grid-column: 1 / -1;
           }
-          .footer-contact-col {
-            grid-column: 1 / -1;
-          }
           .footer-brand {
             margin-bottom: 0.85rem;
           }
           .footer-brand-logo-img {
             height: 38px;
             max-width: 180px;
-          }
-          .footer-tagline {
-            font-size: 0.8rem;
-            line-height: 1.5;
-            margin-bottom: 0.85rem;
-            max-width: 100%;
-          }
-          .footer-dispatch-note {
-            font-size: 0.72rem;
-            padding: 0.5rem 0.75rem;
-            max-width: 100%;
           }
           .footer-col-title {
             font-size: 0.92rem;
@@ -427,6 +378,7 @@ export const Footer = () => {
             justify-content: center;
             gap: 0.35rem 0.55rem;
             font-size: 0.72rem;
+            flex-wrap: wrap;
           }
         }
       `}</style>

@@ -39,4 +39,6 @@ Thumbs.db
 # Diagnostic & audit reports
 audit_results.tsv
 *.tsv
+scratch/
+
 

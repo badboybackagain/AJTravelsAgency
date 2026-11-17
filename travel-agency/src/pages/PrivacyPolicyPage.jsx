@@ -52,7 +52,7 @@ export function PrivacyPolicyPage() {
   ];
 
   return (
-    <div className="about-page-wrapper">
+    <div className="policy-page-wrapper">
       <Header onOpenEnquiry={() => setIsEnquiryOpen(true)} isDark={false} />
 
       {/* Internal Hero Banner */}
@@ -80,32 +80,28 @@ export function PrivacyPolicyPage() {
       </section>
 
       {/* Main Policy Content Section */}
-      <section style={{ padding: '3.5rem 0 5rem', background: '#F8FAFC' }}>
+      <section className="policy-content-section">
         <div className="container" style={{ maxWidth: '900px' }}>
-          <div style={{
-            background: '#FFFFFF',
-            borderRadius: '16px',
-            border: '1px solid #E2E8F0',
-            padding: '2.5rem',
-            boxShadow: '0 4px 20px -2px rgba(0, 0, 0, 0.05)'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem', paddingBottom: '1rem', borderBottom: '1px solid #E2E8F0' }}>
-              <ShieldCheck size={28} color="#0284C7" />
+          <div className="policy-card">
+            <div className="policy-card-header">
+              <div className="policy-header-icon-box">
+                <ShieldCheck size={26} color="#2563EB" />
+              </div>
               <div>
-                <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800, color: '#0F172A' }}>
+                <h2 className="policy-card-title">
                   AJ Travels Customer Privacy Commitment
                 </h2>
-                <span style={{ fontSize: '0.8rem', color: '#64748B' }}>Last updated: March 2026 • Effective for all bookings</span>
+                <span className="policy-card-subtitle">Last updated: March 2026 • Effective for all bookings</span>
               </div>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+            <div className="policy-sections-list">
               {policySections.map((sec, idx) => (
-                <div key={idx}>
-                  <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#1E293B', marginBottom: '0.5rem' }}>
+                <div key={idx} className="policy-section-item">
+                  <h3 className="policy-section-title">
                     {sec.title}
                   </h3>
-                  <p style={{ fontSize: '0.92rem', lineHeight: 1.7, color: '#475569', margin: 0 }}>
+                  <p className="policy-section-desc">
                     {sec.desc}
                   </p>
                 </div>
@@ -113,27 +109,21 @@ export function PrivacyPolicyPage() {
             </div>
 
             {/* Contact Box */}
-            <div style={{
-              marginTop: '3rem',
-              padding: '1.5rem',
-              background: '#F0F9FF',
-              borderRadius: '12px',
-              border: '1px solid #BAE6FD'
-            }}>
-              <h4 style={{ margin: '0 0 0.5rem', fontSize: '0.95rem', fontWeight: 800, color: '#0369A1' }}>
+            <div className="policy-contact-box">
+              <h4 className="policy-contact-heading">
                 Questions or Data Inquiries?
               </h4>
-              <p style={{ margin: '0 0 1rem', fontSize: '0.85rem', color: '#0C4A6E', lineHeight: 1.6 }}>
+              <p className="policy-contact-subtext">
                 If you have questions regarding our privacy practices or wish to update your details, contact our 24/7 desk:
               </p>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1.25rem', fontSize: '0.85rem' }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#0369A1', fontWeight: 600 }}>
+              <div className="policy-contact-channels">
+                <span className="policy-contact-pill">
                   <Phone size={14} /> {businessConfig.phoneDisplay}
                 </span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#0369A1', fontWeight: 600 }}>
+                <span className="policy-contact-pill">
                   <Mail size={14} /> {businessConfig.email}
                 </span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#0369A1', fontWeight: 600 }}>
+                <span className="policy-contact-pill">
                   <MapPin size={14} /> Kasarwadi Hub, Pune 411064
                 </span>
               </div>
@@ -146,6 +136,238 @@ export function PrivacyPolicyPage() {
       <Footer />
       <EnquiryModal isOpen={isEnquiryOpen} onClose={() => setIsEnquiryOpen(false)} />
       <MobileStickyBar onOpenEnquiry={() => setIsEnquiryOpen(true)} />
+
+      <style>{`
+        .policy-page-wrapper {
+          min-height: 100vh;
+          background-color: #F8FAFC;
+          color: #0F172A;
+          font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        .internal-hero-section {
+          background: linear-gradient(180deg, #F8FAFC 0%, #EFF6FF 100%);
+          padding: 7rem 0 2.5rem;
+          border-bottom: 1px solid #E2E8F0;
+        }
+
+        .breadcrumbs-nav {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          font-size: 0.85rem;
+          color: #64748B;
+          margin-bottom: 1rem;
+        }
+
+        .breadcrumbs-nav a {
+          color: #2563EB;
+          text-decoration: none;
+          font-weight: 500;
+          transition: color 0.15s ease;
+        }
+
+        .breadcrumbs-nav a:hover {
+          color: #1D4ED8;
+          text-decoration: underline;
+        }
+
+        .bc-sep {
+          color: #94A3B8;
+        }
+
+        .bc-current {
+          color: #0F172A;
+          font-weight: 600;
+        }
+
+        .hero-badge-pill {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.45rem;
+          background: rgba(37, 99, 235, 0.1);
+          color: #2563EB;
+          padding: 0.35rem 0.85rem;
+          border-radius: 9999px;
+          font-size: 0.75rem;
+          font-weight: 700;
+          letter-spacing: 0.05em;
+          margin-bottom: 0.75rem;
+        }
+
+        .internal-hero-title {
+          font-size: 2.35rem;
+          font-weight: 800;
+          line-height: 1.2;
+          color: #0F172A;
+          max-width: 820px;
+          margin-bottom: 0.75rem;
+          letter-spacing: -0.02em;
+        }
+
+        .text-gradient {
+          background: linear-gradient(135deg, #1D4ED8 0%, #0284C7 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+        }
+
+        .internal-hero-subtitle {
+          font-size: 1.05rem;
+          line-height: 1.6;
+          color: #475569;
+          max-width: 760px;
+          margin: 0;
+        }
+
+        .policy-content-section {
+          padding: 3.5rem 0 5rem;
+          background: #F8FAFC;
+        }
+
+        .policy-card {
+          background: #FFFFFF;
+          border-radius: 20px;
+          border: 1px solid #E2E8F0;
+          padding: 2.75rem;
+          box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.04), 0 2px 8px -2px rgba(0, 0, 0, 0.02);
+        }
+
+        .policy-card-header {
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+          margin-bottom: 2.25rem;
+          padding-bottom: 1.5rem;
+          border-bottom: 1px solid #E2E8F0;
+        }
+
+        .policy-header-icon-box {
+          width: 48px;
+          height: 48px;
+          border-radius: 12px;
+          background: #EFF6FF;
+          border: 1px solid #BFDBFE;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+        }
+
+        .policy-card-title {
+          margin: 0;
+          font-size: 1.35rem;
+          font-weight: 800;
+          color: #0F172A;
+          letter-spacing: -0.01em;
+        }
+
+        .policy-card-subtitle {
+          display: block;
+          font-size: 0.82rem;
+          color: #64748B;
+          margin-top: 0.25rem;
+        }
+
+        .policy-sections-list {
+          display: flex;
+          flex-direction: column;
+          gap: 2rem;
+        }
+
+        .policy-section-item {
+          display: flex;
+          flex-direction: column;
+        }
+
+        .policy-section-title {
+          font-size: 1.08rem;
+          font-weight: 700;
+          color: #1E293B;
+          margin: 0 0 0.5rem;
+          letter-spacing: -0.01em;
+        }
+
+        .policy-section-desc {
+          font-size: 0.94rem;
+          line-height: 1.75;
+          color: #475569;
+          margin: 0;
+        }
+
+        .policy-contact-box {
+          margin-top: 3rem;
+          padding: 1.75rem;
+          background: #EFF6FF;
+          border-radius: 14px;
+          border: 1px solid #BFDBFE;
+        }
+
+        .policy-contact-heading {
+          margin: 0 0 0.45rem;
+          font-size: 0.98rem;
+          font-weight: 800;
+          color: #1D4ED8;
+        }
+
+        .policy-contact-subtext {
+          margin: 0 0 1rem;
+          font-size: 0.86rem;
+          color: #1E40AF;
+          line-height: 1.6;
+        }
+
+        .policy-contact-channels {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 1.25rem;
+        }
+
+        .policy-contact-pill {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.45rem;
+          color: #1D4ED8;
+          font-weight: 600;
+          font-size: 0.86rem;
+        }
+
+        @media (max-width: 768px) {
+          .internal-hero-section {
+            padding: 5.5rem 0 1.75rem;
+          }
+          .internal-hero-title {
+            font-size: 1.75rem;
+          }
+          .internal-hero-subtitle {
+            font-size: 0.92rem;
+          }
+          .policy-content-section {
+            padding: 2rem 0 3.5rem;
+          }
+          .policy-card {
+            padding: 1.5rem 1.25rem;
+            border-radius: 16px;
+          }
+          .policy-card-title {
+            font-size: 1.12rem;
+          }
+          .policy-section-title {
+            font-size: 0.98rem;
+          }
+          .policy-section-desc {
+            font-size: 0.88rem;
+            line-height: 1.65;
+          }
+          .policy-contact-box {
+            padding: 1.25rem;
+            margin-top: 2rem;
+          }
+          .policy-contact-channels {
+            flex-direction: column;
+            gap: 0.65rem;
+          }
+        }
+      `}</style>
     </div>
   );
 }

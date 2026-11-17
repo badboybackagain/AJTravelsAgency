@@ -279,6 +279,10 @@ export const OneWayRoundTripSection = () => {
             margin-bottom: 1.25rem;
             gap: 0.5rem;
           }
+          /* In mobile view strictly show only the first two features */
+          .trip-feature-list li:nth-child(n+3) {
+            display: none !important;
+          }
           .trip-feature-list li {
             font-size: 0.8rem;
           }

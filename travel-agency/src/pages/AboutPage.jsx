@@ -643,9 +643,47 @@ export function AboutPage() {
           .internal-hero-title {
             font-size: 1.85rem;
           }
-          .stats-grid,
+          .stats-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 0.65rem !important;
+          }
+          .stat-card {
+            padding: 0.85rem 0.5rem;
+            border-radius: 10px;
+          }
+          .stat-number {
+            font-size: 1.35rem;
+            margin-bottom: 0.2rem;
+          }
+          .stat-label {
+            font-size: 0.72rem;
+            line-height: 1.3;
+          }
           .pillars-grid {
             grid-template-columns: 1fr;
+            gap: 1rem;
+          }
+          .pillar-card {
+            padding: 1.35rem 1.15rem;
+            border-radius: 14px;
+          }
+          .hubs-card {
+            padding: 1.35rem 1.15rem;
+            border-radius: 16px;
+          }
+          .hub-action-box {
+            padding: 1.35rem 1.15rem;
+            border-radius: 14px;
+          }
+          .hub-action-btns {
+            flex-direction: column;
+            width: 100%;
+            gap: 0.6rem;
+          }
+          .btn-primary-action,
+          .btn-secondary-action {
+            width: 100%;
+            justify-content: center;
           }
           .hubs-card {
             padding: 1.5rem;

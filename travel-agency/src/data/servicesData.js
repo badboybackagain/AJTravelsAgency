@@ -12,7 +12,7 @@ export const servicesData = [
     heroImg: '/assets/pune-to-mumbai-premium-travel-banner.webp',
     distance: '150 km',
     duration: '3 hrs 15 mins',
-    route: 'Via Mumbai-Pune Expressway (NH 48)',
+    route: 'Mumbai-Pune Expressway (NH 48)',
     tagline: 'Chauffeured intercity travel guide, route planning, and comfortable transfers along the Mumbai-Pune Expressway.',
     pickupDefault: 'pune',
     dropDefault: 'mumbai',
@@ -62,7 +62,7 @@ export const servicesData = [
     heroImg: '/assets/sedan.webp',
     distance: '150 km',
     duration: '3 hrs 15 mins',
-    route: 'Via Mumbai-Pune Expressway (NH 48)',
+    route: 'Mumbai-Pune Expressway (NH 48)',
     tagline: 'Instant flat rates, verified highway chauffeurs, and doorstep pickup across Pune & PCMC directly to Mumbai.',
     pickupDefault: 'pune',
     dropDefault: 'mumbai',
@@ -112,7 +112,7 @@ export const servicesData = [
     heroImg: '/assets/suv.webp',
     distance: '150 km',
     duration: '3 hrs 15 mins',
-    route: 'Via Yashwantrao Chavan Expressway (NH 48)',
+    route: 'Mumbai-Pune Expressway (NH 48)',
     tagline: 'Direct doorstep & airport taxi transfers from Mumbai to all localities in Pune with tolls included.',
     pickupDefault: 'mumbai',
     dropDefault: 'pune',
@@ -162,7 +162,7 @@ export const servicesData = [
     heroImg: '/assets/pune-mumbai-travel-banner.webp',
     distance: '150 km',
     duration: '3 hrs 15 mins',
-    route: 'Via Yashwantrao Chavan Expressway (NH 48)',
+    route: 'Mumbai-Pune Expressway (NH 48)',
     tagline: 'Chauffeured return cab service, highway travel planning, and smooth intercity transport from Mumbai to Pune.',
     pickupDefault: 'mumbai',
     dropDefault: 'pune',
@@ -229,7 +229,19 @@ export const servicesData = [
     faqs: [
       {
         q: 'How many hours before international flight departure should I leave Pune?',
-        a: 'We strongly advise leaving Pune 6.5 to 7 hours before your flight’s scheduled departure time to comfortably clear check-in, immigration, and security.'
+        a: 'We strongly advise leaving Pune 6.5 to 7 hours before your flight’s scheduled departure time to comfortably clear check-in, immigration, and security at Mumbai CSMIA (BOM).'
+      },
+      {
+        q: 'Do you track incoming and departing flights for delays?',
+        a: 'Yes, our dispatch desk monitors flight schedules in real time using your flight number. If your flight is delayed or rescheduled, your chauffeur pickup timing is adjusted automatically with zero penalty.'
+      },
+      {
+        q: 'Are Mumbai-Pune Expressway toll plaza fees and taxes included in the fare?',
+        a: 'Yes. All one-way airport transfer quotes include expressway toll plaza charges, green tax, and state transport permits. Parking fees at terminal pickup zones are billed at actuals against receipts.'
+      },
+      {
+        q: 'Which vehicle is recommended for families traveling with international luggage?',
+        a: 'For 3 to 4 passengers with international check-in bags (2-3 large trolley bags per person), we recommend our 6-seater Maruti Ertiga or luxury Toyota Innova Crysta, which offer foldable third-row seating providing ample boot capacity.'
       }
     ]
   },
@@ -242,7 +254,7 @@ export const servicesData = [
     heroImg: '/assets/cinematic-hero-bg.jpg',
     distance: 'Custom Routes',
     duration: 'Flexible Itineraries',
-    route: 'All Maharashtra State Highways & Expressways',
+    route: 'Maharashtra Highways & Expressways',
     tagline: 'Customizable outstation travel for weekend family escapes, pilgrimages, and road trips.',
     pickupDefault: 'pune',
     dropDefault: 'mahabaleshwar',
@@ -259,7 +271,19 @@ export const servicesData = [
     faqs: [
       {
         q: 'Does AJ Travels offer multi-day outstation packages?',
-        a: 'Yes, our team designs custom multi-day packages with clear driver allowances and no hidden charges.'
+        a: 'Yes, our team designs custom multi-day packages with clear driver allowances, flexible sightseeing halts, and transparent pricing with no hidden charges across Maharashtra and Goa.'
+      },
+      {
+        q: 'How are driver night allowances and toll charges calculated?',
+        a: 'Driver daily allowance (batta) covers driver meals and night accommodation (typically applicable after 10:00 PM). State border taxes and highway tolls can either be included in a fixed package or billed at actuals with receipts.'
+      },
+      {
+        q: 'Can we customize our itinerary or add impromptu stops during the road trip?',
+        a: 'Absolutely. Unlike rigid bus or train schedules, our chauffeured outstation rentals give you total freedom to stop at scenic viewpoints, dhabas, and temples at your own pace.'
+      },
+      {
+        q: 'Which vehicles in your fleet are best suited for ghat roads and hill stations?',
+        a: 'For hill station routes like Mahabaleshwar, Panchgani, and Bhandardara, we recommend our rear-wheel-drive Toyota Innova Crysta or high-ground-clearance Maruti Ertiga SUVs, driven by chauffeurs experienced in ghat navigation.'
       }
     ]
   },
@@ -272,7 +296,7 @@ export const servicesData = [
     heroImg: '/assets/pune-mumbai-travel-banner.webp',
     distance: 'Point-to-Point & Hourly',
     duration: 'On-Demand Corporate Duty',
-    route: 'IT Parks & Financial Hubs Corridor',
+    route: 'IT Parks & Financial Corridor',
     tagline: 'Professional chauffeur transport with GST invoicing and priority fleet allocation.',
     pickupDefault: 'hinjawadi',
     dropDefault: 'bkc',
@@ -289,7 +313,19 @@ export const servicesData = [
     faqs: [
       {
         q: 'Can we get a monthly GST invoice for our company’s intercity travel?',
-        a: 'Yes, we provide itemized corporate GST invoices with detailed trip sheets for easy accounting.'
+        a: 'Yes, we provide consolidated, itemized monthly GST invoices with detailed digital trip sheets (including date, route, passenger name, and km reading) for seamless corporate accounting and input tax credit claims.'
+      },
+      {
+        q: 'Do you offer dedicated executive cabs for airport transfers and client visits?',
+        a: 'Yes. We provide executive chauffeur-driven sedans and luxury Innova Crysta vehicles dedicated to senior executives, corporate delegations, and VIP client hospitality between Pune IT parks and Mumbai business districts.'
+      },
+      {
+        q: 'What corporate billing and payment terms are available for registered businesses?',
+        a: 'We offer flexible 15-day and 30-day corporate credit billing cycles for registered corporate accounts, as well as instant corporate card and UPI payments.'
+      },
+      {
+        q: 'Are AJ Travels chauffeurs trained for corporate etiquette and confidentiality?',
+        a: 'All our executive chauffeurs undergo police verification, background checks, and training in corporate protocol, punctuality, silent cabin etiquette, and client confidentiality.'
       }
     ]
   }

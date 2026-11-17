@@ -6,6 +6,7 @@ import { EnquiryModal } from '../components/EnquiryModal';
 import { MobileStickyBar } from '../components/MobileStickyBar';
 import { usePageSeo } from '../hooks/usePageSeo';
 import { blogApi, normalizeBlogPost } from '../services/api';
+import { blogPosts } from '../data/blogData';
 import { businessConfig } from '../config/business.config';
 import { getLocationDisplayName } from '../utils/locationNames';
 import './blogPost.css';
@@ -57,17 +58,30 @@ export function BlogPostPage({ isRootFallback = false }) {
         blogApi.getAll().catch(() => ({ data: { data: [] } })),
       ]);
 
-      if (articleRes?.is404 || !articleRes?.data?.data) {
-        setNotFound(true);
-      } else {
+      if (articleRes?.data?.data) {
         const normalized = normalizeBlogPost(articleRes.data.data);
         setPost(normalized);
-        const normalizedAll = (allRes.data?.data || []).map(normalizeBlogPost);
+        const rawAll = allRes?.data?.data || [];
+        const normalizedAll = rawAll.length > 0 ? rawAll.map(normalizeBlogPost) : blogPosts;
         setAllPosts(normalizedAll);
+      } else {
+        const localPost = blogPosts.find((p) => p.slug === cleanSlug);
+        if (localPost) {
+          setPost(localPost);
+          setAllPosts(blogPosts);
+        } else {
+          setNotFound(true);
+        }
       }
     } catch (err) {
-      console.error('Error fetching blog article:', err);
-      setError(err.response?.data?.message || 'Failed to load article from database.');
+      console.warn('Error fetching blog article, checking static fallback:', err);
+      const localPost = blogPosts.find((p) => p.slug === cleanSlug);
+      if (localPost) {
+        setPost(localPost);
+        setAllPosts(blogPosts);
+      } else {
+        setError(err.response?.data?.message || 'Failed to load article from database.');
+      }
     } finally {
       setLoading(false);
     }

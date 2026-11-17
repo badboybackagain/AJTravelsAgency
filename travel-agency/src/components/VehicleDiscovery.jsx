@@ -7,6 +7,51 @@ import { vehicleApi } from '../services/api';
 import { resolveMediaUrl, findMatchingDbVehicle, getCanonicalTemplateForDbVehicle } from '../utils/mediaUtils';
 import { vehiclesData } from '../data/vehiclesData';
 
+// Helper: Normalize vehicle feature points into concise single points
+const formatFeaturePoint = (feat) => {
+  if (!feat) return '';
+  const lower = feat.toLowerCase();
+  if (lower.includes('dual air-conditioning') || lower.includes('dual ac') || lower.includes('chilled air')) return 'Dual AC';
+  if (lower.includes('roof-mounted') || lower.includes('rear ac')) return 'Rear AC Vents';
+  if (lower.includes('378l') || lower.includes('boot space') || lower.includes('luggage room') || lower.includes('luggage deck')) {
+    if (lower.includes('378l')) return '378L+ Boot';
+    return 'Large Boot';
+  }
+  if (lower.includes('plush') || lower.includes('leatherette') || lower.includes('captain') || lower.includes('seating') || lower.includes('legroom')) return 'Plush Seating';
+  if (lower.includes('charging') || lower.includes('usb')) return 'USB Charging';
+  if (lower.includes('toll')) return 'Tolls Included';
+  if (lower.includes('suspension')) return 'Ghat Suspension';
+  if (lower.includes('folding 3rd-row') || lower.includes('flexible')) return 'Folding 3rd Row';
+  if (lower.includes('door-to-door') || lower.includes('doorstep')) return 'Doorstep Pickup';
+  if (lower.includes('driver') || lower.includes('chauffeur')) return 'Verified Driver';
+  if (lower.includes('whisper-quiet') || lower.includes('acoustic')) return 'Quiet Cabin';
+  if (lower.includes('climate control')) return 'Climate AC';
+  if (lower.includes('stability')) return 'Ride Stability';
+  if (lower.includes('pushback')) return 'Pushback Seats';
+  if (lower.includes('permit')) return 'Tourist Permit';
+  if (lower.includes('tv') || lower.includes('music')) return 'Music System';
+  if (lower.includes('compact') || lower.includes('fuel-efficient')) return 'Fuel Efficient';
+
+  if (feat.length <= 16) return feat;
+  const firstPhrase = feat.split(/ with | for | keeping | optimizing | accustomed /i)[0];
+  return firstPhrase.length <= 16 ? firstPhrase : firstPhrase.slice(0, 15).trim();
+};
+
+// Helper: Clean verbose pipe-separated ideal-for strings into simple concise text
+const cleanIdealFor = (text) => {
+  if (!text) return '';
+  if (text.includes('|')) {
+    const parts = text.split('|').map(s => s.trim()).filter(Boolean);
+    const bestPart = parts.find(p => p.toLowerCase().startsWith('best for') || p.toLowerCase().startsWith('ideal for')) || parts[parts.length - 1];
+    return bestPart;
+  }
+  if (text.toLowerCase().includes('in pune for')) {
+    const after = text.split(/in pune for/i)[1].trim();
+    return after.charAt(0).toUpperCase() + after.slice(1);
+  }
+  return text;
+};
+
 export const VehicleDiscovery = () => {
   const navigate = useNavigate();
   const fleetData = homepageContent.fleet;
@@ -19,14 +64,16 @@ export const VehicleDiscovery = () => {
     setError('');
     vehicleApi.getAll({ forceRefresh })
       .then(res => {
-        if (res.data?.data) {
+        if (res.data?.data && res.data.data.length > 0) {
           setDbVehicles(res.data.data);
+        } else {
+          setDbVehicles(vehiclesData);
         }
         setLoading(false);
       })
       .catch(err => {
-        console.warn('VehicleDiscovery: Failed to load dynamic fleet:', err?.message);
-        setError('Unable to load fleet vehicles at this time.');
+        console.warn('VehicleDiscovery: Using verified fleet fallback:', err?.message);
+        setDbVehicles(vehiclesData);
         setLoading(false);
       });
   };
@@ -72,10 +119,10 @@ export const VehicleDiscovery = () => {
       id: db.id,
       name: db.name, // DB source of truth
       category: db.category, // DB source of truth
-      seatingCapacity: db.seatingCapacity, // DB source of truth
-      passengers: `${db.seatingCapacity} Passengers`,
-      luggage: canonical?.luggage || staticMatch?.luggage || (db.seatingCapacity <= 4 ? '2 Medium Bags' : '4 Large Bags'),
-      features: canonical?.features || staticMatch?.features || ['Dual Air-Conditioning', 'Generous Legroom', 'USB Phone Charging', 'Experienced Highway Driver'],
+      seatingCapacity: db.seatingCapacity || (db.category === 'SUV' ? 6 : db.category === 'MINIBUS' ? 12 : 4),
+      passengers: db.passengers || `${db.seatingCapacity || 4} Passengers`,
+      luggage: canonical?.luggage || db.luggage || staticMatch?.luggage || (db.seatingCapacity <= 4 ? '2-3 Medium Bags' : '4 Large Bags'),
+      features: (canonical?.features || db.features || staticMatch?.features || ['Dual Air-Conditioning', 'Plush Seating', 'Boot Space', 'USB Charging']).slice(0, 4),
       idealFor: db.description || canonical?.idealFor || staticMatch?.idealFor || `Comfortable ${db.name} rental in Pune with verified chauffeur.`,
       image: activeImg,
       tag: canonical?.tag || (db.category === 'LUXURY' ? 'Executive Class' : 'Fleet Addition'),
@@ -185,26 +232,25 @@ export const VehicleDiscovery = () => {
                     </div>
                   </div>
 
-                  {/* Features List */}
+                  {/* Features List — Simple Single Points (Strictly 4 Features) */}
                   <div className="vehicle-features-list">
-                    {(v.features || []).map((feat, i) => (
+                    {(v.features || []).slice(0, 4).map((feat, i) => (
                       <span key={i} className="feat-chip">
-                        <CheckCircle2 size={12} color="#2563EB" /> {feat}
+                        <CheckCircle2 size={12} color="#2563EB" /> {formatFeaturePoint(feat)}
                       </span>
                     ))}
                   </div>
 
                   <p className="vehicle-ideal-text">
-                    <strong>Ideal for:</strong> {v.idealFor}
+                    <strong>Ideal for:</strong> {cleanIdealFor(v.idealFor)}
                   </p>
 
                   {/* Action Buttons Row */}
-                  <div style={{ display: 'flex', gap: '0.65rem', marginTop: '1.25rem' }}>
+                  <div className="vehicle-actions-row">
                     <button
                       type="button"
                       onClick={() => handleBookVehicle(v)}
                       className="vehicle-btn"
-                      style={{ cursor: 'pointer', border: 'none', flex: 1 }}
                     >
                       <Car size={16} />
                       <span>Check Fare & Book</span>
@@ -216,7 +262,7 @@ export const VehicleDiscovery = () => {
                         className="vehicle-detail-link"
                         title={`View specifications for ${v.name}`}
                       >
-                        <span>Specs</span>
+                        <span>View Specs</span>
                       </Link>
                     )}
                   </div>
@@ -427,9 +473,9 @@ export const VehicleDiscovery = () => {
         }
 
         .vehicle-features-list {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 0.45rem;
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 0.45rem 0.65rem;
           margin-bottom: 0.95rem;
         }
 
@@ -459,6 +505,13 @@ export const VehicleDiscovery = () => {
           font-weight: 600;
         }
 
+        .vehicle-actions-row {
+          display: flex;
+          gap: 0.65rem;
+          margin-top: auto;
+          align-items: stretch;
+        }
+
         .vehicle-btn {
           font-family: var(--font-heading);
           font-size: 0.85rem;
@@ -476,7 +529,10 @@ export const VehicleDiscovery = () => {
           gap: 0.55rem;
           text-decoration: none;
           transition: all 0.25s ease;
-          margin-top: auto;
+          flex: 1;
+          border: none;
+          cursor: pointer;
+          white-space: nowrap;
         }
 
         .vehicle-btn:hover {
@@ -498,6 +554,7 @@ export const VehicleDiscovery = () => {
           font-size: 0.82rem;
           text-decoration: none;
           transition: all 0.2s ease;
+          white-space: nowrap;
         }
 
         .vehicle-detail-link:hover {
@@ -550,7 +607,7 @@ export const VehicleDiscovery = () => {
             padding: 0.22rem 0.55rem;
             font-size: 0.72rem;
           }
-          /* Solution 1: Compact 2-column clean checklist without box-inside-box */
+          /* Simple single points without verbose text */
           .vehicle-features-list {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -559,19 +616,20 @@ export const VehicleDiscovery = () => {
           }
           .feat-chip {
             display: inline-flex;
-            align-items: flex-start;
-            gap: 0.3rem;
-            font-size: 0.71rem;
+            align-items: center;
+            gap: 0.35rem;
+            font-size: 0.73rem;
+            font-weight: 550;
             line-height: 1.25;
-            color: #334155;
+            color: #1E293B;
             background: transparent;
             border: none;
             padding: 0;
             border-radius: 0;
+            white-space: nowrap;
           }
           .feat-chip svg {
             flex-shrink: 0;
-            margin-top: 1px;
           }
           .vehicle-ideal-text {
             font-size: 0.73rem;
@@ -579,13 +637,29 @@ export const VehicleDiscovery = () => {
             margin-bottom: 0.65rem;
             color: #64748B;
           }
+          .vehicle-actions-row {
+            display: flex;
+            flex-direction: column;
+            gap: 0.45rem;
+            margin-top: auto;
+            width: 100%;
+          }
           .vehicle-btn {
-            padding: 0.6rem 0.85rem;
-            font-size: 0.8rem;
+            width: 100%;
+            padding: 0.68rem 1rem;
+            font-size: 0.82rem;
+            font-weight: 700;
+            border-radius: 10px;
+            justify-content: center;
           }
           .vehicle-detail-link {
-            padding: 0 0.85rem;
+            width: 100%;
+            padding: 0.48rem 1rem;
             font-size: 0.78rem;
+            font-weight: 600;
+            text-align: center;
+            justify-content: center;
+            border-radius: 10px;
           }
         }
       `}</style>

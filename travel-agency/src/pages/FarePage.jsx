@@ -1199,7 +1199,7 @@ export const FarePage = () => {
                   }}
                   className={`fare-trip-tab ${formTripType === 'ONE_WAY' ? 'active' : ''}`}
                 >
-                  One Way Outstation
+                  <span className="tab-full-txt">One Way Outstation</span><span className="tab-short-txt">One Way</span>
                 </button>
                 <button
                   type="button"
@@ -1209,7 +1209,7 @@ export const FarePage = () => {
                   }}
                   className={`fare-trip-tab ${formTripType === 'ROUND_TRIP' ? 'active' : ''}`}
                 >
-                  Round Trip
+                  <span className="tab-full-txt">Round Trip</span><span className="tab-short-txt">Round Trip</span>
                 </button>
                 <button
                   type="button"
@@ -1219,13 +1219,13 @@ export const FarePage = () => {
                   }}
                   className={`fare-trip-tab ${formTripType === 'LOCAL' ? 'active' : ''}`}
                 >
-                  Local City Rental
+                  <span className="tab-full-txt">Local City Rental</span><span className="tab-short-txt">Local</span>
                 </button>
               </div>
 
               {formTripType === 'LOCAL' ? (
                 /* Local Rental Inputs */
-                <div className="fare-form-grid-2">
+                <div className="fare-form-grid-2 fare-local-grid">
                   <div className="fare-form-field">
                     <label className="fare-form-label">
                       <MapPin size={13} color="#0099FF" />
@@ -1313,7 +1313,7 @@ export const FarePage = () => {
               )}
 
               {/* Schedule and Vehicle Options */}
-              <div className="fare-form-grid-3">
+              <div className="fare-form-grid-3 fare-schedule-grid">
                 <div className="fare-form-field">
                   <label className="fare-form-label">
                     <Calendar size={13} color="#0099FF" />
@@ -1376,7 +1376,7 @@ export const FarePage = () => {
 
               {/* Round Trip Return Date & Time */}
               {formTripType === 'ROUND_TRIP' && (
-                <div className="fare-form-grid-2" style={{ marginTop: '0.75rem' }}>
+                <div className="fare-form-grid-2 fare-roundtrip-grid" style={{ marginTop: '0.75rem' }}>
                   <div className="fare-form-field">
                     <label className="fare-form-label">
                       <Calendar size={13} color="#6366F1" />

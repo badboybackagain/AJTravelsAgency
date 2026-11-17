@@ -198,12 +198,20 @@ export function ServiceDetailPage() {
 
                 <h3 className="subsection-title">Key Advantages of this Service</h3>
                 <div className="highlights-grid">
-                  {service.highlights.map((h, idx) => (
-                    <div key={idx} className="highlight-pill">
-                      <CheckCircle2 size={16} color="#10B981" />
-                      <span>{h}</span>
-                    </div>
-                  ))}
+                  {service.highlights.map((h, idx) => {
+                    const hasColon = h.includes(':');
+                    const title = hasColon ? h.split(':')[0].trim() : h;
+                    const desc = hasColon ? h.split(':').slice(1).join(':').trim() : '';
+                    return (
+                      <div key={idx} className="highlight-pill">
+                        <CheckCircle2 size={16} color="#10B981" className="hl-icon" />
+                        <div className="hl-text-wrap">
+                          <strong className="hl-title">{title}</strong>
+                          {desc && <span className="hl-desc">{desc}</span>}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
 
                 {service.popularStops && service.popularStops.length > 0 && (
@@ -231,27 +239,9 @@ export function ServiceDetailPage() {
                   </div>
                 )}
               </div>
-
-              {/* FAQs */}
-              {service.faqs && service.faqs.length > 0 && (
-                <div className="content-card" style={{ marginTop: '2rem' }}>
-                  <div className="faq-card-head">
-                    <HelpCircle size={22} color="#2563EB" />
-                    <h3>Frequently Asked Questions</h3>
-                  </div>
-                  <div className="faq-list">
-                    {service.faqs.map((f, i) => (
-                      <div key={i} className="faq-item">
-                        <h4>{f.q}</h4>
-                        <p>{f.a}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
 
-            {/* Right Booking & Fleet Selection Sidebar */}
+            {/* Right Booking & Fleet Selection Sidebar (Sticky on Desktop) */}
             <div className="svc-sidebar-col">
               <div className="sidebar-booking-card">
                 <span className="sb-badge">INSTANT BOOKING</span>
@@ -316,6 +306,53 @@ export function ServiceDetailPage() {
         </div>
       </section>
 
+      {/* Full-Width Balanced FAQs Section */}
+      {service.faqs && service.faqs.length > 0 && (
+        <section className="svc-faqs-section">
+          <div className="container">
+            <div className="faq-section-header">
+              <div className="faq-badge-pill">
+                <HelpCircle size={15} color="#2563EB" />
+                <span>ROUTE INTEL & POLICIES</span>
+              </div>
+              <h2 className="faq-main-title">Frequently Asked Questions</h2>
+              <p className="faq-main-subtitle">
+                Clear answers regarding expressway tolls, timing, driver allowances, and fleet options for your journey.
+              </p>
+            </div>
+            <div className={`faq-grid ${service.faqs.length === 1 ? 'faq-grid-single' : 'faq-grid-2col'}`}>
+              {service.faqs.map((f, i) => (
+                <div key={i} className="faq-card-box">
+                  <h3 className="faq-q-title">{f.q}</h3>
+                  <p className="faq-a-desc">{f.a}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Route Bottom CTA Strip */}
+      <section className="svc-bottom-cta-strip">
+        <div className="container">
+          <div className="svc-bottom-cta-card">
+            <div className="cta-left-text">
+              <h3>Ready to Book Your {service.title}?</h3>
+              <p>100% Toll-Inclusive Pricing • Verified Highway Chauffeurs • Doorstep Pickup Across Pune & PCMC</p>
+            </div>
+            <div className="cta-right-actions">
+              <button type="button" onClick={handleBookNow} className="btn-cta-calculate">
+                <Car size={16} />
+                <span>Calculate Fare & Book</span>
+              </button>
+              <button type="button" onClick={() => setIsEnquiryOpen(true)} className="btn-cta-enquire">
+                <span>Request Custom Quote</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <Footer />
       <MobileStickyBar onOpenEnquiry={() => setIsEnquiryOpen(true)} />
       <EnquiryModal isOpen={isEnquiryOpen} onClose={() => setIsEnquiryOpen(false)} />
@@ -326,12 +363,13 @@ export function ServiceDetailPage() {
           background: #FFFFFF;
           color: #0F172A;
           font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+          overflow-x: hidden;
         }
 
         .svc-breadcrumbs-strip {
           background: #F8FAFC;
           border-bottom: 1px solid #E2E8F0;
-          padding: 1.1rem 0;
+          padding: 7rem 0 1.25rem;
         }
 
         .breadcrumbs-nav {
@@ -354,9 +392,15 @@ export function ServiceDetailPage() {
 
         .svc-hero-grid {
           display: grid;
-          grid-template-columns: 1.2fr 1fr;
+          grid-template-columns: 1.25fr 1fr;
           gap: 2.5rem;
-          align-items: center;
+          align-items: stretch;
+        }
+
+        .svc-hero-content {
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
         }
 
         .svc-badge-tag {
@@ -368,45 +412,53 @@ export function ServiceDetailPage() {
           letter-spacing: 0.08em;
           padding: 0.35rem 0.8rem;
           border-radius: 9999px;
-          margin-bottom: 1rem;
+          margin-bottom: 0.85rem;
+          align-self: flex-start;
         }
 
         .svc-hero-title {
-          font-size: 2.4rem;
+          font-size: 2.25rem;
           font-weight: 800;
           line-height: 1.25;
           color: #0F172A;
-          margin-bottom: 0.75rem;
+          margin-bottom: 0.65rem;
         }
 
         .svc-hero-tagline {
-          font-size: 1.1rem;
-          line-height: 1.6;
+          font-size: 1.05rem;
+          line-height: 1.55;
           color: #475569;
-          margin-bottom: 1.75rem;
+          margin-bottom: 1.5rem;
         }
 
         .svc-stats-chips-row {
           display: flex;
-          gap: 1.25rem;
-          margin-bottom: 2rem;
-          flex-wrap: wrap;
+          gap: 0.65rem;
+          margin-bottom: 1.75rem;
+          flex-wrap: nowrap;
+          align-items: stretch;
         }
 
         .chip-box {
           background: #FFFFFF;
           border: 1px solid #CBD5E1;
           border-radius: 12px;
-          padding: 0.75rem 1rem;
+          padding: 0.65rem 0.85rem;
           display: flex;
           align-items: center;
-          gap: 0.75rem;
+          gap: 0.6rem;
           box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+          flex: 0 0 auto;
+        }
+
+        .chip-box:last-child {
+          flex: 1 1 auto;
+          min-width: 0;
         }
 
         .chip-lbl {
           display: block;
-          font-size: 0.65rem;
+          font-size: 0.62rem;
           font-weight: 800;
           letter-spacing: 0.06em;
           color: #94A3B8;
@@ -414,8 +466,11 @@ export function ServiceDetailPage() {
 
         .chip-box strong {
           display: block;
-          font-size: 0.88rem;
+          font-size: 0.82rem;
           color: #0F172A;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
 
         .svc-hero-cta-row {
@@ -469,13 +524,19 @@ export function ServiceDetailPage() {
           overflow: hidden;
           box-shadow: 0 16px 36px rgba(15, 23, 42, 0.1);
           border: 1px solid #CBD5E1;
+          height: 100%;
+          min-height: 340px;
+          display: flex;
+          flex-direction: column;
         }
 
         .svc-hero-cover-photo {
           width: 100%;
-          height: 380px;
+          height: 100%;
+          min-height: 340px;
           object-fit: cover;
           display: block;
+          flex: 1;
         }
 
         .svc-image-badge-glass {
@@ -506,6 +567,12 @@ export function ServiceDetailPage() {
           grid-template-columns: 1.35fr 1fr;
           gap: 2.25rem;
           align-items: flex-start;
+        }
+
+        .svc-sidebar-col {
+          position: sticky;
+          top: 6.5rem;
+          align-self: flex-start;
         }
 
         .content-card {
@@ -556,14 +623,35 @@ export function ServiceDetailPage() {
         .highlight-pill {
           background: #F8FAFC;
           border: 1px solid #E2E8F0;
-          border-radius: 10px;
-          padding: 0.85rem 1rem;
+          border-radius: 12px;
+          padding: 0.85rem 1.15rem;
           display: flex;
-          align-items: center;
+          align-items: flex-start;
           gap: 0.75rem;
-          font-size: 0.92rem;
-          color: #1E293B;
-          font-weight: 500;
+        }
+
+        .hl-icon {
+          flex-shrink: 0;
+          margin-top: 3px;
+        }
+
+        .hl-text-wrap {
+          display: flex;
+          flex-direction: column;
+          gap: 0.2rem;
+        }
+
+        .hl-title {
+          font-size: 0.95rem;
+          font-weight: 700;
+          color: #0F172A;
+          line-height: 1.35;
+        }
+
+        .hl-desc {
+          font-size: 0.86rem;
+          color: #64748B;
+          line-height: 1.5;
         }
 
         .stops-box {
@@ -623,45 +711,185 @@ export function ServiceDetailPage() {
           text-decoration: underline;
         }
 
-        .faq-card-head {
-          display: flex;
-          align-items: center;
-          gap: 0.6rem;
-          margin-bottom: 1.5rem;
+        /* Full-Width FAQs Section */
+        .svc-faqs-section {
+          padding: 3.5rem 0 1.25rem;
+          background: #FFFFFF;
+          border-top: 1px solid #E2E8F0;
         }
 
-        .faq-card-head h3 {
-          font-size: 1.35rem;
+        .faq-section-header {
+          text-align: center;
+          max-width: 720px;
+          margin: 0 auto 2.5rem;
+        }
+
+        .faq-badge-pill {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.45rem;
+          background: #EFF6FF;
+          color: #2563EB;
+          font-size: 0.72rem;
+          font-weight: 800;
+          letter-spacing: 0.08em;
+          padding: 0.35rem 0.85rem;
+          border-radius: 9999px;
+          margin-bottom: 0.85rem;
+        }
+
+        .faq-main-title {
+          font-size: 2rem;
           font-weight: 800;
           color: #0F172A;
+          margin-bottom: 0.5rem;
+          line-height: 1.25;
+        }
+
+        .faq-main-subtitle {
+          font-size: 0.95rem;
+          color: #64748B;
+          line-height: 1.6;
+        }
+
+        .faq-grid-2col {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 1.25rem;
+        }
+
+        .faq-grid-single {
+          display: flex;
+          justify-content: center;
+          max-width: 780px;
+          margin: 0 auto;
+          width: 100%;
+        }
+
+        .faq-grid-single .faq-card-box {
+          width: 100%;
+        }
+
+        .faq-card-box {
+          background: #F8FAFC;
+          border: 1px solid #E2E8F0;
+          border-radius: 14px;
+          padding: 1.5rem 1.65rem;
+          transition: all 0.2s ease;
+        }
+
+        .faq-card-box:hover {
+          border-color: #BFDBFE;
+          box-shadow: 0 4px 16px rgba(37, 99, 235, 0.06);
+        }
+
+        .faq-q-title {
+          font-size: 1.05rem;
+          font-weight: 700;
+          color: #0F172A;
+          margin-bottom: 0.65rem;
+          line-height: 1.4;
+        }
+
+        .faq-a-desc {
+          font-size: 0.9rem;
+          color: #475569;
+          line-height: 1.6;
           margin: 0;
         }
 
-        .faq-list {
+        /* Route Bottom CTA Strip — Distinct Floating Rectangular Card Separating from Footer */
+        .svc-bottom-cta-strip {
+          background: #FFFFFF;
+          padding: 0.75rem 0 2.5rem;
+        }
+
+        .svc-bottom-cta-card {
+          background: #0F172A;
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          border-radius: 18px;
+          padding: 2.25rem 3rem;
           display: flex;
-          flex-direction: column;
-          gap: 1.1rem;
+          align-items: center;
+          justify-content: space-between;
+          gap: 2.5rem;
+          box-shadow: 0 16px 36px -8px rgba(15, 23, 42, 0.20);
+          position: relative;
+          overflow: hidden;
         }
 
-        .faq-item {
-          background: #F8FAFC;
-          padding: 1rem 1.25rem;
-          border-radius: 10px;
-          border: 1px solid #E2E8F0;
-        }
 
-        .faq-item h4 {
-          font-size: 0.98rem;
-          font-weight: 700;
-          color: #0F172A;
+
+        .cta-left-text h3 {
+          font-size: 1.65rem;
+          font-weight: 800;
+          color: #FFFFFF;
           margin-bottom: 0.35rem;
         }
 
-        .faq-item p {
-          font-size: 0.88rem;
-          color: #64748B;
-          line-height: 1.55;
+        .cta-left-text p {
+          font-size: 0.92rem;
+          color: #94A3B8;
           margin: 0;
+        }
+
+        .cta-right-actions {
+          display: flex;
+          align-items: center;
+          gap: 0.85rem;
+          flex-wrap: wrap;
+          position: relative;
+          z-index: 2;
+        }
+
+        .btn-cta-calculate {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.5rem;
+          background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
+          color: #FFFFFF;
+          font-weight: 700;
+          font-size: 0.92rem;
+          padding: 0.85rem 1.5rem;
+          border-radius: 12px;
+          border: none;
+          cursor: pointer;
+          box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+          transition: all 0.2s ease;
+        }
+
+        .btn-cta-calculate:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(37, 99, 235, 0.45);
+        }
+
+        .btn-cta-enquire {
+          display: inline-flex;
+          align-items: center;
+          background: rgba(255, 255, 255, 0.1);
+          color: #FFFFFF;
+          font-weight: 700;
+          font-size: 0.92rem;
+          padding: 0.85rem 1.4rem;
+          border-radius: 12px;
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .btn-cta-enquire:hover {
+          background: rgba(255, 255, 255, 0.18);
+        }
+          font-size: 0.92rem;
+          padding: 0.85rem 1.4rem;
+          border-radius: 12px;
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .btn-cta-enquire:hover {
+          background: rgba(255, 255, 255, 0.18);
         }
 
         /* Sidebar */
@@ -810,11 +1038,14 @@ export function ServiceDetailPage() {
           .svc-content-2col-grid {
             grid-template-columns: 1fr;
           }
+          .svc-sidebar-col {
+            position: static;
+          }
         }
 
         @media (max-width: 768px) {
           .svc-breadcrumbs-strip {
-            padding: 0.65rem 0;
+            padding: 5.8rem 0 0.85rem;
           }
           .svc-hero-section {
             padding: 1.25rem 0 1rem;
@@ -829,35 +1060,61 @@ export function ServiceDetailPage() {
             margin-bottom: 0.75rem;
           }
           .svc-stats-chips-row {
-            gap: 0.45rem;
-            margin-bottom: 0.85rem;
+            display: grid !important;
+            grid-template-columns: 1fr 1fr !important;
+            gap: 0.5rem !important;
+            margin-bottom: 0.85rem !important;
+            width: 100% !important;
           }
           .chip-box {
-            padding: 0.45rem 0.65rem;
-            gap: 0.45rem;
-            flex: 1 1 calc(50% - 0.45rem);
+            flex: none !important;
+            padding: 0.5rem 0.65rem !important;
+            gap: 0.45rem !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+          }
+          .chip-box:last-child {
+            grid-column: 1 / -1 !important;
+            width: 100% !important;
           }
           .chip-lbl {
             font-size: 0.62rem;
           }
           .chip-box strong {
             font-size: 0.78rem;
+            white-space: normal !important;
           }
           .svc-hero-cta-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 0.5rem;
-            margin-bottom: 1rem;
+            display: grid !important;
+            grid-template-columns: 1fr 1fr !important;
+            gap: 0.5rem !important;
+            margin-bottom: 1rem !important;
+            width: 100% !important;
           }
           .btn-book-now-solid,
           .btn-custom-inquiry {
-            padding: 0.6rem 0.65rem;
-            font-size: 0.78rem;
-            justify-content: center;
-            text-align: center;
+            width: 100% !important;
+            padding: 0.65rem 0.35rem !important;
+            font-size: 0.74rem !important;
+            justify-content: center !important;
+            text-align: center !important;
+            box-sizing: border-box !important;
+            white-space: nowrap !important;
+          }
+          .svc-hero-image-box {
+            width: 100% !important;
+            max-width: 100% !important;
+            height: 180px !important;
+            min-height: 180px !important;
+            border-radius: 16px !important;
+            overflow: hidden !important;
+            box-sizing: border-box !important;
           }
           .svc-hero-cover-photo {
-            height: 180px;
+            width: 100% !important;
+            height: 180px !important;
+            min-height: 180px !important;
+            object-fit: cover !important;
           }
           .svc-image-badge-glass {
             padding: 0.45rem 0.75rem;
@@ -870,7 +1127,7 @@ export function ServiceDetailPage() {
             padding: 1.25rem 0 2.5rem;
           }
           .content-card {
-            padding: 1rem 1.1rem;
+            padding: 1.15rem 1.1rem;
             border-radius: 14px;
           }
           .content-card-title {
@@ -890,9 +1147,23 @@ export function ServiceDetailPage() {
             grid-template-columns: 1fr;
             gap: 0.45rem;
           }
+          /* Hide verbose descriptive lines on mobile — strictly show main points */
+          .hl-desc {
+            display: none !important;
+          }
           .highlight-pill {
-            padding: 0.5rem 0.65rem;
-            font-size: 0.78rem;
+            padding: 0.55rem 0.75rem;
+            align-items: center;
+            border-radius: 10px;
+          }
+          .hl-icon {
+            margin-top: 0;
+            width: 14px;
+            height: 14px;
+          }
+          .hl-title {
+            font-size: 0.8rem;
+            font-weight: 700;
           }
           .sidebar-booking-card {
             padding: 1.1rem 1rem;
@@ -900,6 +1171,68 @@ export function ServiceDetailPage() {
           }
           .sidebar-booking-card h3 {
             font-size: 1.15rem;
+          }
+          .svc-faqs-section {
+            padding: 2rem 0 0.75rem;
+          }
+          .faq-section-header {
+            margin-bottom: 1.5rem;
+          }
+          .faq-main-title {
+            font-size: 1.4rem;
+          }
+          .faq-main-subtitle {
+            font-size: 0.82rem;
+            line-height: 1.45;
+          }
+          .faq-grid-2col {
+            grid-template-columns: 1fr;
+            gap: 0.85rem;
+          }
+          .faq-card-box {
+            padding: 1rem 1.15rem;
+            border-radius: 12px;
+          }
+          .faq-q-title {
+            font-size: 0.92rem;
+            margin-bottom: 0.35rem;
+          }
+          .faq-a-desc {
+            font-size: 0.8rem;
+            line-height: 1.45;
+          }
+          .svc-bottom-cta-strip {
+            background: #FFFFFF !important;
+            padding: 0.5rem 0 2rem !important;
+            border-top: none !important;
+          }
+          .svc-bottom-cta-card {
+            border-radius: 14px !important;
+            padding: 1.35rem 1.15rem !important;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1.15rem;
+            width: 100% !important;
+            box-sizing: border-box !important;
+          }
+          .cta-left-text h3 {
+            font-size: 1.25rem;
+          }
+          .cta-left-text p {
+            font-size: 0.82rem;
+          }
+          .cta-right-actions {
+            width: 100%;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+          }
+          .btn-cta-calculate,
+          .btn-cta-enquire {
+            width: 100%;
+            justify-content: center;
+            padding: 0.65rem 0.5rem;
+            font-size: 0.78rem;
           }
         }
       `}</style>

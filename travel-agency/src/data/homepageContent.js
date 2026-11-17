@@ -33,12 +33,13 @@ export const homepageContent = {
     titleSecondary: "Intercity Cabs, Airport Transfers & Chauffeur-Driven Vehicles",
     description: "",
     bgImage: "/assets/hero-luxury-cars.jpg",
+    bgImageMobile: "/assets/hero-luxury-cars-mobile.jpg",
     bgImageAlt: "AJ Travels Executive Cab Fleet - Sedans, SUVs and Tempo Travellers in Pune",
     trustChips: [
       { text: "30-Min Fast Dispatch", color: "green" },
       { text: "Expressway Tolls Included", color: "sky" },
       { text: "Verified Highway Drivers", color: "amber" },
-      { text: "24/7 Travel Desk Support", color: "blue" }
+      { text: "24/7 Travel Desk Support", shortText: "24/7 Support", color: "clock" }
     ],
     dispatchNotice: {
       headline: "Prompt Doorstep Dispatch:",

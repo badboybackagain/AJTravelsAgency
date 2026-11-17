@@ -21,6 +21,50 @@ import {
   RotateCcw
 } from 'lucide-react';
 
+// Helper: Normalize vehicle feature points into concise single points
+const formatFeaturePoint = (feat) => {
+  if (!feat) return '';
+  const lower = feat.toLowerCase();
+  if (lower.includes('dual air-conditioning') || lower.includes('dual ac') || lower.includes('chilled air')) return 'Dual AC';
+  if (lower.includes('roof-mounted') || lower.includes('rear ac')) return 'Rear AC Vents';
+  if (lower.includes('378l') || lower.includes('boot space') || lower.includes('luggage room') || lower.includes('luggage deck')) {
+    if (lower.includes('378l')) return '378L+ Boot';
+    return 'Large Boot';
+  }
+  if (lower.includes('plush') || lower.includes('leatherette') || lower.includes('captain') || lower.includes('seating') || lower.includes('legroom')) return 'Plush Seating';
+  if (lower.includes('charging') || lower.includes('usb')) return 'USB Charging';
+  if (lower.includes('toll')) return 'Tolls Included';
+  if (lower.includes('suspension')) return 'Ghat Suspension';
+  if (lower.includes('folding 3rd-row') || lower.includes('flexible') || lower.includes('folding 3rd row')) return 'Folding 3rd Row';
+  if (lower.includes('door-to-door') || lower.includes('doorstep')) return 'Doorstep Pickup';
+  if (lower.includes('driver') || lower.includes('chauffeur')) return 'Verified Driver';
+  if (lower.includes('whisper-quiet') || lower.includes('acoustic') || lower.includes('quiet cabin')) return 'Quiet Cabin';
+  if (lower.includes('climate control')) return 'Climate AC';
+  if (lower.includes('stability')) return 'Ride Stability';
+  if (lower.includes('pushback')) return 'Pushback Seats';
+  if (lower.includes('permit')) return 'Tourist Permit';
+  if (lower.includes('tv') || lower.includes('music')) return 'Music System';
+  if (lower.includes('compact') || lower.includes('fuel-efficient')) return 'Fuel Efficient';
+
+  if (feat.length <= 18) return feat;
+  const firstPhrase = feat.split(/ with | for | keeping | optimizing | accustomed /i)[0];
+  return firstPhrase.length <= 18 ? firstPhrase : firstPhrase.slice(0, 16).trim();
+};
+
+const cleanIdealFor = (text) => {
+  if (!text) return '';
+  if (text.includes('|')) {
+    const parts = text.split('|').map(s => s.trim()).filter(Boolean);
+    const bestPart = parts.find(p => p.toLowerCase().startsWith('best for') || p.toLowerCase().startsWith('ideal for')) || parts[parts.length - 1];
+    return bestPart;
+  }
+  if (text.toLowerCase().includes('in pune for')) {
+    const after = text.split(/in pune for/i)[1].trim();
+    return after.charAt(0).toUpperCase() + after.slice(1);
+  }
+  return text;
+};
+
 export function VehiclesPage() {
   usePageSeo(
     'vehicles',
@@ -40,14 +84,16 @@ export function VehiclesPage() {
     setError('');
     vehicleApi.getAll({ forceRefresh })
       .then(res => {
-        if (res.data?.data) {
+        if (res.data?.data && res.data.data.length > 0) {
           setDbVehicles(res.data.data);
+        } else {
+          setDbVehicles(vehiclesData);
         }
         setLoading(false);
       })
       .catch(err => {
-        console.warn('VehiclesPage: Failed to load dynamic fleet:', err?.message);
-        setError('Unable to load fleet vehicles at this time.');
+        console.warn('VehiclesPage: Using verified fleet template fallback:', err?.message);
+        setDbVehicles(vehiclesData);
         setLoading(false);
       });
   };
@@ -66,47 +112,54 @@ export function VehiclesPage() {
     navigate(`/fare?${params.toString()}`);
   };
 
-  // Authoritative fleet list: live active DB vehicles only (no stale fallback)
-  const displayedVehicles = dbVehicles.map(db => {
-    const canonical = getCanonicalTemplateForDbVehicle(db, vehiclesData);
-    const slug = canonical?.slug || db.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || db.id;
+  // Authoritative fleet list with reliable fallback
+  const effectiveFleet = (dbVehicles && dbVehicles.length > 0) ? dbVehicles : vehiclesData;
+
+  const displayedVehicles = effectiveFleet.map(item => {
+    const isDb = Boolean(item.createdAt || item.updatedAt || (item.seatingCapacity !== undefined && !item.slug));
+    const db = isDb ? item : null;
+    const staticItem = isDb ? null : item;
+    const canonical = db ? getCanonicalTemplateForDbVehicle(db, vehiclesData) : staticItem;
+
+    const slug = canonical?.slug || (db ? db.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') : item.id) || item.id;
 
     const categoryFallback = (
-      db.category === 'SUV' ? '/assets/suv.webp' :
-      db.category === 'LUXURY' ? '/assets/luxury.jpg' :
-      db.category === 'MINIBUS' ? '/assets/minibus.jpg' :
-      db.category === 'HATCHBACK' ? '/assets/hatchback.jpg' :
+      item.category === 'SUV' ? '/assets/suv.webp' :
+      item.category === 'LUXURY' ? '/assets/luxury.jpg' :
+      item.category === 'MINIBUS' ? '/assets/minibus.jpg' :
+      item.category === 'HATCHBACK' ? '/assets/hatchback.jpg' :
       '/assets/sedan.webp'
     );
 
-    const cardImage = resolveMediaUrl(db.image, canonical?.image || categoryFallback);
+    const cardImage = resolveMediaUrl(item.image, canonical?.image || categoryFallback);
 
-    // Price logic:
-    // 1. If active route fares exist in DB for this vehicle, display lowest base fare
-    // 2. If canonical template has known teaser fare, use it
-    // 3. For any custom vehicle with no DB fares yet, display "On Request"
-    const displayStartingFare = db.startingBaseFare
-      ? `₹${db.startingBaseFare.toLocaleString()}`
-      : (canonical?.fareStarting || 'On Request');
+    const displayStartingFare = item.startingBaseFare
+      ? `₹${item.startingBaseFare.toLocaleString()}`
+      : (canonical?.fareStarting || item.fareStarting || 'On Request');
+
+    const models = canonical?.models || item.models || `${item.name} Fleet`;
+    const idealFor = item.idealFor || canonical?.idealFor || (db?.description ? db.description : canonical?.overview) || `Commercial AC ${item.name} with certified highway chauffeur.`;
+
+    const rawFeatures = canonical?.features || item.features || [
+      'Dual Air-Conditioning',
+      'Plush Seating',
+      'Large Boot Space',
+      'USB Mobile Charging'
+    ];
 
     return {
-      id: db.id,
+      id: item.id || slug,
       slug,
-      name: db.name, // DB source of truth
-      category: db.category, // DB source of truth
-      seatingCapacity: db.seatingCapacity, // DB source of truth
-      passengers: `${db.seatingCapacity} Passengers`,
+      name: item.name,
+      category: item.category,
+      seatingCapacity: item.seatingCapacity || 4,
+      passengers: item.passengers || `${item.seatingCapacity || 4} Passengers`,
       image: cardImage,
-      tag: canonical?.tag || (db.category === 'LUXURY' ? 'SUPREME COMFORT' : 'FLEET ADDITION'),
-      models: db.description || canonical?.models || `${db.name} Fleet`,
-      luggage: canonical?.luggage || (db.seatingCapacity <= 4 ? '2-3 Medium Bags' : db.seatingCapacity <= 7 ? '4-5 Large Bags' : '10+ Big Bags'),
-      overview: db.description || canonical?.overview || `Commercial AC ${db.name} with certified highway chauffeur.`,
-      features: canonical?.features || [
-        'Dual Air-Conditioning with rapid cooling',
-        'Plush ergonomic seating with ample legroom',
-        'Experienced, background-verified highway chauffeur',
-        'All-inclusive toll package available'
-      ],
+      tag: canonical?.tag || (item.category === 'LUXURY' ? 'SUPREME COMFORT' : 'FLEET ADDITION'),
+      models,
+      luggage: canonical?.luggage || item.luggage || (item.seatingCapacity <= 4 ? '2-3 Medium Bags' : '4 Large Bags'),
+      idealFor,
+      features: rawFeatures,
       displayStartingFare,
     };
   });
@@ -224,16 +277,20 @@ export function VehiclesPage() {
                       </div>
                     </div>
 
-                    <p className="fleet-overview-blurb">{v.overview}</p>
-
-                    <div className="fleet-features-preview">
-                      {(v.features || []).slice(0, 3).map((f, i) => (
-                        <div key={i} className="feat-line">
-                          <CheckCircle2 size={14} color="#10B981" />
-                          <span>{f}</span>
+                    {/* Features List — Clean single points: 4 on desktop, 2 on mobile */}
+                    <div className="fleet-features-grid">
+                      {(v.features || []).slice(0, 4).map((f, i) => (
+                        <div key={i} className={`feat-pill-item ${i >= 2 ? 'hide-on-mobile' : ''}`}>
+                          <CheckCircle2 size={13} color="#2563EB" />
+                          <span>{formatFeaturePoint(f)}</span>
                         </div>
                       ))}
                     </div>
+
+                    {/* Single Ideal For Line — Never duplicated */}
+                    <p className="fleet-ideal-line">
+                      <strong>Ideal for:</strong> {cleanIdealFor(v.idealFor)}
+                    </p>
 
                     <div className="fleet-footer-row">
                       <div className="fleet-price-box">
@@ -447,30 +504,30 @@ export function VehiclesPage() {
         .fleet-cards-grid {
           display: grid;
           grid-template-columns: repeat(2, 1fr);
-          gap: 2.5rem;
-          margin-bottom: 4rem;
+          gap: 2rem;
+          margin-bottom: 3.5rem;
         }
 
         .fleet-card {
           background: #FFFFFF;
           border-radius: 20px;
-          border: 1px solid #CBD5E1;
+          border: 1.5px solid #E2E8F0;
           overflow: hidden;
-          box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+          box-shadow: 0 4px 20px rgba(15, 23, 42, 0.05);
           display: flex;
           flex-direction: column;
           transition: all 0.25s ease;
         }
 
         .fleet-card:hover {
-          transform: translateY(-4px);
-          box-shadow: 0 16px 36px rgba(15, 23, 42, 0.1);
-          border-color: #93C5FD;
+          transform: translateY(-3px);
+          box-shadow: 0 12px 32px rgba(15, 23, 42, 0.09);
+          border-color: #BFDBFE;
         }
 
         .fleet-img-wrapper {
           position: relative;
-          height: 240px;
+          height: 220px;
           overflow: hidden;
           background: #F1F5F9;
         }
@@ -501,7 +558,7 @@ export function VehiclesPage() {
         }
 
         .fleet-card-body {
-          padding: 2rem;
+          padding: 1.75rem 2rem 2rem;
           display: flex;
           flex-direction: column;
           flex: 1;
@@ -543,7 +600,7 @@ export function VehiclesPage() {
         .fleet-capacities-row {
           display: flex;
           gap: 0.85rem;
-          margin-bottom: 1.25rem;
+          margin-bottom: 1.15rem;
         }
 
         .cap-pill {
@@ -558,29 +615,39 @@ export function VehiclesPage() {
           border-radius: 6px;
         }
 
-        .fleet-overview-blurb {
-          font-size: 0.9rem;
-          line-height: 1.6;
+        .fleet-features-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 0.5rem;
+          margin-bottom: 1.15rem;
+          padding: 0.85rem 1rem;
+          background: #F8FAFC;
+          border-radius: 12px;
+          border: 1px solid #E2E8F0;
+        }
+
+        .feat-pill-item {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.4rem;
+          font-size: 0.8rem;
+          font-weight: 600;
+          color: #334155;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .fleet-ideal-line {
+          font-size: 0.86rem;
+          line-height: 1.55;
           color: #475569;
-          margin-bottom: 1.25rem;
+          margin-bottom: 1.35rem;
           flex: 1;
         }
 
-        .fleet-features-preview {
-          display: flex;
-          flex-direction: column;
-          gap: 0.5rem;
-          margin-bottom: 1.5rem;
-          border-top: 1px solid #F1F5F9;
-          padding-top: 1rem;
-        }
-
-        .feat-line {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          font-size: 0.82rem;
-          color: #334155;
+        .fleet-ideal-line strong {
+          color: #0F172A;
         }
 
         .fleet-footer-row {
@@ -694,17 +761,86 @@ export function VehiclesPage() {
         @media (max-width: 991px) {
           .fleet-cards-grid {
             grid-template-columns: 1fr;
+            gap: 1.5rem;
           }
         }
 
-        @media (max-width: 640px) {
+        @media (max-width: 768px) {
           .internal-hero-title {
-            font-size: 1.85rem;
+            font-size: 1.75rem;
+          }
+          .internal-hero-subtitle {
+            font-size: 0.88rem;
+          }
+          .fleet-cards-grid {
+            gap: 1.25rem;
+            margin-bottom: 2.5rem;
+          }
+          .fleet-card {
+            border-radius: 16px;
+          }
+          .fleet-img-wrapper {
+            height: 180px;
+          }
+          .fleet-card-body {
+            padding: 1.25rem 1.15rem 1.35rem;
+          }
+          .fleet-car-title {
+            font-size: 1.3rem;
+          }
+          .fleet-models-txt {
+            font-size: 0.8rem;
+            margin-bottom: 0.85rem;
+          }
+          .fleet-capacities-row {
+            gap: 0.5rem;
+            margin-bottom: 0.85rem;
+          }
+          .cap-pill {
+            font-size: 0.74rem;
+            padding: 0.3rem 0.65rem;
+          }
+          .hide-on-mobile {
+            display: none !important;
+          }
+          .fleet-features-grid {
+            grid-template-columns: 1fr 1fr;
+            gap: 0.4rem;
+            padding: 0.65rem 0.85rem;
+            margin-bottom: 0.85rem;
+          }
+          .feat-pill-item {
+            font-size: 0.76rem;
+          }
+          .fleet-ideal-line {
+            font-size: 0.8rem;
+            margin-bottom: 1rem;
+          }
+          .fleet-footer-row {
+            padding-top: 1rem;
+            gap: 0.75rem;
+          }
+          .rate-val {
+            font-size: 1.25rem;
+          }
+          .fleet-btns-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.45rem;
+            flex: 1;
+          }
+          .btn-book-fleet,
+          .btn-details-fleet {
+            width: 100%;
+            justify-content: center;
+            padding: 0.6rem 0.4rem;
+            font-size: 0.78rem;
+            white-space: nowrap;
           }
           .fleet-standards-box {
             flex-direction: column;
             align-items: flex-start;
-            padding: 1.5rem;
+            padding: 1.35rem;
           }
         }
       `}</style>

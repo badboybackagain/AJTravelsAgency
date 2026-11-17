@@ -80,13 +80,13 @@ export function VehicleDetailPage() {
     '/assets/sedan.webp'
   );
 
-  // Unified vehicle object: live DB fields take absolute precedence over static copy
+  // Unified vehicle object: live DB fields take absolute precedence when available; static template provides seamless fallback
   const vehicle = dbMatch ? {
     id: dbMatch.id,
     slug: canonicalTemplate?.slug || dbMatch.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || dbMatch.id,
     name: dbMatch.name, // DATABASE IS SOURCE OF TRUTH
     category: dbMatch.category, // DATABASE IS SOURCE OF TRUTH
-    models: dbMatch.description || canonicalTemplate?.models || `${dbMatch.name} Fleet`,
+    models: canonicalTemplate?.models || dbMatch.description || `${dbMatch.name} Fleet`,
     tag: canonicalTemplate?.tag || (dbMatch.category === 'LUXURY' ? 'SUPREME COMFORT & LUXURY' : 'POPULAR FLEET CHOICE'),
     metaTitle: canonicalTemplate?.metaTitle || `${dbMatch.name} on Rent in Pune with Driver - AJ Travels`,
     metaDesc: canonicalTemplate?.metaDesc || `Hire ${dbMatch.name} on rent in Pune with chauffeur. Transparent rates for Pune to Mumbai, airport pickup/drop, and outstation trips.`,
@@ -94,7 +94,7 @@ export function VehicleDetailPage() {
     passengers: `${dbMatch.seatingCapacity} Passengers`, // DATABASE IS SOURCE OF TRUTH
     luggage: canonicalTemplate?.luggage || (dbMatch.seatingCapacity <= 4 ? '2-3 Medium Bags' : dbMatch.seatingCapacity <= 7 ? '4-5 Large Bags' : '10+ Big Bags'),
     fareStarting: dbMatch.startingBaseFare ? `₹${dbMatch.startingBaseFare.toLocaleString()}` : (canonicalTemplate?.fareStarting || 'On Request'),
-    overview: dbMatch.description || canonicalTemplate?.overview || `Our ${dbMatch.name} fleet features well-maintained commercial vehicles with experienced highway chauffeurs.`,
+    overview: canonicalTemplate?.overview || dbMatch.description || `Our ${dbMatch.name} fleet features well-maintained commercial vehicles with experienced highway chauffeurs.`,
     features: canonicalTemplate?.features || [
       'Dual Air-Conditioning with rapid cooling',
       'Plush fabric or leatherette seating with ample legroom',
@@ -108,7 +108,34 @@ export function VehicleDetailPage() {
       bootCapacity: 'Generous Luggage Space',
       ac: 'Yes, High-Performance Climate Control'
     }
-  } : null;
+  } : (staticVehicle ? {
+    id: staticVehicle.id,
+    slug: staticVehicle.slug,
+    name: staticVehicle.name,
+    category: staticVehicle.category,
+    models: staticVehicle.models || `${staticVehicle.name} Fleet`,
+    tag: staticVehicle.tag || 'POPULAR FLEET CHOICE',
+    metaTitle: staticVehicle.metaTitle || `${staticVehicle.name} on Rent in Pune with Driver - AJ Travels`,
+    metaDesc: staticVehicle.metaDesc || `Hire ${staticVehicle.name} on rent in Pune with chauffeur.`,
+    image: staticVehicle.image || categoryFallback,
+    passengers: staticVehicle.passengers || '4 Passengers',
+    luggage: staticVehicle.luggage || '2-3 Medium Bags',
+    fareStarting: staticVehicle.fareStarting || 'On Request',
+    overview: staticVehicle.overview || `Commercial AC ${staticVehicle.name} with certified highway chauffeur.`,
+    features: staticVehicle.features || [
+      'Dual Air-Conditioning with rapid cooling',
+      'Plush fabric or leatherette seating with ample legroom',
+      'Commercial licensed highway chauffeur',
+      'All-inclusive toll package available'
+    ],
+    idealFor: staticVehicle.idealFor || `${staticVehicle.name} rental in Pune for family tours, corporate transfers, and airport drops.`,
+    specs: staticVehicle.specs || {
+      engine: 'Highway Commercial Engine',
+      seatingCapacity: '4 + 1 Driver',
+      bootCapacity: 'Generous Luggage Space',
+      ac: 'Yes, High-Performance Climate Control'
+    }
+  } : null);
 
   const activeImage = vehicle?.image || canonicalTemplate?.image || categoryFallback;
   const activeStartingFare = vehicle?.fareStarting || 'On Request';
@@ -120,7 +147,7 @@ export function VehicleDetailPage() {
     vehicle ? `https://ajtravelsagency.vercel.app/vehicles/${vehicle.slug}` : undefined
   );
 
-  if (loading) {
+  if (loading && !staticVehicle) {
     return (
       <div className="veh-detail-wrapper" aria-busy="true" aria-label="Loading vehicle profile">
         <Header onOpenEnquiry={() => setIsEnquiryOpen(true)} isDark={false} />
@@ -185,7 +212,7 @@ export function VehicleDetailPage() {
     );
   }
 
-  if (error && dbVehicles.length === 0) {
+  if (error && dbVehicles.length === 0 && !staticVehicle) {
     return (
       <div className="veh-detail-wrapper">
         <Header onOpenEnquiry={() => setIsEnquiryOpen(true)} isDark={false} />
@@ -400,20 +427,24 @@ export function VehicleDetailPage() {
               <div className="other-vehicles-box">
                 <h4>Other Vehicle Options</h4>
                 <div className="other-veh-list">
-                  {dbVehicles
-                    .filter(db => db.id !== vehicle.id)
-                    .map(db => {
-                      const canonical = getCanonicalTemplateForDbVehicle(db, vehiclesData);
-                      const otherSlug = canonical?.slug || db.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || db.id;
-                      const otherFare = db.startingBaseFare
-                        ? `₹${db.startingBaseFare.toLocaleString()}`
-                        : (canonical?.fareStarting || 'On Request');
+                  {((dbVehicles && dbVehicles.length > 0) ? dbVehicles : vehiclesData)
+                    .filter(item => item.id !== vehicle.id && item.slug !== vehicle.slug)
+                    .slice(0, 5)
+                    .map(item => {
+                      const isDb = Boolean(item.createdAt || item.updatedAt || (item.seatingCapacity !== undefined && !item.slug));
+                      const db = isDb ? item : null;
+                      const canonical = db ? getCanonicalTemplateForDbVehicle(db, vehiclesData) : item;
+                      const otherSlug = canonical?.slug || (db ? db.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') : item.id) || item.id;
+                      const otherFare = item.startingBaseFare
+                        ? `₹${item.startingBaseFare.toLocaleString()}`
+                        : (canonical?.fareStarting || item.fareStarting || 'On Request');
+                      const passengers = item.passengers || `${item.seatingCapacity || 4} Passengers`;
 
                       return (
-                        <Link key={db.id} to={`/vehicles/${otherSlug}`} className="other-veh-row">
+                        <Link key={item.id || otherSlug} to={`/vehicles/${otherSlug}`} className="other-veh-row">
                           <div>
-                            <strong>{db.name}</strong>
-                            <span>{db.seatingCapacity} Passengers • From {otherFare}*</span>
+                            <strong>{item.name}</strong>
+                            <span>{passengers} • From {otherFare}*</span>
                           </div>
                           <ArrowRight size={14} />
                         </Link>
@@ -436,6 +467,7 @@ export function VehicleDetailPage() {
           background: #FFFFFF;
           color: #0F172A;
           font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+          overflow-x: hidden;
         }
 
         
@@ -882,20 +914,125 @@ export function VehicleDetailPage() {
           .veh-hero-grid,
           .veh-content-2col-layout {
             grid-template-columns: 1fr;
+            gap: 1.5rem;
           }
         }
 
-        @media (max-width: 640px) {
+        @media (max-width: 768px) {
+          .veh-breadcrumbs-strip {
+            padding: 0.65rem 0;
+          }
+          .veh-hero-section {
+            padding: 1.25rem 0 1.5rem;
+          }
+          .veh-hero-grid {
+            grid-template-columns: 1fr;
+            gap: 1.15rem;
+          }
+          .veh-hero-image-box {
+            border-radius: 14px;
+            height: 190px;
+          }
+          .veh-hero-photo {
+            height: 190px;
+          }
+          .veh-floating-tag {
+            top: 0.75rem;
+            left: 0.75rem;
+            font-size: 0.65rem;
+            padding: 0.25rem 0.65rem;
+          }
           .veh-main-title {
-            font-size: 1.85rem;
+            font-size: 1.45rem;
+            line-height: 1.25;
+            margin-bottom: 0.3rem;
+          }
+          .veh-models-subtitle {
+            font-size: 0.82rem;
+            margin-bottom: 0.85rem;
+          }
+          .veh-spec-chips {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+            margin-bottom: 0.85rem;
+            width: 100%;
+          }
+          .spec-chip {
+            padding: 0.55rem 0.65rem;
+            gap: 0.5rem;
+          }
+          .spec-chip strong {
+            font-size: 0.78rem;
+          }
+          .veh-blurb-text {
+            font-size: 0.84rem;
+            line-height: 1.5;
+            margin-bottom: 1rem;
           }
           .veh-fare-box {
             flex-direction: column;
-            align-items: flex-start;
+            align-items: stretch;
+            gap: 0.75rem;
+            padding: 1rem 1.1rem;
+            border-radius: 14px;
+          }
+          .rate-amount {
+            font-size: 1.35rem;
           }
           .btn-book-this-veh {
             width: 100%;
             justify-content: center;
+            padding: 0.75rem;
+            font-size: 0.85rem;
+          }
+          .veh-details-content-section {
+            padding: 1.25rem 0 2.5rem;
+          }
+          .content-card,
+          .sidebar-action-card,
+          .other-vehicles-box {
+            padding: 1.2rem 1.1rem;
+            border-radius: 14px;
+          }
+          .content-card-title {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+          }
+          .features-checklist {
+            gap: 0.65rem;
+            margin-bottom: 1.25rem;
+          }
+          .feat-check-row {
+            font-size: 0.84rem;
+            gap: 0.5rem;
+          }
+          .ideal-use-banner {
+            padding: 0.85rem 1rem;
+            border-radius: 10px;
+            gap: 0.65rem;
+          }
+          .ideal-use-banner strong {
+            font-size: 0.84rem;
+          }
+          .ideal-use-banner p {
+            font-size: 0.8rem;
+          }
+          .specs-table th,
+          .specs-table td {
+            padding: 0.65rem 0.75rem;
+            font-size: 0.82rem;
+          }
+          .sidebar-action-card h3 {
+            font-size: 1.2rem;
+          }
+          .sidebar-action-card p {
+            font-size: 0.82rem;
+            margin-bottom: 1rem;
+          }
+          .btn-full-calc {
+            padding: 0.75rem;
+            font-size: 0.85rem;
           }
         }
       `}</style>

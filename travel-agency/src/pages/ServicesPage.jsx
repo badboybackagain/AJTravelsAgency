@@ -105,12 +105,20 @@ export function ServicesPage() {
                   <p className="svc-overview-txt">{svc.overview}</p>
 
                   <div className="svc-highlights-list">
-                    {svc.highlights.slice(0, 3).map((h, i) => (
-                      <div key={i} className="svc-hl-item">
-                        <CheckCircle2 size={15} color="#10B981" />
-                        <span>{h}</span>
-                      </div>
-                    ))}
+                    {svc.highlights.slice(0, 4).map((h, i) => {
+                      const hasColon = h.includes(':');
+                      const title = hasColon ? h.split(':')[0].trim() : h;
+                      const desc = hasColon ? h.split(':').slice(1).join(':').trim() : '';
+                      return (
+                        <div key={i} className={`svc-hl-item ${i >= 2 ? 'hide-on-mobile' : ''}`}>
+                          <CheckCircle2 size={15} color="#10B981" className="svc-hl-icon" />
+                          <div className="svc-hl-text">
+                            <span className="svc-hl-title">{title}</span>
+                            {desc && <span className="svc-hl-desc">{desc}</span>}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
 
                   <div className="svc-action-buttons">
@@ -148,7 +156,7 @@ export function ServicesPage() {
 
         .internal-hero-section {
           background: linear-gradient(180deg, #F8FAFC 0%, #EFF6FF 100%);
-          padding: 2.25rem 0 1.5rem;
+          padding: 7.5rem 0 2.5rem;
           border-bottom: 1px solid #E2E8F0;
         }
 
@@ -322,19 +330,41 @@ export function ServicesPage() {
         }
 
         .svc-highlights-list {
-          display: flex;
-          flex-direction: column;
-          gap: 0.5rem;
-          margin-bottom: 1.75rem;
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 0.75rem 1.25rem;
+          margin-bottom: 1.5rem;
         }
 
         .svc-hl-item {
           display: flex;
-          align-items: center;
-          gap: 0.6rem;
+          align-items: flex-start;
+          gap: 0.5rem;
           font-size: 0.88rem;
           color: #334155;
-          font-weight: 500;
+        }
+
+        .svc-hl-icon {
+          flex-shrink: 0;
+          margin-top: 2px;
+        }
+
+        .svc-hl-text {
+          display: flex;
+          flex-direction: column;
+          gap: 0.15rem;
+        }
+
+        .svc-hl-title {
+          font-weight: 700;
+          color: #0F172A;
+          line-height: 1.35;
+        }
+
+        .svc-hl-desc {
+          font-size: 0.8rem;
+          color: #64748B;
+          line-height: 1.45;
         }
 
         .svc-action-buttons {
@@ -399,7 +429,7 @@ export function ServicesPage() {
 
         @media (max-width: 768px) {
           .internal-hero-section {
-            padding: 1.35rem 0 1rem;
+            padding: 6rem 0 1.25rem;
           }
           .internal-hero-title {
             font-size: 1.4rem;
@@ -413,14 +443,14 @@ export function ServicesPage() {
             padding: 1rem 0 2rem;
           }
           .services-stack {
-            gap: 1rem;
+            gap: 1.25rem;
           }
           .service-showcase-card {
-            border-radius: 14px;
+            border-radius: 16px;
           }
           .svc-img-side {
             min-height: auto;
-            height: 160px;
+            height: 170px;
           }
           .svc-floating-badge {
             top: 0.65rem;
@@ -429,51 +459,59 @@ export function ServicesPage() {
             padding: 0.2rem 0.55rem;
           }
           .svc-info-side {
-            padding: 0.85rem 0.95rem 1rem;
+            padding: 1rem 1rem 1.15rem;
           }
           .svc-route-meta-strip {
             gap: 0.3rem;
             margin-bottom: 0.4rem;
           }
           .meta-pill {
-            padding: 0.18rem 0.45rem;
+            padding: 0.2rem 0.45rem;
             font-size: 0.68rem;
             gap: 0.25rem;
           }
           .svc-card-title {
-            font-size: 1.15rem;
+            font-size: 1.2rem;
             margin-bottom: 0.2rem;
             line-height: 1.25;
           }
           .svc-tagline {
-            font-size: 0.76rem;
-            margin-bottom: 0.35rem;
-          }
-          .svc-overview-txt {
             font-size: 0.78rem;
-            line-height: 1.42;
-            color: #64748B;
-            margin-bottom: 0.6rem;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
+            margin-bottom: 0.45rem;
+            line-height: 1.35;
+          }
+          /* Hide verbose overview paragraph on mobile — keep punchy tagline */
+          .svc-overview-txt {
+            display: none !important;
+          }
+          /* Hide highlights beyond the first 2 on mobile */
+          .hide-on-mobile {
+            display: none !important;
+          }
+          /* Hide verbose descriptive lines on mobile — strictly show main points */
+          .svc-hl-desc {
+            display: none !important;
           }
           .svc-highlights-list {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 0.3rem 0.5rem;
-            margin-bottom: 0.75rem;
+            gap: 0.4rem 0.6rem;
+            margin-bottom: 0.85rem;
           }
           .svc-hl-item {
-            font-size: 0.72rem;
+            font-size: 0.74rem;
+            align-items: center;
             gap: 0.35rem;
-            line-height: 1.25;
           }
-          .svc-hl-item svg {
-            flex-shrink: 0;
-            width: 13px;
-            height: 13px;
+          .svc-hl-icon {
+            width: 14px;
+            height: 14px;
+            margin-top: 0;
+          }
+          .svc-hl-title {
+            font-size: 0.74rem;
+            font-weight: 700;
+            line-height: 1.2;
           }
           .svc-action-buttons {
             display: grid;
@@ -482,12 +520,12 @@ export function ServicesPage() {
             width: 100%;
           }
           .btn-book-corridor {
-            padding: 0.55rem 0.75rem;
+            padding: 0.65rem 0.5rem;
             font-size: 0.78rem;
             justify-content: center;
           }
           .btn-view-details {
-            padding: 0.55rem 0.75rem;
+            padding: 0.65rem 0.5rem;
             font-size: 0.78rem;
             justify-content: center;
           }

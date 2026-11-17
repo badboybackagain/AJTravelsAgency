@@ -6,6 +6,7 @@ import { EnquiryModal } from '../components/EnquiryModal';
 import { MobileStickyBar } from '../components/MobileStickyBar';
 import { usePageSeo } from '../hooks/usePageSeo';
 import { blogApi, normalizeBlogPost } from '../services/api';
+import { blogPosts } from '../data/blogData';
 import { 
   BookOpen, 
   Clock, 
@@ -38,10 +39,15 @@ export function BlogPage() {
       const res = await blogApi.getAll();
       const raw = res.data?.data || [];
       const normalized = raw.map(normalizeBlogPost);
-      setPosts(normalized);
+      if (normalized.length > 0) {
+        setPosts(normalized);
+      } else {
+        setPosts(blogPosts);
+      }
     } catch (err) {
-      console.error('Error loading published blogs:', err);
-      setError(err.response?.data?.message || 'Unable to connect to the blog service. Please check your internet connection.');
+      console.warn('Error loading published blogs, using static fallback guides:', err);
+      setPosts(blogPosts);
+      setError(null);
     } finally {
       setLoading(false);
     }
@@ -549,6 +555,7 @@ export function BlogPage() {
         }
 
         .btn-read-featured {
+          white-space: nowrap;
           display: inline-flex;
           align-items: center;
           gap: 0.5rem;
@@ -698,11 +705,21 @@ export function BlogPage() {
         .read-more-link {
           display: inline-flex;
           align-items: center;
-          gap: 0.3rem;
+          gap: 0.35rem;
+          padding: 0.45rem 0.95rem;
+          border-radius: 8px;
+          background: #EFF6FF;
+          color: #1D4ED8;
           font-size: 0.82rem;
           font-weight: 700;
-          color: #2563EB;
           text-decoration: none;
+          transition: all 0.2s ease;
+          white-space: nowrap;
+        }
+
+        .read-more-link:hover {
+          background: #2563EB;
+          color: #FFFFFF;
         }
 
         .read-more-link:hover {
@@ -817,10 +834,60 @@ export function BlogPage() {
           }
         }
 
+        @media (max-width: 768px) {
+          .featured-body-side {
+            padding: 1.35rem 1.15rem;
+          }
+          .featured-title {
+            font-size: 1.35rem;
+            line-height: 1.3;
+          }
+          .featured-excerpt {
+            font-size: 0.88rem;
+            line-height: 1.55;
+            margin-bottom: 1.25rem;
+          }
+          .featured-bottom-row {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 0.85rem;
+            padding-top: 1rem;
+          }
+          .post-author-chip {
+            font-size: 0.82rem;
+            color: #64748B;
+          }
+          .btn-read-featured {
+            width: 100%;
+            height: 48px;
+            justify-content: center;
+            font-size: 0.94rem;
+            white-space: nowrap;
+            border-radius: 12px;
+          }
+          .article-card-footer {
+            flex-wrap: wrap;
+            gap: 0.5rem;
+          }
+        }
+
         @media (max-width: 640px) {
           .articles-grid {
             grid-template-columns: 1fr;
+            gap: 1.25rem;
           }
+          .internal-hero-title {
+            font-size: 1.65rem;
+            line-height: 1.25;
+          }
+          .category-pills-list {
+            gap: 0.4rem;
+          }
+          .cat-pill-btn {
+            padding: 0.4rem 0.85rem;
+            font-size: 0.78rem;
+          }
+        }
           .internal-hero-title {
             font-size: 1.75rem;
           }

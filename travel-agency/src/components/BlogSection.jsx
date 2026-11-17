@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Calendar, Clock, ArrowRight, BookOpen, Sparkles } from 'lucide-react';
 import { blogApi, normalizeBlogPost } from '../services/api';
+import { blogPosts } from '../data/blogData';
 
 export const BlogSection = () => {
   const [featuredArticles, setFeaturedArticles] = useState([]);
@@ -18,13 +19,14 @@ export const BlogSection = () => {
         const rawList = res.data?.data || [];
         const normalized = rawList.map(normalizeBlogPost);
         if (isSubscribed) {
-          setFeaturedArticles(normalized.slice(0, 3));
+          setFeaturedArticles(normalized.length > 0 ? normalized.slice(0, 3) : blogPosts.slice(0, 3));
           setError(null);
         }
       } catch (err) {
         console.error('Error fetching homepage blog showcase:', err);
         if (isSubscribed) {
-          setError('Unable to load featured articles.');
+          setFeaturedArticles(blogPosts.slice(0, 3));
+          setError(null);
         }
       } finally {
         if (isSubscribed) {

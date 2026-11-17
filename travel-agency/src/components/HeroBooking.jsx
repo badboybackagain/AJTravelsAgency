@@ -13,6 +13,7 @@ import {
   Zap,
   ArrowRight,
   ShieldCheck,
+  CheckCircle2,
 } from 'lucide-react';
 import gsap from 'gsap';
 import { businessConfig } from '../config/business.config';
@@ -349,49 +350,67 @@ export const HeroBooking = () => {
     <section id="home" className="hero-split-section">
       {/* Background Banner Image */}
       <div className="hero-bg-wrapper">
-        <img
-          src={homepageContent.hero.bgImage}
-          alt={homepageContent.hero.bgImageAlt}
-          className="hero-bg-img"
-          fetchPriority="high"
-          width="1920"
-          height="1080"
-          decoding="async"
-        />
+        <picture className="hero-bg-picture">
+          <source
+            media="(max-width: 768px)"
+            srcSet={homepageContent.hero.bgImageMobile || "/assets/hero-luxury-cars-mobile.jpg"}
+          />
+          <img
+            src={homepageContent.hero.bgImage}
+            alt={homepageContent.hero.bgImageAlt}
+            className="hero-bg-img"
+            fetchPriority="high"
+            width="1920"
+            height="1080"
+            decoding="async"
+          />
+        </picture>
         <div className="hero-bg-overlay"></div>
       </div>
 
       <div className="hero-split-container container">
         {/* Left Column: Heading & Trust Highlights */}
         <div className="hero-left-col">
-          <div className="hero-eyebrow">
-            <Sparkles size={13} color="#38BDF8" />
-            <span>{homepageContent.hero.eyebrow}</span>
-          </div>
-
           <h1 className="hero-title">
             {homepageContent.hero.titlePrimary}
             <span className="hero-title-sub">{homepageContent.hero.titleSecondary}</span>
           </h1>
 
-
-
           <div className="hero-trust-chips">
             {homepageContent.hero.trustChips.map((chip, idx) => (
               <div key={idx} className="hero-chip">
-                <span className={`chip-indicator ${chip.color}`}></span>
-                <span>{chip.text}</span>
+                {chip.color === 'clock' ? (
+                  <Clock size={12} className="chip-clock-icon" color="#CBD5E1" />
+                ) : (
+                  <span className={`chip-indicator ${chip.color}`}></span>
+                )}
+                <span className="chip-text-full">{chip.text}</span>
+                <span className="chip-text-short">{chip.shortText || chip.text}</span>
               </div>
             ))}
           </div>
 
-          <div className="hero-dispatch-notice-pill">
-            <div className="notice-icon-box">
-              <Zap size={14} color="#38BDF8" />
+          {/* Desktop Feature Points List (Hidden on Mobile) */}
+          <div className="hero-desktop-features">
+            <div className="hero-feature-item">
+              <CheckCircle2 size={16} color="#38BDF8" className="hero-feature-icon" />
+              <span>Expressway Tolls & Taxes Included</span>
             </div>
-            <span className="notice-text">
-              <strong>{homepageContent.hero.dispatchNotice.headline}</strong> {homepageContent.hero.dispatchNotice.text}
-            </span>
+
+            <div className="hero-feature-item">
+              <CheckCircle2 size={16} color="#38BDF8" className="hero-feature-icon" />
+              <span>30-Minute Prompt Doorstep Dispatch</span>
+            </div>
+
+            <div className="hero-feature-item">
+              <CheckCircle2 size={16} color="#38BDF8" className="hero-feature-icon" />
+              <span>Verified Professional Chauffeurs</span>
+            </div>
+
+            <div className="hero-feature-item">
+              <CheckCircle2 size={16} color="#38BDF8" className="hero-feature-icon" />
+              <span>Clean & Sanitized Luxury Fleet</span>
+            </div>
           </div>
         </div>
 
@@ -884,7 +903,7 @@ export const HeroBooking = () => {
                 type="submit"
                 className="booking-submit-btn"
               >
-                <span>CHECK FARE & AVAILABLE CABS</span>
+                <span>Search Cabs</span>
                 <ArrowRight size={17} />
               </button>
             </form>

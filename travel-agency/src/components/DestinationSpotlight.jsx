@@ -450,13 +450,16 @@ export const DestinationSpotlight = () => {
           }
         }
 
-        @media (max-width: 640px) {
+        @media (max-width: 768px) {
           .dest-icon-strip {
-            flex-wrap: nowrap;
-            justify-content: flex-start;
-            overflow-x: auto;
-            padding-bottom: 0.5rem;
-            margin-bottom: 1.25rem;
+            display: flex !important;
+            flex-wrap: nowrap !important;
+            justify-content: flex-start !important;
+            overflow-x: auto !important;
+            scroll-snap-type: x mandatory;
+            gap: 0.65rem !important;
+            padding: 0.25rem 0.25rem 0.75rem !important;
+            margin-bottom: 1.25rem !important;
             -webkit-overflow-scrolling: touch;
             scrollbar-width: none;
           }
@@ -464,70 +467,99 @@ export const DestinationSpotlight = () => {
             display: none;
           }
           .dest-icon-card {
-            min-width: 110px;
-            padding: 0.65rem 0.75rem;
-            flex-shrink: 0;
-            border-radius: 12px;
+            flex: 0 0 auto !important;
+            min-width: 96px !important;
+            max-width: 110px !important;
+            scroll-snap-align: start;
+            padding: 0.65rem 0.45rem !important;
+            border-radius: 12px !important;
           }
+          .dest-icon-box {
+            width: 36px !important;
+            height: 36px !important;
+            margin-bottom: 0.35rem !important;
+            border-radius: 10px !important;
+          }
+          .dest-icon-box svg {
+            width: 18px !important;
+            height: 18px !important;
+          }
+          .dest-icon-name {
+            font-size: 0.76rem !important;
+          }
+          .dest-icon-city {
+            font-size: 0.66rem !important;
+          }
+
           .spotlight-card-wrapper {
-            padding: 1rem;
-            border-radius: 18px;
+            padding: 1.25rem 1.15rem !important;
+            border-radius: 20px !important;
           }
           .spotlight-2col-grid {
-            gap: 1.25rem;
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 1.25rem !important;
           }
-          .spotlight-title {
-            font-size: 1.35rem;
-            margin-bottom: 0.35rem;
+          .spotlight-left-col {
+            width: 100% !important;
           }
-          .spotlight-tagline {
-            font-size: 0.85rem;
-            margin-bottom: 0.5rem;
-          }
-          .spotlight-desc {
-            font-size: 0.8rem;
-            margin-bottom: 1rem;
-            line-height: 1.45;
-          }
-          .spotlight-info-grid {
-            grid-template-columns: 1fr 1fr;
-            gap: 0.6rem;
-            margin-bottom: 1.15rem;
-            padding-top: 0.85rem;
-          }
-          .info-badge-val {
-            font-size: 0.8rem;
+          .spotlight-right-col {
+            width: 100% !important;
+            order: -1 !important;
           }
           .spotlight-media-card {
-            height: 140px;
-            border-radius: 14px;
+            height: 170px !important;
+            border-radius: 14px !important;
           }
-          .btn-spotlight-guide {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.45rem;
-            background: #EFF6FF;
-            border: 1px solid #BFDBFE;
-            color: #1D4ED8;
-            padding: 0.75rem 1.25rem;
-            border-radius: 12px;
-            font-weight: 700;
-            font-size: 0.88rem;
-            text-decoration: none;
-            transition: all 0.2s ease;
+          .spotlight-eyebrow {
+            font-size: 0.68rem !important;
+            padding: 0.25rem 0.75rem !important;
+            margin-bottom: 0.45rem !important;
           }
-          .btn-spotlight-guide:hover {
-            background: #DBEAFE;
-            color: #1E40AF;
-            transform: translateY(-2px);
+          .spotlight-title {
+            font-size: 1.25rem !important;
+            line-height: 1.25 !important;
+            margin-bottom: 0.35rem !important;
+          }
+          .spotlight-tagline {
+            font-size: 0.82rem !important;
+            line-height: 1.4 !important;
+            margin-bottom: 0.85rem !important;
+          }
+          /* Hide verbose description paragraph on mobile to keep card clean and uncluttered */
+          .spotlight-desc {
+            display: none !important;
+          }
+          .spotlight-info-grid {
+            grid-template-columns: 1fr 1fr !important;
+            gap: 0.55rem !important;
+            margin-bottom: 1.15rem !important;
+            padding-top: 0.75rem !important;
+          }
+          .info-badge-box {
+            padding: 0.55rem 0.75rem !important;
+            border-radius: 10px !important;
+          }
+          .info-badge-label {
+            font-size: 0.60rem !important;
+          }
+          .info-badge-val {
+            font-size: 0.78rem !important;
+            line-height: 1.3 !important;
+          }
+          .spotlight-action-row {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 0.55rem !important;
+            width: 100% !important;
           }
           .btn-emerald-glowing,
-          .btn-spotlight-guide,
           .btn-whatsapp-outline {
-            width: 100%;
-            justify-content: center;
-            padding: 0.65rem 1rem;
-            font-size: 0.82rem;
+            width: 100% !important;
+            justify-content: center !important;
+            padding: 0.75rem 1rem !important;
+            font-size: 0.85rem !important;
+            border-radius: 12px !important;
           }
         }
       `}</style>

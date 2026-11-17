@@ -91,14 +91,14 @@ export const PuneToMumbaiSection = () => {
       </div>
 
       <style>{`
-        .split-grid {
+        #pune-to-mumbai .split-grid {
           display: grid;
           grid-template-columns: 1fr 1fr;
           gap: 3.5rem;
           align-items: center;
         }
 
-        .split-media {
+        #pune-to-mumbai .split-media {
           position: relative;
           border-radius: 20px;
           overflow: hidden;
@@ -106,18 +106,18 @@ export const PuneToMumbaiSection = () => {
           border: 1.5px solid #DCE3EB;
         }
 
-        .split-img {
+        #pune-to-mumbai .split-img {
           width: 100%;
           height: 460px;
           object-fit: cover;
           transition: transform 0.4s ease;
         }
 
-        .split-media:hover .split-img {
+        #pune-to-mumbai .split-media:hover .split-img {
           transform: scale(1.02);
         }
 
-        .media-overlay-badge {
+        #pune-to-mumbai .media-overlay-badge {
           position: absolute;
           bottom: 1.5rem;
           left: 1.5rem;
@@ -135,42 +135,44 @@ export const PuneToMumbaiSection = () => {
           gap: 0.5rem;
         }
 
-        .lead-paragraph {
+        #pune-to-mumbai .lead-paragraph {
           font-size: 0.98rem;
           line-height: 1.65;
           margin-bottom: 1.5rem;
         }
 
-        .benefits-grid {
+        #pune-to-mumbai .benefits-grid {
           display: grid;
           grid-template-columns: 1fr 1fr;
           gap: 1.15rem;
           margin-bottom: 2rem;
         }
 
-        .benefit-item {
+        #pune-to-mumbai .benefit-item {
           display: flex;
-          align-items: flex-start;
+          align-items: center;
           gap: 0.65rem;
         }
 
-        .benefit-icon {
+        #pune-to-mumbai .benefit-icon {
           flex-shrink: 0;
-          margin-top: 0.15rem;
+          color: #2563EB;
         }
 
-        .benefit-title {
-          font-size: 0.88rem;
+        #pune-to-mumbai .benefit-title {
+          font-size: 0.92rem;
           font-weight: 700;
-          margin-bottom: 0.15rem;
+          color: #17324D;
+          margin-bottom: 0;
+          line-height: 1.35;
         }
 
-        .benefit-desc {
-          font-size: 0.78rem;
-          line-height: 1.4;
+        /* Hide verbose descriptive subtitle lines — keep clean single main points */
+        #pune-to-mumbai .benefit-desc {
+          display: none !important;
         }
 
-        .action-row {
+        #pune-to-mumbai .action-row {
           display: flex;
           align-items: center;
           gap: 1rem;
@@ -178,19 +180,95 @@ export const PuneToMumbaiSection = () => {
         }
 
         @media (max-width: 992px) {
-          .card-white {
-            padding: 1.5rem !important;
+          #pune-to-mumbai .card-white {
+            padding: 1.75rem !important;
           }
-          .split-grid {
+          #pune-to-mumbai .split-grid {
             grid-template-columns: 1fr;
             gap: 2rem;
           }
-          .split-img {
-            height: 220px;
+          #pune-to-mumbai .split-img {
+            height: 240px;
           }
-          .benefits-grid {
+          #pune-to-mumbai .benefits-grid {
             grid-template-columns: 1fr;
-            gap: 0.85rem;
+            gap: 0.95rem;
+          }
+        }
+
+        @media (max-width: 768px) {
+          #pune-to-mumbai {
+            padding-top: 3rem !important;
+            padding-bottom: 3rem !important;
+          }
+          #pune-to-mumbai .card-white {
+            padding: 1.5rem 1.25rem !important;
+            border-radius: 20px !important;
+          }
+          #pune-to-mumbai .split-grid {
+            gap: 1.5rem;
+          }
+          #pune-to-mumbai .split-img {
+            height: 200px;
+            border-radius: 16px;
+          }
+          #pune-to-mumbai .media-overlay-badge {
+            bottom: 0.85rem;
+            left: 0.85rem;
+            padding: 0.45rem 0.85rem;
+            font-size: 0.75rem;
+          }
+          #pune-to-mumbai .lovable-title {
+            font-size: 1.6rem !important;
+            line-height: 1.25;
+            margin-bottom: 0.65rem !important;
+          }
+          #pune-to-mumbai .lead-paragraph {
+            font-size: 0.90rem;
+            line-height: 1.55;
+            margin-bottom: 1.25rem;
+          }
+          #pune-to-mumbai .subheading {
+            font-size: 1.05rem !important;
+            margin-bottom: 0.85rem !important;
+          }
+
+          /* Show only the first two descriptive points on mobile:
+             1. Direct Doorstep Pickup
+             2. 100% Toll-Inclusive Pricing
+             Hide the other four descriptive points using responsive CSS only */
+          #pune-to-mumbai .benefit-item:nth-child(n+3) {
+            display: none !important;
+          }
+
+          #pune-to-mumbai .benefits-grid {
+            grid-template-columns: 1fr !important;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+          }
+          #pune-to-mumbai .benefit-item {
+            display: flex;
+            align-items: center;
+            gap: 0.65rem;
+          }
+          #pune-to-mumbai .benefit-title {
+            font-size: 0.92rem;
+            margin-bottom: 0;
+            line-height: 1.35;
+          }
+
+          #pune-to-mumbai .action-row {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            gap: 0.75rem;
+          }
+          #pune-to-mumbai .action-row a,
+          #pune-to-mumbai .action-row .btn {
+            width: 100%;
+            justify-content: center;
+            text-align: center;
+            box-sizing: border-box;
           }
         }
       `}</style>
