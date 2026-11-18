@@ -256,7 +256,6 @@ export function VehiclesPage() {
                         e.target.src = '/assets/sedan.webp';
                       }}
                     />
-                    <span className="fleet-tag-chip">{v.tag}</span>
                   </div>
 
                   <div className="fleet-card-body">
