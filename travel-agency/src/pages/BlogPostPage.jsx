@@ -422,7 +422,9 @@ export function BlogPostPage({ isRootFallback = false }) {
             <span className="bc-sep">/</span>
             <Link to="/blog">Blog</Link>
             <span className="bc-sep">/</span>
-            <span className="bc-current">{post.title}</span>
+            <span className="bc-current" title={post.title}>
+              {post.breadcrumbTitle || (post.title?.includes(':') ? post.title.split(':')[0].trim() : post.title)}
+            </span>
           </div>
         </div>
       </section>

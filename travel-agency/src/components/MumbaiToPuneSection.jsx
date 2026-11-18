@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { CheckCircle2, MessageSquare, MapPin, ShieldCheck, ArrowRight } from 'lucide-react';
+import { CheckCircle2, MessageSquare, MapPin, ShieldCheck } from 'lucide-react';
 import { getWhatsAppLink } from '../utils/whatsapp';
 import { homepageContent } from '../data/homepageContent';
 
@@ -49,27 +49,6 @@ export const MumbaiToPuneSection = () => {
                 >
                   <span>{data.ctaText}</span>
                 </Link>
-                {data.articleUrl && (
-                  <Link
-                    to={data.articleUrl}
-                    className="btn btn-outline-primary btn-lg"
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '0.45rem',
-                      padding: '0.85rem 1.4rem',
-                      borderRadius: '12px',
-                      fontWeight: 700,
-                      textDecoration: 'none',
-                      border: '1.5px solid #2563EB',
-                      color: '#2563EB',
-                      background: '#FFFFFF'
-                    }}
-                  >
-                    <span>OUTSTATION GUIDE</span>
-                    <ArrowRight size={16} />
-                  </Link>
-                )}
               </div>
             </div>
 

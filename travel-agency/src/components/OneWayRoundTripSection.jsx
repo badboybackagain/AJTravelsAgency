@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ArrowRight, RefreshCw, Check, Sparkles } from 'lucide-react';
 import { homepageContent } from '../data/homepageContent';
 
@@ -7,12 +7,136 @@ export const OneWayRoundTripSection = () => {
   const oneWay = tripData.oneWay;
   const roundTrip = tripData.roundTrip;
 
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [isUserSelected, setIsUserSelected] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
+
+  const containerRef = useRef(null);
+  const isInteractingRef = useRef(false);
+  const resumeTimerRef = useRef(null);
+  const autoScrollTimerRef = useRef(null);
+  const isInitialVisibilityKickRef = useRef(true);
+  const wasOutRef = useRef(false);
+
   const handleSelectType = (type) => {
+    setIsUserSelected(true);
+    if (autoScrollTimerRef.current) {
+      clearTimeout(autoScrollTimerRef.current);
+      autoScrollTimerRef.current = null;
+    }
     window.dispatchEvent(new CustomEvent('selectTripType', { detail: type }));
     const el = document.getElementById('home');
     if (el) {
       el.scrollIntoView({ behavior: 'smooth' });
     }
+  };
+
+  const scrollToIndex = (index) => {
+    const container = containerRef.current;
+    if (!container) return;
+    const targetCard = container.children[index];
+    if (targetCard) {
+      const targetLeft = targetCard.offsetLeft - (container.clientWidth - targetCard.clientWidth) / 2;
+      container.scrollTo({ left: Math.max(0, targetLeft), behavior: 'smooth' });
+      setActiveIndex(index);
+    }
+  };
+
+  // IntersectionObserver: start auto-scroll immediately upon entering screen
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container || typeof IntersectionObserver === 'undefined') return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          if (wasOutRef.current) {
+            isInitialVisibilityKickRef.current = true;
+            wasOutRef.current = false;
+          }
+        } else {
+          setIsVisible(false);
+          wasOutRef.current = true;
+          isInitialVisibilityKickRef.current = true;
+          isInteractingRef.current = false;
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, []);
+
+  // Auto-scroll loop between One-Way (0) and Round-Trip (1)
+  useEffect(() => {
+    if (isUserSelected || !isVisible) {
+      if (autoScrollTimerRef.current) {
+        clearTimeout(autoScrollTimerRef.current);
+        autoScrollTimerRef.current = null;
+      }
+      return;
+    }
+
+    if (typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      return;
+    }
+
+    if (autoScrollTimerRef.current) {
+      clearTimeout(autoScrollTimerRef.current);
+      autoScrollTimerRef.current = null;
+    }
+
+    const startDelay = isInitialVisibilityKickRef.current ? 400 : 2800;
+    isInitialVisibilityKickRef.current = false;
+
+    autoScrollTimerRef.current = setTimeout(() => {
+      if (isInteractingRef.current || isUserSelected || !isVisible) return;
+      const container = containerRef.current;
+      if (!container) return;
+
+      // Only auto-scroll when horizontal overflow is present (mobile / tablet)
+      if (container.scrollWidth <= container.clientWidth + 10) return;
+
+      const nextIndex = activeIndex === 0 ? 1 : 0;
+      scrollToIndex(nextIndex);
+    }, startDelay);
+
+    return () => {
+      if (autoScrollTimerRef.current) {
+        clearTimeout(autoScrollTimerRef.current);
+        autoScrollTimerRef.current = null;
+      }
+    };
+  }, [activeIndex, isUserSelected, isVisible]);
+
+  const pauseInteraction = (resumeDelay = 3000) => {
+    isInteractingRef.current = true;
+    if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current);
+    resumeTimerRef.current = setTimeout(() => {
+      isInteractingRef.current = false;
+    }, resumeDelay);
+  };
+
+  const handleScroll = () => {
+    const container = containerRef.current;
+    if (!container) return;
+    const centerPoint = container.scrollLeft + container.clientWidth / 2;
+    let closestIndex = 0;
+    let minDistance = Infinity;
+
+    Array.from(container.children).forEach((child, idx) => {
+      if (child.classList.contains('trip-card')) {
+        const cardCenter = child.offsetLeft + child.clientWidth / 2;
+        const dist = Math.abs(centerPoint - cardCenter);
+        if (dist < minDistance) {
+          minDistance = dist;
+          closestIndex = idx;
+        }
+      }
+    });
+    setActiveIndex(closestIndex);
   };
 
   return (
@@ -37,7 +161,13 @@ export const OneWayRoundTripSection = () => {
           </div>
         </div>
 
-        <div className="trip-types-grid">
+        <div 
+          ref={containerRef}
+          className="trip-types-grid"
+          onScroll={handleScroll}
+          onTouchStart={() => pauseInteraction(4000)}
+          onMouseDown={() => pauseInteraction(4000)}
+        >
           {/* One Way Card - Crisp White Enterprise Card */}
           <div id="pune-mumbai-one-way" className="trip-card trip-card-light reveal stagger-1">
             <div className="trip-card-badge">{oneWay.badge}</div>
@@ -81,6 +211,28 @@ export const OneWayRoundTripSection = () => {
               <span>{roundTrip.buttonText}</span>
             </button>
           </div>
+        </div>
+
+        {/* Mobile Indicator Dots */}
+        <div className="trip-mobile-indicators">
+          <button
+            type="button"
+            className={`trip-dot ${activeIndex === 0 ? 'active' : ''}`}
+            onClick={() => {
+              pauseInteraction(5000);
+              scrollToIndex(0);
+            }}
+            aria-label="One-Way Cabs"
+          />
+          <button
+            type="button"
+            className={`trip-dot ${activeIndex === 1 ? 'active' : ''}`}
+            onClick={() => {
+              pauseInteraction(5000);
+              scrollToIndex(1);
+            }}
+            aria-label="Round-Trip Rentals"
+          />
         </div>
       </div>
 
@@ -248,6 +400,14 @@ export const OneWayRoundTripSection = () => {
           transform: translateY(-2px);
         }
 
+        .trip-mobile-indicators {
+          display: none;
+          justify-content: center;
+          align-items: center;
+          gap: 0.5rem;
+          margin-top: 1.25rem;
+        }
+
         @media (max-width: 768px) {
           .trip-types-grid {
             display: flex;
@@ -264,9 +424,27 @@ export const OneWayRoundTripSection = () => {
           .trip-card {
             flex: 0 0 85%;
             max-width: 310px;
-            scroll-snap-align: start;
+            scroll-snap-align: center;
             padding: 1.35rem;
             border-radius: 18px;
+          }
+          .trip-mobile-indicators {
+            display: flex;
+          }
+          .trip-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 9999px;
+            background: #CBD5E1;
+            border: none;
+            padding: 0;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+          }
+          .trip-dot.active {
+            width: 26px;
+            background: #2563EB;
+            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35);
           }
           .trip-card h2 {
             font-size: 1.35rem;

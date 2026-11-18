@@ -127,11 +127,11 @@ export function ServicesPage() {
                       onClick={() => handleBookService(svc)}
                       className="btn-book-corridor"
                     >
-                      <Car size={16} />
+                      <Car size={15} />
                       <span>Book Corridor</span>
                     </button>
                     <Link to={`/services/${svc.slug}`} className="btn-view-details">
-                      <span>Full Route Details</span>
+                      <span>Route Details</span>
                       <ArrowRight size={14} />
                     </Link>
                   </div>
@@ -518,16 +518,22 @@ export function ServicesPage() {
             grid-template-columns: 1fr 1fr;
             gap: 0.5rem;
             width: 100%;
+            align-items: stretch;
           }
-          .btn-book-corridor {
-            padding: 0.65rem 0.5rem;
-            font-size: 0.78rem;
-            justify-content: center;
-          }
+          .btn-book-corridor,
           .btn-view-details {
-            padding: 0.65rem 0.5rem;
-            font-size: 0.78rem;
+            display: inline-flex;
+            align-items: center;
             justify-content: center;
+            gap: 0.35rem;
+            height: 42px;
+            padding: 0 0.5rem;
+            font-size: 0.78rem;
+            font-weight: 700;
+            white-space: nowrap;
+            box-sizing: border-box;
+            border-radius: 10px;
+            text-align: center;
           }
         }
       `}</style>

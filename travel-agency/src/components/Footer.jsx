@@ -119,7 +119,7 @@ export const Footer = () => {
           </div>
         </div>
 
-        {/* Footer Bottom Bar: Clean structured legal & copyright */}
+        {/* Footer Bottom Bar: Clean, simple legal & copyright */}
         <div className="footer-bottom">
           <div className="legal-links">
             <Link to="/privacy-policy">Privacy Policy</Link>
@@ -127,18 +127,11 @@ export const Footer = () => {
             <Link to="/terms">Terms &amp; Conditions</Link>
             <span className="dot-sep">•</span>
             <Link to="/sitemap">Sitemap</Link>
-            <span className="dot-sep">•</span>
-            <Link to="/contact">Contact Desk</Link>
           </div>
 
-          <div className="footer-bottom-info">
-            <p className="copyright-text">
-              © {new Date().getFullYear()} {businessConfig.businessName} (AJ Tours & Travels Pune). All rights reserved.
-            </p>
-            <p className="sub-legal-note">
-              Verified Chauffeur-Driven Car & Tempo Traveller Hire • GST Invoicing Available
-            </p>
-          </div>
+          <p className="copyright-text">
+            © {new Date().getFullYear()} AJ Travels. All rights reserved.
+          </p>
         </div>
       </div>
 
@@ -293,40 +286,29 @@ export const Footer = () => {
           align-items: center;
           justify-content: center;
           text-align: center;
-          padding-top: 2rem;
-          border-top: 1px solid rgba(255, 255, 255, 0.12);
-          font-size: 0.82rem;
-          color: #CBD5E1;
-          text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+          padding-top: 1.75rem;
+          border-top: 1px solid rgba(255, 255, 255, 0.1);
+          font-size: 0.8rem;
+          color: #94A3B8;
           position: relative;
           z-index: 2;
-          gap: 0.95rem;
+          gap: 0.65rem;
           width: 100%;
         }
 
-        .footer-bottom-info {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          text-align: center;
-          gap: 0.25rem;
-        }
-
         .copyright-text {
-          font-weight: 600;
-          color: #F8FAFC;
-        }
-
-        .sub-legal-note {
-          font-size: 0.75rem;
+          font-size: 0.78rem;
+          font-weight: 500;
           color: #94A3B8;
+          margin: 0;
+          line-height: 1.4;
         }
 
         .legal-links {
           display: flex;
           align-items: center;
           justify-content: center;
-          gap: 0.85rem;
+          gap: 0.75rem;
           flex-wrap: nowrap;
           width: 100%;
         }
@@ -336,6 +318,7 @@ export const Footer = () => {
           transition: color 0.2s ease;
           text-decoration: none;
           font-weight: 500;
+          font-size: 0.8rem;
           white-space: nowrap;
         }
 
@@ -345,6 +328,7 @@ export const Footer = () => {
 
         .dot-sep {
           color: rgba(255, 255, 255, 0.25);
+          font-size: 0.7rem;
         }
 
         @media (max-width: 992px) {
@@ -437,24 +421,22 @@ export const Footer = () => {
             margin-top: 0.4rem;
           }
           .footer-bottom {
-            flex-direction: column;
-            text-align: center;
-            align-items: center;
-            gap: 0.75rem;
             padding-top: 1.25rem;
+            gap: 0.5rem;
           }
           .copyright-text {
-            font-size: 0.75rem;
+            font-size: 0.72rem;
+            color: #94A3B8;
             line-height: 1.4;
-          }
-          .sub-legal-note {
-            font-size: 0.68rem;
           }
           .legal-links {
             justify-content: center;
-            gap: 0.5rem 0.75rem;
-            font-size: 0.75rem;
-            flex-wrap: wrap;
+            gap: 0.65rem;
+            font-size: 0.74rem;
+            flex-wrap: nowrap;
+          }
+          .legal-links a {
+            font-size: 0.74rem;
           }
         }
       `}</style>

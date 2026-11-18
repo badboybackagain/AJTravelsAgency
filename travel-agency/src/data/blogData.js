@@ -506,6 +506,54 @@ export const blogPosts = [
       }
     ],
     relatedPosts: ['pune-to-mumbai-one-way-cab', 'car-rental-in-pune-with-driver', 'tempo-traveller-on-rent-in-pune']
+  },
+  {
+    id: 9,
+    slug: 'pune-to-mahabaleshwar-road-trip-guide',
+    title: 'Pune to Mahabaleshwar Road Trip Guide',
+    metaTitle: 'Pune to Mahabaleshwar Road Trip Guide | AJ Travels',
+    metaDesc: 'Explore our comprehensive guide to driving to Mahabaleshwar and Panchgani: route condition via Wai Ghat, strawberry season, must-visit viewpoints, and outstation cab booking tips.',
+    category: 'Travel Guides',
+    categorySlug: 'travel-guides',
+    author: 'AJ Travels Editorial Team',
+    publishedDate: 'November 4, 2026',
+    readTime: '1 min read',
+    featuredImage: '/assets/pune-to-mumbai-premium-travel-banner.webp',
+    imageAlt: 'Pune to Mahabaleshwar Road Trip Guide',
+    summary: 'Planning a scenic hill station escape from Pune? Explore our comprehensive guide to driving to Mahabaleshwar and Panchgani: route condition via Wai Ghat, strawberry season, must-visit viewpoints, and outstation cab booking tips.',
+    pickupDefault: 'pune',
+    dropDefault: 'mahabaleshwar',
+    content: [
+      {
+        type: 'heading',
+        level: 2,
+        title: 'The Classic Western Ghats Road Trip Experience'
+      },
+      {
+        type: 'intro',
+        text: 'Nestled atop the Sahyadri mountain ranges at 1,353 meters altitude, Mahabaleshwar and its charming twin hill station Panchgani remain the favorite weekend sanctuary for Pune travelers. The pleasant mountain air, lush strawberry estates, panoramic valley overlooks, and winding misty ghats make the 120-kilometer drive from Pune an unforgettable road trip.'
+      },
+      {
+        type: 'points',
+        title: 'Top Highlights to Explore on Your Trip:',
+        items: [
+          'Mapro Garden (Wai-Panchgani Road): Taste fresh strawberry cream, wood-fired pizzas, and sample farm-fresh jams and crushes.',
+          'Table Land (Panchgani): Asia’s second-longest volcanic mountain plateau offering 360-degree views of the Krishna river valley.',
+          'Venna Lake: Enjoy tranquil evening paddle-boating and taste roasted street corn along the lakeside.'
+        ]
+      }
+    ],
+    faqs: [
+      {
+        q: 'What is the best time to visit Mahabaleshwar from Pune?',
+        a: 'October to March offers crisp winter mornings and fresh strawberry harvesting. July to September is beloved for roaring waterfalls and mist-covered green valleys.'
+      },
+      {
+        q: 'Which cab is recommended for a family trip to Mahabaleshwar?',
+        a: 'For groups of 4 to 6 members with luggage, an Ertiga, Carens, or Innova Crysta is ideal for comfort and high-torque climbing across the ghats.'
+      }
+    ],
+    relatedPosts: ['pune-to-mahabaleshwar-cab', 'best-weekend-getaways-from-pune']
   }
 ];
 

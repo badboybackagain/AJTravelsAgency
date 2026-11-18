@@ -219,7 +219,9 @@ function LiveMigratedContent({ currentSlug }) {
             <span className="bc-sep">/</span>
             <Link to={bcParent.path}>{bcParent.label}</Link>
             <span className="bc-sep">/</span>
-            <span className="bc-current">{page.h1}</span>
+            <span className="bc-current" title={page.h1}>
+              {page.h1?.includes(':') ? page.h1.split(':')[0].trim() : page.h1}
+            </span>
           </div>
         </div>
       </section>
@@ -565,7 +567,7 @@ function LiveMigratedContent({ currentSlug }) {
         .article-breadcrumbs-strip {
           background: #F8FAFC;
           border-bottom: 1px solid #E2E8F0;
-          padding: 0.85rem 0;
+          padding: 7rem 0 1rem;
         }
 
         .breadcrumbs-nav {
@@ -577,9 +579,18 @@ function LiveMigratedContent({ currentSlug }) {
           flex-wrap: wrap;
         }
 
-        .breadcrumbs-nav a { color: #2563EB; text-decoration: none; font-weight: 500; }
-        .bc-sep { color: #94A3B8; }
-        .bc-current { color: #0F172A; font-weight: 600; }
+        .breadcrumbs-nav a { color: #2563EB; text-decoration: none; font-weight: 500; white-space: nowrap; }
+        .bc-sep { color: #94A3B8; flex-shrink: 0; }
+        .bc-current { 
+          color: #0F172A; 
+          font-weight: 600; 
+          max-width: 500px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          display: inline-block;
+          vertical-align: bottom;
+        }
 
         .article-header-section {
           padding: 2rem 0 1rem;
@@ -1189,6 +1200,18 @@ function LiveMigratedContent({ currentSlug }) {
         }
 
         @media (max-width: 768px) {
+          .article-breadcrumbs-strip {
+            padding: 5.75rem 0 0.75rem;
+          }
+          .breadcrumbs-nav {
+            font-size: 0.8rem;
+            gap: 0.35rem;
+            flex-wrap: nowrap;
+            overflow: hidden;
+          }
+          .bc-current {
+            max-width: 210px;
+          }
           .article-main-title {
             font-size: 1.85rem;
           }
