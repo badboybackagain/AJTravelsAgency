@@ -41,10 +41,12 @@ const CategoryOffersStrip = ({ cat, onBookCategory }) => {
   const isInteractingRef = useRef(false);
   const isResettingRef = useRef(false);
   const resumeTimerRef = useRef(null);
+  const autoScrollTimerRef = useRef(null);
+  const isInitialVisibilityKickRef = useRef(true);
 
   // Section visibility & re-entry observer:
-  // Rule 1: Scroll only when visible on screen; stop when user is on another section/page.
-  // Rule 6: Resume auto-scrolling only when user explicitly leaves and re-enters the section.
+  // Starts auto-scrolling immediately when section reaches screen viewport (threshold: 0)
+  // Pauses when leaving viewport; resumes upon returning provided no manual selection was made.
   useEffect(() => {
     const container = containerRef.current;
     if (!container || typeof IntersectionObserver === 'undefined') return;
@@ -54,17 +56,17 @@ const CategoryOffersStrip = ({ cat, onBookCategory }) => {
         if (entry.isIntersecting) {
           setIsVisible(true);
           if (wasOutRef.current) {
-            setIsUserSelected(false);
-            isInteractingRef.current = false;
+            isInitialVisibilityKickRef.current = true;
             wasOutRef.current = false;
           }
         } else {
           setIsVisible(false);
           wasOutRef.current = true;
+          isInitialVisibilityKickRef.current = true;
           isInteractingRef.current = false;
         }
       },
-      { threshold: 0.15 }
+      { threshold: 0 }
     );
 
     observer.observe(container);
@@ -86,13 +88,28 @@ const CategoryOffersStrip = ({ cat, onBookCategory }) => {
 
   // Infinite Circular Auto-scroll loop for mobile viewports
   useEffect(() => {
-    if (isUserSelected || !isVisible) return;
+    if (isUserSelected || !isVisible) {
+      if (autoScrollTimerRef.current) {
+        clearTimeout(autoScrollTimerRef.current);
+        autoScrollTimerRef.current = null;
+      }
+      return;
+    }
 
     if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       return;
     }
 
-    const interval = setInterval(() => {
+    if (autoScrollTimerRef.current) {
+      clearTimeout(autoScrollTimerRef.current);
+      autoScrollTimerRef.current = null;
+    }
+
+    // Start auto-scroll immediately upon entering screen (300ms), then standard 2200ms cadence
+    const startDelay = isInitialVisibilityKickRef.current ? 300 : 2200;
+    isInitialVisibilityKickRef.current = false;
+
+    autoScrollTimerRef.current = setTimeout(() => {
       if (isInteractingRef.current || isUserSelected || !isVisible) return;
       const container = containerRef.current;
       if (!container) return;
@@ -133,9 +150,14 @@ const CategoryOffersStrip = ({ cat, onBookCategory }) => {
           }, 450);
         }
       }
-    }, 2200);
+    }, startDelay);
 
-    return () => clearInterval(interval);
+    return () => {
+      if (autoScrollTimerRef.current) {
+        clearTimeout(autoScrollTimerRef.current);
+        autoScrollTimerRef.current = null;
+      }
+    };
   }, [realIndex, routeCount, isUserSelected, isVisible]);
 
   const pauseInteraction = (resumeDelay = 2200) => {

@@ -413,12 +413,12 @@ function LiveMigratedContent({ currentSlug }) {
                 {dId ? (
                   <div className="sidebar-corridor-pill">
                     <span className="corridor-point">{pId.toUpperCase()}</span>
-                    <ArrowRight size={14} color="#1D4ED8" />
+                    <ArrowRight size={14} color="#38BDF8" />
                     <span className="corridor-point">{dId.toUpperCase()}</span>
                   </div>
                 ) : (
                   <div className="sidebar-corridor-pill">
-                    <MapPin size={14} color="#1D4ED8" />
+                    <MapPin size={14} color="#38BDF8" />
                     <span className="corridor-point">
                       {localityName.toUpperCase()}
                     </span>
@@ -1035,12 +1035,15 @@ function LiveMigratedContent({ currentSlug }) {
         .sidebar-corridor-pill {
           display: flex;
           align-items: center;
-          gap: 0.5rem;
+          justify-content: center;
+          gap: 0.65rem;
           background: rgba(255, 255, 255, 0.08);
           border: 1px solid rgba(255, 255, 255, 0.14);
-          padding: 0.5rem 0.85rem;
+          padding: 0.55rem 0.85rem;
           border-radius: 10px;
           margin-bottom: 0.85rem;
+          text-align: center;
+          width: 100%;
         }
 
         .corridor-point {

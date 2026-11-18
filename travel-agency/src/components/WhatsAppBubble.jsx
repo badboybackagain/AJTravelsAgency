@@ -134,21 +134,6 @@ export const WhatsAppBubble = () => {
         }}
       >
         <WhatsAppIcon />
-        {/* Online indicator dot — top-right of the circle, matches reference */}
-        <span
-          aria-hidden="true"
-          style={{
-            position: 'absolute',
-            top: '4px',
-            right: '4px',
-            width: '11px',
-            height: '11px',
-            borderRadius: '50%',
-            background: '#4ade80',
-            border: '2px solid #25D366',
-            boxShadow: '0 0 0 1px rgba(255,255,255,0.4)',
-          }}
-        />
       </a>
 
       {/* Pulse ring animation — purely decorative, draws attention */}

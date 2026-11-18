@@ -31,6 +31,7 @@ import { Footer } from '../components/Footer';
 import { EnquiryModal } from '../components/EnquiryModal';
 import { SearchableLocationInput } from '../components/SearchableLocationInput';
 import { detectLocationRegion } from '../services/locationSearchService';
+import { DateInput } from '../components/DateInput';
 import { getWhatsAppLink } from '../utils/whatsapp';
 import { usePageSeo } from '../hooks/usePageSeo';
 import { useScrollReveal } from '../hooks/useScrollReveal';
@@ -1325,8 +1326,7 @@ export const FarePage = () => {
                     <Calendar size={13} color="#0099FF" />
                     <span>Departure Date *</span>
                   </label>
-                  <input
-                    type="date"
+                  <DateInput
                     min={new Date().toISOString().split('T')[0]}
                     value={formDepartureDate}
                     onChange={(e) => {
@@ -1334,6 +1334,10 @@ export const FarePage = () => {
                       setFormError('');
                     }}
                     className="fare-form-input"
+                    wrapperClassName="fare-form-input-wrapper"
+                    placeholder="DD/MM/YYYY"
+                    ariaLabel="Departure Date"
+                    iconColor="#0099FF"
                   />
                 </div>
 
@@ -1388,8 +1392,7 @@ export const FarePage = () => {
                       <Calendar size={13} color="#6366F1" />
                       <span>Return Date *</span>
                     </label>
-                    <input
-                      type="date"
+                    <DateInput
                       min={formDepartureDate || new Date().toISOString().split('T')[0]}
                       value={formReturnDate}
                       onChange={(e) => {
@@ -1397,6 +1400,10 @@ export const FarePage = () => {
                         setFormError('');
                       }}
                       className="fare-form-input"
+                      wrapperClassName="fare-form-input-wrapper"
+                      placeholder="DD/MM/YYYY"
+                      ariaLabel="Return Date"
+                      iconColor="#6366F1"
                     />
                   </div>
 

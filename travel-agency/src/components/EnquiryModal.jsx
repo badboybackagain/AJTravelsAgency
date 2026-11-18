@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { getWhatsAppLink } from '../utils/whatsapp';
 import { enquiryApi } from '../services/api';
+import { DateInput } from './DateInput';
 
 export const EnquiryModal = ({ isOpen, onClose, initialData = null }) => {
   const [formData, setFormData] = useState({
@@ -298,15 +299,18 @@ export const EnquiryModal = ({ isOpen, onClose, initialData = null }) => {
                     <span>Travel Date</span>
                   </label>
                   <div className="input-with-icon">
-                    <input
+                    <DateInput
                       id="modal-enquiry-date"
-                      type="date"
                       name="date"
                       min={new Date().toISOString().split('T')[0]}
                       value={formData.date}
                       onChange={handleChange}
                       disabled={isSubmitting}
                       className="modal-input"
+                      wrapperClassName="modal-input-wrapper"
+                      placeholder="DD/MM/YYYY"
+                      ariaLabel="Travel Date"
+                      iconColor="#C89B3C"
                     />
                   </div>
                 </div>

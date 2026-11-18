@@ -36,6 +36,8 @@ export const DestinationSpotlight = () => {
   const programmaticTimerRef = useRef(null);
   const resumeTimerRef = useRef(null);
   const scrollDebounceTimerRef = useRef(null);
+  const autoScrollTimerRef = useRef(null);
+  const isInitialVisibilityKickRef = useRef(true);
 
   // Preload all destination images on mount to eliminate image decode delay
   useEffect(() => {
@@ -97,7 +99,13 @@ export const DestinationSpotlight = () => {
   useEffect(() => {
     // Rule 1: Scroll only when the relevant section is visible on screen
     // Rule 3 & 5: When user clicks or manually selects an option, immediately stop auto-scrolling
-    if (destCount <= 1 || isUserSelected || !isVisible) return;
+    if (destCount <= 1 || isUserSelected || !isVisible) {
+      if (autoScrollTimerRef.current) {
+        clearTimeout(autoScrollTimerRef.current);
+        autoScrollTimerRef.current = null;
+      }
+      return;
+    }
 
     const prefersReduced = typeof window !== 'undefined' &&
       window.matchMedia &&
@@ -105,7 +113,16 @@ export const DestinationSpotlight = () => {
 
     if (prefersReduced) return;
 
-    const interval = setInterval(() => {
+    if (autoScrollTimerRef.current) {
+      clearTimeout(autoScrollTimerRef.current);
+      autoScrollTimerRef.current = null;
+    }
+
+    // Start auto-scroll immediately upon entering screen (300ms), then standard 2200ms cadence
+    const startDelay = isInitialVisibilityKickRef.current ? 300 : 2200;
+    isInitialVisibilityKickRef.current = false;
+
+    autoScrollTimerRef.current = setTimeout(() => {
       if (isInteractingRef.current || isUserSelected || !isVisible) return;
       const strip = stripRef.current;
       if (!strip) return;
@@ -141,14 +158,19 @@ export const DestinationSpotlight = () => {
           }
         }, 600); // Wait for smooth scroll to complete before instant silent position reset
       }
-    }, 2200);
+    }, startDelay);
 
-    return () => clearInterval(interval);
+    return () => {
+      if (autoScrollTimerRef.current) {
+        clearTimeout(autoScrollTimerRef.current);
+        autoScrollTimerRef.current = null;
+      }
+    };
   }, [realIndex, destCount, isUserSelected, isVisible]);
 
   // Section visibility & re-entry observer:
-  // Rule 1: Scroll only when visible on screen; stop when user is on another section/page.
-  // Rule 6: Resume auto-scrolling only when user explicitly leaves and re-enters the section.
+  // Starts auto-scrolling immediately when section reaches screen viewport (threshold: 0)
+  // Pauses when leaving viewport; resumes upon returning provided no manual selection was made.
   useEffect(() => {
     const section = sectionRef.current;
     if (!section || typeof IntersectionObserver === 'undefined') return;
@@ -157,20 +179,18 @@ export const DestinationSpotlight = () => {
       ([entry]) => {
         if (entry.isIntersecting) {
           setIsVisible(true);
-          // If the user previously scrolled away, re-entering resets user lock and resumes auto-scroll
           if (wasOutRef.current) {
-            setIsUserSelected(false);
-            isInteractingRef.current = false;
+            isInitialVisibilityKickRef.current = true;
             wasOutRef.current = false;
           }
         } else {
           setIsVisible(false);
-          // Mark that the user has left the section so re-entering resumes
           wasOutRef.current = true;
+          isInitialVisibilityKickRef.current = true;
           isInteractingRef.current = false;
         }
       },
-      { threshold: 0.15 }
+      { threshold: 0 }
     );
 
     observer.observe(section);

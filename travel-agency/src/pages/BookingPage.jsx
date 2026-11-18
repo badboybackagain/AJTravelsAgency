@@ -1204,32 +1204,19 @@ export const BookingPage = () => {
 
                 {/* ── Section 5: Submit Action ── */}
                 <button
-                  type="submit"
-                  disabled={recalculatingQuote || isSubmitting || (!selectedVehicle && !vehicleId) || !isPhoneVerified}
+                  type={(!selectedVehicle && !vehicleId) ? "button" : "submit"}
+                  onClick={(!selectedVehicle && !vehicleId) ? () => navigate('/fare') : undefined}
+                  disabled={recalculatingQuote || isSubmitting || (Boolean(selectedVehicle || vehicleId) && !isPhoneVerified)}
                   className="booking-confirm-btn"
-                  style={(!selectedVehicle && !vehicleId) || !isPhoneVerified ? { opacity: 0.7, cursor: 'not-allowed' } : {}}
                 >
                   {isSubmitting ? (
-                    <>
-                      <Loader2 size={16} className="animate-spin" />
-                      <span>CONFIRMING YOUR BOOKING...</span>
-                    </>
+                    <span>CONFIRMING YOUR BOOKING...</span>
                   ) : !selectedVehicle && !vehicleId ? (
-                    <>
-                      <AlertCircle size={16} />
-                      <span>SELECT CAB IN FARE CALCULATOR TO BOOK</span>
-                    </>
+                    <span>SELECT CAB IN FARE CALCULATOR TO BOOK</span>
                   ) : !isPhoneVerified ? (
-                    <>
-                      <Lock size={16} />
-                      <span>VERIFY PHONE NUMBER VIA OTP TO CONFIRM BOOKING</span>
-                    </>
+                    <span>VERIFY PHONE NUMBER VIA OTP TO CONFIRM BOOKING</span>
                   ) : (
-                    <>
-                      <CheckCircle2 size={16} />
-                      <span>CONFIRM & BOOK CAB NOW (₹{fareTotal?.toLocaleString()})</span>
-                      <ArrowRight size={16} />
-                    </>
+                    <span>CONFIRM & BOOK CAB NOW (₹{fareTotal?.toLocaleString()})</span>
                   )}
                 </button>
               </form>
@@ -1242,7 +1229,8 @@ export const BookingPage = () => {
                   Trip & Vehicle Summary
                 </span>
                 <span className="booking-fare-verified-badge">
-                  ✓ Guaranteed Price
+                  <CheckCircle2 size={12} color="#15803D" style={{ flexShrink: 0 }} />
+                  <span>Guaranteed Price</span>
                 </span>
               </div>
 
@@ -1418,7 +1406,7 @@ export const BookingPage = () => {
 
               {/* Trust Badge */}
               <div className="booking-trust-note">
-                <CheckCircle2 size={14} color="#16A34A" style={{ flexShrink: 0 }} />
+                <CheckCircle2 size={16} color="#16A34A" style={{ flexShrink: 0, marginTop: '2px' }} />
                 <span>Zero Advance Required. Pay directly to the chauffeur on trip completion (Cash / UPI).</span>
               </div>
             </div>

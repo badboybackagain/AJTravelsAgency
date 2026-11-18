@@ -19,6 +19,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { enquiryApi } from '../services/api';
+import { DateInput } from '../components/DateInput';
 
 export function ContactPage() {
   usePageSeo(
@@ -321,14 +322,17 @@ export function ContactPage() {
                     <div className="form-row-2col form-row-datetime">
                       <div className="input-group">
                         <label htmlFor="travelDate">Travel Date *</label>
-                        <input
+                        <DateInput
                           id="travelDate"
-                          type="date"
                           name="travelDate"
                           min={new Date().toISOString().split('T')[0]}
                           value={formData.travelDate}
                           onChange={handleChange}
                           required
+                          wrapperClassName="contact-input-wrapper"
+                          placeholder="DD/MM/YYYY"
+                          ariaLabel="Travel Date"
+                          iconColor="#2563EB"
                         />
                       </div>
                       <div className="input-group">

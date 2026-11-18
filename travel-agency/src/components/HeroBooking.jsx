@@ -21,6 +21,7 @@ import { locationApi } from '../services/api';
 import { homepageContent } from '../data/homepageContent';
 import { SearchableLocationInput } from './SearchableLocationInput';
 import { detectLocationRegion } from '../services/locationSearchService';
+import { DateInput } from './DateInput';
 
 const TIME_SLOTS = [
   '12:00 AM', '01:00 AM', '02:00 AM', '03:00 AM', '04:00 AM', '05:00 AM',
@@ -548,8 +549,7 @@ export const HeroBooking = () => {
                         <Calendar size={13} color="#0099FF" />
                         <span>Departure Date *</span>
                       </label>
-                      <input
-                        type="date"
+                      <DateInput
                         min={new Date().toISOString().split('T')[0]}
                         value={departureDate}
                         onChange={(e) => {
@@ -557,6 +557,9 @@ export const HeroBooking = () => {
                           setValidationError('');
                         }}
                         className="booking-input-control"
+                        placeholder="DD/MM/YYYY"
+                        ariaLabel="Departure Date"
+                        iconColor="#0099FF"
                       />
                     </div>
 
@@ -679,8 +682,7 @@ export const HeroBooking = () => {
                         <Calendar size={13} color="#0099FF" />
                         <span>Departure Date *</span>
                       </label>
-                      <input
-                        type="date"
+                      <DateInput
                         min={new Date().toISOString().split('T')[0]}
                         value={departureDate}
                         onChange={(e) => {
@@ -688,6 +690,9 @@ export const HeroBooking = () => {
                           setValidationError('');
                         }}
                         className="booking-input-control"
+                        placeholder="DD/MM/YYYY"
+                        ariaLabel="Departure Date"
+                        iconColor="#0099FF"
                       />
                     </div>
 
@@ -721,8 +726,7 @@ export const HeroBooking = () => {
                         <Calendar size={13} color="#F59E0B" />
                         <span>Return Date *</span>
                       </label>
-                      <input
-                        type="date"
+                      <DateInput
                         min={departureDate || new Date().toISOString().split('T')[0]}
                         value={returnDate}
                         onChange={(e) => {
@@ -730,6 +734,9 @@ export const HeroBooking = () => {
                           setValidationError('');
                         }}
                         className="booking-input-control"
+                        placeholder="DD/MM/YYYY"
+                        ariaLabel="Return Date"
+                        iconColor="#F59E0B"
                       />
                     </div>
 
@@ -835,8 +842,7 @@ export const HeroBooking = () => {
                         <Calendar size={13} color="#0099FF" />
                         <span>Pickup Date *</span>
                       </label>
-                      <input
-                        type="date"
+                      <DateInput
                         min={new Date().toISOString().split('T')[0]}
                         value={departureDate}
                         onChange={(e) => {
@@ -844,6 +850,9 @@ export const HeroBooking = () => {
                           setValidationError('');
                         }}
                         className="booking-input-control"
+                        placeholder="DD/MM/YYYY"
+                        ariaLabel="Departure Date"
+                        iconColor="#0099FF"
                       />
                     </div>
 

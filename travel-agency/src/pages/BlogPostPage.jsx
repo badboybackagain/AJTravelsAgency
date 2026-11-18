@@ -642,7 +642,7 @@ export function BlogPostPage({ isRootFallback = false }) {
                 <h3 className="sidebar-card-title">Book Cab For This Route</h3>
                 <div className="sidebar-corridor-pill">
                   <span className="corridor-point">{post.pickupDefault ? post.pickupDefault.toUpperCase() : 'PUNE'}</span>
-                  <ArrowRight size={14} color="#1D4ED8" />
+                  <ArrowRight size={14} color="#38BDF8" />
                   <span className="corridor-point">{post.dropDefault ? post.dropDefault.toUpperCase() : 'MUMBAI'}</span>
                 </div>
                 <p className="sidebar-card-desc">

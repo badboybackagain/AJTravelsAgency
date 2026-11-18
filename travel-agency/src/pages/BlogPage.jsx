@@ -848,6 +848,44 @@ export function BlogPage() {
         }
 
         @media (max-width: 768px) {
+          .blog-controls-strip {
+            padding: 0.85rem 0;
+            background: #F8FAFC;
+            border-bottom: 1px solid #E2E8F0;
+          }
+          .controls-row {
+            width: 100%;
+          }
+          .category-pills-list {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.5rem;
+            width: 100%;
+            background: #FFFFFF;
+            padding: 0.5rem;
+            border-radius: 14px;
+            border: 1px solid #E2E8F0;
+            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+          }
+          .cat-pill-btn {
+            width: 100%;
+            min-height: 42px;
+            padding: 0.55rem 0.5rem;
+            font-size: 0.78rem;
+            font-weight: 600;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            line-height: 1.25;
+            white-space: normal;
+            word-break: normal;
+            box-sizing: border-box;
+          }
+          .cat-pill-btn:last-child:nth-child(odd) {
+            grid-column: span 2;
+          }
           .featured-body-side {
             padding: 1.35rem 1.15rem;
           }
@@ -909,13 +947,6 @@ export function BlogPage() {
             line-height: 1.25;
             word-break: break-word;
             overflow-wrap: break-word;
-          }
-          .category-pills-list {
-            gap: 0.4rem;
-          }
-          .cat-pill-btn {
-            padding: 0.4rem 0.85rem;
-            font-size: 0.78rem;
           }
         }
       `}</style>
