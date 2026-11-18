@@ -246,11 +246,14 @@ export const Header = ({ isDark = false, onOpenEnquiry }) => {
           margin-bottom: -82px;
           pointer-events: none;
           animation: navSlideDown 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-          transition: padding 0.25s ease, margin 0.25s ease;
+          transition: padding 0.25s ease, margin 0.25s ease, background 0.25s ease;
         }
 
         .header.scrolled {
           padding: calc(env(safe-area-inset-top, 0px) + 0.55rem) 1.25rem 0.5rem;
+          background: linear-gradient(180deg, #0F172A 0%, #0F172A 70%, rgba(15, 23, 42, 0.85) 85%, transparent 100%);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
         }
 
         /* ── Floating Translucent Dark Glass Capsule (CakeStory Style) ── */
@@ -262,7 +265,7 @@ export const Header = ({ isDark = false, onOpenEnquiry }) => {
           width: 100%;
           max-width: 1280px;
           margin: 0 auto;
-          background: rgba(15, 23, 42, 0.76);
+          background: rgba(15, 23, 42, 0.92);
           backdrop-filter: blur(20px) saturate(180%);
           -webkit-backdrop-filter: blur(20px) saturate(180%);
           border: 1px solid rgba(255, 255, 255, 0.16);
@@ -280,7 +283,7 @@ export const Header = ({ isDark = false, onOpenEnquiry }) => {
         }
 
         .header.scrolled .header-capsule {
-          background: rgba(15, 23, 42, 0.88);
+          background: #0F172A;
           border-color: rgba(255, 255, 255, 0.22);
           box-shadow: 0 20px 40px -4px rgba(0, 0, 0, 0.5), 0 6px 16px rgba(0, 0, 0, 0.25);
         }

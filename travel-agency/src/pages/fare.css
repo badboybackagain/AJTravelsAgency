@@ -132,7 +132,7 @@
 
 .chip-lbl {
   display: block;
-  font-size: 0.65rem;
+  font-size: var(--text-xs, 0.76rem);
   font-weight: 600;
   letter-spacing: 0.05em;
   color: #94A3B8;
@@ -299,7 +299,7 @@
   background: #FEF3C7;
   border: 1px solid #FCD34D;
   color: #B45309;
-  font-size: 0.65rem;
+  font-size: var(--text-xs, 0.76rem);
   font-weight: 600;
   padding: 0.2rem 0.5rem;
   border-radius: 6px;
@@ -355,7 +355,7 @@
   background: #17324D;
   border: 1px solid rgba(255, 255, 255, 0.15);
   color: #FFFFFF;
-  font-size: 0.65rem;
+  font-size: var(--text-xs, 0.76rem);
   font-weight: 600;
   padding: 0.2rem 0.55rem;
   border-radius: 6px;
@@ -1477,7 +1477,7 @@
 
   .fare-form-badge {
     padding: 0.25rem 0.65rem;
-    font-size: 0.7rem;
+    font-size: var(--text-xs, 0.76rem);
     margin-bottom: 0.5rem;
   }
 

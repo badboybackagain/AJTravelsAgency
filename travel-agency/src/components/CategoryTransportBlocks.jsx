@@ -373,7 +373,7 @@ export const CategoryTransportBlocks = () => {
         .category-badge-chip {
           align-self: flex-start;
           font-family: var(--font-heading);
-          font-size: 0.68rem;
+          font-size: var(--text-xs, 0.76rem);
           font-weight: 600;
           letter-spacing: 0.05em;
           background: rgba(29, 78, 216, 0.85);
@@ -489,7 +489,7 @@ export const CategoryTransportBlocks = () => {
         }
 
         .price-start-lbl {
-          font-size: 0.64rem;
+          font-size: var(--text-xs, 0.76rem);
           font-weight: 550;
           letter-spacing: 0.05em;
           color: #64748B;

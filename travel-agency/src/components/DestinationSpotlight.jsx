@@ -369,7 +369,7 @@ export const DestinationSpotlight = () => {
         }
 
         .info-badge-label {
-          font-size: 0.65rem;
+          font-size: var(--text-xs, 0.75rem);
           font-weight: 550;
           color: #94A3B8;
           letter-spacing: 0.04em;
@@ -488,7 +488,7 @@ export const DestinationSpotlight = () => {
             font-size: 0.76rem !important;
           }
           .dest-icon-city {
-            font-size: 0.66rem !important;
+            font-size: 0.74rem !important;
           }
 
           .spotlight-card-wrapper {
@@ -512,7 +512,7 @@ export const DestinationSpotlight = () => {
             border-radius: 14px !important;
           }
           .spotlight-eyebrow {
-            font-size: 0.68rem !important;
+            font-size: 0.74rem !important;
             padding: 0.25rem 0.75rem !important;
             margin-bottom: 0.45rem !important;
           }
@@ -541,7 +541,7 @@ export const DestinationSpotlight = () => {
             border-radius: 10px !important;
           }
           .info-badge-label {
-            font-size: 0.60rem !important;
+            font-size: 0.72rem !important;
           }
           .info-badge-val {
             font-size: 0.78rem !important;
