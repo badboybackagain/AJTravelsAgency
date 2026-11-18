@@ -30,7 +30,6 @@
           width: 100%;
           max-width: 100%;
           box-sizing: border-box;
-          overflow-x: hidden;
         }
 
         .article-header {
@@ -501,7 +500,6 @@
           display: grid;
           grid-template-columns: minmax(0, 1fr) 350px;
           gap: 2.75rem;
-          align-items: flex-start;
           margin-bottom: 3.5rem;
           width: 100%;
           max-width: 100%;
@@ -516,8 +514,11 @@
         }
 
         .article-sidebar-col {
+          position: -webkit-sticky;
           position: sticky;
           top: 96px;
+          height: fit-content;
+          align-self: start;
           display: flex;
           flex-direction: column;
           gap: 1.5rem;

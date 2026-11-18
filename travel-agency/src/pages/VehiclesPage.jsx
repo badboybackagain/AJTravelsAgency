@@ -260,7 +260,9 @@ export function VehiclesPage() {
                   </div>
 
                   <div className="fleet-card-body">
-                    <div className="fleet-cat-eyebrow">{v.category}</div>
+                    <div className="fleet-cat-eyebrow">
+                      {v.category?.toUpperCase().includes('CATEGORY') ? v.category : `${v.category} CATEGORY`}
+                    </div>
                     <h2 className="fleet-car-title">
                       <Link to={`/vehicles/${v.slug}`}>{v.name}</Link>
                     </h2>
@@ -503,17 +505,17 @@ export function VehiclesPage() {
 
         .fleet-cards-grid {
           display: grid;
-          grid-template-columns: repeat(2, 1fr);
-          gap: 2rem;
-          margin-bottom: 3.5rem;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 1.5rem;
+          margin-bottom: 3rem;
         }
 
         .fleet-card {
           background: #FFFFFF;
-          border-radius: 20px;
-          border: 1.5px solid #E2E8F0;
+          border-radius: 18px;
+          border: 1px solid #E2E8F0;
           overflow: hidden;
-          box-shadow: 0 4px 20px rgba(15, 23, 42, 0.05);
+          box-shadow: 0 4px 18px rgba(15, 23, 42, 0.05);
           display: flex;
           flex-direction: column;
           transition: all 0.25s ease;
@@ -521,13 +523,13 @@ export function VehiclesPage() {
 
         .fleet-card:hover {
           transform: translateY(-3px);
-          box-shadow: 0 12px 32px rgba(15, 23, 42, 0.09);
+          box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
           border-color: #BFDBFE;
         }
 
         .fleet-img-wrapper {
           position: relative;
-          height: 220px;
+          height: 185px;
           overflow: hidden;
           background: #F1F5F9;
         }
@@ -540,44 +542,46 @@ export function VehiclesPage() {
         }
 
         .fleet-card:hover .fleet-car-img {
-          transform: scale(1.05);
+          transform: scale(1.04);
         }
 
         .fleet-tag-chip {
           position: absolute;
-          top: 1rem;
-          left: 1rem;
-          background: rgba(15, 23, 42, 0.85);
-          backdrop-filter: blur(6px);
+          top: 0.75rem;
+          left: 0.75rem;
+          background: rgba(15, 23, 42, 0.82);
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
           color: #FFFFFF;
-          font-size: 0.68rem;
-          font-weight: 800;
-          letter-spacing: 0.06em;
-          padding: 0.3rem 0.7rem;
-          border-radius: 6px;
+          font-size: 0.65rem;
+          font-weight: 700;
+          letter-spacing: 0.04em;
+          padding: 0.28rem 0.65rem;
+          border-radius: 9999px;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
         }
 
         .fleet-card-body {
-          padding: 1.75rem 2rem 2rem;
+          padding: 1.25rem 1.2rem 1.35rem;
           display: flex;
           flex-direction: column;
           flex: 1;
         }
 
         .fleet-cat-eyebrow {
-          font-size: 0.7rem;
-          font-weight: 800;
-          letter-spacing: 0.08em;
+          font-size: 0.68rem;
+          font-weight: 700;
+          letter-spacing: 0.07em;
           color: #2563EB;
           text-transform: uppercase;
-          margin-bottom: 0.3rem;
+          margin-bottom: 0.25rem;
         }
 
         .fleet-car-title {
-          font-size: 1.45rem;
+          font-size: 1.22rem;
           font-weight: 800;
-          line-height: 1.3;
-          margin-bottom: 0.35rem;
+          line-height: 1.25;
+          margin-bottom: 0.3rem;
         }
 
         .fleet-car-title a {
@@ -591,46 +595,49 @@ export function VehiclesPage() {
         }
 
         .fleet-models-txt {
-          font-size: 0.85rem;
-          font-weight: 600;
+          font-size: 0.78rem;
+          font-weight: 550;
           color: #64748B;
-          margin-bottom: 1.1rem;
+          margin-bottom: 0.75rem;
+          line-height: 1.35;
         }
 
         .fleet-capacities-row {
           display: flex;
-          gap: 0.85rem;
-          margin-bottom: 1.15rem;
+          gap: 0.45rem;
+          margin-bottom: 0.75rem;
+          flex-wrap: wrap;
         }
 
         .cap-pill {
           display: inline-flex;
           align-items: center;
-          gap: 0.4rem;
-          background: #EFF6FF;
-          color: #1D4ED8;
-          font-size: 0.78rem;
+          gap: 0.35rem;
+          background: #F1F5F9;
+          color: #334155;
+          border: 1px solid #E2E8F0;
+          border-radius: 8px;
+          font-size: 0.74rem;
           font-weight: 600;
-          padding: 0.35rem 0.75rem;
-          border-radius: 6px;
+          padding: 0.3rem 0.6rem;
         }
 
         .fleet-features-grid {
           display: grid;
           grid-template-columns: 1fr 1fr;
-          gap: 0.5rem;
-          margin-bottom: 1.15rem;
-          padding: 0.85rem 1rem;
+          gap: 0.4rem;
+          padding: 0.55rem 0.75rem;
+          margin-bottom: 0.75rem;
           background: #F8FAFC;
-          border-radius: 12px;
+          border-radius: 10px;
           border: 1px solid #E2E8F0;
         }
 
         .feat-pill-item {
           display: inline-flex;
           align-items: center;
-          gap: 0.4rem;
-          font-size: 0.8rem;
+          gap: 0.35rem;
+          font-size: 0.74rem;
           font-weight: 600;
           color: #334155;
           white-space: nowrap;
@@ -639,41 +646,44 @@ export function VehiclesPage() {
         }
 
         .fleet-ideal-line {
-          font-size: 0.86rem;
-          line-height: 1.55;
+          font-size: 0.78rem;
+          line-height: 1.45;
           color: #475569;
-          margin-bottom: 1.35rem;
+          margin-bottom: 1rem;
           flex: 1;
         }
 
         .fleet-ideal-line strong {
           color: #0F172A;
+          font-weight: 700;
         }
 
         .fleet-footer-row {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          border-top: 1px solid #E2E8F0;
-          padding-top: 1.25rem;
-          gap: 1rem;
-          flex-wrap: wrap;
+          border-top: 1px solid #F1F5F9;
+          padding-top: 0.85rem;
+          gap: 0.5rem;
+          margin-top: auto;
         }
 
         .fleet-price-box {
           display: flex;
           flex-direction: column;
+          flex-shrink: 0;
         }
 
         .rate-lbl {
-          font-size: 0.65rem;
-          font-weight: 800;
+          font-size: 0.62rem;
+          font-weight: 700;
           letter-spacing: 0.06em;
           color: #64748B;
+          margin-bottom: 0.1rem;
         }
 
         .rate-val {
-          font-size: 1.35rem;
+          font-size: 1.25rem;
           font-weight: 800;
           color: #0F172A;
           line-height: 1.1;
@@ -681,62 +691,71 @@ export function VehiclesPage() {
 
         .fleet-btns-group {
           display: flex;
-          gap: 0.5rem;
+          gap: 0.45rem;
+          align-items: center;
         }
 
         .btn-book-fleet {
           display: inline-flex;
           align-items: center;
-          gap: 0.45rem;
-          background: #1D4ED8;
+          justify-content: center;
+          gap: 0.35rem;
+          background: linear-gradient(135deg, #1D4ED8 0%, #1E40AF 100%);
           color: #FFFFFF;
-          font-size: 0.85rem;
+          font-size: 0.80rem;
           font-weight: 700;
-          padding: 0.65rem 1.15rem;
-          border-radius: 8px;
+          padding: 0.6rem 0.85rem;
+          border-radius: 9px;
           border: none;
           cursor: pointer;
+          box-shadow: 0 3px 10px rgba(29, 78, 216, 0.28);
           transition: all 0.2s ease;
+          white-space: nowrap;
         }
 
         .btn-book-fleet:hover {
-          background: #1E40AF;
+          background: linear-gradient(135deg, #1E40AF 0%, #172554 100%);
+          box-shadow: 0 4px 14px rgba(29, 78, 216, 0.4);
+          transform: translateY(-1px);
         }
 
         .btn-details-fleet {
           display: inline-flex;
           align-items: center;
-          gap: 0.35rem;
+          justify-content: center;
+          gap: 0.3rem;
           background: #EFF6FF;
           color: #1D4ED8;
-          font-size: 0.85rem;
+          font-size: 0.80rem;
           font-weight: 700;
-          padding: 0.65rem 1rem;
-          border-radius: 8px;
+          padding: 0.6rem 0.75rem;
+          border-radius: 9px;
           text-decoration: none;
           border: 1px solid #BFDBFE;
           transition: all 0.2s ease;
+          white-space: nowrap;
         }
 
         .btn-details-fleet:hover {
           background: #DBEAFE;
+          border-color: #93C5FD;
         }
 
         .fleet-standards-box {
           background: #FFFFFF;
           border-radius: 20px;
           border: 1px solid #CBD5E1;
-          padding: 2.5rem;
+          padding: 2.25rem;
           display: flex;
           align-items: center;
           gap: 2rem;
-          box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+          box-shadow: 0 6px 20px rgba(15, 23, 42, 0.04);
         }
 
         .standards-icon-box {
-          width: 72px;
-          height: 72px;
-          border-radius: 18px;
+          width: 68px;
+          height: 68px;
+          border-radius: 16px;
           background: #EFF6FF;
           display: flex;
           align-items: center;
@@ -745,102 +764,266 @@ export function VehiclesPage() {
         }
 
         .standards-text h3 {
-          font-size: 1.35rem;
+          font-size: 1.3rem;
           font-weight: 800;
           color: #0F172A;
-          margin-bottom: 0.4rem;
+          margin-bottom: 0.35rem;
         }
 
         .standards-text p {
-          font-size: 0.92rem;
+          font-size: 0.90rem;
           line-height: 1.6;
           color: #475569;
           margin: 0;
         }
 
-        @media (max-width: 991px) {
+        @media (max-width: 1023px) and (min-width: 769px) {
           .fleet-cards-grid {
-            grid-template-columns: 1fr;
-            gap: 1.5rem;
-          }
-        }
-
-        @media (max-width: 768px) {
-          .internal-hero-title {
-            font-size: 1.75rem;
-          }
-          .internal-hero-subtitle {
-            font-size: 0.88rem;
-          }
-          .fleet-cards-grid {
+            grid-template-columns: repeat(2, 1fr);
             gap: 1.25rem;
             margin-bottom: 2.5rem;
-          }
-          .fleet-card {
-            border-radius: 16px;
           }
           .fleet-img-wrapper {
             height: 180px;
           }
           .fleet-card-body {
-            padding: 1.25rem 1.15rem 1.35rem;
+            padding: 1.15rem 1.1rem 1.25rem;
+          }
+        }
+
+        @media (max-width: 768px) {
+          .internal-hero-section {
+            padding: 1.25rem 0 1rem;
+          }
+          .breadcrumbs-nav {
+            margin-bottom: 0.5rem;
+            font-size: 0.78rem;
+          }
+          .hero-badge-pill {
+            font-size: 0.68rem;
+            padding: 0.28rem 0.65rem;
+            margin-bottom: 0.5rem;
+          }
+          .internal-hero-title {
+            font-size: 1.45rem;
+            line-height: 1.25;
+            margin-bottom: 0.45rem;
+          }
+          .internal-hero-subtitle {
+            font-size: 0.82rem;
+            line-height: 1.5;
+          }
+          .vehicles-main-section {
+            padding: 1.25rem 0 2.5rem;
+          }
+          .fleet-cards-grid {
+            grid-template-columns: 1fr !important;
+            gap: 1.25rem;
+            margin-bottom: 2rem;
+          }
+          .fleet-card {
+            border-radius: 20px;
+            border: 1px solid #E2E8F0;
+            box-shadow: 0 4px 18px rgba(15, 23, 42, 0.05);
+            background: #FFFFFF;
+            overflow: hidden;
+          }
+          .fleet-img-wrapper {
+            height: 170px;
+            position: relative;
+          }
+          .fleet-tag-chip {
+            top: 0.75rem;
+            left: 0.75rem;
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            padding: 0.28rem 0.65rem;
+            border-radius: 9999px;
+            background: rgba(15, 23, 42, 0.82);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+          }
+          .fleet-card-body {
+            padding: 1.1rem 1rem 1.15rem;
+          }
+          .fleet-cat-eyebrow {
+            font-size: 0.68rem;
+            font-weight: 700;
+            letter-spacing: 0.07em;
+            color: #2563EB;
+            margin-bottom: 0.2rem;
           }
           .fleet-car-title {
-            font-size: 1.3rem;
+            font-size: 1.25rem;
+            line-height: 1.25;
+            margin-bottom: 0.25rem;
           }
           .fleet-models-txt {
-            font-size: 0.8rem;
-            margin-bottom: 0.85rem;
+            font-size: 0.80rem;
+            font-weight: 500;
+            color: #64748B;
+            margin-bottom: 0.75rem;
+            line-height: 1.35;
           }
           .fleet-capacities-row {
-            gap: 0.5rem;
-            margin-bottom: 0.85rem;
+            display: flex;
+            gap: 0.45rem;
+            margin-bottom: 0.65rem;
+            flex-wrap: wrap;
           }
           .cap-pill {
-            font-size: 0.74rem;
-            padding: 0.3rem 0.65rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            background: #F1F5F9;
+            color: #334155;
+            border: 1px solid #E2E8F0;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.32rem 0.6rem;
           }
           .hide-on-mobile {
             display: none !important;
           }
           .fleet-features-grid {
+            display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 0.4rem;
-            padding: 0.65rem 0.85rem;
-            margin-bottom: 0.85rem;
+            padding: 0.55rem 0.75rem;
+            margin-bottom: 0.65rem;
+            background: #F8FAFC;
+            border-radius: 10px;
+            border: 1px solid #E2E8F0;
           }
           .feat-pill-item {
-            font-size: 0.76rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #1E293B;
           }
           .fleet-ideal-line {
-            font-size: 0.8rem;
-            margin-bottom: 1rem;
+            font-size: 0.78rem;
+            line-height: 1.45;
+            color: #475569;
+            margin-bottom: 0.85rem;
+          }
+          .fleet-ideal-line strong {
+            color: #0F172A;
+            font-weight: 700;
           }
           .fleet-footer-row {
-            padding-top: 1rem;
-            gap: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-top: 1px solid #F1F5F9;
+            padding-top: 0.85rem;
+            gap: 0.5rem;
+          }
+          .fleet-price-box {
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+          }
+          .rate-lbl {
+            font-size: 0.62rem;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            color: #64748B;
+            margin-bottom: 0.1rem;
           }
           .rate-val {
             font-size: 1.25rem;
+            font-weight: 800;
+            color: #0F172A;
+            line-height: 1.1;
           }
           .fleet-btns-group {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
+            display: flex;
             gap: 0.45rem;
-            flex: 1;
+            align-items: center;
+            justify-content: flex-end;
           }
-          .btn-book-fleet,
-          .btn-details-fleet {
-            width: 100%;
+          .btn-book-fleet {
+            display: inline-flex;
+            align-items: center;
             justify-content: center;
-            padding: 0.6rem 0.4rem;
-            font-size: 0.78rem;
+            gap: 0.35rem;
+            background: linear-gradient(135deg, #1D4ED8 0%, #1E40AF 100%);
+            color: #FFFFFF;
+            font-size: 0.80rem;
+            font-weight: 700;
+            padding: 0.6rem 0.85rem;
+            border-radius: 10px;
+            border: none;
+            box-shadow: 0 3px 10px rgba(29, 78, 216, 0.28);
             white-space: nowrap;
+            cursor: pointer;
+            transition: all 0.2s ease;
+          }
+          .btn-details-fleet {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.3rem;
+            background: #EFF6FF;
+            color: #1D4ED8;
+            font-size: 0.80rem;
+            font-weight: 700;
+            padding: 0.6rem 0.75rem;
+            border-radius: 10px;
+            border: 1px solid #BFDBFE;
+            text-decoration: none;
+            white-space: nowrap;
+            transition: all 0.2s ease;
           }
           .fleet-standards-box {
             flex-direction: column;
             align-items: flex-start;
-            padding: 1.35rem;
+            padding: 1.25rem;
+            border-radius: 16px;
+            gap: 1rem;
+          }
+          .standards-icon-box {
+            width: 52px;
+            height: 52px;
+            border-radius: 14px;
+          }
+          .standards-icon-box svg {
+            width: 28px;
+            height: 28px;
+          }
+          .standards-text h3 {
+            font-size: 1.15rem;
+            margin-bottom: 0.35rem;
+          }
+          .standards-text p {
+            font-size: 0.82rem;
+            line-height: 1.5;
+          }
+        }
+
+        @media (max-width: 420px) {
+          .fleet-img-wrapper {
+            height: 155px;
+          }
+          .fleet-card-body {
+            padding: 0.95rem 0.85rem 1.05rem;
+          }
+          .fleet-car-title {
+            font-size: 1.15rem;
+          }
+          .rate-val {
+            font-size: 1.15rem;
+          }
+          .btn-book-fleet,
+          .btn-details-fleet {
+            padding: 0.55rem 0.65rem;
+            font-size: 0.75rem;
           }
         }
       `}</style>

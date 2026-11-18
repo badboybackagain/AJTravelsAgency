@@ -467,7 +467,6 @@ export function VehicleDetailPage() {
           background: #FFFFFF;
           color: #0F172A;
           font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-          overflow-x: hidden;
         }
 
         
@@ -922,25 +921,46 @@ export function VehicleDetailPage() {
           .veh-breadcrumbs-strip {
             padding: 0.65rem 0;
           }
+          .breadcrumbs-nav {
+            display: flex;
+            align-items: center;
+            flex-wrap: nowrap;
+            overflow: hidden;
+            font-size: 0.78rem;
+          }
+          .bc-current {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 175px;
+            display: inline-block;
+            vertical-align: middle;
+          }
           .veh-hero-section {
-            padding: 1.25rem 0 1.5rem;
+            padding: 1rem 0 1.5rem;
           }
           .veh-hero-grid {
             grid-template-columns: 1fr;
             gap: 1.15rem;
           }
           .veh-hero-image-box {
-            border-radius: 14px;
-            height: 190px;
+            border-radius: 18px;
+            height: 185px;
+            overflow: hidden;
           }
           .veh-hero-photo {
-            height: 190px;
+            height: 185px;
           }
           .veh-floating-tag {
             top: 0.75rem;
             left: 0.75rem;
             font-size: 0.65rem;
-            padding: 0.25rem 0.65rem;
+            padding: 0.28rem 0.65rem;
+            border-radius: 9999px;
+            background: rgba(15, 23, 42, 0.82);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
           }
           .veh-main-title {
             font-size: 1.45rem;
@@ -961,6 +981,7 @@ export function VehicleDetailPage() {
           .spec-chip {
             padding: 0.55rem 0.65rem;
             gap: 0.5rem;
+            border-radius: 12px;
           }
           .spec-chip strong {
             font-size: 0.78rem;
@@ -974,8 +995,8 @@ export function VehicleDetailPage() {
             flex-direction: column;
             align-items: stretch;
             gap: 0.75rem;
-            padding: 1rem 1.1rem;
-            border-radius: 14px;
+            padding: 1rem 1.15rem;
+            border-radius: 16px;
           }
           .rate-amount {
             font-size: 1.35rem;
@@ -984,6 +1005,11 @@ export function VehicleDetailPage() {
             width: 100%;
             justify-content: center;
             padding: 0.75rem;
+            font-size: 0.88rem;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #1D4ED8 0%, #1E40AF 100%);
+            box-shadow: 0 4px 14px rgba(29, 78, 216, 0.3);
+          }
             font-size: 0.85rem;
           }
           .veh-details-content-section {

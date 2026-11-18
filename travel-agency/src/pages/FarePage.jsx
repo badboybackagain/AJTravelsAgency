@@ -762,6 +762,12 @@ export const FarePage = () => {
       ? dropId.replace(/[-_]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
       : '');
 
+  // Helper to format concise city name for compact corridor chip display
+  const formatLocationForChip = (str) => {
+    if (!str) return '';
+    return str.replace(/\s*\([^)]*\)/g, '').trim();
+  };
+
   // Detect specific city corridor locations
   const pickupInfo = (
     (quoteData?.route?.pickup?.city || '') +
@@ -1052,7 +1058,7 @@ export const FarePage = () => {
                     <div>
                       <span className="chip-lbl">ROUND TRIP ROUTE</span>
                       <strong>
-                        {pickupDisplayName || 'Pune'} ⇄ {dropDisplayName || 'Mumbai'}
+                        {formatLocationForChip(pickupDisplayName) || 'Pune'} ⇄ {formatLocationForChip(dropDisplayName) || 'Mumbai'}
                       </strong>
                     </div>
                   </div>
@@ -1097,7 +1103,7 @@ export const FarePage = () => {
                     <div>
                       <span className="chip-lbl">CORRIDOR ROUTE</span>
                       <strong>
-                        {pickupDisplayName || 'Pune'} ➔ {dropDisplayName || 'Mumbai'}
+                        {formatLocationForChip(pickupDisplayName) || 'Pune'} ➔ {formatLocationForChip(dropDisplayName) || 'Mumbai'}
                       </strong>
                     </div>
                   </div>
@@ -1662,14 +1668,14 @@ export const FarePage = () => {
                 onClick={() => setActiveCategory('INNOVA_CRYSTA')}
                 className={`fare-tab-pill ${activeCategory === 'INNOVA_CRYSTA' ? 'active' : ''}`}
               >
-                Executive Crysta / Luxury
+                Executive Crysta
               </button>
               <button
                 type="button"
                 onClick={() => setActiveCategory('TEMPO_TRAVELLER')}
                 className={`fare-tab-pill ${activeCategory === 'TEMPO_TRAVELLER' ? 'active' : ''}`}
               >
-                Mini Bus & Tempo
+                Tempo Travellers
               </button>
             </div>
 
@@ -1768,8 +1774,23 @@ export const FarePage = () => {
                         </div>
 
                         <p className="cab-description-text">
-                          {v.description ||
-                            'Sanitized AC vehicle, clean seats, well-maintained expressway certified commercial cab.'}
+                          {(() => {
+                            const desc = v.description;
+                            if (desc && desc.includes('|')) {
+                              const parts = desc
+                                .split('|')
+                                .map((s) => s.trim())
+                                .filter((s) => {
+                                  const lower = s.toLowerCase();
+                                  return !lower.startsWith('fuel') && !lower.includes('seater');
+                                });
+                              return parts.length > 0 ? parts.join(' • ') : desc;
+                            }
+                            return (
+                              desc ||
+                              'Sanitized AC vehicle, clean seats, well-maintained expressway certified commercial cab.'
+                            );
+                          })()}
                         </p>
 
                         <div className="cab-inclusions-grid">

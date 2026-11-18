@@ -916,7 +916,7 @@
     gap: 1.25rem;
   }
   .cab-image-col {
-    height: 180px;
+    height: 165px;
   }
   .cab-price-col {
     border-left: none;
@@ -931,6 +931,179 @@
   }
   .booking-compact-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  /* Compact 2x2 Corridor Stats Matrix with FULL VISIBILITY (no text crop) */
+  .svc-stats-chips-row {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+    margin-top: 1rem;
+  }
+
+  .chip-box {
+    padding: 0.6rem 0.65rem;
+    border-radius: 10px;
+    gap: 0.45rem;
+    min-width: 0;
+    align-items: flex-start;
+  }
+
+  .chip-box > svg {
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .chip-box > div {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .chip-lbl {
+    font-size: 0.62rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    white-space: normal;
+    word-break: normal;
+    color: #64748B;
+    line-height: 1.25;
+    display: block;
+    margin-bottom: 2px;
+  }
+
+  .chip-box strong {
+    font-size: 0.76rem;
+    line-height: 1.3;
+    white-space: normal;
+    word-break: normal;
+    color: #0F172A;
+    display: block;
+  }
+
+  /* All-Visible 2x2 Segmented Filter Matrix */
+  .fare-filter-tabs {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+    overflow-x: visible;
+    padding: 0.5rem;
+    margin-bottom: 1.5rem;
+    background: #F8FAFC;
+    border: 1px solid #E2E8F0;
+    border-radius: 16px;
+  }
+
+  .fare-tab-pill {
+    width: 100%;
+    padding: 0.65rem 0.5rem;
+    font-size: 0.78rem;
+    border-radius: 10px;
+    white-space: normal;
+    text-align: center;
+    line-height: 1.25;
+    box-shadow: none;
+  }
+
+  .fare-tab-pill:first-child {
+    grid-column: span 2;
+    padding: 0.7rem 0.75rem;
+    font-size: 0.84rem;
+    font-weight: 700;
+  }
+
+  /* Compact Cab Card on Mobile */
+  .fare-cab-card {
+    padding: 1.15rem;
+    border-radius: 18px;
+    gap: 1rem;
+  }
+
+  .cab-image-col {
+    height: 155px;
+    border-radius: 12px;
+    padding: 0.5rem;
+  }
+
+  .cab-title {
+    font-size: 1.2rem;
+  }
+
+  /* 3 Capacity Badges in Single Clean Row */
+  .cab-badges-row {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 0.35rem;
+    margin: 0.2rem 0 0.4rem;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .cab-badges-row::-webkit-scrollbar {
+    display: none;
+  }
+
+  .cab-spec-badge {
+    padding: 0.22rem 0.45rem;
+    font-size: 0.72rem;
+    white-space: nowrap;
+    flex-shrink: 0;
+    border-radius: 6px;
+  }
+
+  .cab-description-text {
+    font-size: 0.8rem;
+    line-height: 1.45;
+    margin-bottom: 0.4rem;
+  }
+
+  /* Formatted Inclusions Matrix with FULL VISIBILITY (no text crop) */
+  .cab-inclusions-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem 0.75rem;
+    background: #F8FAFC;
+    padding: 0.75rem 0.85rem;
+    border-radius: 12px;
+    border: 1px solid #EDF2F7;
+    margin: 0.35rem 0;
+  }
+
+  .inclusion-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.4rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #1E293B;
+    white-space: normal;
+    line-height: 1.3;
+  }
+
+  .inclusion-item svg {
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .inclusion-item span {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    word-break: normal;
+  }
+
+  .cab-select-btn {
+    width: 100%;
+    height: 46px;
+    font-size: 0.92rem;
+    border-radius: 12px;
+  }
+
+  .fare-cabs-grid {
+    padding-bottom: 2.5rem;
+    margin-bottom: 2rem;
   }
 }
 

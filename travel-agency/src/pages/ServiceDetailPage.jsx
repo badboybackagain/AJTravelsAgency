@@ -363,7 +363,6 @@ export function ServiceDetailPage() {
           background: #FFFFFF;
           color: #0F172A;
           font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-          overflow-x: hidden;
         }
 
         .svc-breadcrumbs-strip {

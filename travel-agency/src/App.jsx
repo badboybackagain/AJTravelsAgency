@@ -323,6 +323,7 @@ function App() {
           <Route path="/services/:slug" element={<ServiceDetailPage />} />
 
           {/* Fleet & Vehicles Architecture */}
+          <Route path="/fleet" element={<Navigate to="/vehicles" replace />} />
           <Route path="/vehicles" element={<VehiclesPage />} />
           <Route path="/vehicles/:slug" element={<VehicleDetailPage />} />
 

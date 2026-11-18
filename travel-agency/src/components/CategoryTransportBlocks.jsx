@@ -394,7 +394,8 @@ export const CategoryTransportBlocks = () => {
               className={`pill-tab-btn ${activeTab === 'ALL' ? 'active' : ''}`}
               onClick={() => setActiveTab('ALL')}
             >
-              <span>All Transport Fleet</span>
+              <span className="tab-title">All Transport</span>
+              <span className="tab-sub">Fleet</span>
             </button>
 
             <button
@@ -402,7 +403,8 @@ export const CategoryTransportBlocks = () => {
               className={`pill-tab-btn ${activeTab === 'cabs' ? 'active' : ''}`}
               onClick={() => setActiveTab('cabs')}
             >
-              <span>Executive Sedans (4-Seater)</span>
+              <span className="tab-title">Executive Sedans</span>
+              <span className="tab-sub">(4-Seater)</span>
             </button>
 
             <button
@@ -410,7 +412,8 @@ export const CategoryTransportBlocks = () => {
               className={`pill-tab-btn ${activeTab === 'suv' ? 'active' : ''}`}
               onClick={() => setActiveTab('suv')}
             >
-              <span>Spacious SUVs (6-Seater)</span>
+              <span className="tab-title">Spacious SUVs</span>
+              <span className="tab-sub">(6-Seater)</span>
             </button>
 
             <button
@@ -418,7 +421,8 @@ export const CategoryTransportBlocks = () => {
               className={`pill-tab-btn ${activeTab === 'minibus' ? 'active' : ''}`}
               onClick={() => setActiveTab('minibus')}
             >
-              <span>Group Tempo Travellers</span>
+              <span className="tab-title">Tempo Travellers</span>
+              <span className="tab-sub">(Group Fleet)</span>
             </button>
           </div>
         </div>
@@ -526,6 +530,16 @@ export const CategoryTransportBlocks = () => {
           display: inline-flex;
           align-items: center;
           justify-content: center;
+          gap: 0.35rem;
+        }
+
+        .pill-tab-btn .tab-title {
+          font-weight: 600;
+        }
+
+        .pill-tab-btn .tab-sub {
+          font-weight: 500;
+          opacity: 0.85;
         }
 
         .pill-tab-btn:hover {
@@ -841,34 +855,79 @@ export const CategoryTransportBlocks = () => {
         }
 
         @media (max-width: 768px) {
-          /* Mobile filter buttons: 2x2 wrapping grid - 100% visible */
+          /* Mobile filter tabs: 2x2 grid with all 4 cards 100% visible */
           .pill-tab-wrapper {
-            margin-bottom: 1.25rem;
-            padding: 0 0.25rem;
+            display: flex;
+            justify-content: center;
+            margin-bottom: 1.35rem;
+            padding: 0 0.5rem;
+            width: 100%;
+            box-sizing: border-box;
           }
+
           .pill-tab-container {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             width: 100%;
-            max-width: 480px;
+            max-width: 440px;
             gap: 0.45rem;
-            padding: 0.35rem;
+            padding: 0.4rem;
             border-radius: 16px;
-            white-space: normal;
+            background: #F8FAFC;
+            border: 1px solid #E2E8F0;
+            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+            box-sizing: border-box;
           }
+
           .pill-tab-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 0.55rem 0.35rem;
+            border-radius: 12px;
+            min-height: 52px;
+            background: #FFFFFF;
+            border: 1px solid #E2E8F0;
+            color: #334155;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            gap: 0.1rem;
+            box-sizing: border-box;
             width: 100%;
-            min-height: 44px;
-            padding: 0.5rem 0.4rem;
-            font-size: 0.76rem;
-            line-height: 1.25;
-            text-align: center;
-            border-radius: 10px;
-            white-space: normal;
           }
-          .pill-tab-btn span {
+
+          .pill-tab-btn .tab-title {
             display: block;
-            text-align: center;
+            font-size: 0.78rem;
+            font-weight: 700;
+            line-height: 1.2;
+            color: #1E293B;
+            white-space: nowrap;
+          }
+
+          .pill-tab-btn .tab-sub {
+            display: block;
+            font-size: 0.68rem;
+            font-weight: 500;
+            line-height: 1.1;
+            color: #64748B;
+            white-space: nowrap;
+          }
+
+          .pill-tab-btn.active {
+            background: linear-gradient(135deg, #1D4ED8 0%, #1E40AF 100%) !important;
+            border-color: #1D4ED8 !important;
+            box-shadow: 0 4px 14px rgba(29, 78, 216, 0.35) !important;
+          }
+
+          .pill-tab-btn.active .tab-title {
+            color: #FFFFFF !important;
+          }
+
+          .pill-tab-btn.active .tab-sub {
+            color: rgba(255, 255, 255, 0.88) !important;
           }
 
           .category-transport-card {
