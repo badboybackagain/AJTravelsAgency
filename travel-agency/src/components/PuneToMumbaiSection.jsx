@@ -51,14 +51,14 @@ export const PuneToMumbaiSection = () => {
                 <ShieldCheck size={13} />
                 <span>{data.badge}</span>
               </div>
-              <h2 className="lovable-title" style={{ textAlign: 'left', marginBottom: '0.85rem' }}>
+              <h2 className="lovable-title" style={{ textAlign: 'left', fontSize: '2.2rem', marginBottom: '0.85rem' }}>
                 {data.title}
               </h2>
               <p className="lead-paragraph" style={{ color: '#475569' }}>
                 {data.subtitle}
               </p>
 
-              <h3 className="subheading" style={{ color: '#17324D', marginBottom: '1rem' }}>
+              <h3 className="subheading" style={{ color: '#17324D', fontSize: '1.2rem', fontWeight: 800, marginBottom: '1rem' }}>
                 Why Book AJ Travels for Expressway Transit?
               </h3>
 

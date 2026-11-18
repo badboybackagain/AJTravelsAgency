@@ -553,10 +553,10 @@ export function VehiclesPage() {
           backdrop-filter: blur(8px);
           -webkit-backdrop-filter: blur(8px);
           color: #FFFFFF;
-          font-size: 0.65rem;
-          font-weight: 700;
-          letter-spacing: 0.04em;
-          padding: 0.28rem 0.65rem;
+          font-size: 0.68rem;
+          font-weight: 800;
+          letter-spacing: 0.06em;
+          padding: 0.3rem 0.7rem;
           border-radius: 9999px;
           box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
         }
@@ -569,19 +569,19 @@ export function VehiclesPage() {
         }
 
         .fleet-cat-eyebrow {
-          font-size: 0.68rem;
-          font-weight: 700;
-          letter-spacing: 0.07em;
+          font-size: 0.7rem;
+          font-weight: 800;
+          letter-spacing: 0.08em;
           color: #2563EB;
           text-transform: uppercase;
           margin-bottom: 0.25rem;
         }
 
         .fleet-car-title {
-          font-size: 1.22rem;
+          font-size: 1.45rem;
           font-weight: 800;
-          line-height: 1.25;
-          margin-bottom: 0.3rem;
+          line-height: 1.3;
+          margin-bottom: 0.35rem;
         }
 
         .fleet-car-title a {
@@ -595,10 +595,10 @@ export function VehiclesPage() {
         }
 
         .fleet-models-txt {
-          font-size: 0.78rem;
-          font-weight: 550;
+          font-size: 0.85rem;
+          font-weight: 600;
           color: #64748B;
-          margin-bottom: 0.75rem;
+          margin-bottom: 0.85rem;
           line-height: 1.35;
         }
 
@@ -617,9 +617,9 @@ export function VehiclesPage() {
           color: #334155;
           border: 1px solid #E2E8F0;
           border-radius: 8px;
-          font-size: 0.74rem;
+          font-size: 0.78rem;
           font-weight: 600;
-          padding: 0.3rem 0.6rem;
+          padding: 0.35rem 0.7rem;
         }
 
         .fleet-features-grid {
@@ -636,8 +636,8 @@ export function VehiclesPage() {
         .feat-pill-item {
           display: inline-flex;
           align-items: center;
-          gap: 0.35rem;
-          font-size: 0.74rem;
+          gap: 0.4rem;
+          font-size: 0.8rem;
           font-weight: 600;
           color: #334155;
           white-space: nowrap;
@@ -646,8 +646,8 @@ export function VehiclesPage() {
         }
 
         .fleet-ideal-line {
-          font-size: 0.78rem;
-          line-height: 1.45;
+          font-size: 0.86rem;
+          line-height: 1.5;
           color: #475569;
           margin-bottom: 1rem;
           flex: 1;
@@ -675,15 +675,15 @@ export function VehiclesPage() {
         }
 
         .rate-lbl {
-          font-size: 0.62rem;
-          font-weight: 700;
+          font-size: 0.65rem;
+          font-weight: 800;
           letter-spacing: 0.06em;
           color: #64748B;
           margin-bottom: 0.1rem;
         }
 
         .rate-val {
-          font-size: 1.25rem;
+          font-size: 1.35rem;
           font-weight: 800;
           color: #0F172A;
           line-height: 1.1;
@@ -702,7 +702,7 @@ export function VehiclesPage() {
           gap: 0.35rem;
           background: linear-gradient(135deg, #1D4ED8 0%, #1E40AF 100%);
           color: #FFFFFF;
-          font-size: 0.80rem;
+          font-size: 0.85rem;
           font-weight: 700;
           padding: 0.6rem 0.85rem;
           border-radius: 9px;
@@ -726,7 +726,7 @@ export function VehiclesPage() {
           gap: 0.3rem;
           background: #EFF6FF;
           color: #1D4ED8;
-          font-size: 0.80rem;
+          font-size: 0.85rem;
           font-weight: 700;
           padding: 0.6rem 0.75rem;
           border-radius: 9px;
@@ -835,8 +835,8 @@ export function VehiclesPage() {
           .fleet-tag-chip {
             top: 0.75rem;
             left: 0.75rem;
-            font-size: 0.65rem;
-            font-weight: 700;
+            font-size: 0.68rem;
+            font-weight: 800;
             letter-spacing: 0.04em;
             padding: 0.28rem 0.65rem;
             border-radius: 9999px;
@@ -849,14 +849,14 @@ export function VehiclesPage() {
             padding: 1.1rem 1rem 1.15rem;
           }
           .fleet-cat-eyebrow {
-            font-size: 0.68rem;
-            font-weight: 700;
+            font-size: 0.7rem;
+            font-weight: 800;
             letter-spacing: 0.07em;
             color: #2563EB;
             margin-bottom: 0.2rem;
           }
           .fleet-car-title {
-            font-size: 1.25rem;
+            font-size: 1.3rem;
             line-height: 1.25;
             margin-bottom: 0.25rem;
           }
@@ -930,8 +930,8 @@ export function VehiclesPage() {
             flex-shrink: 0;
           }
           .rate-lbl {
-            font-size: 0.62rem;
-            font-weight: 700;
+            font-size: 0.65rem;
+            font-weight: 800;
             letter-spacing: 0.06em;
             color: #64748B;
             margin-bottom: 0.1rem;
@@ -955,7 +955,7 @@ export function VehiclesPage() {
             gap: 0.35rem;
             background: linear-gradient(135deg, #1D4ED8 0%, #1E40AF 100%);
             color: #FFFFFF;
-            font-size: 0.80rem;
+            font-size: 0.85rem;
             font-weight: 700;
             padding: 0.6rem 0.85rem;
             border-radius: 10px;
@@ -972,7 +972,7 @@ export function VehiclesPage() {
             gap: 0.3rem;
             background: #EFF6FF;
             color: #1D4ED8;
-            font-size: 0.80rem;
+            font-size: 0.85rem;
             font-weight: 700;
             padding: 0.6rem 0.75rem;
             border-radius: 10px;

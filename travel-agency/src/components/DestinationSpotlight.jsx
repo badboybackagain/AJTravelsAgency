@@ -922,7 +922,7 @@ export const DestinationSpotlight = () => {
             font-size: 0.76rem !important;
           }
           .dest-icon-city {
-            font-size: 0.74rem !important;
+            font-size: 0.66rem !important;
           }
 
           .spotlight-card-wrapper {
@@ -951,7 +951,7 @@ export const DestinationSpotlight = () => {
             bottom: auto !important;
           }
           .spotlight-eyebrow {
-            font-size: 0.74rem !important;
+            font-size: 0.68rem !important;
             padding: 0.25rem 0.75rem !important;
             margin-bottom: 0.45rem !important;
           }
