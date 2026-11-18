@@ -570,6 +570,14 @@ export const BookingPage = () => {
                   <strong>100% Guaranteed On-Time Departure</strong>
                 </div>
               </div>
+
+              <div className="chip-box">
+                <CheckCircle2 size={15} color="#059669" />
+                <div>
+                  <span className="chip-lbl">ADVANCE DEPOSIT</span>
+                  <strong>Zero Advance / Pay on Arrival</strong>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -724,7 +732,7 @@ export const BookingPage = () => {
             {/* Left Column: Form */}
             <div className="booking-card-left reveal stagger-1">
               <div className="booking-section-header">
-                <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
+                <h2 style={{ fontWeight: 800, color: '#0F172A', margin: 0 }}>
                   AJ Travel Agency — Passenger & Booking Details
                 </h2>
                 <span className="booking-instant-tag">✓ Verified Secure Booking</span>
@@ -806,7 +814,7 @@ export const BookingPage = () => {
 
                   {/* Mobile Number with inline OTP trigger */}
                   <div className="booking-input-group">
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div className="booking-label-row">
                       <label className="booking-form-label">Mobile Number *</label>
                       {isPhoneVerified ? (
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
@@ -1045,20 +1053,20 @@ export const BookingPage = () => {
                 {/* ── Section 2: Journey Pickup & Destination ── */}
                 {/* Pickup Address */}
                 <div className="booking-input-group">
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div className="booking-label-row">
                     <label className="booking-form-label">
                       <MapPin size={12} color="#2563EB" style={{ display: 'inline', marginRight: '3px' }} />
                       Exact Pickup Address / Building / Landmark *
                     </label>
                     {!isPhoneVerified && !isFallbackMode && (
-                      <span style={{ fontSize: '0.66rem', color: '#D97706', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-                        <Lock size={11} />
+                      <span className="booking-lock-pill">
+                        <Lock size={10} />
                         <span>Verify Phone First</span>
                       </span>
                     )}
                     {!isPhoneVerified && isFallbackMode && (
-                      <span style={{ fontSize: '0.66rem', color: '#0284C7', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-                        <Unlock size={11} />
+                      <span className="booking-lock-pill unlocked">
+                        <Unlock size={10} />
                         <span>Unlocked for Callback</span>
                       </span>
                     )}
@@ -1070,7 +1078,7 @@ export const BookingPage = () => {
                       value={pickupAddress}
                       disabled={!isAddressUnlocked}
                       onChange={(e) => setPickupAddress(e.target.value)}
-                      placeholder={isAddressUnlocked ? 'e.g. Flat 302, Rohan Viti, Wakad / Baner / Pune Airport' : '🔒 Verify mobile number above to enter exact pickup address'}
+                      placeholder={isAddressUnlocked ? 'e.g. Flat 302, Rohan Viti, Wakad / Baner / Pune Airport' : '🔒 Verify mobile number above to unlock'}
                       className="booking-form-control with-dot"
                       required
                     />
@@ -1080,20 +1088,20 @@ export const BookingPage = () => {
                 {/* Drop Address (Intercity or Local) */}
                 {tripType !== 'LOCAL' ? (
                   <div className="booking-input-group">
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div className="booking-label-row">
                       <label className="booking-form-label">
                         <Navigation size={12} color="#10B981" style={{ display: 'inline', marginRight: '3px' }} />
                         Drop Location / Terminal / Hotel *
                       </label>
                       {!isPhoneVerified && !isFallbackMode && (
-                        <span style={{ fontSize: '0.66rem', color: '#D97706', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-                          <Lock size={11} />
+                        <span className="booking-lock-pill">
+                          <Lock size={10} />
                           <span>Verify Phone First</span>
                         </span>
                       )}
                       {!isPhoneVerified && isFallbackMode && (
-                        <span style={{ fontSize: '0.66rem', color: '#0284C7', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-                          <Unlock size={11} />
+                        <span className="booking-lock-pill unlocked">
+                          <Unlock size={10} />
                           <span>Unlocked for Callback</span>
                         </span>
                       )}
@@ -1105,7 +1113,7 @@ export const BookingPage = () => {
                         value={dropAddress}
                         disabled={!isAddressUnlocked}
                         onChange={(e) => setDropAddress(e.target.value)}
-                        placeholder={isAddressUnlocked ? 'e.g. T2 Mumbai International Airport / BKC / Bandra' : '🔒 Verify mobile number above to enter exact drop location'}
+                        placeholder={isAddressUnlocked ? 'e.g. T2 Mumbai International Airport / BKC / Bandra' : '🔒 Verify mobile number above to unlock'}
                         className="booking-form-control with-dot"
                         required
                       />
@@ -1313,8 +1321,8 @@ export const BookingPage = () => {
               {/* Journey Specifications */}
               <div className="booking-specs-list">
                 <div className="booking-spec-row">
-                  <span>Route / City:</span>
-                  <strong>
+                  <span className="spec-label">Route / City:</span>
+                  <strong className="spec-val">
                     {tripType === 'LOCAL'
                       ? `${city} (${duration}h / ${duration * 10}km package)`
                       : `${quoteData?.route?.pickup?.name || 'Pune'} ➔ ${quoteData?.route?.drop?.name || 'Mumbai'}`}
@@ -1322,20 +1330,20 @@ export const BookingPage = () => {
                 </div>
 
                 <div className="booking-spec-row">
-                  <span>Pickup Date & Time:</span>
-                  <strong>{departureDate} at {departureTime}</strong>
+                  <span className="spec-label">Pickup Date & Time:</span>
+                  <strong className="spec-val">{departureDate} at {departureTime}</strong>
                 </div>
 
                 {tripType === 'ROUND_TRIP' && returnDate && (
                   <div className="booking-spec-row">
-                    <span>Return Date & Time:</span>
-                    <strong style={{ color: '#D97706' }}>{returnDate} at {returnTime}</strong>
+                    <span className="spec-label">Return Date & Time:</span>
+                    <strong className="spec-val" style={{ color: '#D97706' }}>{returnDate} at {returnTime}</strong>
                   </div>
                 )}
                 
                 <div className="booking-spec-row">
-                  <span>Passengers:</span>
-                  <strong>{passengers} Person(s)</strong>
+                  <span className="spec-label">Passengers:</span>
+                  <strong className="spec-val">{passengers} Person(s)</strong>
                 </div>
               </div>
 
@@ -1343,26 +1351,26 @@ export const BookingPage = () => {
               <div className="booking-price-box">
                 <div className="booking-price-item">
                   <span>Base Cab Rate:</span>
-                  <span>₹{selectedVehicle?.fare?.baseFare?.toLocaleString() || 0}</span>
+                  <strong>₹{selectedVehicle?.fare?.baseFare?.toLocaleString() || 0}</strong>
                 </div>
 
                 {selectedVehicle?.fare?.toll > 0 && (
                   <div className="booking-price-item">
                     <span>Expressway Toll:</span>
-                    <span>+₹{selectedVehicle.fare.toll.toLocaleString()}</span>
+                    <strong>+₹{selectedVehicle.fare.toll.toLocaleString()}</strong>
                   </div>
                 )}
 
                 {selectedVehicle?.fare?.parking > 0 && (
                   <div className="booking-price-item">
                     <span>Airport Parking:</span>
-                    <span>+₹{selectedVehicle.fare.parking.toLocaleString()}</span>
+                    <strong>+₹{selectedVehicle.fare.parking.toLocaleString()}</strong>
                   </div>
                 )}
 
                 <div className="booking-total-row">
                   <span style={{ fontWeight: 800, fontSize: '0.88rem', color: '#0F172A' }}>Total Payable Amount:</span>
-                  <span style={{ fontWeight: 900, fontSize: '1.25rem', color: '#0284C7' }}>
+                  <span style={{ fontWeight: 900, fontSize: '1.35rem', color: '#0284C7' }}>
                     ₹{fareTotal?.toLocaleString()}
                   </span>
                 </div>

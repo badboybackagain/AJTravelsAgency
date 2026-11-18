@@ -1212,3 +1212,17 @@ img { max-width: 100%; height: auto; display: block; }
   transform: translateY(-3px);
   box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
 }
+
+/* ==========================================================================
+   RESPONSIVE BREADCRUMBS SYSTEM
+   ========================================================================== */
+.breadcrumbs-nav {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.5rem;
+}
+.breadcrumbs-nav a,
+.breadcrumbs-nav span {
+  white-space: nowrap;
+}
