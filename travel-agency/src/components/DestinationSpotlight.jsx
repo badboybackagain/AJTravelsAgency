@@ -32,7 +32,20 @@ export const DestinationSpotlight = () => {
   const stripRef = useRef(null);
   const isInteractingRef = useRef(false);
   const isResettingRef = useRef(false);
+  const isProgrammaticScrollRef = useRef(false);
+  const programmaticTimerRef = useRef(null);
   const resumeTimerRef = useRef(null);
+  const scrollDebounceTimerRef = useRef(null);
+
+  // Preload all destination images on mount to eliminate image decode delay
+  useEffect(() => {
+    destinations.forEach(d => {
+      if (d.image) {
+        const img = new Image();
+        img.src = d.image;
+      }
+    });
+  }, [destinations]);
 
   // Position at the start of middle set on mount
   useEffect(() => {
@@ -46,6 +59,39 @@ export const DestinationSpotlight = () => {
       }
     }
   }, [destCount]);
+
+  // Dedicated helper to smoothly scroll to a target index without triggering onScroll fight
+  const scrollToTargetIndex = (targetReal, smooth = true) => {
+    const strip = stripRef.current;
+    if (!strip) return;
+
+    isProgrammaticScrollRef.current = true;
+    if (programmaticTimerRef.current) clearTimeout(programmaticTimerRef.current);
+
+    setRealIndex(targetReal);
+
+    if (strip.scrollWidth > strip.clientWidth + 10) {
+      const targetCard = strip.children[targetReal];
+      if (targetCard) {
+        const targetLeft = targetCard.offsetLeft - (strip.clientWidth - targetCard.clientWidth) / 2;
+        if (smooth) {
+          strip.scrollTo({ left: Math.max(0, targetLeft), behavior: 'smooth' });
+          programmaticTimerRef.current = setTimeout(() => {
+            isProgrammaticScrollRef.current = false;
+          }, 600);
+        } else {
+          strip.style.scrollBehavior = 'auto';
+          strip.scrollLeft = Math.max(0, targetLeft);
+          strip.style.scrollBehavior = '';
+          programmaticTimerRef.current = setTimeout(() => {
+            isProgrammaticScrollRef.current = false;
+          }, 60);
+        }
+      }
+    } else {
+      isProgrammaticScrollRef.current = false;
+    }
+  };
 
   // Infinite Circular Auto-scroll loop for destinations
   useEffect(() => {
@@ -65,41 +111,35 @@ export const DestinationSpotlight = () => {
       if (!strip) return;
 
       const nextReal = realIndex + 1;
-      const targetCard = strip.children[nextReal];
-      if (targetCard) {
-        if (strip.scrollWidth > strip.clientWidth + 10) {
-          const targetLeft = targetCard.offsetLeft - (strip.clientWidth - targetCard.clientWidth) / 2;
-          strip.scrollTo({ left: Math.max(0, targetLeft), behavior: 'smooth' });
-        }
-        setRealIndex(nextReal);
+      scrollToTargetIndex(nextReal, true);
 
-        // Circular loop: when smoothly advancing into 3rd set, silently snap back to middle set
-        if (nextReal >= 2 * destCount) {
-          setTimeout(() => {
-            if (!strip) return;
-            const resetIndex = nextReal - destCount;
-            const resetCard = strip.children[resetIndex];
-            if (resetCard && strip.scrollWidth > strip.clientWidth + 10) {
-              const resetLeft = resetCard.offsetLeft - (strip.clientWidth - resetCard.clientWidth) / 2;
-              isResettingRef.current = true;
-              strip.style.scrollBehavior = 'auto';
-              strip.style.scrollSnapType = 'none';
-              strip.scrollLeft = Math.max(0, resetLeft);
-              setRealIndex(resetIndex);
-              requestAnimationFrame(() => {
-                if (strip) {
-                  strip.style.scrollSnapType = 'x mandatory';
-                  strip.style.scrollBehavior = '';
-                }
-                setTimeout(() => {
-                  isResettingRef.current = false;
-                }, 50);
-              });
-            }
-          }, 450);
-        }
-      } else {
-        setRealIndex(nextReal);
+      // Circular loop: when smoothly advancing into 3rd set, silently snap back to middle set
+      if (nextReal >= 2 * destCount) {
+        setTimeout(() => {
+          const s = stripRef.current;
+          if (!s) return;
+          const resetIndex = nextReal - destCount;
+          const resetCard = s.children[resetIndex];
+          if (resetCard && s.scrollWidth > s.clientWidth + 10) {
+            const resetLeft = resetCard.offsetLeft - (s.clientWidth - resetCard.clientWidth) / 2;
+            isResettingRef.current = true;
+            isProgrammaticScrollRef.current = true;
+            s.style.scrollBehavior = 'auto';
+            s.style.scrollSnapType = 'none';
+            s.scrollLeft = Math.max(0, resetLeft);
+            setRealIndex(resetIndex);
+            requestAnimationFrame(() => {
+              if (s) {
+                s.style.scrollSnapType = 'x mandatory';
+                s.style.scrollBehavior = '';
+              }
+              setTimeout(() => {
+                isResettingRef.current = false;
+                isProgrammaticScrollRef.current = false;
+              }, 60);
+            });
+          }
+        }, 600); // Wait for smooth scroll to complete before instant silent position reset
       }
     }, 2200);
 
@@ -157,78 +197,74 @@ export const DestinationSpotlight = () => {
   };
 
   const handleScroll = () => {
-    if (isResettingRef.current) return;
+    // If programmatic scrolling or silent loop reset is underway, never fight it
+    if (isProgrammaticScrollRef.current || isResettingRef.current) return;
     const strip = stripRef.current;
     if (!strip || strip.scrollWidth <= strip.clientWidth + 10) return;
-    const centerPoint = strip.scrollLeft + strip.clientWidth / 2;
-    let closestIndex = destCount;
-    let minDistance = Infinity;
 
-    Array.from(strip.children).forEach((child, idx) => {
-      if (child.classList.contains('dest-icon-card')) {
-        const childCenter = child.offsetLeft + child.clientWidth / 2;
-        const dist = Math.abs(childCenter - centerPoint);
-        if (dist < minDistance) {
-          minDistance = dist;
-          closestIndex = idx;
+    // Debounce touch drag updates so manual finger movements don't rapidly thrash state
+    if (scrollDebounceTimerRef.current) clearTimeout(scrollDebounceTimerRef.current);
+    scrollDebounceTimerRef.current = setTimeout(() => {
+      if (isProgrammaticScrollRef.current || isResettingRef.current) return;
+      const centerPoint = strip.scrollLeft + strip.clientWidth / 2;
+      let closestIndex = destCount;
+      let minDistance = Infinity;
+
+      Array.from(strip.children).forEach((child, idx) => {
+        if (child.classList.contains('dest-icon-card')) {
+          const childCenter = child.offsetLeft + child.clientWidth / 2;
+          const dist = Math.abs(childCenter - centerPoint);
+          if (dist < minDistance) {
+            minDistance = dist;
+            closestIndex = idx;
+          }
         }
-      }
-    });
+      });
 
-    if (closestIndex !== realIndex) {
-      setRealIndex(closestIndex);
-    }
+      if (closestIndex !== realIndex) {
+        setRealIndex(closestIndex);
+      }
+    }, 70);
   };
 
   const scrollToDestination = (dotIdx) => {
     setIsUserSelected(true);
     isInteractingRef.current = false;
     const targetReal = destCount + dotIdx;
-    setRealIndex(targetReal);
-    const strip = stripRef.current;
-    if (!strip) return;
-    const targetCard = strip.children[targetReal];
-    if (targetCard && strip.scrollWidth > strip.clientWidth + 10) {
-      const targetLeft = targetCard.offsetLeft - (strip.clientWidth - targetCard.clientWidth) / 2;
-      strip.scrollTo({ left: Math.max(0, targetLeft), behavior: 'smooth' });
-    }
+    scrollToTargetIndex(targetReal, true);
   };
 
   const scrollNext = () => {
     setIsUserSelected(true);
     isInteractingRef.current = false;
     const nextReal = realIndex + 1;
-    setRealIndex(nextReal);
-    const strip = stripRef.current;
-    if (!strip) return;
-    const targetCard = strip.children[nextReal];
-    if (targetCard && strip.scrollWidth > strip.clientWidth + 10) {
-      const targetLeft = targetCard.offsetLeft - (strip.clientWidth - targetCard.clientWidth) / 2;
-      strip.scrollTo({ left: Math.max(0, targetLeft), behavior: 'smooth' });
-      if (nextReal >= 2 * destCount) {
-        setTimeout(() => {
-          if (!strip) return;
-          const resetIndex = nextReal - destCount;
-          const resetCard = strip.children[resetIndex];
-          if (resetCard) {
-            const resetLeft = resetCard.offsetLeft - (strip.clientWidth - resetCard.clientWidth) / 2;
-            isResettingRef.current = true;
-            strip.style.scrollBehavior = 'auto';
-            strip.style.scrollSnapType = 'none';
-            strip.scrollLeft = Math.max(0, resetLeft);
-            setRealIndex(resetIndex);
-            requestAnimationFrame(() => {
-              if (strip) {
-                strip.style.scrollSnapType = 'x mandatory';
-                strip.style.scrollBehavior = '';
-              }
-              setTimeout(() => {
-                isResettingRef.current = false;
-              }, 50);
-            });
-          }
-        }, 450);
-      }
+    scrollToTargetIndex(nextReal, true);
+    if (nextReal >= 2 * destCount) {
+      setTimeout(() => {
+        const strip = stripRef.current;
+        if (!strip) return;
+        const resetIndex = nextReal - destCount;
+        const resetCard = strip.children[resetIndex];
+        if (resetCard && strip.scrollWidth > strip.clientWidth + 10) {
+          const resetLeft = resetCard.offsetLeft - (strip.clientWidth - resetCard.clientWidth) / 2;
+          isResettingRef.current = true;
+          isProgrammaticScrollRef.current = true;
+          strip.style.scrollBehavior = 'auto';
+          strip.style.scrollSnapType = 'none';
+          strip.scrollLeft = Math.max(0, resetLeft);
+          setRealIndex(resetIndex);
+          requestAnimationFrame(() => {
+            if (strip) {
+              strip.style.scrollSnapType = 'x mandatory';
+              strip.style.scrollBehavior = '';
+            }
+            setTimeout(() => {
+              isResettingRef.current = false;
+              isProgrammaticScrollRef.current = false;
+            }, 60);
+          });
+        }
+      }, 600);
     }
   };
 
@@ -236,37 +272,33 @@ export const DestinationSpotlight = () => {
     setIsUserSelected(true);
     isInteractingRef.current = false;
     const prevReal = realIndex - 1;
-    setRealIndex(prevReal);
-    const strip = stripRef.current;
-    if (!strip) return;
-    const targetCard = strip.children[prevReal];
-    if (targetCard && strip.scrollWidth > strip.clientWidth + 10) {
-      const targetLeft = targetCard.offsetLeft - (strip.clientWidth - targetCard.clientWidth) / 2;
-      strip.scrollTo({ left: Math.max(0, targetLeft), behavior: 'smooth' });
-      if (prevReal < destCount) {
-        setTimeout(() => {
-          if (!strip) return;
-          const resetIndex = prevReal + destCount;
-          const resetCard = strip.children[resetIndex];
-          if (resetCard) {
-            const resetLeft = resetCard.offsetLeft - (strip.clientWidth - resetCard.clientWidth) / 2;
-            isResettingRef.current = true;
-            strip.style.scrollBehavior = 'auto';
-            strip.style.scrollSnapType = 'none';
-            strip.scrollLeft = Math.max(0, resetLeft);
-            setRealIndex(resetIndex);
-            requestAnimationFrame(() => {
-              if (strip) {
-                strip.style.scrollSnapType = 'x mandatory';
-                strip.style.scrollBehavior = '';
-              }
-              setTimeout(() => {
-                isResettingRef.current = false;
-              }, 50);
-            });
-          }
-        }, 450);
-      }
+    scrollToTargetIndex(prevReal, true);
+    if (prevReal < destCount) {
+      setTimeout(() => {
+        const strip = stripRef.current;
+        if (!strip) return;
+        const resetIndex = prevReal + destCount;
+        const resetCard = strip.children[resetIndex];
+        if (resetCard && strip.scrollWidth > strip.clientWidth + 10) {
+          const resetLeft = resetCard.offsetLeft - (strip.clientWidth - resetCard.clientWidth) / 2;
+          isResettingRef.current = true;
+          isProgrammaticScrollRef.current = true;
+          strip.style.scrollBehavior = 'auto';
+          strip.style.scrollSnapType = 'none';
+          strip.scrollLeft = Math.max(0, resetLeft);
+          setRealIndex(resetIndex);
+          requestAnimationFrame(() => {
+            if (strip) {
+              strip.style.scrollSnapType = 'x mandatory';
+              strip.style.scrollBehavior = '';
+            }
+            setTimeout(() => {
+              isResettingRef.current = false;
+              isProgrammaticScrollRef.current = false;
+            }, 60);
+          });
+        }
+      }, 600);
     }
   };
 
@@ -398,7 +430,7 @@ export const DestinationSpotlight = () => {
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
         >
-          <div className="spotlight-2col-grid" key={selectedDest.id || activeIndex}>
+          <div className="spotlight-2col-grid">
             {/* Left Content Column */}
             <div className="spotlight-left-col">
               <span className="spotlight-eyebrow">DESTINATION FOCUS</span>
@@ -450,8 +482,8 @@ export const DestinationSpotlight = () => {
                   src={selectedDest.image}
                   alt={selectedDest.title}
                   className="spotlight-media-img"
-                  loading="lazy"
-                  decoding="async"
+                  loading="eager"
+                  decoding="sync"
                 />
                 <div className="spotlight-media-overlay">
                   <span className="media-chip">
