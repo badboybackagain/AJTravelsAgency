@@ -879,6 +879,8 @@ export function BlogPage() {
           .internal-hero-title {
             font-size: 1.65rem;
             line-height: 1.25;
+            word-break: break-word;
+            overflow-wrap: break-word;
           }
           .category-pills-list {
             gap: 0.4rem;
@@ -886,10 +888,6 @@ export function BlogPage() {
           .cat-pill-btn {
             padding: 0.4rem 0.85rem;
             font-size: 0.78rem;
-          }
-        }
-          .internal-hero-title {
-            font-size: 1.75rem;
           }
         }
       `}</style>

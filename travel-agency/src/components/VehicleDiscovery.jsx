@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Users, Briefcase, CheckCircle2, Car, ArrowRight, AlertCircle, RotateCcw } from 'lucide-react';
+import { Users, Briefcase, CheckCircle2, Car, ArrowRight, AlertCircle, RotateCcw, ChevronLeft, ChevronRight } from 'lucide-react';
 import { buildFareUrl } from '../utils/fareNavigation';
 import { homepageContent } from '../data/homepageContent';
 import { vehicleApi } from '../services/api';
@@ -131,8 +131,239 @@ export const VehicleDiscovery = () => {
     };
   });
 
+  const vehCount = displayedVehicles.length;
+  // Render 3 sets of vehicles for seamless circular looping on mobile viewports
+  const loopVehicles = [...displayedVehicles, ...displayedVehicles, ...displayedVehicles];
+  const [realIndex, setRealIndex] = useState(vehCount);
+  const [isUserSelected, setIsUserSelected] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
+  const wasOutRef = useRef(false);
+  const sectionRef = useRef(null);
+  const containerRef = useRef(null);
+  const isInteractingRef = useRef(false);
+  const isResettingRef = useRef(false);
+  const resumeTimerRef = useRef(null);
+
+  // Position at the start of middle set on mount
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    if (container.scrollWidth > container.clientWidth + 10) {
+      const initialCard = container.children[vehCount];
+      if (initialCard) {
+        const initialLeft = initialCard.offsetLeft - (container.clientWidth - initialCard.clientWidth) / 2;
+        container.scrollTo({ left: Math.max(0, initialLeft), behavior: 'auto' });
+      }
+    }
+  }, [vehCount]);
+
+  // Section visibility & re-entry observer:
+  // Rule 1: Scroll only when visible on screen; stop when user is on another section/page.
+  // Rule 6: Resume auto-scrolling only when user explicitly leaves and re-enters the section.
+  useEffect(() => {
+    const section = sectionRef.current;
+    if (!section || typeof IntersectionObserver === 'undefined') return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          if (wasOutRef.current) {
+            setIsUserSelected(false);
+            isInteractingRef.current = false;
+            wasOutRef.current = false;
+          }
+        } else {
+          setIsVisible(false);
+          wasOutRef.current = true;
+          isInteractingRef.current = false;
+        }
+      },
+      { threshold: 0.15 }
+    );
+
+    observer.observe(section);
+    return () => observer.disconnect();
+  }, []);
+
+  // Infinite Circular Auto-scroll loop for mobile viewports
+  useEffect(() => {
+    if (isUserSelected || !isVisible) return;
+
+    if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      return;
+    }
+
+    const interval = setInterval(() => {
+      if (isInteractingRef.current || isUserSelected || !isVisible) return;
+      const container = containerRef.current;
+      if (!container) return;
+
+      // Auto-scroll only when horizontal overflow is present (mobile / tablet)
+      if (container.scrollWidth <= container.clientWidth + 10) return;
+
+      const nextReal = realIndex + 1;
+      const targetCard = container.children[nextReal];
+      if (targetCard) {
+        const targetLeft = targetCard.offsetLeft - (container.clientWidth - targetCard.clientWidth) / 2;
+        container.scrollTo({ left: Math.max(0, targetLeft), behavior: 'smooth' });
+        setRealIndex(nextReal);
+
+        // Circular loop: when smoothly advancing into 3rd set, silently snap back to middle set
+        if (nextReal >= 2 * vehCount) {
+          setTimeout(() => {
+            if (!container) return;
+            const resetIndex = nextReal - vehCount;
+            const resetCard = container.children[resetIndex];
+            if (resetCard) {
+              const resetLeft = resetCard.offsetLeft - (container.clientWidth - resetCard.clientWidth) / 2;
+              isResettingRef.current = true;
+              container.style.scrollBehavior = 'auto';
+              container.style.scrollSnapType = 'none';
+              container.scrollLeft = Math.max(0, resetLeft);
+              setRealIndex(resetIndex);
+              requestAnimationFrame(() => {
+                if (container) {
+                  container.style.scrollSnapType = 'x mandatory';
+                  container.style.scrollBehavior = '';
+                }
+                setTimeout(() => {
+                  isResettingRef.current = false;
+                }, 50);
+              });
+            }
+          }, 450);
+        }
+      }
+    }, 2200);
+
+    return () => clearInterval(interval);
+  }, [realIndex, vehCount, isUserSelected, isVisible]);
+
+  const pauseInteraction = (resumeDelay = 2200) => {
+    isInteractingRef.current = true;
+    if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current);
+    resumeTimerRef.current = setTimeout(() => {
+      isInteractingRef.current = false;
+    }, resumeDelay);
+  };
+
+  const handleScroll = () => {
+    if (isResettingRef.current) return;
+    const container = containerRef.current;
+    if (!container) return;
+    const centerPoint = container.scrollLeft + container.clientWidth / 2;
+    let closestIndex = vehCount;
+    let minDistance = Infinity;
+
+    Array.from(container.children).forEach((child, idx) => {
+      if (child.classList.contains('vehicle-card')) {
+        const childCenter = child.offsetLeft + child.clientWidth / 2;
+        const dist = Math.abs(childCenter - centerPoint);
+        if (dist < minDistance) {
+          minDistance = dist;
+          closestIndex = idx;
+        }
+      }
+    });
+
+    if (closestIndex !== realIndex) {
+      setRealIndex(closestIndex);
+    }
+  };
+
+  const scrollToVehicle = (dotIdx) => {
+    setIsUserSelected(true);
+    isInteractingRef.current = false;
+    const targetReal = vehCount + dotIdx;
+    setRealIndex(targetReal);
+    const container = containerRef.current;
+    if (!container) return;
+    const targetCard = container.children[targetReal];
+    if (targetCard) {
+      const targetLeft = targetCard.offsetLeft - (container.clientWidth - targetCard.clientWidth) / 2;
+      container.scrollTo({ left: Math.max(0, targetLeft), behavior: 'smooth' });
+    }
+  };
+
+  const scrollNext = () => {
+    setIsUserSelected(true);
+    isInteractingRef.current = false;
+    const nextReal = realIndex + 1;
+    setRealIndex(nextReal);
+    const container = containerRef.current;
+    if (!container) return;
+    const targetCard = container.children[nextReal];
+    if (targetCard) {
+      const targetLeft = targetCard.offsetLeft - (container.clientWidth - targetCard.clientWidth) / 2;
+      container.scrollTo({ left: Math.max(0, targetLeft), behavior: 'smooth' });
+      if (nextReal >= 2 * vehCount) {
+        setTimeout(() => {
+          if (!container) return;
+          const resetIndex = nextReal - vehCount;
+          const resetCard = container.children[resetIndex];
+          if (resetCard) {
+            const resetLeft = resetCard.offsetLeft - (container.clientWidth - resetCard.clientWidth) / 2;
+            isResettingRef.current = true;
+            container.style.scrollBehavior = 'auto';
+            container.style.scrollSnapType = 'none';
+            container.scrollLeft = Math.max(0, resetLeft);
+            setRealIndex(resetIndex);
+            requestAnimationFrame(() => {
+              if (container) {
+                container.style.scrollSnapType = 'x mandatory';
+                container.style.scrollBehavior = '';
+              }
+              setTimeout(() => {
+                isResettingRef.current = false;
+              }, 50);
+            });
+          }
+        }, 450);
+      }
+    }
+  };
+
+  const scrollPrev = () => {
+    setIsUserSelected(true);
+    isInteractingRef.current = false;
+    const prevReal = realIndex - 1;
+    setRealIndex(prevReal);
+    const container = containerRef.current;
+    if (!container) return;
+    const targetCard = container.children[prevReal];
+    if (targetCard) {
+      const targetLeft = targetCard.offsetLeft - (container.clientWidth - targetCard.clientWidth) / 2;
+      container.scrollTo({ left: Math.max(0, targetLeft), behavior: 'smooth' });
+      if (prevReal < vehCount) {
+        setTimeout(() => {
+          if (!container) return;
+          const resetIndex = prevReal + vehCount;
+          const resetCard = container.children[resetIndex];
+          if (resetCard) {
+            const resetLeft = resetCard.offsetLeft - (container.clientWidth - resetCard.clientWidth) / 2;
+            isResettingRef.current = true;
+            container.style.scrollBehavior = 'auto';
+            container.style.scrollSnapType = 'none';
+            container.scrollLeft = Math.max(0, resetLeft);
+            setRealIndex(resetIndex);
+            requestAnimationFrame(() => {
+              if (container) {
+                container.style.scrollSnapType = 'x mandatory';
+                container.style.scrollBehavior = '';
+              }
+              setTimeout(() => {
+                isResettingRef.current = false;
+              }, 50);
+            });
+          }
+        }, 450);
+      }
+    }
+  };
+
   return (
-    <section id="vehicles" className="section-padding bg-cool-gray" style={{ position: 'relative' }}>
+    <section ref={sectionRef} id="vehicles" className="section-padding bg-cool-gray" style={{ position: 'relative' }}>
       <div className="container">
         {/* Lovable Header */}
         <div className="lovable-section-header reveal">
@@ -196,80 +427,131 @@ export const VehicleDiscovery = () => {
             </button>
           </div>
         ) : (
-          <div className="vehicles-grid">
-            {displayedVehicles.map((v, idx) => {
-              return (
-              <div key={v.id || idx} className={`vehicle-card reveal stagger-${(idx % 3) + 1}`}>
-                {/* Vehicle Image Container */}
-                <div className="vehicle-img-wrapper">
-                  <img
-                    src={v.image}
-                    alt={`${v.name} cab rental with chauffeur by AJ Travels`}
-                    className="vehicle-img"
-                    loading="lazy"
-                    onError={(e) => {
-                      e.target.src = '/assets/sedan.webp';
-                    }}
+          <div className="vehicles-carousel-wrapper">
+            <div
+              className="vehicles-grid"
+              ref={containerRef}
+              onScroll={handleScroll}
+              onTouchStart={() => pauseInteraction(2200)}
+              onTouchMove={() => pauseInteraction(2200)}
+              onTouchEnd={() => pauseInteraction(2500)}
+              onMouseEnter={() => { isInteractingRef.current = true; }}
+              onMouseLeave={() => pauseInteraction(1500)}
+            >
+              {loopVehicles.map((v, idx) => {
+                const isActive = (idx % vehCount) === (realIndex % vehCount);
+                return (
+                  <div
+                    key={`${v.id || 'veh'}-${idx}`}
+                    className={`vehicle-card ${isActive ? 'active-mobile-card' : ''}`}
+                    onClick={() => scrollToVehicle(idx % vehCount)}
+                  >
+                    {/* Vehicle Image Container - Clean Image without Blue Tag */}
+                    <div className="vehicle-img-wrapper">
+                      <img
+                        src={v.image}
+                        alt={`${v.name} cab rental with chauffeur by AJ Travels`}
+                        className="vehicle-img"
+                        loading="lazy"
+                        onError={(e) => {
+                          e.target.src = '/assets/sedan.webp';
+                        }}
+                      />
+                      <div className="vehicle-img-overlay"></div>
+                    </div>
+
+                    {/* Vehicle Content Body */}
+                    <div className="vehicle-body">
+                      <h3 className="vehicle-title">{v.name}</h3>
+
+                      {/* Specs Row */}
+                      <div className="vehicle-specs-row">
+                        <div className="spec-badge-pill">
+                          <Users size={14} color="#2563EB" />
+                          <span>{v.passengers}</span>
+                        </div>
+                        <div className="spec-badge-pill">
+                          <Briefcase size={14} color="#2563EB" />
+                          <span>{v.luggage}</span>
+                        </div>
+                      </div>
+
+                      {/* Features List — Simple Single Points (Strictly 4 Features) */}
+                      <div className="vehicle-features-list">
+                        {(v.features || []).slice(0, 4).map((feat, i) => (
+                          <span key={i} className="feat-chip">
+                            <CheckCircle2 size={12} color="#2563EB" /> {formatFeaturePoint(feat)}
+                          </span>
+                        ))}
+                      </div>
+
+                      <p className="vehicle-ideal-text">
+                        <strong>Ideal for:</strong> {cleanIdealFor(v.idealFor)}
+                      </p>
+
+                      {/* Action Buttons Row */}
+                      <div className="vehicle-actions-row">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleBookVehicle(v);
+                          }}
+                          className="vehicle-btn"
+                        >
+                          <Car size={16} />
+                          <span>Check Fare & Book</span>
+                          <ArrowRight size={15} />
+                        </button>
+                        {v.url && (
+                          <Link
+                            to={v.url}
+                            className="vehicle-detail-link"
+                            title={`View specifications for ${v.name}`}
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <span>View Specs</span>
+                          </Link>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Mobile Carousel Controls & Smooth Navigation */}
+            <div className="vehicles-mobile-controls" aria-label="Vehicle catalogue navigation">
+              <button
+                type="button"
+                className="veh-nav-arrow veh-nav-prev"
+                onClick={scrollPrev}
+                aria-label="Previous vehicle"
+              >
+                <ChevronLeft size={16} />
+              </button>
+
+              <div className="vehicles-pagination-dots" aria-hidden="true">
+                {displayedVehicles.map((_, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    className={`veh-dot ${i === (realIndex % vehCount) ? 'active' : ''}`}
+                    onClick={() => scrollToVehicle(i)}
+                    aria-label={`Go to vehicle ${i + 1}`}
                   />
-                  <div className="vehicle-img-overlay"></div>
-                  {v.tag && <span className="vehicle-gold-tag">{v.tag}</span>}
-                </div>
-
-                {/* Vehicle Content Body */}
-                <div className="vehicle-body">
-                  <span className="vehicle-category-label">{v.category}</span>
-                  <h3 className="vehicle-title">{v.name}</h3>
-
-                  {/* Specs Row */}
-                  <div className="vehicle-specs-row">
-                    <div className="spec-badge-pill">
-                      <Users size={14} color="#2563EB" />
-                      <span>{v.passengers}</span>
-                    </div>
-                    <div className="spec-badge-pill">
-                      <Briefcase size={14} color="#2563EB" />
-                      <span>{v.luggage}</span>
-                    </div>
-                  </div>
-
-                  {/* Features List — Simple Single Points (Strictly 4 Features) */}
-                  <div className="vehicle-features-list">
-                    {(v.features || []).slice(0, 4).map((feat, i) => (
-                      <span key={i} className="feat-chip">
-                        <CheckCircle2 size={12} color="#2563EB" /> {formatFeaturePoint(feat)}
-                      </span>
-                    ))}
-                  </div>
-
-                  <p className="vehicle-ideal-text">
-                    <strong>Ideal for:</strong> {cleanIdealFor(v.idealFor)}
-                  </p>
-
-                  {/* Action Buttons Row */}
-                  <div className="vehicle-actions-row">
-                    <button
-                      type="button"
-                      onClick={() => handleBookVehicle(v)}
-                      className="vehicle-btn"
-                    >
-                      <Car size={16} />
-                      <span>Check Fare & Book</span>
-                      <ArrowRight size={15} />
-                    </button>
-                    {v.url && (
-                      <Link
-                        to={v.url}
-                        className="vehicle-detail-link"
-                        title={`View specifications for ${v.name}`}
-                      >
-                        <span>View Specs</span>
-                      </Link>
-                    )}
-                  </div>
-                </div>
+                ))}
               </div>
-              );
-            })}
+
+              <button
+                type="button"
+                className="veh-nav-arrow veh-nav-next"
+                onClick={scrollNext}
+                aria-label="Next vehicle"
+              >
+                <ChevronRight size={16} />
+              </button>
+            </div>
           </div>
         )}
       </div>
@@ -363,11 +645,25 @@ export const VehicleDiscovery = () => {
           margin: 0.4rem auto 0 auto;
         }
 
+        .vehicles-carousel-wrapper {
+          position: relative;
+          width: 100%;
+        }
+
+        .vehicles-mobile-controls {
+          display: none;
+        }
+
         .vehicles-grid {
           display: grid;
           grid-template-columns: repeat(3, 1fr);
           gap: 1.75rem;
           margin-top: 2rem;
+        }
+
+        /* Desktop: strictly display only original 6 vehicles */
+        .vehicles-grid > .vehicle-card:nth-child(n+7) {
+          display: none !important;
         }
 
         .vehicle-card {
@@ -570,6 +866,58 @@ export const VehicleDiscovery = () => {
         }
 
         @media (max-width: 768px) {
+          .vehicles-mobile-controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.85rem;
+            margin-top: 1.15rem;
+          }
+
+          .veh-nav-arrow {
+            width: 34px;
+            height: 34px;
+            border-radius: 9999px;
+            background: #FFFFFF;
+            border: 1.5px solid #CBD5E1;
+            color: #1E293B;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+            transition: all 0.2s ease;
+          }
+
+          .veh-nav-arrow:hover,
+          .veh-nav-arrow:active {
+            background: #2563EB;
+            color: #FFFFFF;
+            border-color: #2563EB;
+          }
+
+          .vehicles-pagination-dots {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+          }
+
+          .veh-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 9999px;
+            background: #CBD5E1;
+            border: none;
+            padding: 0;
+            cursor: pointer;
+            transition: all 0.25s ease;
+          }
+
+          .veh-dot.active {
+            width: 22px;
+            background: #2563EB;
+          }
+
           .vehicles-grid {
             display: flex;
             overflow-x: auto;
@@ -583,11 +931,20 @@ export const VehicleDiscovery = () => {
           .vehicles-grid::-webkit-scrollbar {
             display: none;
           }
+          /* Mobile: display all vehicles for infinite circular carousel */
+          .vehicles-grid > .vehicle-card:nth-child(n+7) {
+            display: flex !important;
+          }
           .vehicle-card {
             flex: 0 0 85%;
             max-width: 310px;
-            scroll-snap-align: start;
+            scroll-snap-align: center;
             border-radius: 16px;
+            cursor: pointer;
+          }
+          .vehicle-card.active-mobile-card {
+            border-color: #93C5FD;
+            box-shadow: 0 8px 24px rgba(37, 99, 235, 0.12);
           }
           .vehicle-img-wrapper {
             height: 130px;

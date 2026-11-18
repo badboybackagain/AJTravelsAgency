@@ -66,26 +66,11 @@ export const homepageContent = {
     subtitle: "From daily corporate express routes to scenic hill station holidays and sacred pilgrimage circuits, AJ Travels connects you seamlessly with verified doorstep service.",
     destinations: [
       {
-        id: "pune-mumbai",
-        name: "Mumbai & Airport Transfers",
-        city: "Mumbai & BOM Airport",
-        category: "Express Intercity",
-        title: "PUNE ↔ MUMBAI EXPRESSWAY & AIRPORT",
-        tagline: "Connecting Pune with BKC, Andheri, South Mumbai & CSMIA Airport T1/T2.",
-        image: "/assets/pune-to-mumbai-premium-travel-banner.webp",
-        desc: "Maharashtra's busiest travel corridor. Enjoy smooth, stress-free travel via the Mumbai-Pune Expressway with doorstep pickup in Hinjawadi, Baner, Kothrud, or Viman Nagar straight to your Mumbai destination or airport departure terminal.",
-        popularRoute: "Pune City / Airport → Mumbai (BKC / Airport / South Mumbai)",
-        estTime: "3 Hours 15 Mins",
-        url: "/pune-to-mumbai-one-way-cab/",
-        pickupKey: "pune",
-        dropKey: "mumbai"
-      },
-      {
         id: "mahabaleshwar",
         name: "Mahabaleshwar & Panchgani",
         city: "Satara / Western Ghats",
         category: "Hill Station Tour",
-        title: "MAHABALESHWAR & PANCHGANI ESCAPE",
+        title: "Mahabaleshwar & Panchgani Escape",
         tagline: "Scenic ghat journeys, strawberry farms, viewpoints & family getaways.",
         image: "/assets/suv.webp",
         desc: "Breathe fresh mountain air without the fatigue of driving. Our experienced hill-road chauffeurs take you via Wai and Pasarni Ghat to Venna Lake, Arthur's Seat, Mapro Garden, and Table Land in air-conditioned comfort.",
@@ -100,7 +85,7 @@ export const homepageContent = {
         name: "Shirdi & Shani Shingnapur",
         city: "Ahmednagar District",
         category: "Pilgrimage Corridor",
-        title: "SHIRDI SAI BABA DARSHAN CORRIDOR",
+        title: "Shirdi Sai Baba Darshan Corridor",
         tagline: "Same-day or multi-day sacred pilgrimage travel with family waiting.",
         image: "/assets/sedan.webp",
         desc: "Peaceful and punctual pilgrimage trips to Sai Baba Samadhi Temple and Shani Shingnapur. Vehicles equipped with spacious luggage capacity and flexible waiting options for morning and evening Kakad Aarti.",
@@ -115,7 +100,7 @@ export const homepageContent = {
         name: "Lonavala & Khandala",
         city: "Pune District / Ghats",
         category: "Weekend Gateway",
-        title: "LONAVALA & KHANDALA HILL RETREATS",
+        title: "Lonavala & Khandala Hill Retreats",
         tagline: "Tiger Point, Bhushi Dam, Karla Caves & expressway day outings.",
         image: "/assets/pune-mumbai-travel-banner.webp",
         desc: "The ultimate short break from Pune. Perfect for monsoon waterfall tours, company day outings, and weekend family picnics with doorstep pickup and same-day round-trip packages.",
@@ -130,7 +115,7 @@ export const homepageContent = {
         name: "Nashik & Trimbakeshwar",
         city: "Nashik Region",
         category: "Religious & Wine Hub",
-        title: "NASHIK WINE CAPITAL & TRIMBAKESHWAR",
+        title: "Nashik Wine Capital & Trimbakeshwar",
         tagline: "Jyotirlinga pilgrimage, Panchavati heritage & Sula Vineyards tours.",
         image: "/assets/suv.webp",
         desc: "Comfortable highway cab service connecting Pune with Trimbakeshwar Temple, Muktidham, and famous vineyard tours. Enjoy dedicated one-way or round-trip journeys with complete vehicle privacy.",
@@ -145,7 +130,7 @@ export const homepageContent = {
         name: "Alibaug & Goa Coastal Rides",
         city: "Konkan Coast & Goa",
         category: "Beach Vacations",
-        title: "ALIBAUG BEACHES & GOA EXPRESS",
+        title: "Alibaug Beaches & Goa Express",
         tagline: "Coastal getaways, beach resorts, fort explorations & extended tours.",
         image: "/assets/sedan.webp",
         desc: "Heading to the coast? AJ Travels offers dependable sedans, family SUVs, and group Tempo Travellers with ample boot space for luggage, beach gear, and extended road-trip itineraries.",
@@ -154,6 +139,21 @@ export const homepageContent = {
         url: "/pune-to-alibaug-cab/",
         pickupKey: "pune",
         dropKey: "alibaug"
+      },
+      {
+        id: "pune-mumbai",
+        name: "Mumbai & Airport Transfers",
+        city: "Mumbai & BOM Airport",
+        category: "Express Intercity",
+        title: "Pune ↔ Mumbai Expressway & Airport",
+        tagline: "Connecting Pune with BKC, Andheri, South Mumbai & CSMIA Airport T1/T2.",
+        image: "/assets/pune-to-mumbai-premium-travel-banner.webp",
+        desc: "Maharashtra's busiest travel corridor. Enjoy smooth, stress-free travel via the Mumbai-Pune Expressway with doorstep pickup in Hinjawadi, Baner, Kothrud, or Viman Nagar straight to your Mumbai destination or airport departure terminal.",
+        popularRoute: "Pune City / Airport → Mumbai (BKC / Airport / South Mumbai)",
+        estTime: "3 Hours 15 Mins",
+        url: "/pune-to-mumbai-one-way-cab/",
+        pickupKey: "pune",
+        dropKey: "mumbai"
       }
     ]
   },
@@ -171,9 +171,57 @@ export const homepageContent = {
         bgImg: "/assets/sedan.webp",
         description: "Fuel-efficient, clean AC sedans like Swift Dzire and Toyota Etios. Ideal for couples, business professionals, and small families booking car rental in Pune with driver.",
         routes: [
-          { from: "PUNE", to: "MUMBAI CITY", type: "One-Way Express", est: "All-Inclusive", note: "Expressway Tolls & Taxes Included", link: "/pune-to-mumbai-one-way-cab/" },
-          { from: "PUNE", to: "MAHABALESHWAR", type: "Round-Trip Tour", est: "Custom Package", note: "Sightseeing Waiting Included", link: "/pune-to-mahabaleshwar-cab/" },
-          { from: "PUNE", to: "SHIRDI", type: "Same-Day Darshan", est: "All-Inclusive", note: "Aarti Schedule Flexibility", link: "/pune-to-shirdi-cab/" }
+          {
+            from: "PUNE",
+            to: "MUMBAI CITY",
+            type: "One-Way Express",
+            desc: "Direct expressway travel for business meetings and city drops.",
+            fare: "₹2,199",
+            fareLabel: "Starting from",
+            pricingNote: "Expressway Tolls & Taxes Included",
+            duration: "3h 15m Express",
+            capacity: "4 Seats • 2 Bags",
+            features: [
+              "Expressway Tolls & State Taxes Included",
+              "Doorstep Pickup Across Pune & PCMC",
+              "Clean AC Sedan with Professional Chauffeur"
+            ],
+            link: "/pune-to-mumbai-one-way-cab/"
+          },
+          {
+            from: "PUNE",
+            to: "MAHABALESHWAR",
+            type: "Round-Trip Tour",
+            desc: "Scenic hill station tours with sightseeing and viewpoints.",
+            fare: "₹3,499",
+            fareLabel: "Starting from",
+            pricingNote: "Sightseeing & Waiting Included",
+            duration: "3h via Wai Ghat",
+            capacity: "4 Seats • 2 Bags",
+            features: [
+              "Experienced Hill-Ghat Highway Driver",
+              "Venna Lake, Mapro Garden & Viewpoints",
+              "Flexible Same-Day / Multi-Day Return"
+            ],
+            link: "/pune-to-mahabaleshwar-cab/"
+          },
+          {
+            from: "PUNE",
+            to: "SHIRDI",
+            type: "Same-Day Darshan",
+            desc: "Dedicated pilgrimage travel with flexible temple waiting.",
+            fare: "₹3,699",
+            fareLabel: "Starting from",
+            pricingNote: "Flexible Aarti Waiting Included",
+            duration: "4.5h Direct",
+            capacity: "4 Seats • 2 Bags",
+            features: [
+              "Direct Drop at Sai Baba Samadhi Temple",
+              "Flexible Kakad & Evening Aarti Waiting",
+              "Shani Shingnapur Optional Route Addition"
+            ],
+            link: "/pune-to-shirdi-cab/"
+          }
         ]
       },
       {
@@ -183,9 +231,57 @@ export const homepageContent = {
         bgImg: "/assets/suv.webp",
         description: "Reclining ergonomic seating, dual AC vents, and generous luggage capacity. Ideal for family airport runs, hill station tours, and outstation trips across Maharashtra.",
         routes: [
-          { from: "PUNE RESIDENCE", to: "MUMBAI AIRPORT (BOM)", type: "Flight Transfer", est: "Flight Tracked", note: "Doorstep Pickup & Luggage Assist", link: "/pune-to-mumbai-airport-cab/" },
-          { from: "PUNE", to: "NASHIK / TRIMBAK", type: "Outstation Package", est: "All-Inclusive", note: "Comfort Highway Suspension", link: "/pune-to-nashik-cab/" },
-          { from: "PUNE", to: "LONAVALA HILLS", type: "Day Picnic", est: "Round Trip", note: "Custom Stops Allowed", link: "/pune-to-lonavala-cab/" }
+          {
+            from: "PUNE RESIDENCE",
+            to: "MUMBAI AIRPORT (BOM)",
+            type: "Flight Transfer",
+            desc: "Ideal for airport transfers, arrivals and departures.",
+            fare: "₹3,199",
+            fareLabel: "Starting from",
+            pricingNote: "Flight Tracked • Tolls Included",
+            duration: "3h 30m Direct T1/T2",
+            capacity: "6 Seats • 4 Large Bags",
+            features: [
+              "24/7 Flight Tracking & On-Time Arrival",
+              "Doorstep Pickup & Luggage Loading Assist",
+              "All Mumbai Expressway Tolls Included"
+            ],
+            link: "/pune-to-mumbai-airport-cab/"
+          },
+          {
+            from: "PUNE",
+            to: "NASHIK / TRIMBAK",
+            type: "Outstation Package",
+            desc: "Suitable for outstation trips and pilgrimage travel.",
+            fare: "₹4,399",
+            fareLabel: "Starting from",
+            pricingNote: "Highway Tolls & Driver Included",
+            duration: "4h Scenic Route",
+            capacity: "6 Seats • 4 Large Bags",
+            features: [
+              "Trimbakeshwar Temple & Vineyards Tour",
+              "Comfortable High-Clearance Suspension",
+              "Spacious 3-Row Seating for Families"
+            ],
+            link: "/pune-to-nashik-cab/"
+          },
+          {
+            from: "PUNE",
+            to: "LONAVALA HILLS",
+            type: "Day Picnic Tour",
+            desc: "Perfect for scenic drives and day trips.",
+            fare: "₹2,899",
+            fareLabel: "Starting from",
+            pricingNote: "Round-Trip Sightseeing",
+            duration: "1.5h Expressway",
+            capacity: "6 Seats • 4 Large Bags",
+            features: [
+              "Tiger Point, Bushi Dam & Chikki Market",
+              "Custom Multi-Stop Route Flexibility",
+              "Prompt Same-Day Evening Return"
+            ],
+            link: "/pune-to-lonavala-cab/"
+          }
         ]
       },
       {
@@ -195,9 +291,57 @@ export const homepageContent = {
         bgImg: "/assets/img 4.jfif",
         description: "Luxury high-roof Force Tempo Travellers with pushback seats, individual AC vents, and large luggage space. Ideal for wedding guest transfers, corporate offsites, and group pilgrimage tours.",
         routes: [
-          { from: "PUNE / PCMC", to: "MUMBAI EVENTS", type: "13-Seater Tempo", est: "Special Permit", note: "Pushback Seats & Music System", link: "/tempo-traveller-on-rent-in-pune/" },
-          { from: "PUNE", to: "SHIRDI / SHANI", type: "17-Seater Group", est: "All-Inclusive", note: "Dedicated Safe Chauffeur", link: "/tempo-traveller-on-rent-in-pune/" },
-          { from: "PUNE", to: "GOA / KONKAN", type: "20-Seater Coach", est: "Multi-Day Tour", note: "Interstate Permits Handled", link: "/tempo-traveller-on-rent-in-pune/" }
+          {
+            from: "PUNE / PCMC",
+            to: "MUMBAI EVENTS",
+            type: "13-Seater Tempo",
+            desc: "Ideal for corporate offsites, weddings and group transit.",
+            fare: "₹6,499",
+            fareLabel: "Starting from",
+            pricingNote: "All Passenger Permits Handled",
+            duration: "Group Transit",
+            capacity: "13 Reclining AC Seats",
+            features: [
+              "Luxury Pushback Seats & Individual AC",
+              "Dedicated Rear Luggage Boot Space",
+              "Ideal for Corporate Offsites & Weddings"
+            ],
+            link: "/tempo-traveller-on-rent-in-pune/"
+          },
+          {
+            from: "PUNE",
+            to: "SHIRDI / SHANI",
+            type: "17-Seater Group",
+            desc: "Spacious group pilgrimage travel with family waiting.",
+            fare: "₹7,899",
+            fareLabel: "Starting from",
+            pricingNote: "Family Darshan Special",
+            duration: "Pilgrimage Express",
+            capacity: "17 Reclining AC Seats",
+            features: [
+              "Dedicated Safe Highway Chauffeur",
+              "Senior Pilgrim Friendly Boarding & AC",
+              "All Tolls, Parking & State Taxes Covered"
+            ],
+            link: "/tempo-traveller-on-rent-in-pune/"
+          },
+          {
+            from: "PUNE",
+            to: "GOA / KONKAN",
+            type: "20-Seater Coach",
+            desc: "Comfortable multi-day coastal tours and holiday travel.",
+            fare: "₹12,999",
+            fareLabel: "Starting from",
+            pricingNote: "Multi-Day Tour Package",
+            duration: "Coastal Holiday",
+            capacity: "20 Reclining AC Seats",
+            features: [
+              "Interstate Border & RTO Permits Handled",
+              "Dual AC Blowers & LED Stereo System",
+              "Ample Luggage Capacity for Long Tours"
+            ],
+            link: "/tempo-traveller-on-rent-in-pune/"
+          }
         ]
       }
     ]

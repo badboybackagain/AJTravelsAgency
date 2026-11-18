@@ -161,8 +161,8 @@ export const MumbaiToPuneSection = () => {
 
         #mumbai-to-pune .benefit-title {
           font-size: 0.92rem;
-          font-weight: 700;
-          color: #17324D;
+          font-weight: 450 !important;
+          color: #334155;
           margin-bottom: 0;
           line-height: 1.35;
         }
@@ -249,6 +249,8 @@ export const MumbaiToPuneSection = () => {
           }
           #mumbai-to-pune .benefit-title {
             font-size: 0.90rem;
+            font-weight: 450 !important;
+            color: #334155;
           }
           #mumbai-to-pune .action-row {
             display: flex;

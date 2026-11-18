@@ -12,7 +12,6 @@ import { VehicleDiscovery } from './components/VehicleDiscovery';
 import { BlogSection } from './components/BlogSection';
 import { FAQSection } from './components/FAQSection';
 import { Footer } from './components/Footer';
-import { FinalCTA } from './components/FinalCTA';
 import { MobileStickyBar } from './components/MobileStickyBar';
 import { EnquiryModal } from './components/EnquiryModal';
 import { WhatsAppBubble } from './components/WhatsAppBubble';
@@ -168,11 +167,6 @@ function MainWebsite() {
       {/* 12. Frequently Asked Questions */}
       <div className="reveal">
         <FAQSection />
-      </div>
-
-      {/* 12. Final CTA — Dark Premium Section */}
-      <div className="reveal">
-        <FinalCTA onOpenEnquiry={() => setIsEnquiryOpen(true)} />
       </div>
 
       {/* 13. Footer */}

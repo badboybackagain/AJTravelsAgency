@@ -86,7 +86,7 @@ export function useScrollReveal(dependencies = []) {
             '.lovable-section-header, .category-section-header, .corridor-header, .faq-header, .section-eyebrow, .contact-subheading'
           );
           const cards = section.querySelectorAll(
-            '.trust-scroll-card, .dest-icon-card, .spotlight-card-wrapper, .pill-tab-wrapper, .category-transport-card, .route-offer-tile, .card-white, .split-grid, .trip-card, .vehicle-card, .faq-card-modern, .final-cta-box, .featured-article-card, .article-card, .article-hero-img-box, .key-takeaways-callout, .contact-channel-card, .form-card-container, .service-showcase-card, .fleet-showcase-card, .stat-card, .core-value-card, .pillar-card, .article-faq-item'
+            '.trust-scroll-card, .dest-icon-card, .spotlight-card-wrapper, .pill-tab-wrapper, .category-transport-card, .card-white, .split-grid, .trip-card, .vehicle-card, .faq-card-modern, .final-cta-box, .featured-article-card, .article-card, .article-hero-img-box, .key-takeaways-callout, .contact-channel-card, .form-card-container, .service-showcase-card, .fleet-showcase-card, .stat-card, .core-value-card, .pillar-card, .article-faq-item'
           );
 
           // If section has a header, reveal header first

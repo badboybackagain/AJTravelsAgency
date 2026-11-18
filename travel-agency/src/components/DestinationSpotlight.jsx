@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Building2, Compass, Plane, MapPin, Navigation, MessageSquare, Clock, ArrowRight, Car, Sparkles, Landmark } from 'lucide-react';
-import { getWhatsAppLink } from '../utils/whatsapp';
+import { Building2, Compass, Plane, MapPin, Navigation, Clock, Sparkles, Landmark, ChevronLeft, ChevronRight } from 'lucide-react';
 import { buildFareUrl } from '../utils/fareNavigation';
 import { homepageContent } from '../data/homepageContent';
 
@@ -19,7 +18,257 @@ export const DestinationSpotlight = () => {
   const spotlightData = homepageContent.destinationsSpotlight;
   const destinations = spotlightData.destinations || [];
 
-  const [selectedDest, setSelectedDest] = useState(destinations[0] || {});
+  const destCount = destinations.length;
+  // Render 3 sets of destinations for seamless circular looping on mobile viewports
+  const loopDestinations = [...destinations, ...destinations, ...destinations];
+  const [realIndex, setRealIndex] = useState(destCount);
+  const [isUserSelected, setIsUserSelected] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
+  const wasOutRef = useRef(false);
+  const activeIndex = realIndex % destCount;
+  const selectedDest = destinations[activeIndex] || destinations[0] || {};
+
+  const sectionRef = useRef(null);
+  const stripRef = useRef(null);
+  const isInteractingRef = useRef(false);
+  const isResettingRef = useRef(false);
+  const resumeTimerRef = useRef(null);
+
+  // Position at the start of middle set on mount
+  useEffect(() => {
+    const strip = stripRef.current;
+    if (!strip) return;
+    if (strip.scrollWidth > strip.clientWidth + 10) {
+      const initialCard = strip.children[destCount];
+      if (initialCard) {
+        const initialLeft = initialCard.offsetLeft - (strip.clientWidth - initialCard.clientWidth) / 2;
+        strip.scrollTo({ left: Math.max(0, initialLeft), behavior: 'auto' });
+      }
+    }
+  }, [destCount]);
+
+  // Infinite Circular Auto-scroll loop for destinations
+  useEffect(() => {
+    // Rule 1: Scroll only when the relevant section is visible on screen
+    // Rule 3 & 5: When user clicks or manually selects an option, immediately stop auto-scrolling
+    if (destCount <= 1 || isUserSelected || !isVisible) return;
+
+    const prefersReduced = typeof window !== 'undefined' &&
+      window.matchMedia &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (prefersReduced) return;
+
+    const interval = setInterval(() => {
+      if (isInteractingRef.current || isUserSelected || !isVisible) return;
+      const strip = stripRef.current;
+      if (!strip) return;
+
+      const nextReal = realIndex + 1;
+      const targetCard = strip.children[nextReal];
+      if (targetCard) {
+        if (strip.scrollWidth > strip.clientWidth + 10) {
+          const targetLeft = targetCard.offsetLeft - (strip.clientWidth - targetCard.clientWidth) / 2;
+          strip.scrollTo({ left: Math.max(0, targetLeft), behavior: 'smooth' });
+        }
+        setRealIndex(nextReal);
+
+        // Circular loop: when smoothly advancing into 3rd set, silently snap back to middle set
+        if (nextReal >= 2 * destCount) {
+          setTimeout(() => {
+            if (!strip) return;
+            const resetIndex = nextReal - destCount;
+            const resetCard = strip.children[resetIndex];
+            if (resetCard && strip.scrollWidth > strip.clientWidth + 10) {
+              const resetLeft = resetCard.offsetLeft - (strip.clientWidth - resetCard.clientWidth) / 2;
+              isResettingRef.current = true;
+              strip.style.scrollBehavior = 'auto';
+              strip.style.scrollSnapType = 'none';
+              strip.scrollLeft = Math.max(0, resetLeft);
+              setRealIndex(resetIndex);
+              requestAnimationFrame(() => {
+                if (strip) {
+                  strip.style.scrollSnapType = 'x mandatory';
+                  strip.style.scrollBehavior = '';
+                }
+                setTimeout(() => {
+                  isResettingRef.current = false;
+                }, 50);
+              });
+            }
+          }, 450);
+        }
+      } else {
+        setRealIndex(nextReal);
+      }
+    }, 2200);
+
+    return () => clearInterval(interval);
+  }, [realIndex, destCount, isUserSelected, isVisible]);
+
+  // Section visibility & re-entry observer:
+  // Rule 1: Scroll only when visible on screen; stop when user is on another section/page.
+  // Rule 6: Resume auto-scrolling only when user explicitly leaves and re-enters the section.
+  useEffect(() => {
+    const section = sectionRef.current;
+    if (!section || typeof IntersectionObserver === 'undefined') return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          // If the user previously scrolled away, re-entering resets user lock and resumes auto-scroll
+          if (wasOutRef.current) {
+            setIsUserSelected(false);
+            isInteractingRef.current = false;
+            wasOutRef.current = false;
+          }
+        } else {
+          setIsVisible(false);
+          // Mark that the user has left the section so re-entering resumes
+          wasOutRef.current = true;
+          isInteractingRef.current = false;
+        }
+      },
+      { threshold: 0.15 }
+    );
+
+    observer.observe(section);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+
+  const pauseInteraction = (resumeDelay = 2200) => {
+    isInteractingRef.current = true;
+    if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current);
+    resumeTimerRef.current = setTimeout(() => {
+      isInteractingRef.current = false;
+    }, resumeDelay);
+  };
+
+  const handleMouseEnter = () => {
+    isInteractingRef.current = true;
+  };
+
+  const handleMouseLeave = () => {
+    pauseInteraction(1500);
+  };
+
+  const handleScroll = () => {
+    if (isResettingRef.current) return;
+    const strip = stripRef.current;
+    if (!strip || strip.scrollWidth <= strip.clientWidth + 10) return;
+    const centerPoint = strip.scrollLeft + strip.clientWidth / 2;
+    let closestIndex = destCount;
+    let minDistance = Infinity;
+
+    Array.from(strip.children).forEach((child, idx) => {
+      if (child.classList.contains('dest-icon-card')) {
+        const childCenter = child.offsetLeft + child.clientWidth / 2;
+        const dist = Math.abs(childCenter - centerPoint);
+        if (dist < minDistance) {
+          minDistance = dist;
+          closestIndex = idx;
+        }
+      }
+    });
+
+    if (closestIndex !== realIndex) {
+      setRealIndex(closestIndex);
+    }
+  };
+
+  const scrollToDestination = (dotIdx) => {
+    setIsUserSelected(true);
+    isInteractingRef.current = false;
+    const targetReal = destCount + dotIdx;
+    setRealIndex(targetReal);
+    const strip = stripRef.current;
+    if (!strip) return;
+    const targetCard = strip.children[targetReal];
+    if (targetCard && strip.scrollWidth > strip.clientWidth + 10) {
+      const targetLeft = targetCard.offsetLeft - (strip.clientWidth - targetCard.clientWidth) / 2;
+      strip.scrollTo({ left: Math.max(0, targetLeft), behavior: 'smooth' });
+    }
+  };
+
+  const scrollNext = () => {
+    setIsUserSelected(true);
+    isInteractingRef.current = false;
+    const nextReal = realIndex + 1;
+    setRealIndex(nextReal);
+    const strip = stripRef.current;
+    if (!strip) return;
+    const targetCard = strip.children[nextReal];
+    if (targetCard && strip.scrollWidth > strip.clientWidth + 10) {
+      const targetLeft = targetCard.offsetLeft - (strip.clientWidth - targetCard.clientWidth) / 2;
+      strip.scrollTo({ left: Math.max(0, targetLeft), behavior: 'smooth' });
+      if (nextReal >= 2 * destCount) {
+        setTimeout(() => {
+          if (!strip) return;
+          const resetIndex = nextReal - destCount;
+          const resetCard = strip.children[resetIndex];
+          if (resetCard) {
+            const resetLeft = resetCard.offsetLeft - (strip.clientWidth - resetCard.clientWidth) / 2;
+            isResettingRef.current = true;
+            strip.style.scrollBehavior = 'auto';
+            strip.style.scrollSnapType = 'none';
+            strip.scrollLeft = Math.max(0, resetLeft);
+            setRealIndex(resetIndex);
+            requestAnimationFrame(() => {
+              if (strip) {
+                strip.style.scrollSnapType = 'x mandatory';
+                strip.style.scrollBehavior = '';
+              }
+              setTimeout(() => {
+                isResettingRef.current = false;
+              }, 50);
+            });
+          }
+        }, 450);
+      }
+    }
+  };
+
+  const scrollPrev = () => {
+    setIsUserSelected(true);
+    isInteractingRef.current = false;
+    const prevReal = realIndex - 1;
+    setRealIndex(prevReal);
+    const strip = stripRef.current;
+    if (!strip) return;
+    const targetCard = strip.children[prevReal];
+    if (targetCard && strip.scrollWidth > strip.clientWidth + 10) {
+      const targetLeft = targetCard.offsetLeft - (strip.clientWidth - targetCard.clientWidth) / 2;
+      strip.scrollTo({ left: Math.max(0, targetLeft), behavior: 'smooth' });
+      if (prevReal < destCount) {
+        setTimeout(() => {
+          if (!strip) return;
+          const resetIndex = prevReal + destCount;
+          const resetCard = strip.children[resetIndex];
+          if (resetCard) {
+            const resetLeft = resetCard.offsetLeft - (strip.clientWidth - resetCard.clientWidth) / 2;
+            isResettingRef.current = true;
+            strip.style.scrollBehavior = 'auto';
+            strip.style.scrollSnapType = 'none';
+            strip.scrollLeft = Math.max(0, resetLeft);
+            setRealIndex(resetIndex);
+            requestAnimationFrame(() => {
+              if (strip) {
+                strip.style.scrollSnapType = 'x mandatory';
+                strip.style.scrollBehavior = '';
+              }
+              setTimeout(() => {
+                isResettingRef.current = false;
+              }, 50);
+            });
+          }
+        }, 450);
+      }
+    }
+  };
 
   const handleBookDestination = (dest) => {
     const isCorridor = dest.dropKey === 'mumbai';
@@ -47,7 +296,12 @@ export const DestinationSpotlight = () => {
   };
 
   return (
-    <section className="section-padding bg-white" style={{ paddingTop: '4.5rem', paddingBottom: '5rem', position: 'relative' }}>
+    <section
+      ref={sectionRef}
+      id="destinations"
+      className="section-padding bg-white"
+      style={{ paddingTop: '4.5rem', paddingBottom: '5rem', position: 'relative' }}
+    >
       <div className="container">
         {/* Lovable Modern Section Header */}
         <div className="lovable-section-header">
@@ -69,30 +323,82 @@ export const DestinationSpotlight = () => {
         </div>
 
         {/* Icon Selector Cards Bar */}
-        <div className="dest-icon-strip">
-          {destinations.map((d, idx) => {
-            const Icon = ICON_MAP[d.id] || MapPin;
-            const isSelected = selectedDest.id === d.id;
-            return (
-              <button
-                key={d.id}
-                type="button"
-                className={`dest-icon-card ${isSelected ? 'active' : ''} stagger-${(idx % 5) + 1}`}
-                onClick={() => setSelectedDest(d)}
-              >
-                <div className="dest-icon-box">
-                  <Icon size={22} color={isSelected ? '#FFFFFF' : '#2563EB'} />
-                </div>
-                <span className="dest-icon-name">{d.name}</span>
-                <span className="dest-icon-city">{d.city}</span>
-              </button>
-            );
-          })}
+        <div className="dest-strip-wrapper">
+          <div
+            ref={stripRef}
+            className="dest-icon-strip"
+            role="tablist"
+            aria-label="Trending Outstation Corridors"
+            onScroll={handleScroll}
+            onMouseEnter={() => { isInteractingRef.current = true; }}
+            onMouseLeave={() => pauseInteraction(1500)}
+            onTouchStart={() => pauseInteraction(2200)}
+            onTouchMove={() => pauseInteraction(2200)}
+            onTouchEnd={() => pauseInteraction(2500)}
+          >
+            {loopDestinations.map((d, idx) => {
+              const Icon = ICON_MAP[d.id] || MapPin;
+              const isSelected = (idx % destCount) === (realIndex % destCount);
+              return (
+                <button
+                  key={`${d.id}-${idx}`}
+                  type="button"
+                  role="tab"
+                  aria-selected={isSelected}
+                  className={`dest-icon-card ${isSelected ? 'active' : ''}`}
+                  onClick={() => scrollToDestination(idx % destCount)}
+                >
+                  <div className="dest-icon-box">
+                    <Icon size={22} color={isSelected ? '#FFFFFF' : '#2563EB'} />
+                  </div>
+                  <span className="dest-icon-name">{d.name}</span>
+                  <span className="dest-icon-city">{d.city}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Mobile Navigation Controls: Arrows and Dots */}
+          <div className="dest-mobile-controls" aria-label="Destination navigation">
+            <button
+              type="button"
+              className="dest-nav-arrow dest-nav-prev"
+              onClick={scrollPrev}
+              aria-label="Previous destination"
+            >
+              <ChevronLeft size={16} />
+            </button>
+
+            <div className="dest-pagination-dots" aria-hidden="true">
+              {destinations.map((_, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  className={`dest-dot ${i === (realIndex % destCount) ? 'active' : ''}`}
+                  onClick={() => scrollToDestination(i)}
+                  aria-label={`Go to destination ${i + 1}`}
+                />
+              ))}
+            </div>
+
+            <button
+              type="button"
+              className="dest-nav-arrow dest-nav-next"
+              onClick={scrollNext}
+              aria-label="Next destination"
+            >
+              <ChevronRight size={16} />
+            </button>
+          </div>
         </div>
 
         {/* Perfectly Balanced 2-Column Spotlight Box */}
-        <div className="spotlight-card-wrapper">
-          <div className="spotlight-2col-grid">
+        <div
+          className="spotlight-card-wrapper"
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+        >
+          <div className="spotlight-2col-grid" key={selectedDest.id || activeIndex}>
             {/* Left Content Column */}
             <div className="spotlight-left-col">
               <span className="spotlight-eyebrow">DESTINATION FOCUS</span>
@@ -100,43 +406,40 @@ export const DestinationSpotlight = () => {
               <p className="spotlight-tagline">{selectedDest.tagline}</p>
               <p className="spotlight-desc">{selectedDest.desc}</p>
 
-              {/* Info Badges Row */}
-              <div className="spotlight-info-grid">
-                <div className="info-badge-box">
-                  <span className="info-badge-label">POPULAR ROUTE</span>
-                  <p className="info-badge-val">{selectedDest.popularRoute}</p>
+              {/* Sleek Unified Corridor Route & Travel Time Details */}
+              <div className="spotlight-corridor-card">
+                <div className="corridor-row">
+                  <div className="corridor-icon-wrap">
+                    <Navigation size={15} color="#38BDF8" />
+                  </div>
+                  <div className="corridor-info">
+                    <span className="corridor-tag">POPULAR HIGHWAY ROUTE</span>
+                    <span className="corridor-text">{selectedDest.popularRoute}</span>
+                  </div>
                 </div>
-                <div className="info-badge-box">
-                  <span className="info-badge-label">EST. EXPRESS TIME</span>
-                  <p className="info-badge-val">{selectedDest.estTime}</p>
+
+                <div className="corridor-sep" />
+
+                <div className="corridor-row">
+                  <div className="corridor-icon-wrap">
+                    <Clock size={15} color="#FBBF24" />
+                  </div>
+                  <div className="corridor-info">
+                    <span className="corridor-tag">EST. TRAVEL DURATION</span>
+                    <span className="corridor-text">{selectedDest.estTime}</span>
+                  </div>
                 </div>
               </div>
 
-              {/* Action Buttons Row */}
-              <div className="spotlight-action-row" style={{ display: 'flex', gap: '0.85rem', flexWrap: 'wrap', alignItems: 'center' }}>
+              {/* Action Button Row */}
+              <div className="spotlight-action-row">
                 <button
                   type="button"
                   onClick={() => handleBookDestination(selectedDest)}
                   className="btn-emerald-glowing"
                 >
-                  <Car size={17} />
-                  <span>Book Cab to {selectedDest.name}</span>
-                  <ArrowRight size={15} />
+                  Book Cab to {selectedDest.name}
                 </button>
-
-                <a
-                  href={getWhatsAppLink({
-                    from: 'Pune',
-                    to: selectedDest.name,
-                    tripType: 'Outstation Cab'
-                  })}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn-whatsapp-outline"
-                >
-                  <MessageSquare size={16} color="#25D366" />
-                  <span>WhatsApp</span>
-                </a>
               </div>
             </div>
 
@@ -163,6 +466,17 @@ export const DestinationSpotlight = () => {
       </div>
 
       <style>{`
+        @keyframes spotlightFadeIn {
+          0% {
+            opacity: 0.65;
+            transform: translateY(6px);
+          }
+          100% {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
         .btn-emerald-glowing {
           background: linear-gradient(135deg, #1D4ED8 0%, #1E40AF 100%);
           color: #FFFFFF;
@@ -170,7 +484,7 @@ export const DestinationSpotlight = () => {
           font-size: 0.9rem;
           font-weight: 700;
           letter-spacing: 0.02em;
-          padding: 0.75rem 1.45rem;
+          padding: 0.82rem 1.6rem;
           border-radius: 12px;
           border: none;
           display: inline-flex;
@@ -191,35 +505,28 @@ export const DestinationSpotlight = () => {
           transform: translateY(0);
         }
 
-        .btn-whatsapp-outline {
-          background: rgba(37, 211, 102, 0.12);
-          border: 1.5px solid rgba(37, 211, 102, 0.4);
-          color: #4ADE80;
-          font-family: var(--font-heading);
-          font-size: 0.875rem;
-          font-weight: 700;
-          padding: 0.75rem 1.25rem;
-          border-radius: 12px;
-          display: inline-flex;
-          align-items: center;
-          gap: 0.5rem;
-          text-decoration: none;
-          transition: all 0.2s ease;
+        .dest-strip-wrapper {
+          position: relative;
+          width: 100%;
+          margin-bottom: 2.25rem;
         }
 
-        .btn-whatsapp-outline:hover {
-          background: rgba(37, 211, 102, 0.22);
-          border-color: #22C55E;
-          color: #86EFAC;
-          transform: translateY(-1px);
+        .dest-mobile-controls {
+          display: none;
         }
 
         .dest-icon-strip {
           display: grid;
           grid-template-columns: repeat(6, 1fr);
           gap: 0.85rem;
-          margin-bottom: 2.25rem;
+          margin-bottom: 0;
           width: 100%;
+          position: relative;
+        }
+
+        /* Desktop: strictly display only original 6 destination cards */
+        .dest-icon-strip > .dest-icon-card:nth-child(n+7) {
+          display: none !important;
         }
 
         .dest-icon-card {
@@ -302,6 +609,7 @@ export const DestinationSpotlight = () => {
           grid-template-columns: 1.15fr 0.85fr;
           gap: 2.5rem;
           align-items: center;
+          animation: spotlightFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         .spotlight-left-col {
@@ -344,43 +652,69 @@ export const DestinationSpotlight = () => {
           font-size: 0.92rem;
           color: #CBD5E1;
           line-height: 1.65;
-          margin-bottom: 1.65rem;
+          margin-bottom: 1.45rem;
         }
 
-        .spotlight-info-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 1rem;
+        /* Sleek Unified Corridor Details Card */
+        .spotlight-corridor-card {
           width: 100%;
-          margin-bottom: 1.85rem;
-          padding-top: 1.25rem;
-          border-top: 1px solid rgba(255, 255, 255, 0.12);
-        }
-
-        .info-badge-box {
+          background: rgba(15, 23, 42, 0.65);
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          border-radius: 14px;
+          padding: 0.9rem 1.15rem;
+          margin-bottom: 1.5rem;
           display: flex;
           flex-direction: column;
-          gap: 0.25rem;
-          background: rgba(30, 41, 59, 0.7);
-          border: 1.5px solid rgba(255, 255, 255, 0.1);
-          border-radius: 12px;
-          padding: 0.75rem 1rem;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+          gap: 0.75rem;
+          box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
         }
 
-        .info-badge-label {
-          font-size: var(--text-xs, 0.75rem);
-          font-weight: 550;
+        .corridor-row {
+          display: flex;
+          align-items: flex-start;
+          gap: 0.85rem;
+        }
+
+        .corridor-icon-wrap {
+          width: 30px;
+          height: 30px;
+          border-radius: 8px;
+          background: rgba(255, 255, 255, 0.06);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+          margin-top: 0.15rem;
+        }
+
+        .corridor-info {
+          display: flex;
+          flex-direction: column;
+          gap: 0.15rem;
+          min-width: 0;
+        }
+
+        .corridor-tag {
+          font-size: 0.70rem;
+          font-weight: 600;
+          letter-spacing: 0.05em;
           color: #94A3B8;
-          letter-spacing: 0.04em;
           text-transform: uppercase;
         }
 
-        .info-badge-val {
+        .corridor-text {
           font-family: var(--font-heading);
-          font-size: 0.9rem;
+          font-size: 0.92rem;
           font-weight: 600;
           color: #FFFFFF;
+          line-height: 1.35;
+        }
+
+        .corridor-sep {
+          height: 1px;
+          background: rgba(255, 255, 255, 0.08);
+          width: 100%;
         }
 
         .spotlight-action-row {
@@ -413,7 +747,7 @@ export const DestinationSpotlight = () => {
 
         .spotlight-media-overlay {
           position: absolute;
-          bottom: 1rem;
+          top: 1rem;
           left: 1rem;
           z-index: 2;
         }
@@ -451,6 +785,10 @@ export const DestinationSpotlight = () => {
         }
 
         @media (max-width: 768px) {
+          .dest-strip-wrapper {
+            margin-bottom: 0.75rem !important;
+          }
+
           .dest-icon-strip {
             display: flex !important;
             flex-wrap: nowrap !important;
@@ -459,20 +797,84 @@ export const DestinationSpotlight = () => {
             scroll-snap-type: x mandatory;
             gap: 0.65rem !important;
             padding: 0.25rem 0.25rem 0.75rem !important;
-            margin-bottom: 1.25rem !important;
+            margin-bottom: 0.4rem !important;
             -webkit-overflow-scrolling: touch;
             scrollbar-width: none;
+            position: relative;
           }
           .dest-icon-strip::-webkit-scrollbar {
             display: none;
           }
+
+          /* Mobile: display all cards for infinite circular loop */
+          .dest-icon-strip > .dest-icon-card:nth-child(n+7) {
+            display: flex !important;
+          }
+
+          .dest-mobile-controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.85rem;
+            margin-top: 0.45rem;
+            margin-bottom: 1.15rem;
+          }
+
+          .dest-nav-arrow {
+            width: 32px;
+            height: 32px;
+            border-radius: 9999px;
+            background: #FFFFFF;
+            border: 1.5px solid #CBD5E1;
+            color: #1E293B;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
+            transition: all 0.2s ease;
+          }
+
+          .dest-nav-arrow:hover,
+          .dest-nav-arrow:active {
+            background: #2563EB;
+            color: #FFFFFF;
+            border-color: #2563EB;
+          }
+
+          .dest-pagination-dots {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+          }
+
+          .dest-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 9999px;
+            background: #CBD5E1;
+            border: none;
+            padding: 0;
+            cursor: pointer;
+            transition: all 0.25s ease;
+          }
+
+          .dest-dot.active {
+            width: 22px;
+            background: #2563EB;
+          }
           .dest-icon-card {
             flex: 0 0 auto !important;
-            min-width: 96px !important;
-            max-width: 110px !important;
-            scroll-snap-align: start;
+            min-width: 104px !important;
+            max-width: 120px !important;
+            scroll-snap-align: center;
             padding: 0.65rem 0.45rem !important;
             border-radius: 12px !important;
+          }
+          .dest-icon-card.active {
+            border-color: #2563EB !important;
+            border-width: 2px !important;
+            box-shadow: 0 4px 16px rgba(37, 99, 235, 0.22) !important;
           }
           .dest-icon-box {
             width: 36px !important;
@@ -498,7 +900,7 @@ export const DestinationSpotlight = () => {
           .spotlight-2col-grid {
             display: flex !important;
             flex-direction: column !important;
-            gap: 1.25rem !important;
+            gap: 1.15rem !important;
           }
           .spotlight-left-col {
             width: 100% !important;
@@ -510,6 +912,11 @@ export const DestinationSpotlight = () => {
           .spotlight-media-card {
             height: 170px !important;
             border-radius: 14px !important;
+          }
+          .spotlight-media-overlay {
+            top: 0.75rem !important;
+            left: 0.75rem !important;
+            bottom: auto !important;
           }
           .spotlight-eyebrow {
             font-size: 0.74rem !important;
@@ -530,36 +937,47 @@ export const DestinationSpotlight = () => {
           .spotlight-desc {
             display: none !important;
           }
-          .spotlight-info-grid {
-            grid-template-columns: 1fr 1fr !important;
-            gap: 0.55rem !important;
+          .spotlight-corridor-card {
+            padding: 0.75rem 0.85rem !important;
+            border-radius: 12px !important;
             margin-bottom: 1.15rem !important;
-            padding-top: 0.75rem !important;
+            gap: 0.6rem !important;
           }
-          .info-badge-box {
-            padding: 0.55rem 0.75rem !important;
-            border-radius: 10px !important;
+          .corridor-row {
+            gap: 0.65rem !important;
           }
-          .info-badge-label {
-            font-size: 0.72rem !important;
+          .corridor-icon-wrap {
+            width: 26px !important;
+            height: 26px !important;
           }
-          .info-badge-val {
-            font-size: 0.78rem !important;
+          .corridor-tag {
+            font-size: 0.66rem !important;
+          }
+          .corridor-text {
+            font-size: 0.82rem !important;
             line-height: 1.3 !important;
           }
           .spotlight-action-row {
-            display: flex !important;
-            flex-direction: column !important;
-            gap: 0.55rem !important;
             width: 100% !important;
           }
-          .btn-emerald-glowing,
-          .btn-whatsapp-outline {
+          .btn-emerald-glowing {
             width: 100% !important;
             justify-content: center !important;
-            padding: 0.75rem 1rem !important;
-            font-size: 0.85rem !important;
+            padding: 0.85rem 1rem !important;
+            font-size: 0.88rem !important;
             border-radius: 12px !important;
+          }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .spotlight-2col-grid {
+            animation: none !important;
+          }
+          .dest-icon-strip {
+            scroll-behavior: auto !important;
+          }
+          .dest-icon-card {
+            transition: none !important;
           }
         }
       `}</style>

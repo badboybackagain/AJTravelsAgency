@@ -129,15 +129,13 @@ export const FAQSection = () => {
               rel="noopener noreferrer"
               className="faq-contact-btn wa"
             >
-              <MessageSquare size={16} />
-              <span>WhatsApp Us</span>
+              WhatsApp Us
             </a>
             <a
               href={getPhoneCallLink()}
               className="faq-contact-btn call"
             >
-              <PhoneCall size={16} />
-              <span>Call {businessConfig.phoneDisplay}</span>
+              Call {businessConfig.phoneDisplay}
             </a>
           </div>
         </div>
@@ -393,41 +391,50 @@ export const FAQSection = () => {
         .faq-contact-actions {
           display: flex;
           align-items: center;
-          gap: 0.75rem;
+          gap: 0.85rem;
           flex-shrink: 0;
         }
 
         .faq-contact-btn {
           display: inline-flex;
           align-items: center;
-          gap: 0.45rem;
-          padding: 0.65rem 1.1rem;
+          justify-content: center;
+          padding: 0.72rem 1.4rem;
           border-radius: 10px;
           font-family: var(--font-heading);
-          font-size: 0.84rem;
+          font-size: 0.88rem;
           font-weight: 700;
+          letter-spacing: 0.02em;
           transition: all 0.2s ease;
           text-decoration: none;
+          white-space: nowrap;
+          text-align: center;
+          cursor: pointer;
         }
 
         .faq-contact-btn.wa {
           background: #25D366;
           color: #FFFFFF;
+          border: 1px solid #1EBE5D;
+          box-shadow: 0 4px 14px rgba(37, 211, 102, 0.28);
         }
 
         .faq-contact-btn.wa:hover {
           background: #1EBE5D;
+          box-shadow: 0 6px 18px rgba(37, 211, 102, 0.4);
           transform: translateY(-2px);
         }
 
         .faq-contact-btn.call {
-          background: rgba(255, 255, 255, 0.1);
+          background: rgba(255, 255, 255, 0.12);
           color: #FFFFFF;
-          border: 1px solid rgba(255, 255, 255, 0.2);
+          border: 1.5px solid rgba(255, 255, 255, 0.28);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
 
         .faq-contact-btn.call:hover {
-          background: rgba(255, 255, 255, 0.2);
+          background: rgba(255, 255, 255, 0.22);
+          border-color: rgba(255, 255, 255, 0.45);
           transform: translateY(-2px);
         }
 
@@ -438,11 +445,39 @@ export const FAQSection = () => {
           .faq-contact-banner {
             flex-direction: column;
             text-align: center;
-            padding: 1.5rem;
+            padding: 1.5rem 1.25rem;
+          }
+          .faq-contact-info h4 {
+            font-size: 1.15rem;
+          }
+          .faq-contact-info p {
+            font-size: 0.84rem;
+            margin-bottom: 0.5rem;
           }
           .faq-contact-actions {
             width: 100%;
+            display: flex;
+            flex-direction: row;
             justify-content: center;
+            gap: 0.75rem;
+          }
+          .faq-contact-btn {
+            flex: 1;
+            padding: 0.75rem 0.85rem;
+            font-size: 0.82rem;
+          }
+        }
+
+        @media (max-width: 440px) {
+          .faq-contact-actions {
+            flex-direction: column;
+            width: 100%;
+            gap: 0.65rem;
+          }
+          .faq-contact-btn {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            font-size: 0.88rem;
           }
         }
       `}</style>
