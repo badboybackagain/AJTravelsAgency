@@ -1,9 +1,21 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Phone, MessageSquare, Mail, MapPin, Clock } from 'lucide-react';
+import { Phone, MessageSquare, Mail, MapPin, Clock, ChevronDown } from 'lucide-react';
 import { businessConfig } from '../config/business.config';
 
 export const Footer = () => {
+  const [expanded, setExpanded] = useState({
+    quickLinks: false,
+    corridors: false,
+  });
+
+  const toggleSection = (key) => {
+    setExpanded((prev) => ({
+      ...prev,
+      [key]: !prev[key],
+    }));
+  };
+
   return (
     <footer className="footer-wrapper">
       <div className="container">
@@ -55,10 +67,21 @@ export const Footer = () => {
             </div>
           </div>
 
-          {/* Column 2: Quick Links */}
+          {/* Column 2: Quick Links (Collapsible dropdown on mobile) */}
           <div className="footer-links-col">
-            <h4 className="footer-col-title">Quick Links</h4>
-            <ul className="footer-links-list">
+            <button
+              type="button"
+              className="footer-col-header"
+              onClick={() => toggleSection('quickLinks')}
+              aria-expanded={expanded.quickLinks}
+            >
+              <h4 className="footer-col-title">Quick Links</h4>
+              <ChevronDown
+                size={18}
+                className={`footer-accordion-icon ${expanded.quickLinks ? 'open' : ''}`}
+              />
+            </button>
+            <ul className={`footer-links-list ${expanded.quickLinks ? 'is-open' : ''}`}>
               <li><Link to="/">Home</Link></li>
               <li><Link to="/services">Our Services</Link></li>
               <li><Link to="/vehicles">Fleet & Vehicles</Link></li>
@@ -71,10 +94,21 @@ export const Footer = () => {
             </ul>
           </div>
 
-          {/* Column 3: Verified Travel Corridors */}
+          {/* Column 3: Verified Travel Corridors (Collapsible dropdown on mobile) */}
           <div className="footer-links-col">
-            <h4 className="footer-col-title">Our Corridors</h4>
-            <ul className="footer-links-list">
+            <button
+              type="button"
+              className="footer-col-header"
+              onClick={() => toggleSection('corridors')}
+              aria-expanded={expanded.corridors}
+            >
+              <h4 className="footer-col-title">Our Corridors</h4>
+              <ChevronDown
+                size={18}
+                className={`footer-accordion-icon ${expanded.corridors ? 'open' : ''}`}
+              />
+            </button>
+            <ul className={`footer-links-list ${expanded.corridors ? 'is-open' : ''}`}>
               <li><Link to="/services/pune-to-mumbai-cab">Pune to Mumbai Cab</Link></li>
               <li><Link to="/services/mumbai-to-pune-cab">Mumbai to Pune Cab</Link></li>
               <li><Link to="/services/airport-transfers">Airport Transfers (BOM / PNQ)</Link></li>
@@ -85,28 +119,16 @@ export const Footer = () => {
           </div>
         </div>
 
-        {/* Footer Bottom Bar: Links in One Single Row on Top & Copyright Below */}
+        {/* Footer Bottom Bar: Clean structured legal & copyright */}
         <div className="footer-bottom">
           <div className="legal-links">
-            <Link to="/">Home</Link>
-            <span className="dot-sep">•</span>
-            <Link to="/services">Services</Link>
-            <span className="dot-sep">•</span>
-            <Link to="/vehicles">Fleet</Link>
-            <span className="dot-sep">•</span>
-            <Link to="/fare">Fares</Link>
-            <span className="dot-sep">•</span>
-            <Link to="/blog">Blog</Link>
-            <span className="dot-sep">•</span>
-            <Link to="/about">About</Link>
-            <span className="dot-sep">•</span>
-            <Link to="/contact">Contact</Link>
-            <span className="dot-sep">•</span>
-            <Link to="/sitemap">Sitemap</Link>
-            <span className="dot-sep">•</span>
             <Link to="/privacy-policy">Privacy Policy</Link>
             <span className="dot-sep">•</span>
             <Link to="/terms">Terms &amp; Conditions</Link>
+            <span className="dot-sep">•</span>
+            <Link to="/sitemap">Sitemap</Link>
+            <span className="dot-sep">•</span>
+            <Link to="/contact">Contact Desk</Link>
           </div>
 
           <div className="footer-bottom-info">
@@ -169,6 +191,18 @@ export const Footer = () => {
           transform: scale(1.03);
         }
 
+        .footer-col-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          width: 100%;
+          background: none;
+          border: none;
+          padding: 0;
+          cursor: pointer;
+          text-align: left;
+        }
+
         .footer-col-title {
           font-family: var(--font-heading, 'Outfit', sans-serif);
           font-size: 1.05rem;
@@ -180,6 +214,16 @@ export const Footer = () => {
           display: flex;
           align-items: center;
           gap: 0.4rem;
+        }
+
+        .footer-accordion-icon {
+          display: none;
+          color: #38BDF8;
+          transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .footer-accordion-icon.open {
+          transform: rotate(180deg);
         }
 
         .footer-links-list {
@@ -242,7 +286,7 @@ export const Footer = () => {
           font-weight: 600;
         }
 
-        /* ── Footer Bottom Bar: Links in One Single Row on Top & Copyright Below ── */
+        /* ── Footer Bottom Bar: Clean structured legal & copyright ── */
         .footer-bottom {
           display: flex;
           flex-direction: column;
@@ -282,7 +326,7 @@ export const Footer = () => {
           display: flex;
           align-items: center;
           justify-content: center;
-          gap: 0.65rem;
+          gap: 0.85rem;
           flex-wrap: nowrap;
           width: 100%;
         }
@@ -303,12 +347,6 @@ export const Footer = () => {
           color: rgba(255, 255, 255, 0.25);
         }
 
-        @media (max-width: 1200px) {
-          .legal-links {
-            flex-wrap: wrap;
-          }
-        }
-
         @media (max-width: 992px) {
           .footer-top-grid {
             grid-template-columns: 1fr 1fr;
@@ -327,12 +365,13 @@ export const Footer = () => {
             padding-bottom: 6.25rem; /* Full clearance for mobile sticky bottom bar */
           }
           .footer-top-grid {
-            grid-template-columns: 1fr 1fr;
-            gap: 1.5rem 1rem;
-            margin-bottom: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.85rem;
+            margin-bottom: 1.75rem;
           }
           .footer-brand-col {
-            grid-column: 1 / -1;
+            margin-bottom: 0.5rem;
           }
           .footer-brand {
             margin-bottom: 0.85rem;
@@ -341,24 +380,61 @@ export const Footer = () => {
             height: 38px;
             max-width: 180px;
           }
+          
+          /* Collapsible Dropdown Cards */
+          .footer-links-col {
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            overflow: hidden;
+            transition: all 0.2s ease;
+          }
+          .footer-links-col:focus-within {
+            border-color: rgba(56, 189, 248, 0.3);
+          }
+          .footer-col-header {
+            padding: 0.95rem 1.15rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+          }
           .footer-col-title {
-            font-size: 0.92rem;
-            margin-bottom: 0.65rem;
+            font-size: 0.95rem;
+            margin-bottom: 0 !important;
+            color: #FFFFFF;
+          }
+          .footer-accordion-icon {
+            display: block;
+            flex-shrink: 0;
           }
           .footer-links-list {
-            gap: 0.45rem;
+            display: none;
+            padding: 0.35rem 1.15rem 0.95rem 1.15rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            gap: 0.6rem;
+            list-style: none;
+            margin: 0;
+          }
+          .footer-links-list.is-open {
+            display: flex;
+            flex-direction: column;
           }
           .footer-links-list a {
-            font-size: 0.78rem;
+            font-size: 0.86rem;
+            color: #CBD5E1;
+            padding: 0.2rem 0;
           }
           .footer-contact-info p {
-            font-size: 0.8rem;
+            font-size: 0.82rem;
             margin-bottom: 0.55rem;
           }
           .footer-hours-pill {
-            font-size: 0.7rem;
-            padding: 0.25rem 0.6rem;
-            margin-top: 0.35rem;
+            font-size: 0.72rem;
+            padding: 0.3rem 0.65rem;
+            margin-top: 0.4rem;
           }
           .footer-bottom {
             flex-direction: column;
@@ -366,18 +442,18 @@ export const Footer = () => {
             align-items: center;
             gap: 0.75rem;
             padding-top: 1.25rem;
-            padding-right: 0;
           }
           .copyright-text {
-            font-size: 0.76rem;
+            font-size: 0.75rem;
+            line-height: 1.4;
           }
           .sub-legal-note {
-            font-size: 0.7rem;
+            font-size: 0.68rem;
           }
           .legal-links {
             justify-content: center;
-            gap: 0.35rem 0.55rem;
-            font-size: 0.72rem;
+            gap: 0.5rem 0.75rem;
+            font-size: 0.75rem;
             flex-wrap: wrap;
           }
         }
