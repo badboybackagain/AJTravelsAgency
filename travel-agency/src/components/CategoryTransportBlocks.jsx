@@ -208,7 +208,7 @@ const CategoryOffersStrip = ({ cat, onBookCategory }) => {
               <div className="tile-route-head">
                 <div className="route-locations-flow">
                   <span className="loc-pill origin-pill">{r.from}</span>
-                  <div className="loc-arrow-divider">➔</div>
+                  <span className="loc-arrow-divider">→</span>
                   <span className="loc-pill dest-pill">{r.to}</span>
                 </div>
                 <span className="route-type-tag">{r.type}</span>
@@ -688,51 +688,55 @@ export const CategoryTransportBlocks = () => {
         .route-locations-flow {
           display: flex;
           align-items: center;
-          justify-content: space-between;
+          justify-content: flex-start;
           flex-wrap: nowrap;
-          gap: 0.3rem;
+          gap: 0.45rem;
           margin-bottom: 0.35rem;
           width: 100%;
         }
 
         .loc-pill {
           font-family: var(--font-heading);
-          font-size: 0.67rem;
+          font-size: 0.76rem;
           font-weight: 700;
           color: #0F172A;
           background: #FFFFFF;
-          padding: 0.28rem 0.38rem;
-          border-radius: 7px;
+          padding: 0.28rem 0.58rem;
+          border-radius: 8px;
           border: 1.5px solid #CBD5E1;
-          letter-spacing: 0.01em;
+          letter-spacing: 0.02em;
           white-space: nowrap;
           text-align: center;
+          line-height: 1.25;
+          flex: 0 1 auto;
+          min-width: 0;
           overflow: hidden;
           text-overflow: ellipsis;
-          line-height: 1.2;
+          box-sizing: border-box;
+          box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
         }
 
         .origin-pill {
-          flex: 1 1 0;
-          min-width: 0;
+          color: #0F172A;
+          border-color: #CBD5E1;
+          background: #FFFFFF;
         }
 
         .dest-pill {
-          flex: 1.25 1 0;
-          min-width: 0;
           color: #1D4ED8;
           border-color: #BFDBFE;
           background: #EFF6FF;
         }
 
         .loc-arrow-divider {
-          color: #1D4ED8;
-          font-weight: 800;
-          font-size: 0.76rem;
+          color: #2563EB;
+          font-weight: 700;
+          font-size: 0.92rem;
           user-select: none;
           flex-shrink: 0;
-          padding: 0 0.1rem;
           line-height: 1;
+          display: inline-flex;
+          align-items: center;
         }
 
         .route-type-tag {
