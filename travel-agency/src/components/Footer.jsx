@@ -1,21 +1,9 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
-import { Phone, MessageSquare, Mail, MapPin, Clock, ChevronDown } from 'lucide-react';
+import { Phone, MessageSquare, Mail, MapPin, Clock } from 'lucide-react';
 import { businessConfig } from '../config/business.config';
 
 export const Footer = () => {
-  const [expanded, setExpanded] = useState({
-    quickLinks: false,
-    corridors: false,
-  });
-
-  const toggleSection = (key) => {
-    setExpanded((prev) => ({
-      ...prev,
-      [key]: !prev[key],
-    }));
-  };
-
   return (
     <footer className="footer-wrapper">
       <div className="container">
@@ -67,21 +55,10 @@ export const Footer = () => {
             </div>
           </div>
 
-          {/* Column 2: Quick Links (Collapsible dropdown on mobile) */}
+          {/* Column 2: Quick Links (Always visible clean list) */}
           <div className="footer-links-col">
-            <button
-              type="button"
-              className="footer-col-header"
-              onClick={() => toggleSection('quickLinks')}
-              aria-expanded={expanded.quickLinks}
-            >
-              <h4 className="footer-col-title">Quick Links</h4>
-              <ChevronDown
-                size={18}
-                className={`footer-accordion-icon ${expanded.quickLinks ? 'open' : ''}`}
-              />
-            </button>
-            <ul className={`footer-links-list ${expanded.quickLinks ? 'is-open' : ''}`}>
+            <h4 className="footer-col-title">Quick Links</h4>
+            <ul className="footer-links-list">
               <li><Link to="/">Home</Link></li>
               <li><Link to="/services">Our Services</Link></li>
               <li><Link to="/vehicles">Fleet & Vehicles</Link></li>
@@ -94,21 +71,10 @@ export const Footer = () => {
             </ul>
           </div>
 
-          {/* Column 3: Verified Travel Corridors (Collapsible dropdown on mobile) */}
+          {/* Column 3: Verified Travel Corridors (Always visible clean list) */}
           <div className="footer-links-col">
-            <button
-              type="button"
-              className="footer-col-header"
-              onClick={() => toggleSection('corridors')}
-              aria-expanded={expanded.corridors}
-            >
-              <h4 className="footer-col-title">Our Corridors</h4>
-              <ChevronDown
-                size={18}
-                className={`footer-accordion-icon ${expanded.corridors ? 'open' : ''}`}
-              />
-            </button>
-            <ul className={`footer-links-list ${expanded.corridors ? 'is-open' : ''}`}>
+            <h4 className="footer-col-title">Our Corridors</h4>
+            <ul className="footer-links-list">
               <li><Link to="/services/pune-to-mumbai-cab">Pune to Mumbai Cab</Link></li>
               <li><Link to="/services/mumbai-to-pune-cab">Mumbai to Pune Cab</Link></li>
               <li><Link to="/services/airport-transfers">Airport Transfers (BOM / PNQ)</Link></li>
@@ -349,12 +315,13 @@ export const Footer = () => {
             padding-bottom: 6.25rem; /* Full clearance for mobile sticky bottom bar */
           }
           .footer-top-grid {
-            display: flex;
-            flex-direction: column;
-            gap: 0.85rem;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem 1.25rem;
             margin-bottom: 1.75rem;
           }
           .footer-brand-col {
+            grid-column: 1 / -1;
             margin-bottom: 0.5rem;
           }
           .footer-brand {
@@ -365,51 +332,37 @@ export const Footer = () => {
             max-width: 180px;
           }
           
-          /* Collapsible Dropdown Cards */
+          /* Clean Side-by-Side Always Visible Links (No Dropdown) */
           .footer-links-col {
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            background: rgba(255, 255, 255, 0.03);
-            overflow: hidden;
-            transition: all 0.2s ease;
-          }
-          .footer-links-col:focus-within {
-            border-color: rgba(56, 189, 248, 0.3);
-          }
-          .footer-col-header {
-            padding: 0.95rem 1.15rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            width: 100%;
-            cursor: pointer;
-            -webkit-tap-highlight-color: transparent;
+            border: none;
+            background: transparent;
+            overflow: visible;
+            padding: 0;
           }
           .footer-col-title {
             font-size: 0.95rem;
-            margin-bottom: 0 !important;
+            font-weight: 700;
+            margin-bottom: 0.75rem !important;
             color: #FFFFFF;
           }
-          .footer-accordion-icon {
-            display: block;
-            flex-shrink: 0;
-          }
           .footer-links-list {
-            display: none;
-            padding: 0.35rem 1.15rem 0.95rem 1.15rem;
-            border-top: 1px solid rgba(255, 255, 255, 0.06);
-            gap: 0.6rem;
-            list-style: none;
-            margin: 0;
-          }
-          .footer-links-list.is-open {
-            display: flex;
+            display: flex !important;
             flex-direction: column;
+            gap: 0.55rem;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            border: none;
           }
           .footer-links-list a {
-            font-size: 0.86rem;
+            font-size: 0.84rem;
             color: #CBD5E1;
-            padding: 0.2rem 0;
+            padding: 0.15rem 0;
+            text-decoration: none;
+            transition: color 0.2s ease;
+          }
+          .footer-links-list a:hover {
+            color: #38BDF8;
           }
           .footer-contact-info p {
             font-size: 0.82rem;

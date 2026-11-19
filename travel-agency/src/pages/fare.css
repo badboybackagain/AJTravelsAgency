@@ -1038,11 +1038,24 @@
 /* Responsive adjustments */
 @media (max-width: 900px) {
   .fare-cab-card {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: 1.25rem;
+    overflow: hidden;
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+  }
+  .cab-info-col {
+    min-width: 0;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
   }
   .cab-image-col {
     height: 165px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
   }
   .cab-price-col {
     border-left: none;
@@ -1051,6 +1064,9 @@
     padding-top: 1rem;
     align-items: center;
     text-align: center;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
   }
   .price-tag-wrapper {
     align-items: center;
@@ -1153,14 +1169,29 @@
     padding: 1rem;
     border-radius: 16px;
     gap: 0.85rem;
+    grid-template-columns: minmax(0, 1fr);
+    overflow: hidden;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  .cab-info-col {
+    min-width: 0;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
   }
 
   .cab-image-col {
+    width: 100%;
+    max-width: 100%;
     height: 175px;
     border-radius: 14px;
     padding: 0;
     background: #F1F5F9;
     overflow: hidden;
+    box-sizing: border-box;
   }
 
   .cab-photo {
@@ -1171,18 +1202,19 @@
   }
 
   .cab-title {
-    font-size: 1.3rem;
+    font-size: 1.25rem;
+    word-break: break-word;
   }
 
-  /* 3 Capacity Badges in Single Clean Row */
+  /* 3 Capacity Badges with auto wrapping so they never overflow the card */
   .cab-badges-row {
     display: flex;
-    flex-wrap: nowrap;
-    gap: 0.4rem;
+    flex-wrap: wrap;
+    gap: 0.35rem;
     margin: 0.25rem 0 0.45rem;
-    overflow-x: auto;
-    scrollbar-width: none;
-    -webkit-overflow-scrolling: touch;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
   }
 
   .cab-badges-row::-webkit-scrollbar {
@@ -1190,54 +1222,59 @@
   }
 
   .cab-spec-badge {
-    padding: 0.25rem 0.55rem;
-    font-size: 0.76rem;
+    padding: 0.22rem 0.5rem;
+    font-size: 0.72rem;
     white-space: nowrap;
-    flex-shrink: 0;
     border-radius: 6px;
+    box-sizing: border-box;
   }
 
   .cab-description-text {
-    font-size: 0.84rem;
-    line-height: 1.5;
+    font-size: 0.82rem;
+    line-height: 1.45;
     margin-bottom: 0.45rem;
+    word-break: break-word;
   }
 
-  /* Formatted Inclusions Matrix with FULL VISIBILITY (no text crop) */
+  /* Formatted Inclusions Matrix with strict container bounds */
   .cab-inclusions-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.45rem 0.65rem;
+    gap: 0.4rem 0.5rem;
     background: #F8FAFC;
-    padding: 0.65rem 0.75rem;
+    padding: 0.6rem 0.65rem;
     border-radius: 12px;
     border: 1px solid #EDF2F7;
     margin: 0.35rem 0;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
   }
 
   .inclusion-item {
     display: flex;
-    align-items: flex-start;
-    gap: 0.35rem;
-    font-size: 0.75rem;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.72rem;
     font-weight: 500;
     color: #1E293B;
     white-space: normal;
     line-height: 1.25;
     min-width: 0;
+    box-sizing: border-box;
   }
 
   .inclusion-item svg {
     flex-shrink: 0;
-    margin-top: 2px;
   }
 
   .inclusion-item span {
     white-space: normal;
-    overflow: visible;
-    text-overflow: clip;
-    word-break: break-word;
+    overflow: hidden;
+    text-overflow: ellipsis;
     min-width: 0;
+    line-height: 1.2;
   }
 
   .cab-select-btn {
@@ -1245,6 +1282,7 @@
     height: 46px;
     font-size: 0.92rem;
     border-radius: 12px;
+    box-sizing: border-box;
   }
 
   .fare-cabs-grid {
