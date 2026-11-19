@@ -413,15 +413,15 @@ export const FAQSection = () => {
         }
 
         .faq-contact-btn.wa {
-          background: #25D366;
+          background: #15803D;
           color: #FFFFFF;
-          border: 1px solid #1EBE5D;
-          box-shadow: 0 4px 14px rgba(37, 211, 102, 0.28);
+          border: 1px solid #166534;
+          box-shadow: 0 4px 14px rgba(21, 128, 61, 0.35);
         }
 
         .faq-contact-btn.wa:hover {
-          background: #1EBE5D;
-          box-shadow: 0 6px 18px rgba(37, 211, 102, 0.4);
+          background: #166534;
+          box-shadow: 0 6px 18px rgba(21, 128, 61, 0.45);
           transform: translateY(-2px);
         }
 

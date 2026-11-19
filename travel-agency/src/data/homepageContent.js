@@ -32,8 +32,8 @@ export const homepageContent = {
     titlePrimary: "Car Rental in Pune with Driver & Outstation Cabs",
     titleSecondary: "Intercity Cabs, Airport Transfers & Chauffeur-Driven Vehicles",
     description: "",
-    bgImage: "/assets/hero-luxury-cars.jpg",
-    bgImageMobile: "/assets/hero-luxury-cars-mobile.jpg",
+    bgImage: "/assets/hero-luxury-cars.webp",
+    bgImageMobile: "/assets/hero-luxury-cars-mobile.webp",
     bgImageAlt: "AJ Travels Executive Cab Fleet - Sedans, SUVs and Tempo Travellers in Pune",
     trustChips: [
       { text: "30-Min Fast Dispatch", color: "green" },
@@ -232,8 +232,8 @@ export const homepageContent = {
         description: "Reclining ergonomic seating, dual AC vents, and generous luggage capacity. Ideal for family airport runs, hill station tours, and outstation trips across Maharashtra.",
         routes: [
           {
-            from: "PUNE RESIDENCE",
-            to: "MUMBAI AIRPORT (BOM)",
+            from: "PUNE",
+            to: "MUMBAI AIRPORT",
             type: "Flight Transfer",
             desc: "Ideal for airport transfers, arrivals and departures.",
             fare: "₹3,199",
@@ -292,7 +292,7 @@ export const homepageContent = {
         description: "Luxury high-roof Force Tempo Travellers with pushback seats, individual AC vents, and large luggage space. Ideal for wedding guest transfers, corporate offsites, and group pilgrimage tours.",
         routes: [
           {
-            from: "PUNE / PCMC",
+            from: "PUNE",
             to: "MUMBAI EVENTS",
             type: "13-Seater Tempo",
             desc: "Ideal for corporate offsites, weddings and group transit.",

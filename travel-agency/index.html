@@ -9,14 +9,31 @@
     <link rel="shortcut icon" href="/favicon.ico?v=aj3" />
     <link rel="apple-touch-icon" href="/favicon.png?v=aj3" />
 
-    <!-- Google tag (gtag.js) - Google Analytics 4 -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-8NMEZNKH7V"></script>
+    <!-- Google tag (gtag.js) - Google Analytics 4 (Non-blocking lazy evaluation) -->
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
-
       gtag('config', 'G-8NMEZNKH7V');
+
+      (function() {
+        var loaded = false;
+        function loadGtag() {
+          if (loaded) return;
+          loaded = true;
+          window.removeEventListener('scroll', loadGtag);
+          window.removeEventListener('click', loadGtag);
+          window.removeEventListener('touchstart', loadGtag);
+          var s = document.createElement('script');
+          s.async = true;
+          s.src = 'https://www.googletagmanager.com/gtag/js?id=G-8NMEZNKH7V';
+          document.head.appendChild(s);
+        }
+        window.addEventListener('scroll', loadGtag, { passive: true, once: true });
+        window.addEventListener('click', loadGtag, { once: true });
+        window.addEventListener('touchstart', loadGtag, { passive: true, once: true });
+        setTimeout(loadGtag, 3500);
+      })();
     </script>
     
     <!-- Primary Meta Tags -->
@@ -27,6 +44,9 @@
     <meta name="author" content="AJ Travels" />
     <meta name="robots" content="index, follow" />
     <link rel="canonical" href="https://www.ajtravelspune.com/" />
+
+    <!-- Agentic Resource Discovery & LLM Context -->
+    <link rel="ard" href="/.well-known/ard.json" />
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
@@ -42,8 +62,9 @@
     <meta property="twitter:description" content="AJ Travels is a trusted vehicle rental service based in Pune offering chauffeur-driven car rentals, intercity cabs, airport transfers, and Tempo Travellers across Maharashtra." />
     <meta property="twitter:image" content="/assets/pune-to-mumbai-premium-travel-banner.webp" />
 
-    <!-- Preload Critical Above-The-Fold Assets -->
-    <link rel="preload" as="image" href="/assets/hero-luxury-cars.jpg" fetchpriority="high" />
+    <!-- Preload Critical Above-The-Fold Assets Responsively -->
+    <link rel="preload" as="image" href="/assets/hero-luxury-cars-mobile.webp" media="(max-width: 768px)" type="image/webp" fetchpriority="high" />
+    <link rel="preload" as="image" href="/assets/hero-luxury-cars.webp" media="(min-width: 769px)" type="image/webp" fetchpriority="high" />
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">

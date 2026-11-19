@@ -1,0 +1,30 @@
+{
+  "specVersion": "0.91",
+  "host": {
+    "displayName": "AJ Travels Pune",
+    "identifier": "ajtravelspune.com"
+  },
+  "entries": [
+    {
+      "@context": "https://agenticresourcediscovery.org/context/v1",
+      "identifier": "urn:air:ajtravelspune.com:content:llms",
+      "displayName": "AJ Travels LLM Service Directory",
+      "type": "text/markdown; profile=\"urn:air:agent-skills\"",
+      "url": "https://www.ajtravelspune.com/llms.txt",
+      "description": "Machine-readable overview of intercity cab routes, fleets, fares, and booking procedures for AI agents and LLMs.",
+      "representativeQueries": [
+        "pune to mumbai cab",
+        "mumbai to pune taxi",
+        "pune airport transfers",
+        "tempo traveller hire pune"
+      ],
+      "trustManifest": {
+        "identity": "did:web:ajtravelspune.com",
+        "publisher": "AJ Travels",
+        "contact": "ajtravelpune@gmail.com",
+        "license": "CC-BY-4.0",
+        "updatedAt": "2026-11-19T00:00:00Z"
+      }
+    }
+  ]
+}

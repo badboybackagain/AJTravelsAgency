@@ -84,7 +84,7 @@ export const BlogSection = () => {
           ) : (
             featuredArticles.map((article) => (
               <article key={article.slug} className="blog-card">
-                <Link to={`/blog/${article.slug}`} className="blog-card-media" aria-label={article.title}>
+                <Link to={`/blog/${article.slug}`} className="blog-card-media" tabIndex={-1} aria-hidden="true">
                   <img
                     src={article.featuredImage}
                     alt={article.title}

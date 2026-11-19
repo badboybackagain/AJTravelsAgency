@@ -280,8 +280,11 @@ export const SearchableLocationInput = ({
           placeholder={placeholder}
           disabled={disabled}
           autoComplete="off"
-          aria-label={ariaLabel}
+          role="combobox"
+          aria-autocomplete="list"
+          aria-haspopup="listbox"
           aria-expanded={isOpen}
+          aria-label={ariaLabel}
           className="sli-input-control"
         />
 

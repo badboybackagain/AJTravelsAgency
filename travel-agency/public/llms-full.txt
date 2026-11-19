@@ -1,0 +1,45 @@
+# AJ Travels - Complete Service Directory & Model Context Specification
+
+> AJ Travels (AJ Tours & Travels Pune) is an accredited car rental and intercity taxi agency established in Pune, Maharashtra. We operate an extensive, company-audited fleet comprising compact sedans, prime sedans, 6-seater SUVs, premium MPVs (Toyota Innova Crysta), and 12-26 seater luxury Tempo Travellers.
+
+## Service Matrix
+
+### 1. Pune to Mumbai Cab Services
+- Route: Pune City / PCMC / Hinjawadi / Wakad to Mumbai / Navi Mumbai / Thane / CSMIA BOM Airport via the Mumbai-Pune Expressway (National Expressway 1 / Yashwantrao Chavan Expressway).
+- Approximate Distance: 150 km. Typical Driving Duration: 3 hours to 3 hours 30 minutes.
+- Inclusions: State tax, commercial permit, Expressway Toll (Khalapur Toll & Talegaon Toll included in one-way fare), doorstep pickup and drop.
+- Vehicle Options: Sedan (Maruti Dzire / Toyota Etios), SUV (Maruti Ertiga), Luxury MPV (Toyota Innova Crysta), Tempo Traveller.
+- Booking Link: https://www.ajtravelspune.com/services/pune-mumbai-cab
+
+### 2. Mumbai to Pune Cab Services
+- Pickup Zones: CSMIA Airport Terminal 1 (Domestic), CSMIA Terminal 2 (International), South Mumbai, Bandra Kurla Complex (BKC), Andheri, Borivali, Dadar, Thane, Navi Mumbai (Vashi, Kharghar, Panvel).
+- Destination: Any address in Pune, PCMC, Hadapsar, Hinjawadi Phase 1-3, Kharadi, Magarpatta, Baner, Kothrud.
+- Highlights: Flight delayed tracking, no waiting charge for flight delays, 24/7 dedicated chauffeurs.
+- Booking Link: https://www.ajtravelspune.com/services/mumbai-pune-cab
+
+### 3. Outstation Travel Across Maharashtra
+- Major Outstation Corridors:
+  - Pune to Mahabaleshwar & Panchgani (120 km, ~3 hrs via Wai Ghat)
+  - Pune to Lonavala & Khandala (65 km, ~1 hr 15 mins via Expressway)
+  - Pune to Shirdi Sai Baba Temple (190 km, ~4 hrs via Ahmednagar Highway)
+  - Pune to Alibaug & Kashid Coastal Beaches (145 km, ~3 hrs 45 mins)
+  - Pune to Lavasa & Mulshi (55 km, ~1 hr 45 mins)
+  - Pune to Goa (450 km, ~8-9 hrs via Kolhapur / NH 48)
+- Booking Options: One-way drops or multi-day round-trip packages with night driver allowance.
+- Booking Link: https://www.ajtravelspune.com/services/outstation
+
+### 4. Group Travel & Tempo Traveller Rentals
+- Capacities: 12-Seater, 17-Seater, 20-Seater, and 26-Seater Force Urbania & Tempo Travellers.
+- Features: Pushback 1x1 / 2x1 luxury seats, high-roof AC cabins, individual charging ports, ample luggage boot space, music system, verified long-distance chauffeurs.
+- Booking Link: https://www.ajtravelspune.com/services/tempo-traveller
+
+## Pricing Policies
+- One-Way Pricing: Fixed transparent rates with Expressway tolls included. No hidden charges or unexpected return kilometer penalties.
+- Round-Trip Pricing: Standard per-kilometer base with minimum 250 km/day billing and clear driver allowance.
+- Tolls & Parking: All fastag expressway tolls included on designated standard one-way express routes. Municipal parking charges at airports or sightseeing points paid directly at actuals.
+
+## Booking & Contact
+- Website: https://www.ajtravelspune.com/
+- Telephone: +91 7447443536
+- WhatsApp Support: +91 7447443536
+- Headquarters: Old Mumbai–Pune Highway, Nashik Fata, Kasarawadi, Pune 411064

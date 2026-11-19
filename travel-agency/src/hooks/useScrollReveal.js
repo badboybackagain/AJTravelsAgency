@@ -21,9 +21,9 @@ export function useScrollReveal(dependencies = []) {
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    // 1. Accessibility Check: Respect reduced motion preferences immediately
+    // 1. Accessibility & Mobile Optimization: Respect reduced motion and keep mobile zero-reflow
     const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (prefersReducedMotion) {
+    if (prefersReducedMotion || window.innerWidth < 768) {
       document.querySelectorAll('.reveal, .reveal-on-scroll').forEach((el) => {
         el.style.opacity = '1';
         el.style.transform = 'none';

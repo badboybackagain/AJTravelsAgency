@@ -641,9 +641,9 @@ export const DestinationSpotlight = () => {
 
         .dest-icon-city {
           font-size: 0.72rem;
-          color: #64748B;
+          color: #475569;
           margin-top: 0.25rem;
-          font-weight: 450;
+          font-weight: 500;
           letter-spacing: 0.01em;
         }
 

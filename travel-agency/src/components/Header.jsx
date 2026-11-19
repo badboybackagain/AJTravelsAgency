@@ -120,7 +120,7 @@ export const Header = ({ isDark = false, onOpenEnquiry }) => {
             <button
               onClick={onOpenEnquiry}
               className="btn-action btn-enquiry-header"
-              aria-label="Request Trip Quotation"
+              aria-label="Enquire Now - Request Trip Quotation"
             >
               <span>Enquire Now</span>
             </button>
@@ -128,7 +128,7 @@ export const Header = ({ isDark = false, onOpenEnquiry }) => {
             <Link
               to="/booking"
               className="btn-action btn-enquiry-header"
-              aria-label="Enquire Now"
+              aria-label="Enquire Now - Request Trip Quotation"
             >
               <span>Enquire Now</span>
             </Link>

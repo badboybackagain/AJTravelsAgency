@@ -584,12 +584,10 @@ function LiveMigratedContent({ currentSlug }) {
         .bc-current { 
           color: #0F172A; 
           font-weight: 600; 
-          max-width: 500px;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-          display: inline-block;
-          vertical-align: bottom;
+          max-width: 100%;
+          white-space: normal;
+          word-break: break-word;
+          display: inline;
         }
 
         .article-header-section {
@@ -1204,13 +1202,16 @@ function LiveMigratedContent({ currentSlug }) {
             padding: 5.75rem 0 0.75rem;
           }
           .breadcrumbs-nav {
-            font-size: 0.8rem;
-            gap: 0.35rem;
-            flex-wrap: nowrap;
-            overflow: hidden;
+            font-size: 0.82rem;
+            gap: 0.35rem 0.5rem;
+            flex-wrap: wrap;
+            line-height: 1.45;
           }
           .bc-current {
-            max-width: 210px;
+            max-width: 100%;
+            white-space: normal;
+            word-break: break-word;
+            display: inline;
           }
           .article-main-title {
             font-size: 1.85rem;

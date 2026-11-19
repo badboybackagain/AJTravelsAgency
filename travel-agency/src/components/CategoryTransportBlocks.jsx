@@ -495,7 +495,7 @@ export const CategoryTransportBlocks = () => {
           font-size: 0.72rem;
           font-weight: 600;
           letter-spacing: 0.06em;
-          color: #0284C7;
+          color: #0369A1;
           background: #E0F2FE;
           padding: 0.35rem 0.9rem;
           border-radius: 9999px;
@@ -560,8 +560,8 @@ export const CategoryTransportBlocks = () => {
         }
 
         .pill-tab-btn .tab-sub {
-          font-weight: 500;
-          opacity: 0.85;
+          font-weight: 550;
+          opacity: 0.95;
         }
 
         .pill-tab-btn:hover {
@@ -744,10 +744,7 @@ export const CategoryTransportBlocks = () => {
           white-space: nowrap;
           text-align: center;
           line-height: 1.25;
-          flex: 0 1 auto;
-          min-width: 0;
-          overflow: hidden;
-          text-overflow: ellipsis;
+          flex: 0 0 auto;
           box-sizing: border-box;
           box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
         }
@@ -828,7 +825,7 @@ export const CategoryTransportBlocks = () => {
 
         .price-note-txt {
           font-size: 0.73rem;
-          color: #059669;
+          color: #047857;
           font-weight: 600;
           display: inline-flex;
           align-items: center;
@@ -1033,11 +1030,14 @@ export const CategoryTransportBlocks = () => {
             height: 150px;
           }
           .loc-pill {
-            font-size: 0.65rem;
-            padding: 0.24rem 0.35rem;
+            font-size: 0.70rem;
+            padding: 0.25rem 0.5rem;
+            flex-shrink: 0;
+            white-space: nowrap;
           }
           .route-locations-flow {
-            gap: 0.25rem;
+            gap: 0.35rem;
+            flex-wrap: nowrap;
           }
           .route-desc-text {
             font-size: 0.74rem;

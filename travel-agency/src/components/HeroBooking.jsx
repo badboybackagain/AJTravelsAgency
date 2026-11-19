@@ -354,10 +354,16 @@ export const HeroBooking = () => {
         <picture className="hero-bg-picture">
           <source
             media="(max-width: 768px)"
-            srcSet={homepageContent.hero.bgImageMobile || "/assets/hero-luxury-cars-mobile.jpg"}
+            type="image/webp"
+            srcSet={homepageContent.hero.bgImageMobile || "/assets/hero-luxury-cars-mobile.webp"}
+          />
+          <source
+            media="(min-width: 769px)"
+            type="image/webp"
+            srcSet={homepageContent.hero.bgImage || "/assets/hero-luxury-cars.webp"}
           />
           <img
-            src={homepageContent.hero.bgImage}
+            src={homepageContent.hero.bgImageMobile || "/assets/hero-luxury-cars-mobile.webp"}
             alt={homepageContent.hero.bgImageAlt}
             className="hero-bg-img"
             fetchPriority="high"
@@ -480,7 +486,13 @@ export const HeroBooking = () => {
             )}
 
             {/* Main Form */}
-            <form onSubmit={handleCheckFare} className="booking-form-body">
+            <form
+              onSubmit={handleCheckFare}
+              className="booking-form-body"
+              toolname="search_and_book_cab"
+              tooldescription="Search available cabs, calculate real-time fares for one-way or round-trip journeys between Pune, Mumbai, airports and outstation cities."
+              toolautosubmit="false"
+            >
               {/* ================================================= */}
               {/* MODE 1: ONE WAY (Horizontal Compact 2-Row Layout) */}
               {/* ================================================= */}
@@ -564,11 +576,14 @@ export const HeroBooking = () => {
                     </div>
 
                     <div className="booking-field-group">
-                      <label className="booking-label">
+                      <label className="booking-label" htmlFor="hero-oneway-time">
                         <Clock size={13} color="#0099FF" />
                         <span>Pickup Time *</span>
                       </label>
                       <select
+                        id="hero-oneway-time"
+                        aria-label="Departure Pickup Time"
+                        toolparamdescription="Departure pickup time slot"
                         value={departureTime}
                         onChange={(e) => {
                           setDepartureTime(e.target.value);
@@ -586,11 +601,14 @@ export const HeroBooking = () => {
                     </div>
 
                     <div className="booking-field-group">
-                      <label className="booking-label">
+                      <label className="booking-label" htmlFor="hero-oneway-passengers">
                         <Users size={13} color="#6366F1" />
                         <span>Passengers</span>
                       </label>
                       <select
+                        id="hero-oneway-passengers"
+                        aria-label="Number of Passengers"
+                        toolparamdescription="Number of travelling passengers"
                         value={passengers}
                         onChange={(e) => setPassengers(e.target.value)}
                         className="booking-select-control"
@@ -697,11 +715,14 @@ export const HeroBooking = () => {
                     </div>
 
                     <div className="booking-field-group">
-                      <label className="booking-label">
+                      <label className="booking-label" htmlFor="hero-roundtrip-time">
                         <Clock size={13} color="#0099FF" />
                         <span>Pickup Time *</span>
                       </label>
                       <select
+                        id="hero-roundtrip-time"
+                        aria-label="Departure Pickup Time"
+                        toolparamdescription="Departure pickup time slot"
                         value={departureTime}
                         onChange={(e) => {
                           setDepartureTime(e.target.value);
@@ -741,11 +762,14 @@ export const HeroBooking = () => {
                     </div>
 
                     <div className="booking-field-group">
-                      <label className="booking-label">
+                      <label className="booking-label" htmlFor="hero-roundtrip-return-time">
                         <Clock size={13} color="#F59E0B" />
                         <span>Return Time *</span>
                       </label>
                       <select
+                        id="hero-roundtrip-return-time"
+                        aria-label="Return Pickup Time"
+                        toolparamdescription="Return pickup time slot"
                         value={returnTime}
                         onChange={(e) => {
                           setReturnTime(e.target.value);
@@ -763,11 +787,14 @@ export const HeroBooking = () => {
                     </div>
 
                     <div className="booking-field-group">
-                      <label className="booking-label">
+                      <label className="booking-label" htmlFor="hero-roundtrip-passengers">
                         <Users size={13} color="#6366F1" />
                         <span>Passengers</span>
                       </label>
                       <select
+                        id="hero-roundtrip-passengers"
+                        aria-label="Number of Passengers"
+                        toolparamdescription="Number of travelling passengers"
                         value={passengers}
                         onChange={(e) => setPassengers(e.target.value)}
                         className="booking-select-control"
@@ -797,11 +824,14 @@ export const HeroBooking = () => {
                 <>
                   <div className="booking-row-2col booking-row-local-package">
                     <div className="booking-field-group">
-                      <label className="booking-label">
+                      <label className="booking-label" htmlFor="hero-local-city">
                         <MapPin size={13} color="#0099FF" />
                         <span>Select City *</span>
                       </label>
                       <select
+                        id="hero-local-city"
+                        aria-label="Select Local City"
+                        toolparamdescription="Local service city (Pune or Mumbai)"
                         value={localCity}
                         onChange={(e) => {
                           setLocalCity(e.target.value);
@@ -816,11 +846,14 @@ export const HeroBooking = () => {
                     </div>
 
                     <div className="booking-field-group">
-                      <label className="booking-label">
+                      <label className="booking-label" htmlFor="hero-local-duration">
                         <Clock size={13} color="#10B981" />
                         <span>Duration Package *</span>
                       </label>
                       <select
+                        id="hero-local-duration"
+                        aria-label="Select Duration Package"
+                        toolparamdescription="Hourly duration package"
                         value={localDuration}
                         onChange={(e) => {
                           setLocalDuration(e.target.value);
@@ -857,11 +890,14 @@ export const HeroBooking = () => {
                     </div>
 
                     <div className="booking-field-group">
-                      <label className="booking-label">
+                      <label className="booking-label" htmlFor="hero-local-time">
                         <Clock size={13} color="#0099FF" />
                         <span>Pickup Time *</span>
                       </label>
                       <select
+                        id="hero-local-time"
+                        aria-label="Local Pickup Time"
+                        toolparamdescription="Local pickup time slot"
                         value={departureTime}
                         onChange={(e) => {
                           setDepartureTime(e.target.value);
@@ -879,11 +915,14 @@ export const HeroBooking = () => {
                     </div>
 
                     <div className="booking-field-group">
-                      <label className="booking-label">
+                      <label className="booking-label" htmlFor="hero-local-passengers">
                         <Users size={13} color="#6366F1" />
                         <span>Passengers</span>
                       </label>
                       <select
+                        id="hero-local-passengers"
+                        aria-label="Number of Passengers"
+                        toolparamdescription="Number of travelling passengers"
                         value={passengers}
                         onChange={(e) => setPassengers(e.target.value)}
                         className="booking-select-control"
