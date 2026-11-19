@@ -808,6 +808,21 @@ function LiveMigratedContent({ currentSlug }) {
           gap: 2rem;
           margin: 3.5rem 0;
           box-shadow: 0 12px 32px rgba(15, 23, 42, 0.2);
+          width: 100%;
+          max-width: 100%;
+          box-sizing: border-box;
+          overflow: hidden;
+        }
+
+        .cta-left {
+          flex: 1;
+          min-width: 0;
+          box-sizing: border-box;
+        }
+
+        .cta-right {
+          flex-shrink: 0;
+          box-sizing: border-box;
         }
 
         .cta-badge {
@@ -1215,12 +1230,124 @@ function LiveMigratedContent({ currentSlug }) {
           }
           .article-main-title {
             font-size: 1.85rem;
+            word-break: break-word;
           }
           .article-booking-cta-card {
             flex-direction: column;
-            align-items: flex-start;
+            align-items: stretch;
+            padding: 1.5rem 1.15rem;
+            gap: 1.25rem;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+            overflow: hidden;
+            margin: 2.25rem 0;
+          }
+          .article-booking-cta-card h3 {
+            font-size: 1.3rem;
+            line-height: 1.35;
+            word-break: break-word;
+          }
+          .article-booking-cta-card p {
+            font-size: 0.88rem;
+            line-height: 1.55;
+          }
+          .cta-fleet-links {
+            line-height: 1.6;
+            word-break: break-word;
+          }
+          .cta-left {
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+          }
+          .cta-right {
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+          }
+          .btn-cta-calculate {
+            width: 100%;
+            max-width: 100%;
+            min-height: 48px;
+            height: auto;
+            justify-content: center;
+            padding: 0.85rem 1rem;
+            font-size: 0.92rem;
+            border-radius: 12px;
+            box-sizing: border-box;
+            text-align: center;
+            white-space: normal;
+            word-break: break-word;
+          }
+          .btn-cta-calculate span {
+            text-align: center;
+            line-height: 1.25;
+          }
+          .commercial-image-overlay-badge {
+            font-size: 0.8rem;
+            padding: 0.65rem 1rem;
+            line-height: 1.35;
+          }
+          .sidebar-card {
+            padding: 1.5rem 1.15rem;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+            overflow: hidden;
+          }
+          .sidebar-btn-book {
+            width: 100%;
+            max-width: 100%;
+            min-height: 48px;
+            height: auto;
+            box-sizing: border-box;
+            justify-content: center;
+            white-space: normal;
+            word-break: break-word;
+            padding: 0.85rem 1rem;
+            text-align: center;
+          }
+          .sidebar-desk-actions {
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+            gap: 0.65rem;
+          }
+          .sidebar-desk-link {
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+            padding: 0.75rem 0.5rem;
+            font-size: 0.8rem;
+            text-align: center;
+            justify-content: center;
+          }
+          .article-faqs-section {
+            padding: 1.5rem 1.15rem;
+            border-radius: 16px;
+          }
+          .article-related-links-card {
+            padding: 1.35rem 1.15rem;
+            border-radius: 14px;
+          }
+          .key-takeaways-callout {
+            padding: 1rem 1.15rem;
+          }
+          .prose-points-box {
+            padding: 1.15rem;
           }
           .related-links-grid {
+            grid-template-columns: 1fr;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .sidebar-desk-actions {
             grid-template-columns: 1fr;
           }
         }

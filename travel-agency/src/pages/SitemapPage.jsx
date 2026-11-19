@@ -534,11 +534,14 @@ export function SitemapPage() {
         .sitemap-link-item {
           display: flex;
           align-items: center;
+          min-width: 0;
+          width: 100%;
+          box-sizing: border-box;
         }
 
         .sitemap-anchor {
           display: inline-flex;
-          align-items: center;
+          align-items: flex-start;
           gap: 0.45rem;
           color: #334155;
           text-decoration: none;
@@ -546,16 +549,22 @@ export function SitemapPage() {
           line-height: 1.45;
           padding: 0.2rem 0;
           transition: all 0.15s ease;
+          min-width: 0;
+          max-width: 100%;
+          word-break: break-word;
         }
 
         .bullet-chevron {
           color: #94A3B8;
           flex-shrink: 0;
+          margin-top: 0.25rem;
           transition: transform 0.15s ease, color 0.15s ease;
         }
 
         .anchor-label {
           font-weight: 450;
+          word-break: break-word;
+          min-width: 0;
         }
 
         .sitemap-anchor:hover {
@@ -653,12 +662,18 @@ export function SitemapPage() {
           }
 
           .sitemap-section-card {
-            padding: 1.25rem;
+            padding: 1.15rem;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+            overflow: hidden;
           }
 
           .sitemap-links-list {
             grid-template-columns: 1fr;
             gap: 0.5rem;
+            width: 100%;
+            box-sizing: border-box;
           }
 
           .sitemap-anchor {

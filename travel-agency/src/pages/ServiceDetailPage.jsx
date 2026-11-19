@@ -1209,19 +1209,29 @@ export function ServiceDetailPage() {
             border-radius: 14px !important;
             padding: 1.35rem 1.15rem !important;
             flex-direction: column;
-            align-items: flex-start;
+            align-items: stretch !important;
             gap: 1.15rem;
             width: 100% !important;
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+            overflow: hidden !important;
+          }
+          .cta-left-text {
+            width: 100% !important;
+            max-width: 100% !important;
             box-sizing: border-box !important;
           }
           .cta-left-text h3 {
             font-size: 1.25rem;
+            word-break: break-word;
           }
           .cta-left-text p {
             font-size: 0.82rem;
           }
           .cta-right-actions {
             width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 0.5rem;
@@ -1229,9 +1239,23 @@ export function ServiceDetailPage() {
           .btn-cta-calculate,
           .btn-cta-enquire {
             width: 100%;
+            max-width: 100%;
+            min-height: 44px;
+            height: auto;
+            box-sizing: border-box;
             justify-content: center;
-            padding: 0.65rem 0.5rem;
-            font-size: 0.78rem;
+            padding: 0.75rem 0.6rem;
+            font-size: 0.82rem;
+            white-space: normal;
+            word-break: break-word;
+            text-align: center;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .cta-right-actions {
+            grid-template-columns: 1fr;
+            gap: 0.65rem;
           }
         }
       `}</style>
